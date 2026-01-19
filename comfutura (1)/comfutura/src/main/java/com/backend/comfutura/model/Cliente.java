@@ -14,7 +14,7 @@ public class Cliente {
 
     private String razonSocial;
 
-    @Column(unique = true, length = 11)
+    @Column(name = "ruc", columnDefinition = "char(11)")
     private String ruc;
 
     private Boolean activo = true;
