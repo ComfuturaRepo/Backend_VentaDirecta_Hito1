@@ -18,7 +18,7 @@ public class Ots {
     @Column(name = "id_ots")
     private Integer id;
 
-    private Long ot;
+    private Integer ot;
     private String ceco;
 
     @ManyToOne
