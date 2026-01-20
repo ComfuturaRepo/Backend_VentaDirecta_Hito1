@@ -70,7 +70,6 @@ public class OtServiceImpl implements OtService {
                 .site(site)
                 .region(region)
                 .descripcion(request.getDescripcion())
-                .fechaApertura(request.getFechaApertura())
                 .diasAsignados(
                         request.getDiasAsignados() != null ? request.getDiasAsignados() : 0
                 )
@@ -124,7 +123,6 @@ public class OtServiceImpl implements OtService {
                 .idOts(ots.getIdOts())
                 .ot(ots.getOt())
                 .descripcion(ots.getDescripcion())
-                .fechaApertura(ots.getFechaApertura())
                 .diasAsignados(ots.getDiasAsignados())
                 .activo(ots.getActivo())
                 .fechaCreacion(ots.getFechaCreacion())

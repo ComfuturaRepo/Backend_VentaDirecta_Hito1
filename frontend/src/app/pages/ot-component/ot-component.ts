@@ -18,7 +18,7 @@ import { AuthService } from '../../service/auth.service';
   selector: 'app-create-ot',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
- templateUrl: './ot-component.html',
+  templateUrl: './ot-component.html',
   styleUrl: './ot-component.css'
 })
 export class CreateOtComponent implements OnInit {
@@ -31,13 +31,12 @@ export class CreateOtComponent implements OnInit {
 
   // Dropdowns
   clientes: DropdownItem[] = [];
-  areas: DropdownItem[] = [];           // ← se carga dinámicamente
+  areas: DropdownItem[] = [];
   proyectos: DropdownItem[] = [];
   fases: DropdownItem[] = [];
   sites: DropdownItem[] = [];
   regiones: DropdownItem[] = [];
 
-  // Trabajadores disponibles (puedes cargar desde otro endpoint)
   trabajadoresDisponibles: DropdownItem[] = [];
 
   constructor(
@@ -49,12 +48,10 @@ export class CreateOtComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Info del usuario logueado
     const user = this.authService.currentUser;
     this.usernameLogueado = user?.username || '—';
     this.trabajadorIdLogueado = user?.idTrabajador ?? null;
 
-    // Inicializar formulario
     this.form = this.fb.group({
       idCliente: ['', Validators.required],
       idArea: ['', Validators.required],
@@ -62,9 +59,8 @@ export class CreateOtComponent implements OnInit {
       idFase: ['', Validators.required],
       idSite: ['', Validators.required],
       idRegion: ['', Validators.required],
-      descripcion: [''],
+      descripcion: [{ value: '', disabled: true }, Validators.required],  // ← Campo deshabilitado
       fechaApertura: ['', Validators.required],
-      // Responsables (todos opcionales)
       jefaturaClienteSolicitante: [''],
       analistaClienteSolicitante: [''],
       coordinadoresTiCwPextEnergia: [''],
@@ -72,43 +68,43 @@ export class CreateOtComponent implements OnInit {
       liquidador: [''],
       ejecutante: [''],
       analistaContable: [''],
-      // Trabajadores
       trabajadores: this.fb.array([])
     });
 
-    // Cascada: al cambiar cliente → cargar áreas
+    // Suscripciones
+    this.form.valueChanges.subscribe(() => {
+      this.actualizarDescripcion();
+    });
+
     this.form.get('idCliente')?.valueChanges.subscribe(clienteId => {
       if (clienteId) {
-        this.cargarAreasPorCliente(clienteId);
-        this.form.get('idArea')?.reset(); // reset área cuando cambia cliente
+        this.cargarAreasPorCliente(Number(clienteId));
+        this.form.get('idArea')?.reset();
       } else {
         this.areas = [];
         this.form.get('idArea')?.reset();
       }
     });
 
-    // Cargar dropdowns iniciales
     this.cargarDropdownsIniciales();
+    this.actualizarDescripcion(); // inicial
   }
 
-  // Getters útiles
   get f() { return this.form.controls; }
   get trabajadoresArray() { return this.form.get('trabajadores') as FormArray; }
 
   private cargarDropdownsIniciales(): void {
-    this.dropdownService.getClientes().subscribe(d => this.clientes = d);
-    this.dropdownService.getProyectos().subscribe(d => this.proyectos = d);
-    this.dropdownService.getFases().subscribe(d => this.fases = d);
-    this.dropdownService.getSites().subscribe(d => this.sites = d);
-    this.dropdownService.getRegiones().subscribe(d => this.regiones = d);
-
-    // Si tienes endpoint para trabajadores disponibles:
-    // this.dropdownService.getTrabajadores().subscribe(d => this.trabajadoresDisponibles = d);
+    this.dropdownService.getClientes().subscribe(d => this.clientes = d || []);
+    this.dropdownService.getProyectos().subscribe(d => this.proyectos = d || []);
+    this.dropdownService.getFases().subscribe(d => this.fases = d || []);
+    this.dropdownService.getSites().subscribe(d => this.sites = d || []);
+    this.dropdownService.getRegiones().subscribe(d => this.regiones = d || []);
+    // this.dropdownService.getTrabajadores()... cuando exista
   }
 
   private cargarAreasPorCliente(idCliente: number): void {
     this.dropdownService.getAreasByCliente(idCliente).subscribe({
-      next: (areas) => this.areas = areas,
+      next: (areas) => this.areas = areas || [],
       error: () => {
         this.areas = [];
         Swal.fire('Error', 'No se pudieron cargar las áreas del cliente', 'error');
@@ -116,7 +112,32 @@ export class CreateOtComponent implements OnInit {
     });
   }
 
-  agregarTrabajador() {
+  // ... imports iguales ...
+
+private actualizarDescripcion(): void {
+  const values = this.form.value;
+
+  // Obtenemos los valores necesarios
+  const proyectoNombre = this.proyectos.find(p => p.id === Number(values.idProyecto))?.label || '';
+  const areaNombre     = this.areas.find(a => a.id === Number(values.idArea))?.label || '';
+  const idSitio        = values.idSite ? String(values.idSite) : '';
+  const siteNombre     = this.sites.find(s => s.id === Number(values.idSite))?.label || '';
+
+  // Concatenación con separador "-"
+  let desc = [proyectoNombre, areaNombre, idSitio, siteNombre]
+    .filter(Boolean)              // elimina elementos vacíos
+    .join(' - ');                 // separador con guion y espacios para legibilidad
+
+  // Mensaje por defecto si nada está seleccionado
+  if (!desc.trim()) {
+    desc = 'Completar campos principales para generar descripción';
+  }
+
+  // Actualizamos el control de descripción (aunque esté disabled)
+  this.form.get('descripcion')?.setValue(desc, { emitEvent: false });
+}
+
+  agregarTrabajador(): void {
     this.trabajadoresArray.push(
       this.fb.group({
         idTrabajador: ['', Validators.required],
@@ -125,7 +146,7 @@ export class CreateOtComponent implements OnInit {
     );
   }
 
-  eliminarTrabajador(index: number) {
+  eliminarTrabajador(index: number): void {
     this.trabajadoresArray.removeAt(index);
   }
 
@@ -154,11 +175,9 @@ export class CreateOtComponent implements OnInit {
       idFase: Number(values.idFase),
       idSite: Number(values.idSite),
       idRegion: Number(values.idRegion),
-      descripcion: values.descripcion?.trim() || undefined,
-      fechaApertura: values.fechaApertura,
-      diasAsignados: values.diasAsignados ?? 0,
+      descripcion: values.descripcion?.trim() || '',
+      diasAsignados: 0,
       idOtsAnterior: null,
-
       jefaturaClienteSolicitante: values.jefaturaClienteSolicitante?.trim() || undefined,
       analistaClienteSolicitante: values.analistaClienteSolicitante?.trim() || undefined,
       coordinadoresTiCwPextEnergia: values.coordinadoresTiCwPextEnergia?.trim() || undefined,
@@ -176,7 +195,7 @@ export class CreateOtComponent implements OnInit {
     const payload: CrearOtCompletaRequest = {
       ot: otPayload,
       trabajadores,
-      detalles: [] // ← si implementas detalles después, mapea aquí
+      detalles: []
     };
 
     this.otService.crearOtCompleta(payload).subscribe({
@@ -184,8 +203,7 @@ export class CreateOtComponent implements OnInit {
         Swal.fire({
           icon: 'success',
           title: '¡Orden creada!',
-          html: `OT <strong>#${res.ot}</strong> registrada exitosamente<br>
-                 <small>Fecha: ${res.fechaApertura}</small>`,
+          html: `OT <strong>#${res.ot}</strong> registrada exitosamente`,
           timer: 3500,
           showConfirmButton: false
         });
@@ -195,7 +213,7 @@ export class CreateOtComponent implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'Error al crear OT',
-          text: err.message || 'Ocurrió un problema inesperado. Intenta nuevamente.'
+          text: err.error?.message || err.message || 'Ocurrió un problema inesperado'
         });
       },
       complete: () => this.loading = false
@@ -207,5 +225,6 @@ export class CreateOtComponent implements OnInit {
     this.trabajadoresArray.clear();
     this.submitted = false;
     this.areas = [];
+    this.actualizarDescripcion();
   }
 }

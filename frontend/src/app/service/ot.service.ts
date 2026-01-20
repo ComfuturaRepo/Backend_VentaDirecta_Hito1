@@ -18,7 +18,6 @@ export interface OtCreateRequest {
   idRegion: number;
   idOtsAnterior?: number | null;
   descripcion?: string;
-  fechaApertura: string;           // 'YYYY-MM-DD'
   diasAsignados?: number;
 
   // Campos de responsables (opcionales)
@@ -57,7 +56,6 @@ export interface OtResponse {
   idOts: number;
   ot: number;                      // generado automáticamente
   descripcion?: string;
-  fechaApertura: string;
   diasAsignados: number;
   activo: boolean;
   fechaCreacion: string;

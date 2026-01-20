@@ -18,6 +18,5 @@ public class OtCreateRequest {
     private Integer idRegion;
 
     private String descripcion;
-    private LocalDate fechaApertura;
     private Integer diasAsignados;
 }

@@ -7,6 +7,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+
 @Entity
 @Table(name = "ots")
 @Getter
@@ -16,47 +17,41 @@ import java.time.LocalDateTime;
 @Builder
 public class Ots {
 
-    /* ================= PK ================= */
-
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_ots")
     private Integer idOts;
 
-    /* ================= DATOS PRINCIPALES ================= */
-
     @Column(name = "ot", nullable = false, unique = true)
     private Integer ot;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_ots_anterior")
     private Ots otsAnterior;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "id_cliente")
     private Cliente cliente;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "id_area")
     private Area area;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "id_proyecto")
     private Proyecto proyecto;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "id_fase")
     private Fase fase;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "id_site")
     private Site site;
 
-    @ManyToOne(optional = false)
+    @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "id_region")
     private Region region;
-
-    /* ================= DESCRIPCIÓN ================= */
 
     @Column(columnDefinition = "TEXT")
     private String descripcion;
@@ -64,33 +59,34 @@ public class Ots {
     @Column(name = "fecha_apertura", nullable = false)
     private LocalDate fechaApertura;
 
-    /* ================= RESPONSABLES ================= */
+    // ── Relaciones uno-a-uno/muchos-a-uno (solo una persona por rol) ──
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_jefatura_cliente_solicitante")
+    private JefaturaClienteSolicitante jefaturaClienteSolicitante;
 
-    @Column(name = "jefatura_cliente_solicitante", length = 150)
-    private String jefaturaClienteSolicitante;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_analista_cliente_solicitante")
+    private AnalistaClienteSolicitante analistaClienteSolicitante;
 
-    @Column(name = "analista_cliente_solicitante", length = 150)
-    private String analistaClienteSolicitante;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_coordinador_ti_cw")   // ← corrige aquí
+    private CoordinadorTiCwPextEnergia coordinadorTiCw;     // ← también cambia el nombre del campo y el tipo
 
-    @Column(
-            name = "coordinadores_ti_cw_pext_energia",
-            length = 500
-    )
-    private String coordinadoresTiCwPextEnergia;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_jefatura_responsable")
+    private JefaturaResponsable jefaturaResponsable;
 
-    @Column(name = "jefatura_responsable", length = 150)
-    private String jefaturaResponsable;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_liquidador")
+    private Liquidador liquidador;
 
-    @Column(name = "liquidador", length = 150)
-    private String liquidador;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_ejecutante")
+    private Ejecutante ejecutante;
 
-    @Column(name = "ejecutante", length = 150)
-    private String ejecutante;
-
-    @Column(name = "analista_contable", length = 150)
-    private String analistaContable;
-
-    /* ================= CONTROL ================= */
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_analista_contable")
+    private AnalistaContable analistaContable;
 
     @Column(name = "dias_asignados")
     private Integer diasAsignados = 0;

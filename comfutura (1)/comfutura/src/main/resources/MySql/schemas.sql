@@ -236,36 +236,89 @@ CREATE TABLE region (
 );
 
 
+-- 1. Jefatura del cliente solicitante
+CREATE TABLE jefatura_cliente_solicitante (
+                                              id INT AUTO_INCREMENT PRIMARY KEY,               -- ← cambia a "id"
+                                              descripcion VARCHAR(150) NOT NULL,
+                                              activo TINYINT(1) DEFAULT 1
+);
 
+-- 2. Analista del cliente solicitante
+CREATE TABLE analista_cliente_solicitante (
+                                              id INT AUTO_INCREMENT PRIMARY KEY,
+                                              descripcion VARCHAR(150) NOT NULL,
+                                              activo TINYINT(1) DEFAULT 1
+);
+
+
+CREATE TABLE coordinador_ti_cw (
+                                   id INT AUTO_INCREMENT PRIMARY KEY,
+                                   descripcion VARCHAR(150) NOT NULL,          -- un coordinador a la vez
+                                   activo TINYINT(1) DEFAULT 1
+);
+
+
+-- 4. Jefatura responsable
+CREATE TABLE jefatura_responsable (
+                                      id INT AUTO_INCREMENT PRIMARY KEY,
+                                      descripcion VARCHAR(150) NOT NULL,
+                                      activo TINYINT(1) DEFAULT 1
+);
+
+
+-- 5. Liquidador
+CREATE TABLE liquidador (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            descripcion VARCHAR(150) NOT NULL,
+                            activo TINYINT(1) DEFAULT 1
+);
+
+
+-- 6. Ejecutante
+CREATE TABLE ejecutante (
+                            id INT AUTO_INCREMENT PRIMARY KEY,
+                            descripcion VARCHAR(150) NOT NULL,
+                            activo TINYINT(1) DEFAULT 1
+);
+
+
+-- 7. Analista contable
+CREATE TABLE analista_contable (
+                                   id INT AUTO_INCREMENT PRIMARY KEY,
+                                   descripcion VARCHAR(150) NOT NULL,
+                                   activo TINYINT(1) DEFAULT 1
+);
 CREATE TABLE ots (
                      id_ots INT AUTO_INCREMENT PRIMARY KEY,
 
-                     ot INT NOT NULL UNIQUE,                        -- Número de OT (cambiado a INT)
+                     ot INT NOT NULL UNIQUE,                        -- Número de OT
+                     id_ots_anterior INT NULL,                      -- OT anterior (autorreferencia)
 
-                     id_ots_anterior INT NULL,                      -- OT anterior (referencia a sí misma)
-                     id_cliente INT NOT NULL,
-                     id_area INT NOT NULL,
+                     id_cliente  INT NOT NULL,
+                     id_area     INT NOT NULL,
                      id_proyecto INT NOT NULL,
-                     id_fase INT NOT NULL,
-                     id_site INT NOT NULL,
-                     id_region INT NOT NULL,
+                     id_fase     INT NOT NULL,
+                     id_site     INT NOT NULL,
+                     id_region   INT NOT NULL,
 
                      descripcion TEXT,
                      fecha_apertura DATE NOT NULL,
 
-                     jefatura_cliente_solicitante     VARCHAR(150) DEFAULT NULL COMMENT 'JEFATURA DEL CLIENTE SOLICITANTE',
-                     analista_cliente_solicitante     VARCHAR(150) DEFAULT NULL COMMENT 'ANALISTA DEL CLIENTE SOLICITANTE',
-                     coordinadores_ti_cw_pext_energia VARCHAR(500) DEFAULT NULL COMMENT 'COORDINADORES TI/CW/PEXT/ENERGIA (separados por coma o texto libre)',
-                     jefatura_responsable             VARCHAR(150) DEFAULT NULL,
-                     liquidador                       VARCHAR(150) DEFAULT NULL,
-                     ejecutante                       VARCHAR(150) DEFAULT NULL,
-                     analista_contable                VARCHAR(150) DEFAULT NULL,
+    -- Campos reemplazados por FK (todos permiten NULL)
+                     id_jefatura_cliente_solicitante   INT DEFAULT NULL,
+                     id_analista_cliente_solicitante   INT DEFAULT NULL,
+                     id_coordinador_ti_cw              INT DEFAULT NULL,   -- principal (si necesitas varios → tabla relación aparte)
+                     id_jefatura_responsable           INT DEFAULT NULL,
+                     id_liquidador                     INT DEFAULT NULL,
+                     id_ejecutante                     INT DEFAULT NULL,
+                     id_analista_contable              INT DEFAULT NULL,
 
-                     dias_asignados INT DEFAULT 0,                  -- Días asignados a la fecha
+                     dias_asignados INT DEFAULT 0,
 
                      activo TINYINT(1) DEFAULT 1,
                      fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
+    -- Claves foráneas existentes
                      CONSTRAINT fk_ots_padre
                          FOREIGN KEY (id_ots_anterior) REFERENCES ots(id_ots),
 
@@ -285,8 +338,31 @@ CREATE TABLE ots (
                          FOREIGN KEY (id_site) REFERENCES site(id_site),
 
                      CONSTRAINT fk_ots_region
-                         FOREIGN KEY (id_region) REFERENCES region(id_region)
+                         FOREIGN KEY (id_region) REFERENCES region(id_region),
+
+                     CONSTRAINT fk_ots_jefatura_cliente
+                         FOREIGN KEY (id_jefatura_cliente_solicitante) REFERENCES jefatura_cliente_solicitante(id),
+
+                     CONSTRAINT fk_ots_analista_cliente
+                         FOREIGN KEY (id_analista_cliente_solicitante) REFERENCES analista_cliente_solicitante(id),
+
+                     CONSTRAINT fk_ots_coordinador
+                         FOREIGN KEY (id_coordinador_ti_cw) REFERENCES coordinador_ti_cw(id),
+
+                     CONSTRAINT fk_ots_jefatura_responsable
+                         FOREIGN KEY (id_jefatura_responsable) REFERENCES jefatura_responsable(id),
+
+                     CONSTRAINT fk_ots_liquidador
+                         FOREIGN KEY (id_liquidador) REFERENCES liquidador(id),
+
+                     CONSTRAINT fk_ots_ejecutante
+                         FOREIGN KEY (id_ejecutante) REFERENCES ejecutante(id),
+
+                     CONSTRAINT fk_ots_analista_contable
+                         FOREIGN KEY (id_analista_contable) REFERENCES analista_contable(id)
 );
+
+
 
 -- =====================================================
 -- 8. RELACIONES OTS

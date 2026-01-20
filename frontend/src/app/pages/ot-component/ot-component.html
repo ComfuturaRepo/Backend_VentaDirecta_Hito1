@@ -23,22 +23,11 @@
               <i class="bi bi-info-circle me-2"></i> Información principal de la OT
             </h5>
 
-            <div class="row g-4 mb-5">
-              <div class="col-md-4">
-                <label class="form-label fw-bold">Fecha Apertura <span class="text-danger">*</span></label>
-                <input type="date" class="form-control" formControlName="fechaApertura"
-                       [class.is-invalid]="submitted && f['fechaApertura'].invalid">
-                <div class="invalid-feedback" *ngIf="submitted && f['fechaApertura'].errors?.['required']">
-                  Obligatoria
-                </div>
-              </div>
-            </div>
-
             <!-- Cliente y Área (cascada) -->
             <div class="row g-4 mb-5">
               <div class="col-md-6">
                 <label class="form-label fw-bold">Cliente <span class="text-danger">*</span></label>
-                <select class="form-select" formControlName="idCliente"
+                <select class="form-select form-control-lg" formControlName="idCliente"
                         [class.is-invalid]="submitted && f['idCliente'].invalid">
                   <option value="">Seleccione cliente...</option>
                   <option *ngFor="let c of clientes" [value]="c.id">{{ c.label }}</option>
@@ -50,7 +39,7 @@
 
               <div class="col-md-6">
                 <label class="form-label fw-bold">Área <span class="text-danger">*</span></label>
-                <select class="form-select" formControlName="idArea"
+                <select class="form-select form-control-lg" formControlName="idArea"
                         [class.is-invalid]="submitted && f['idArea'].invalid"
                         [disabled]="!f['idCliente'].value || areas.length === 0">
                   <option value="">Seleccione área...</option>
@@ -69,7 +58,7 @@
             <div class="row g-4 mb-5">
               <div class="col-md-6">
                 <label class="form-label fw-bold">Proyecto <span class="text-danger">*</span></label>
-                <select class="form-select" formControlName="idProyecto"
+                <select class="form-select form-control-lg" formControlName="idProyecto"
                         [class.is-invalid]="submitted && f['idProyecto'].invalid">
                   <option value="">Seleccione proyecto...</option>
                   <option *ngFor="let p of proyectos" [value]="p.id">{{ p.label }}</option>
@@ -81,7 +70,7 @@
 
               <div class="col-md-6">
                 <label class="form-label fw-bold">Fase <span class="text-danger">*</span></label>
-                <select class="form-select" formControlName="idFase"
+                <select class="form-select form-control-lg" formControlName="idFase"
                         [class.is-invalid]="submitted && f['idFase'].invalid">
                   <option value="">Seleccione fase...</option>
                   <option *ngFor="let f of fases" [value]="f.id">{{ f.label }}</option>
@@ -95,7 +84,7 @@
             <div class="row g-4 mb-5">
               <div class="col-md-6">
                 <label class="form-label fw-bold">Site <span class="text-danger">*</span></label>
-                <select class="form-select" formControlName="idSite"
+                <select class="form-select form-control-lg" formControlName="idSite"
                         [class.is-invalid]="submitted && f['idSite'].invalid">
                   <option value="">Seleccione site...</option>
                   <option *ngFor="let s of sites" [value]="s.id">{{ s.label }}</option>
@@ -107,7 +96,7 @@
 
               <div class="col-md-6">
                 <label class="form-label fw-bold">Región <span class="text-danger">*</span></label>
-                <select class="form-select" formControlName="idRegion"
+                <select class="form-select form-control-lg" formControlName="idRegion"
                         [class.is-invalid]="submitted && f['idRegion'].invalid">
                   <option value="">Seleccione región...</option>
                   <option *ngFor="let r of regiones" [value]="r.id">{{ r.label }}</option>
@@ -119,11 +108,23 @@
             </div>
 
             <!-- Descripción -->
-            <div class="mb-5">
-              <label class="form-label fw-bold">Descripción / Observaciones</label>
-              <textarea class="form-control" formControlName="descripcion" rows="4"
-                        placeholder="Alcance, comentarios, notas importantes..."></textarea>
-            </div>
+<div class="mb-5">
+  <label class="form-label fw-bold">Descripción / Observaciones <span class="text-danger">*</span></label>
+  <textarea
+    class="form-control form-control-lg bg-light"
+    formControlName="descripcion"
+    rows="3"
+    readonly
+    [class.is-invalid]="submitted && f['descripcion'].invalid"
+    placeholder="Se genera automáticamente: Proyecto + Área + ID Site + Nombre Site">
+  </textarea>
+  <div class="invalid-feedback" *ngIf="submitted && f['descripcion'].errors?.['required']">
+    La descripción es obligatoria (se genera automáticamente)
+  </div>
+  <small class="form-text text-muted mt-1">
+    Formato automático: NombreProyecto + NombreÁrea + IdSite + NombreSite
+  </small>
+</div>
 
             <!-- Responsables -->
             <h5 class="mb-4 pb-2 border-bottom text-primary">
@@ -147,7 +148,7 @@
               <div class="col-12">
                 <label class="form-label">Coordinadores TI / CW / PEXT / Energía</label>
                 <input type="text" class="form-control" formControlName="coordinadoresTiCwPextEnergia"
-                       placeholder="Nombres separados por coma o texto libre">
+                       placeholder="Nombres separados por coma">
               </div>
             </div>
 
@@ -171,7 +172,7 @@
               <input type="text" class="form-control" formControlName="analistaContable">
             </div>
 
-            <!-- Trabajadores asignados -->
+            <!-- Trabajadores -->
             <h5 class="mb-4 pb-2 border-bottom text-primary">
               <i class="bi bi-people-fill me-2"></i> Trabajadores asignados
             </h5>
@@ -244,7 +245,7 @@
         </div>
 
         <div class="card-footer bg-light text-muted small text-center py-3">
-          Campos con <span class="text-danger">*</span> son obligatorios • El número OT se genera automáticamente en el servidor
+          Campos con <span class="text-danger">*</span> son obligatorios • El número OT se genera automáticamente
         </div>
       </div>
     </div>
