@@ -8,6 +8,9 @@ import java.time.LocalDateTime;
 @Entity
 @Table(name = "proveedor")
 @Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
 public class Proveedor {
 
     @Id
@@ -40,3 +43,4 @@ public class Proveedor {
     @CreationTimestamp
     private LocalDateTime fechaCreacion;
 }
+
