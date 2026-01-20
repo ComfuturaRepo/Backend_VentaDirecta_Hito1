@@ -1,18 +1,26 @@
 package com.backend.comfutura.dto.response;
 
 
+
+
+import lombok.Builder;
 import lombok.Data;
 
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+
 @Data
+@Builder
 public class OrdenCompraResponseDTO {
-    private String idOc;
-    private String estado;
-    private String ots;
-    private String maestro;
-    private String proveedor;
-    private String cantidad;
-    private String costoUnitario;
-    private String fechaOc;
+    private Integer idOc;
+    private String estadoOcNombre;
+    private String otsNombre;
+    private String maestroCodigo;
+    private String proveedorNombre;
+    private BigDecimal cantidad;
+    private BigDecimal costoUnitario;
+    private LocalDateTime fechaOc;
     private String observacion;
 }
+
 

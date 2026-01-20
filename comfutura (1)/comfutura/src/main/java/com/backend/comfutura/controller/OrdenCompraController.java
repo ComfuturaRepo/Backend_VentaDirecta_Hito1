@@ -2,14 +2,18 @@ package com.backend.comfutura.controller;
 
 import com.backend.comfutura.dto.request.OrdenCompraRequestDTO;
 import com.backend.comfutura.dto.response.OrdenCompraResponseDTO;
-import com.backend.comfutura.model.*;
+import com.backend.comfutura.model.OrdenCompra;
 import com.backend.comfutura.service.OrdenCompraService;
+import com.backend.comfutura.repository.EstadoOcRepository;
+import com.backend.comfutura.repository.OtsRepository;
+import com.backend.comfutura.repository.MaestroCodigoRepository;
+import com.backend.comfutura.repository.ProveedorRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import java.math.BigDecimal;
 
 @RestController
 @RequestMapping("/api/ordenes-compra")
@@ -17,72 +21,85 @@ import java.math.BigDecimal;
 public class OrdenCompraController {
 
     private final OrdenCompraService ordenCompraService;
+    private final EstadoOcRepository estadoOcRepository;
+    private final OtsRepository otsRepository;
+    private final MaestroCodigoRepository maestroRepository;
+    private final ProveedorRepository proveedorRepository;
 
+    // ===== Crear orden de compra =====
     @PostMapping
-    public OrdenCompraResponseDTO crear(@RequestBody OrdenCompraRequestDTO dto) {
+    public ResponseEntity<OrdenCompraResponseDTO> crear(@RequestBody OrdenCompraRequestDTO dto) {
+        OrdenCompra oc = OrdenCompra.builder()
+                .estadoOc(estadoOcRepository.findById(dto.getEstadoOcId()).orElseThrow(() -> new RuntimeException("Estado OC no encontrado")))
+                .ots(otsRepository.findById(dto.getOtsId()).orElseThrow(() -> new RuntimeException("OTS no encontrado")))
+                .maestro(maestroRepository.findById(dto.getMaestroId()).orElseThrow(() -> new RuntimeException("Maestro no encontrado")))
+                .proveedor(proveedorRepository.findById(dto.getProveedorId()).orElseThrow(() -> new RuntimeException("Proveedor no encontrado")))
+                .cantidad(dto.getCantidad())
+                .costoUnitario(dto.getCostoUnitario())
+                .observacion(dto.getObservacion())
+                .build();
 
-        // Relaciones
-        EstadoOc estado = new EstadoOc();
-        estado.setIdEstadoOc(Integer.parseInt(dto.getIdEstadoOc()));
-
-        Ots ots = new Ots();
-        ots.setIdOts(Integer.parseInt(dto.getIdOts()));
-
-        MaestroCodigo maestro = new MaestroCodigo();
-        maestro.setId(Integer.parseInt(dto.getIdMaestro())); // campo real de tu entidad
-
-        Proveedor proveedor = new Proveedor();
-        proveedor.setId(Integer.parseInt(dto.getIdProveedor())); // campo real
-
-        // Orden de compra
-        OrdenCompra oc = new OrdenCompra();
-        oc.setEstadoOc(estado);
-        oc.setOts(ots);
-        oc.setMaestro(maestro);
-        oc.setProveedor(proveedor);
-        oc.setCantidad(new BigDecimal(dto.getCantidad()));
-        oc.setCostoUnitario(new BigDecimal(dto.getCostoUnitario()));
-        oc.setObservacion(dto.getObservacion());
-
-        // Guardar
-        OrdenCompra guardada = ordenCompraService.crear(oc);
-
-        // DTO de respuesta
-        OrdenCompraResponseDTO response = new OrdenCompraResponseDTO();
-        response.setIdOc(String.valueOf(guardada.getIdOc()));
-        response.setEstado(String.valueOf(guardada.getEstadoOc().getIdEstadoOc()));
-        response.setOts(String.valueOf(guardada.getOts().getIdOts()));
-        response.setMaestro(String.valueOf(guardada.getMaestro().getId()));
-        response.setProveedor(guardada.getProveedor().getRazonSocial()); // tu campo real
-        response.setCantidad(guardada.getCantidad().toPlainString());
-        response.setCostoUnitario(guardada.getCostoUnitario().toPlainString());
-        response.setFechaOc(guardada.getFechaOc().toString());
-        response.setObservacion(guardada.getObservacion());
-
-        return response;
+        OrdenCompra creada = ordenCompraService.crear(oc);
+        return ResponseEntity.ok(mapToResponse(creada));
     }
 
-    // -----------------------------
-    // LISTAR CON PAGINACIÓN
-    // -----------------------------
+    // ===== Actualizar orden de compra =====
+    @PutMapping("/{id}")
+    public ResponseEntity<OrdenCompraResponseDTO> actualizar(@PathVariable Integer id,
+                                                             @RequestBody OrdenCompraRequestDTO dto) {
+        OrdenCompra oc = OrdenCompra.builder()
+                .estadoOc(estadoOcRepository.findById(dto.getEstadoOcId()).orElseThrow(() -> new RuntimeException("Estado OC no encontrado")))
+                .ots(otsRepository.findById(dto.getOtsId()).orElseThrow(() -> new RuntimeException("OTS no encontrado")))
+                .maestro(maestroRepository.findById(dto.getMaestroId()).orElseThrow(() -> new RuntimeException("Maestro no encontrado")))
+                .proveedor(proveedorRepository.findById(dto.getProveedorId()).orElseThrow(() -> new RuntimeException("Proveedor no encontrado")))
+                .cantidad(dto.getCantidad())
+                .costoUnitario(dto.getCostoUnitario())
+                .observacion(dto.getObservacion())
+                .build();
+
+        OrdenCompra actualizada = ordenCompraService.actualizar(id, oc);
+        return ResponseEntity.ok(mapToResponse(actualizada));
+    }
+
+    // ===== Obtener orden por ID =====
+    @GetMapping("/{id}")
+    public ResponseEntity<OrdenCompraResponseDTO> obtenerPorId(@PathVariable Integer id) {
+        return ordenCompraService.obtenerPorId(id)
+                .map(oc -> ResponseEntity.ok(mapToResponse(oc)))
+                .orElseGet(() -> ResponseEntity.notFound().build());
+    }
+
+    // ===== Listar ordenes con paginación =====
     @GetMapping
-    public Page<OrdenCompraResponseDTO> listar(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size
-    ) {
-        return ordenCompraService.listar(PageRequest.of(page, size))
-                .map(oc -> {
-                    OrdenCompraResponseDTO response = new OrdenCompraResponseDTO();
-                    response.setIdOc(String.valueOf(oc.getIdOc()));
-                    response.setEstado(String.valueOf(oc.getEstadoOc().getIdEstadoOc()));
-                    response.setOts(String.valueOf(oc.getOts().getIdOts()));
-                    response.setMaestro(String.valueOf(oc.getMaestro().getId()));
-                    response.setProveedor(oc.getProveedor().getRazonSocial());
-                    response.setCantidad(oc.getCantidad().toPlainString());
-                    response.setCostoUnitario(oc.getCostoUnitario().toPlainString());
-                    response.setFechaOc(oc.getFechaOc().toString());
-                    response.setObservacion(oc.getObservacion());
-                    return response;
-                });
+    public ResponseEntity<Page<OrdenCompraResponseDTO>> listar(@RequestParam(defaultValue = "0") int page,
+                                                               @RequestParam(defaultValue = "10") int size) {
+        Pageable pageable = PageRequest.of(page, size);
+        Page<OrdenCompra> lista = ordenCompraService.listar(pageable);
+        Page<OrdenCompraResponseDTO> dtoPage = lista.map(this::mapToResponse);
+        return ResponseEntity.ok(dtoPage);
     }
+
+    // ===== Eliminar orden de compra =====
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> eliminar(@PathVariable Integer id) {
+        ordenCompraService.eliminar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // ===== Mapeo entidad a DTO =====
+    private OrdenCompraResponseDTO mapToResponse(OrdenCompra oc) {
+        return OrdenCompraResponseDTO.builder()
+                .idOc(oc.getIdOc())
+                .estadoOcNombre(oc.getEstadoOc().getNombre())       // OK
+                .otsNombre("OT: " + oc.getOts().getOt() + " - " + oc.getOts().getDescripcion()) // Combina OT y descripción
+                .maestroCodigo(oc.getMaestro().getCodigo())       // OK
+                .proveedorNombre(oc.getProveedor().getRazonSocial())
+
+                .cantidad(oc.getCantidad())
+                .costoUnitario(oc.getCostoUnitario())
+                .fechaOc(oc.getFechaOc())
+                .observacion(oc.getObservacion())
+                .build();
+    }
+
 }
