@@ -13,4 +13,7 @@ public interface DropdownService {
     List<DropdownDTO> getSites();
     List<DropdownDTO> getRegiones();
     List<DropdownDTO> getOtsActivas();
+     List<DropdownDTO> getTrabajadores();
+     List<DropdownDTO> getMaestroCodigos();
+     List<DropdownDTO> getProveedores();
 }

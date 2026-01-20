@@ -1,0 +1,21 @@
+.chart-placeholder {
+  height: 300px; /* mismo alto que tendrían los gráficos */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: #f8f9fa;
+  border-radius: 8px;
+  text-align: center;
+  color: #6c757d;
+}
+
+.soon-message {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin: 0 0 8px 0;
+}
+
+.coming-soon {
+  opacity: 0.9;
+}

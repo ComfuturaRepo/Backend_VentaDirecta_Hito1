@@ -24,6 +24,44 @@ public class DropdownServiceImpl implements DropdownService {
     private RegionRepository regionRepository;
     @Autowired
     private OtsRepository otsRepository;
+    @Autowired
+    private TrabajadorRepository trabajadorRepository;
+    @Autowired
+    private MaestroCodigoRepository maestroCodigoRepository;
+    @Autowired
+    private ProveedorRepository proveedorRepository;
+
+
+
+    @Override
+    public List<DropdownDTO> getTrabajadores() {
+        return trabajadorRepository.findByActivoTrueOrderByApellidosAsc()
+                .stream()
+                .map(t -> new DropdownDTO(
+                        t.getId(),
+                        t.getApellidos() + ", " + t.getNombres() + " - " + t.getDni()
+                ))
+                .toList();
+    }
+
+    @Override
+    public List<DropdownDTO> getMaestroCodigos() {
+        return maestroCodigoRepository.findByActivoTrueOrderByCodigoAsc()
+                .stream()
+                .map(m -> new DropdownDTO(
+                        m.getId(),
+                        m.getCodigo() + " - " + m.getDescripcion() + " (" + m.getPrecioBase() + ")"
+                ))
+                .toList();
+    }
+
+    @Override
+    public List<DropdownDTO> getProveedores() {
+        return proveedorRepository.findByActivoTrueOrderByRazonSocialAsc()
+                .stream()
+                .map(p -> new DropdownDTO(p.getId(), p.getRazonSocial() + " - " + p.getRuc()))
+                .toList();
+    }
 
     @Override
     public List<DropdownDTO> getClientes() {
