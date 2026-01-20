@@ -79,6 +79,8 @@ INSERT INTO unidad_medida (codigo, descripcion) VALUES
                                                     ('HORA', 'Hora'),
                                                     ('JUEGO','Juego (set)');
 
+
+
 INSERT INTO maestro_codigo (codigo, descripcion, id_unidad_medida, precio_base) VALUES
                                                                                     ('S000001', 'Instalación punto cableado CAT6',         1,  85.00),
                                                                                     ('S000002', 'Horas hombre técnico fibra óptica',       2,  95.00),
@@ -178,3 +180,14 @@ INSERT INTO cliente_area (id_cliente, id_area) VALUES
 (4, 5),   -- CW
 (4, 7),   -- PEXT
 (4, 15);  -- GERENTE GENERAL
+
+
+-- insertar estado_oc
+INSERT INTO estado_oc (nombre) VALUES
+                                   ('PENDIENTE'),
+                                   ('APROBADA'),
+                                   ('RECHAZADA'),
+                                   ('ANULADA'),
+                                   ('EN PROCESO'),
+                                   ('ATENDIDA'),
+                                   ('CERRADA');
