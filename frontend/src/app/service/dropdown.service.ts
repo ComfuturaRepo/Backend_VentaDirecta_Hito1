@@ -47,5 +47,7 @@ export class DropdownService {
   getOtsActivas(): Observable<DropdownItem[]> {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/ots`);
   }
-
+getAreasByCliente(idCliente: number): Observable<DropdownItem[]> {
+  return this.http.get<DropdownItem[]>(`${this.apiUrl}/clientes/${idCliente}/areas`);
+}
 }

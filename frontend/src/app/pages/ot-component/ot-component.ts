@@ -8,8 +8,8 @@ import { DropdownItem, DropdownService } from '../../service/dropdown.service';
 import {
   OtCreateRequest,
   OtTrabajadorRequest,
-  OtDetalleRequest,
   CrearOtCompletaRequest,
+  OtResponse,
   OtService
 } from '../../service/ot.service';
 import { AuthService } from '../../service/auth.service';
@@ -18,34 +18,27 @@ import { AuthService } from '../../service/auth.service';
   selector: 'app-create-ot',
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './ot-component.html',
+ templateUrl: './ot-component.html',
   styleUrl: './ot-component.css'
 })
 export class CreateOtComponent implements OnInit {
-
   form!: FormGroup;
   submitted = false;
   loading = false;
 
-  // Propiedades públicas para que el template las vea sin errores de tipado
   usernameLogueado: string = '—';
   trabajadorIdLogueado: number | null = null;
 
-  // Dropdowns principales
-  clientes:  DropdownItem[] = [];
-  areas:     DropdownItem[] = [];
+  // Dropdowns
+  clientes: DropdownItem[] = [];
+  areas: DropdownItem[] = [];           // ← se carga dinámicamente
   proyectos: DropdownItem[] = [];
-  fases:     DropdownItem[] = [];
-  sites:     DropdownItem[] = [];
-  regiones:  DropdownItem[] = [];
+  fases: DropdownItem[] = [];
+  sites: DropdownItem[] = [];
+  regiones: DropdownItem[] = [];
 
-  // Dropdowns dinámicos
+  // Trabajadores disponibles (puedes cargar desde otro endpoint)
   trabajadoresDisponibles: DropdownItem[] = [];
-  maestrosDisponibles:     DropdownItem[] = [];
-  proveedoresDisponibles:  DropdownItem[] = [];
-
-  // Ya no es necesario este campo (lo reemplazamos por trabajadorIdLogueado)
-  // currentTrabajadorId: number | null = null;
 
   constructor(
     private fb: FormBuilder,
@@ -56,78 +49,84 @@ export class CreateOtComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
-    // Obtenemos la información del usuario autenticado UNA vez
+    // Info del usuario logueado
     const user = this.authService.currentUser;
-
-    // Asignamos valores para el template
-    this.usernameLogueado     = user?.username || '—';
+    this.usernameLogueado = user?.username || '—';
     this.trabajadorIdLogueado = user?.idTrabajador ?? null;
 
-    // Inicializamos el formulario
+    // Inicializar formulario
     this.form = this.fb.group({
-      ot:            ['', [Validators.required, Validators.min(1)]],
-      ceco:          ['', [Validators.required, Validators.maxLength(20)]],
-      idCliente:     ['', Validators.required],
-      idArea:        ['', Validators.required],
-      idProyecto:    ['', Validators.required],
-      idFase:        ['', Validators.required],
-      idSite:        ['', Validators.required],
-      idRegion:      ['', Validators.required],
-      descripcion:   [''],
+      idCliente: ['', Validators.required],
+      idArea: ['', Validators.required],
+      idProyecto: ['', Validators.required],
+      idFase: ['', Validators.required],
+      idSite: ['', Validators.required],
+      idRegion: ['', Validators.required],
+      descripcion: [''],
       fechaApertura: ['', Validators.required],
-
-      trabajadores: this.fb.array([]),
-      detalles:     this.fb.array([])
+      // Responsables (todos opcionales)
+      jefaturaClienteSolicitante: [''],
+      analistaClienteSolicitante: [''],
+      coordinadoresTiCwPextEnergia: [''],
+      jefaturaResponsable: [''],
+      liquidador: [''],
+      ejecutante: [''],
+      analistaContable: [''],
+      // Trabajadores
+      trabajadores: this.fb.array([])
     });
 
-    this.cargarDropdowns();
+    // Cascada: al cambiar cliente → cargar áreas
+    this.form.get('idCliente')?.valueChanges.subscribe(clienteId => {
+      if (clienteId) {
+        this.cargarAreasPorCliente(clienteId);
+        this.form.get('idArea')?.reset(); // reset área cuando cambia cliente
+      } else {
+        this.areas = [];
+        this.form.get('idArea')?.reset();
+      }
+    });
+
+    // Cargar dropdowns iniciales
+    this.cargarDropdownsIniciales();
   }
 
+  // Getters útiles
   get f() { return this.form.controls; }
-
   get trabajadoresArray() { return this.form.get('trabajadores') as FormArray; }
-  get detallesArray()     { return this.form.get('detalles')     as FormArray; }
+
+  private cargarDropdownsIniciales(): void {
+    this.dropdownService.getClientes().subscribe(d => this.clientes = d);
+    this.dropdownService.getProyectos().subscribe(d => this.proyectos = d);
+    this.dropdownService.getFases().subscribe(d => this.fases = d);
+    this.dropdownService.getSites().subscribe(d => this.sites = d);
+    this.dropdownService.getRegiones().subscribe(d => this.regiones = d);
+
+    // Si tienes endpoint para trabajadores disponibles:
+    // this.dropdownService.getTrabajadores().subscribe(d => this.trabajadoresDisponibles = d);
+  }
+
+  private cargarAreasPorCliente(idCliente: number): void {
+    this.dropdownService.getAreasByCliente(idCliente).subscribe({
+      next: (areas) => this.areas = areas,
+      error: () => {
+        this.areas = [];
+        Swal.fire('Error', 'No se pudieron cargar las áreas del cliente', 'error');
+      }
+    });
+  }
 
   agregarTrabajador() {
     this.trabajadoresArray.push(
       this.fb.group({
         idTrabajador: ['', Validators.required],
-        rolEnOt:      ['', [Validators.required, Validators.maxLength(50)]]
+        rolEnOt: ['', [Validators.required, Validators.maxLength(50)]]
       })
     );
   }
 
   eliminarTrabajador(index: number) {
     this.trabajadoresArray.removeAt(index);
-  }
-
-  agregarDetalle() {
-    this.detallesArray.push(
-      this.fb.group({
-        idMaestro:      ['', Validators.required],
-        idProveedor:    ['', Validators.required],
-        cantidad:       ['', [Validators.required, Validators.min(0.01)]],
-        precioUnitario: ['', [Validators.required, Validators.min(0.01)]]
-      })
-    );
-  }
-
-  eliminarDetalle(index: number) {
-    this.detallesArray.removeAt(index);
-  }
-
-  private cargarDropdowns(): void {
-    this.dropdownService.getClientes().subscribe(d => this.clientes = d);
-    this.dropdownService.getAreas().subscribe(d => this.areas = d);
-    this.dropdownService.getProyectos().subscribe(d => this.proyectos = d);
-    this.dropdownService.getFases().subscribe(d => this.fases = d);
-    this.dropdownService.getSites().subscribe(d => this.sites = d);
-    this.dropdownService.getRegiones().subscribe(d => this.regiones = d);
-
-    // Descomenta cuando tengas estos endpoints
-    // this.dropdownService.getTrabajadores().subscribe(d => this.trabajadoresDisponibles = d);
-    // this.dropdownService.getMaestrosCodigo().subscribe(d => this.maestrosDisponibles = d);
-    // this.dropdownService.getProveedores().subscribe(d => this.proveedoresDisponibles = d);
   }
 
   onSubmit(): void {
@@ -149,18 +148,24 @@ export class CreateOtComponent implements OnInit {
     const values = this.form.value;
 
     const otPayload: OtCreateRequest = {
-      ot:             Number(values.ot),
-      ceco:           values.ceco.trim(),
-      idCliente:      Number(values.idCliente),
-      idArea:         Number(values.idArea),
-      idProyecto:     Number(values.idProyecto),
-      idFase:         Number(values.idFase),
-      idSite:         Number(values.idSite),
-      idRegion:       Number(values.idRegion),
-      descripcion:    values.descripcion?.trim() || undefined,
-      fechaApertura:  values.fechaApertura,
-      diasAsignados:  0,
-      idOtsAnterior:  null
+      idCliente: Number(values.idCliente),
+      idArea: Number(values.idArea),
+      idProyecto: Number(values.idProyecto),
+      idFase: Number(values.idFase),
+      idSite: Number(values.idSite),
+      idRegion: Number(values.idRegion),
+      descripcion: values.descripcion?.trim() || undefined,
+      fechaApertura: values.fechaApertura,
+      diasAsignados: values.diasAsignados ?? 0,
+      idOtsAnterior: null,
+
+      jefaturaClienteSolicitante: values.jefaturaClienteSolicitante?.trim() || undefined,
+      analistaClienteSolicitante: values.analistaClienteSolicitante?.trim() || undefined,
+      coordinadoresTiCwPextEnergia: values.coordinadoresTiCwPextEnergia?.trim() || undefined,
+      jefaturaResponsable: values.jefaturaResponsable?.trim() || undefined,
+      liquidador: values.liquidador?.trim() || undefined,
+      ejecutante: values.ejecutante?.trim() || undefined,
+      analistaContable: values.analistaContable?.trim() || undefined
     };
 
     const trabajadores: OtTrabajadorRequest[] = (values.trabajadores || []).map((t: any) => ({
@@ -168,26 +173,20 @@ export class CreateOtComponent implements OnInit {
       rolEnOt: t.rolEnOt.trim()
     }));
 
-    const detalles: OtDetalleRequest[] = (values.detalles || []).map((d: any) => ({
-      idMaestro: Number(d.idMaestro),
-      idProveedor: Number(d.idProveedor),
-      cantidad: Number(d.cantidad),
-      precioUnitario: Number(d.precioUnitario)
-    }));
-
     const payload: CrearOtCompletaRequest = {
       ot: otPayload,
       trabajadores,
-      detalles
+      detalles: [] // ← si implementas detalles después, mapea aquí
     };
 
     this.otService.crearOtCompleta(payload).subscribe({
-      next: (res) => {
+      next: (res: OtResponse) => {
         Swal.fire({
           icon: 'success',
           title: '¡Orden creada!',
-          text: `OT #${res.ot} registrada exitosamente`,
-          timer: 2800,
+          html: `OT <strong>#${res.ot}</strong> registrada exitosamente<br>
+                 <small>Fecha: ${res.fechaApertura}</small>`,
+          timer: 3500,
           showConfirmButton: false
         });
         this.router.navigate(['/ots/list']);
@@ -196,7 +195,7 @@ export class CreateOtComponent implements OnInit {
         Swal.fire({
           icon: 'error',
           title: 'Error al crear OT',
-          text: err.message || 'Ocurrió un problema inesperado',
+          text: err.message || 'Ocurrió un problema inesperado. Intenta nuevamente.'
         });
       },
       complete: () => this.loading = false
@@ -206,7 +205,7 @@ export class CreateOtComponent implements OnInit {
   resetForm(): void {
     this.form.reset();
     this.trabajadoresArray.clear();
-    this.detallesArray.clear();
     this.submitted = false;
+    this.areas = [];
   }
 }

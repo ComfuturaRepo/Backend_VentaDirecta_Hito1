@@ -13,7 +13,6 @@ public class OtResponse {
 
     private Integer idOts;
     private Integer ot;
-    private String ceco;
 
     private String descripcion;
     private LocalDate fechaApertura;

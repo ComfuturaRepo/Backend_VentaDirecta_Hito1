@@ -10,8 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-@Service
+import java.util.List;@Service
 @RequiredArgsConstructor
 public class OtServiceImpl implements OtService {
 
@@ -26,18 +25,16 @@ public class OtServiceImpl implements OtService {
     private final TrabajadorRepository trabajadorRepository;
     private final OtTrabajadorRepository otTrabajadorRepository;
 
-    private final MaestroCodigoRepository maestroCodigoRepository;
-    private final ProveedorRepository proveedorRepository;
-
     // ==============================
-    // CREAR OT BASE
+    // CREAR OT BASE (OT AUTOMÁTICA)
     // ==============================
     @Transactional
     public Ots createOtBase(OtCreateRequest request) {
 
-        if (otsRepository.existsByOt(request.getOt())) {
-            throw new IllegalArgumentException("Ya existe una OT con el número: " + request.getOt());
-        }
+        // 🔥 Generar OT automáticamente
+        Integer nuevaOt = otsRepository.findTopByOrderByOtDesc()
+                .map(o -> o.getOt() + 1)
+                .orElse(1000); // OT inicial si no existe ninguna
 
         Cliente cliente = clienteRepository.findById(request.getIdCliente())
                 .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
@@ -64,8 +61,7 @@ public class OtServiceImpl implements OtService {
         }
 
         Ots ots = Ots.builder()
-                .ot(request.getOt())
-                .ceco(request.getCeco())
+                .ot(nuevaOt)
                 .otsAnterior(otsAnterior)
                 .cliente(cliente)
                 .area(area)
@@ -75,14 +71,14 @@ public class OtServiceImpl implements OtService {
                 .region(region)
                 .descripcion(request.getDescripcion())
                 .fechaApertura(request.getFechaApertura())
-                .diasAsignados(request.getDiasAsignados() != null ? request.getDiasAsignados() : 0)
+                .diasAsignados(
+                        request.getDiasAsignados() != null ? request.getDiasAsignados() : 0
+                )
                 .activo(true)
                 .build();
 
         return otsRepository.save(ots);
     }
-
-
 
     // ==============================
     // CREAR OT COMPLETA
@@ -94,7 +90,6 @@ public class OtServiceImpl implements OtService {
         Ots ots = createOtBase(request.getOt());
 
         asignarTrabajadores(ots, request.getTrabajadores());
-        agregarDetalles(ots, request.getDetalles());
 
         return mapToResponse(ots);
     }
@@ -121,23 +116,6 @@ public class OtServiceImpl implements OtService {
     }
 
     // ==============================
-    // DETALLES
-    // ==============================
-    private void agregarDetalles(Ots ots, List<OtDetalleRequest> detalles) {
-
-        for (OtDetalleRequest req : detalles) {
-
-            MaestroCodigo maestro = maestroCodigoRepository.findById(req.getIdMaestro())
-                    .orElseThrow(() -> new ResourceNotFoundException("Código maestro no encontrado"));
-
-            Proveedor proveedor = proveedorRepository.findById(req.getIdProveedor())
-                    .orElseThrow(() -> new ResourceNotFoundException("Proveedor no encontrado"));
-
-
-        }
-    }
-
-    // ==============================
     // RESPONSE
     // ==============================
     private OtResponse mapToResponse(Ots ots) {
@@ -145,7 +123,6 @@ public class OtServiceImpl implements OtService {
         return OtResponse.builder()
                 .idOts(ots.getIdOts())
                 .ot(ots.getOt())
-                .ceco(ots.getCeco())
                 .descripcion(ots.getDescripcion())
                 .fechaApertura(ots.getFechaApertura())
                 .diasAsignados(ots.getDiasAsignados())

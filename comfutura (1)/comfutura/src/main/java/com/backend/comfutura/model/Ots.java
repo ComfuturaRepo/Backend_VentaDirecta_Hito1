@@ -1,15 +1,8 @@
 package com.backend.comfutura.model;
+
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
-
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.util.HashSet;
-import java.util.Set;
-
-import jakarta.persistence.*;
-import lombok.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -23,19 +16,18 @@ import java.time.LocalDateTime;
 @Builder
 public class Ots {
 
+    /* ================= PK ================= */
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id_ots")
     private Integer idOts;
 
-    @Column(nullable = false, unique = true)
+    /* ================= DATOS PRINCIPALES ================= */
+
+    @Column(name = "ot", nullable = false, unique = true)
     private Integer ot;
 
-    @Column(nullable = false, length = 20)
-    private String ceco;
-
-    /* ================= RELACIONES ================= */
-
-    // OT anterior (autorelación)
     @ManyToOne
     @JoinColumn(name = "id_ots_anterior")
     private Ots otsAnterior;
@@ -64,17 +56,49 @@ public class Ots {
     @JoinColumn(name = "id_region")
     private Region region;
 
-    /* ================= DATOS ================= */
+    /* ================= DESCRIPCIÓN ================= */
 
     @Column(columnDefinition = "TEXT")
     private String descripcion;
 
-    @Column(nullable = false)
+    @Column(name = "fecha_apertura", nullable = false)
     private LocalDate fechaApertura;
 
+    /* ================= RESPONSABLES ================= */
+
+    @Column(name = "jefatura_cliente_solicitante", length = 150)
+    private String jefaturaClienteSolicitante;
+
+    @Column(name = "analista_cliente_solicitante", length = 150)
+    private String analistaClienteSolicitante;
+
+    @Column(
+            name = "coordinadores_ti_cw_pext_energia",
+            length = 500
+    )
+    private String coordinadoresTiCwPextEnergia;
+
+    @Column(name = "jefatura_responsable", length = 150)
+    private String jefaturaResponsable;
+
+    @Column(name = "liquidador", length = 150)
+    private String liquidador;
+
+    @Column(name = "ejecutante", length = 150)
+    private String ejecutante;
+
+    @Column(name = "analista_contable", length = 150)
+    private String analistaContable;
+
+    /* ================= CONTROL ================= */
+
+    @Column(name = "dias_asignados")
     private Integer diasAsignados = 0;
 
+    @Column(name = "activo")
     private Boolean activo = true;
 
-    private LocalDateTime fechaCreacion = LocalDateTime.now();
+    @CreationTimestamp
+    @Column(name = "fecha_creacion", updatable = false)
+    private LocalDateTime fechaCreacion;
 }

@@ -3,6 +3,7 @@ package com.backend.comfutura.config;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -12,6 +13,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -25,37 +29,40 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // Deshabilitamos CSRF porque usamos JWT (stateless)
-                .csrf(csrf -> csrf.disable())
+                .csrf(csrf -> csrf.disable())  // ya lo tienes
 
+                // ← Agrega CORS explícito en Security (más prioridad que WebMvcConfigurer)
+                .cors(cors -> cors.configurationSource(request -> {
+                    CorsConfiguration config = new CorsConfiguration();
+                    config.setAllowedOrigins(List.of("http://localhost:4200", "http://localhost:4201"));
+                    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
+                    config.setAllowedHeaders(List.of("*"));
+                    config.setAllowCredentials(true);
+                    config.setExposedHeaders(List.of("Authorization", "Content-Type"));
+                    config.setMaxAge(3600L);
+                    return config;
+                }))
+
+                // ← Crucial: permite OPTIONS en TODAS las rutas (preflight)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()   // ← Esto resuelve la mayoría de 403 en preflight
                         .requestMatchers(
                                 "/api/auth/**",
+                                "/api/dropdowns/**",   // confirma que esté aquí
                                 "/v3/api-docs/**",
-                                "/api/dropdowns/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
-                                "/swagger-ui/index.html",           // ← A veces necesario en versiones recientes
-                                "/webjars/**"                       // ← Recursos JS/CSS de swagger
+                                "/webjars/**"
                         ).permitAll()
                         .anyRequest().authenticated()
                 )
 
-                // Sesión STATELESS → no guarda nada en servidor
-                .sessionManagement(session ->
-                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
-                )
-
-                // Proveedor de autenticación (normalmente el que usa UserDetailsService + PasswordEncoder)
+                .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authenticationProvider(authenticationProvider)
-
-                // Añadimos nuestro filtro JWT antes del filtro por defecto de username/password
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
-
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();

@@ -106,15 +106,15 @@ INSERT INTO trabajador_cliente (id_trabajador, id_cliente) VALUES
 
 -- 15. Órdenes de Trabajo (OTS) → versión compatible con campos nuevos
 INSERT INTO ots (
-    ot, ceco,
+    ot,
     id_cliente, id_area, id_proyecto, id_fase, id_site, id_region,
     descripcion, fecha_apertura
 ) VALUES
-      (20250001, 'CC-ENER-2025',
+      (20250001,
        2,  4, 1, 2, 1, 1,
        'Backbone fibra óptica edificio corporativo', '2025-02-10'),
 
-      (20250002, 'CC-CLARO-025',
+      (20250002,
        2,  5, 1, 3, 2, 2,
        'Reemplazo postes y tendido aéreo zona sur',   '2025-04-01');
 
@@ -125,12 +125,6 @@ INSERT INTO ots_trabajador (id_ots, id_trabajador, rol_en_ot) VALUES
                                                                   (1, 3, 'Supervisor Técnico'),
                                                                   (2, 4, 'Coordinador de Campo');
 
--- 17. ots_detalle
-INSERT INTO ots_detalle (id_ots, id_maestro, id_proveedor, cantidad, precio_unitario) VALUES
-                                                                                          (1, 1, 1, 320.00,  85.00),
-                                                                                          (1, 2, 1, 180.00,  95.00),
-                                                                                          (1, 3, 1,  45.00, 180.00),
-                                                                                          (2, 4, 1,  18.00, 2850.00);
 
 -- 18. Roles
 INSERT INTO rol (nombre, descripcion) VALUES
@@ -149,4 +143,38 @@ INSERT INTO usuario (username, password, id_trabajador) VALUES
 INSERT INTO usuario_rol (id_usuario, id_rol) VALUES
                                                  (1, 1), (1, 2),
                                                  (2, 3),
-                                                 (3, 3);
+                                                 (3, 3);-- 21. cliente_area (relación Cliente ↔ Área)
+
+INSERT INTO cliente_area (id_cliente, id_area) VALUES
+-- COMFUTURA
+(1, 1),   -- RRHH
+(1, 2),   -- COSTOS
+(1, 3),   -- ADMINISTRATIVA
+(1, 10),  -- SSOMA
+(1, 11),  -- TI
+(1, 12),  -- CIERRE
+(1, 13),  -- CONTABILIDAD
+(1, 14),  -- LOGISTICA
+(1, 15),  -- GERENTE GENERAL
+
+-- CLARO PERÚ
+(2, 4),   -- ENERGIA
+(2, 5),   -- CW
+(2, 7),   -- PEXT
+(2, 9),   -- ENTEL (puedes renombrar luego si deseas)
+(2, 10),  -- SSOMA
+(2, 12),  -- CIERRE
+
+-- ENTEL PERÚ
+(3, 4),   -- ENERGIA
+(3, 5),   -- CW
+(3, 7),   -- PEXT
+(3, 9),   -- ENTEL
+(3, 10),  -- SSOMA
+(3, 12),  -- CIERRE
+
+-- STL TELECOM
+(4, 4),   -- ENERGIA
+(4, 5),   -- CW
+(4, 7),   -- PEXT
+(4, 15);  -- GERENTE GENERAL

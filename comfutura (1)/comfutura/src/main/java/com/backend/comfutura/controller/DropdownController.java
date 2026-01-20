@@ -1,51 +1,54 @@
 package com.backend.comfutura.controller;
 
 import com.backend.comfutura.record.DropdownDTO;
-import com.backend.comfutura.service.DropdownService;
+import com.backend.comfutura.service.serviceImpl.DropdownServiceImpl;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+
 
 @RestController
 @RequestMapping("/api/dropdowns")
 @RequiredArgsConstructor
 public class DropdownController {
 
-    private final DropdownService dropdownService;
+    private final DropdownServiceImpl dropdownService;
 
     @GetMapping("/clientes")
-    public List<DropdownDTO> getClientes() {
-        return dropdownService.getClientes();
+    public ResponseEntity<List<DropdownDTO>> getClientes() {
+        return ResponseEntity.ok(dropdownService.getClientes());
     }
 
-    @GetMapping("/areas")
-    public List<DropdownDTO> getAreas() {
-        return dropdownService.getAreas();
+    @GetMapping("/clientes/{idCliente}/areas")
+    public ResponseEntity<List<DropdownDTO>> getAreasByCliente(@PathVariable Integer idCliente) {
+        List<DropdownDTO> areas = dropdownService.getAreasByCliente(idCliente);
+        return ResponseEntity.ok(areas);
     }
 
     @GetMapping("/proyectos")
-    public List<DropdownDTO> getProyectos() {
-        return dropdownService.getProyectos();
+    public ResponseEntity<List<DropdownDTO>> getProyectos() {
+        return ResponseEntity.ok(dropdownService.getProyectos());
     }
 
     @GetMapping("/fases")
-    public List<DropdownDTO> getFases() {
-        return dropdownService.getFases();
+    public ResponseEntity<List<DropdownDTO>> getFases() {
+        return ResponseEntity.ok(dropdownService.getFases());
     }
 
     @GetMapping("/sites")
-    public List<DropdownDTO> getSites() {
-        return dropdownService.getSites();
+    public ResponseEntity<List<DropdownDTO>> getSites() {
+        return ResponseEntity.ok(dropdownService.getSites());
     }
 
     @GetMapping("/regiones")
-    public List<DropdownDTO> getRegiones() {
-        return dropdownService.getRegiones();
+    public ResponseEntity<List<DropdownDTO>> getRegiones() {
+        return ResponseEntity.ok(dropdownService.getRegiones());
     }
 
     @GetMapping("/ots")
-    public List<DropdownDTO> getOtsActivas() {
-        return dropdownService.getOtsActivas();
+    public ResponseEntity<List<DropdownDTO>> getOtsActivas() {
+        return ResponseEntity.ok(dropdownService.getOtsActivas());
     }
 }

@@ -49,6 +49,19 @@ CREATE TABLE cargo (
                        CONSTRAINT fk_cargo_nivel
                            FOREIGN KEY (id_nivel) REFERENCES nivel(id_nivel)
 );
+CREATE TABLE cliente_area (
+                              id_cliente INT NOT NULL,
+                              id_area INT NOT NULL,
+                              activo TINYINT(1) DEFAULT 1,
+
+                              PRIMARY KEY (id_cliente, id_area),
+
+                              CONSTRAINT fk_ca_cliente
+                                  FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
+
+                              CONSTRAINT fk_ca_area
+                                  FOREIGN KEY (id_area) REFERENCES area(id_area)
+);
 
 -- =====================================================
 -- 3. TRABAJADORES
@@ -222,13 +235,14 @@ CREATE TABLE region (
                         activo TINYINT(1) DEFAULT 1
 );
 
+
+
 CREATE TABLE ots (
                      id_ots INT AUTO_INCREMENT PRIMARY KEY,
 
-                     ot BIGINT NOT NULL UNIQUE,          -- Número de OT
-                     ceco VARCHAR(20) NOT NULL,          -- Centro de costos
+                     ot INT NOT NULL UNIQUE,                        -- Número de OT (cambiado a INT)
 
-                     id_ots_anterior INT NULL,              -- OT anterior
+                     id_ots_anterior INT NULL,                      -- OT anterior (referencia a sí misma)
                      id_cliente INT NOT NULL,
                      id_area INT NOT NULL,
                      id_proyecto INT NOT NULL,
@@ -238,7 +252,16 @@ CREATE TABLE ots (
 
                      descripcion TEXT,
                      fecha_apertura DATE NOT NULL,
-                     dias_asignados INT DEFAULT 0,       -- Días asignados a la fecha
+
+                     jefatura_cliente_solicitante     VARCHAR(150) DEFAULT NULL COMMENT 'JEFATURA DEL CLIENTE SOLICITANTE',
+                     analista_cliente_solicitante     VARCHAR(150) DEFAULT NULL COMMENT 'ANALISTA DEL CLIENTE SOLICITANTE',
+                     coordinadores_ti_cw_pext_energia VARCHAR(500) DEFAULT NULL COMMENT 'COORDINADORES TI/CW/PEXT/ENERGIA (separados por coma o texto libre)',
+                     jefatura_responsable             VARCHAR(150) DEFAULT NULL,
+                     liquidador                       VARCHAR(150) DEFAULT NULL,
+                     ejecutante                       VARCHAR(150) DEFAULT NULL,
+                     analista_contable                VARCHAR(150) DEFAULT NULL,
+
+                     dias_asignados INT DEFAULT 0,                  -- Días asignados a la fecha
 
                      activo TINYINT(1) DEFAULT 1,
                      fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -264,7 +287,6 @@ CREATE TABLE ots (
                      CONSTRAINT fk_ots_region
                          FOREIGN KEY (id_region) REFERENCES region(id_region)
 );
-
 
 -- =====================================================
 -- 8. RELACIONES OTS

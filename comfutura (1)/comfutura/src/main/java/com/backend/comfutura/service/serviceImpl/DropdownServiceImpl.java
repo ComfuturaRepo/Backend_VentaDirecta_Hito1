@@ -1,121 +1,100 @@
 package com.backend.comfutura.service.serviceImpl;
+
 import com.backend.comfutura.record.DropdownDTO;
 import com.backend.comfutura.repository.*;
 import com.backend.comfutura.service.DropdownService;
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class DropdownServiceImpl implements DropdownService {
 
-    @Autowired
-    private ClienteRepository clienteRepository;
-    @Autowired
-    private AreaRepository areaRepository;
-    @Autowired
-    private ProyectoRepository proyectoRepository;
-    @Autowired
-    private FaseRepository faseRepository;
-    @Autowired
-    private SiteRepository siteRepository;
-    @Autowired
-    private RegionRepository regionRepository;
-    @Autowired
-    private OtsRepository otsRepository;
-    @Autowired
-    private TrabajadorRepository trabajadorRepository;
-    @Autowired
-    private MaestroCodigoRepository maestroCodigoRepository;
-    @Autowired
-    private ProveedorRepository proveedorRepository;
+    private final ClienteRepository clienteRepository;
+    private final AreaRepository areaRepository;
+    private final ProyectoRepository proyectoRepository;
+    private final FaseRepository faseRepository;
+    private final SiteRepository siteRepository;
+    private final RegionRepository regionRepository;
+    private final OtsRepository otsRepository;
 
-
-
-    @Override
-    public List<DropdownDTO> getTrabajadores() {
-        return trabajadorRepository.findByActivoTrueOrderByApellidosAsc()
-                .stream()
-                .map(t -> new DropdownDTO(
-                        t.getId(),
-                        t.getApellidos() + ", " + t.getNombres() + " - " + t.getDni()
-                ))
-                .toList();
-    }
-
-    @Override
-    public List<DropdownDTO> getMaestroCodigos() {
-        return maestroCodigoRepository.findByActivoTrueOrderByCodigoAsc()
-                .stream()
-                .map(m -> new DropdownDTO(
-                        m.getId(),
-                        m.getCodigo() + " - " + m.getDescripcion() + " (" + m.getPrecioBase() + ")"
-                ))
-                .toList();
-    }
-
-    @Override
-    public List<DropdownDTO> getProveedores() {
-        return proveedorRepository.findByActivoTrueOrderByRazonSocialAsc()
-                .stream()
-                .map(p -> new DropdownDTO(p.getId(), p.getRazonSocial() + " - " + p.getRuc()))
-                .toList();
-    }
-
+    /**
+     * Retorna todos los clientes activos para el dropdown
+     */
     @Override
     public List<DropdownDTO> getClientes() {
         return clienteRepository.findByActivoTrueOrderByRazonSocialAsc()
                 .stream()
                 .map(c -> new DropdownDTO(c.getId(), c.getRazonSocial()))
-                .toList();
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Retorna las áreas activas de un cliente específico
+     */
     @Override
-    public List<DropdownDTO> getAreas() {
-        return areaRepository.findByActivoTrueOrderByNombreAsc()
+    public List<DropdownDTO> getAreasByCliente(Integer idCliente) {
+        return areaRepository.findByClienteIdAndActivoTrue(idCliente)
                 .stream()
                 .map(a -> new DropdownDTO(a.getId(), a.getNombre()))
-                .toList();
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Retorna todos los proyectos activos
+     */
     @Override
     public List<DropdownDTO> getProyectos() {
         return proyectoRepository.findByActivoTrueOrderByNombreAsc()
                 .stream()
                 .map(p -> new DropdownDTO(p.getIdProyecto(), p.getNombre()))
-                .toList();
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Retorna todas las fases activas ordenadas por nombre
+     */
     @Override
     public List<DropdownDTO> getFases() {
         return faseRepository.findByActivoTrueOrderByNombreAsc()
                 .stream()
                 .map(f -> new DropdownDTO(f.getIdFase(), f.getNombre()))
-                .toList();
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Retorna todos los sites activos ordenados por nombre
+     */
     @Override
     public List<DropdownDTO> getSites() {
         return siteRepository.findByActivoTrueOrderByNombreAsc()
                 .stream()
                 .map(s -> new DropdownDTO(s.getIdSite(), s.getNombre()))
-                .toList();
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Retorna todas las regiones activas
+     */
     @Override
     public List<DropdownDTO> getRegiones() {
         return regionRepository.findByActivoTrueOrderByNombreAsc()
                 .stream()
                 .map(r -> new DropdownDTO(r.getIdRegion(), r.getNombre()))
-                .toList();
+                .collect(Collectors.toList());
     }
 
+    /**
+     * Opcional: Retorna todas las OTs activas con formato "OT XXX"
+     */
     @Override
     public List<DropdownDTO> getOtsActivas() {
         return otsRepository.findByActivoTrueOrderByOtAsc()
                 .stream()
-                .map(o -> new DropdownDTO(o.getIdOts(), "OT " + o.getOt()))
-                .toList();
+                .map(ot -> new DropdownDTO(ot.getIdOts(), "OT " + ot.getOt()))
+                .collect(Collectors.toList());
     }
 }
