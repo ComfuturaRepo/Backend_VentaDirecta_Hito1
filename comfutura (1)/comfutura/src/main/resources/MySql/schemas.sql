@@ -287,23 +287,39 @@ CREATE TABLE ots_trabajador (
                                     FOREIGN KEY (id_trabajador) REFERENCES trabajador(id_trabajador)
 );
 
--- Servicios / materiales usados en la OT y su proveedor
-CREATE TABLE ots_detalle (
-                             id_ots_detalle INT AUTO_INCREMENT PRIMARY KEY,
-
-                             id_ots INT NOT NULL,
-                             id_maestro INT NOT NULL,
-                             id_proveedor INT NOT NULL,
-
-                             cantidad DECIMAL(10,2) NOT NULL,
-                             precio_unitario DECIMAL(10,2) NOT NULL,
-
-                             CONSTRAINT fk_od_ots
-                                 FOREIGN KEY (id_ots) REFERENCES ots(id_ots),
-
-                             CONSTRAINT fk_od_maestro
-                                 FOREIGN KEY (id_maestro) REFERENCES maestro_codigo(id_maestro),
-
-                             CONSTRAINT fk_od_proveedor
-                                 FOREIGN KEY (id_proveedor) REFERENCES proveedor(id_proveedor)
+-- =========================
+-- ESTADOS DE ORDEN DE COMPRA
+-- =========================
+CREATE TABLE estado_oc (
+                           id_estado_oc INT AUTO_INCREMENT PRIMARY KEY,
+                           nombre VARCHAR(50) NOT NULL UNIQUE
 );
+CREATE TABLE orden_compra (
+                              id_oc INT AUTO_INCREMENT PRIMARY KEY,
+
+                              id_estado_oc INT NOT NULL,
+                              id_ots INT NOT NULL,
+                              id_maestro INT NOT NULL,
+                              id_proveedor INT NOT NULL,
+
+                              cantidad DECIMAL(10,2) NOT NULL,
+                              costo_unitario DECIMAL(10,2) NOT NULL,
+
+                              fecha_oc TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                              observacion VARCHAR(255),
+
+                              CONSTRAINT fk_oc_estado
+                                  FOREIGN KEY (id_estado_oc) REFERENCES estado_oc(id_estado_oc),
+
+                              CONSTRAINT fk_oc_ots
+                                  FOREIGN KEY (id_ots) REFERENCES ots(id_ots),
+
+                              CONSTRAINT fk_oc_maestro
+                                  FOREIGN KEY (id_maestro) REFERENCES maestro_codigo(id_maestro),
+
+                              CONSTRAINT fk_oc_proveedor
+                                  FOREIGN KEY (id_proveedor) REFERENCES proveedor(id_proveedor)
+);
+
+
+

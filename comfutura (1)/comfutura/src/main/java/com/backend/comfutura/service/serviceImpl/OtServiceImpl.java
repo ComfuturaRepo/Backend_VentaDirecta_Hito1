@@ -26,7 +26,6 @@ public class OtServiceImpl implements OtService {
     private final TrabajadorRepository trabajadorRepository;
     private final OtTrabajadorRepository otTrabajadorRepository;
 
-    private final OtDetalleRepository otDetalleRepository;
     private final MaestroCodigoRepository maestroCodigoRepository;
     private final ProveedorRepository proveedorRepository;
 
@@ -134,15 +133,7 @@ public class OtServiceImpl implements OtService {
             Proveedor proveedor = proveedorRepository.findById(req.getIdProveedor())
                     .orElseThrow(() -> new ResourceNotFoundException("Proveedor no encontrado"));
 
-            OtDetalle detalle = OtDetalle.builder()
-                    .ots(ots)
-                    .maestro(maestro)
-                    .proveedor(proveedor)
-                    .cantidad(req.getCantidad())
-                    .precioUnitario(req.getPrecioUnitario())
-                    .build();
 
-            otDetalleRepository.save(detalle);
         }
     }
 
