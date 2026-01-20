@@ -1,13 +1,16 @@
 package com.backend.comfutura.service;
 
-
-
-import com.backend.comfutura.dto.DropTown.AreaDropdownDTO;
-import com.backend.comfutura.dto.DropTown.ClienteDropdownDTO;
+import com.backend.comfutura.record.DropdownDTO;
 
 import java.util.List;
 
 public interface DropdownService {
-    List<ClienteDropdownDTO> getAllClientesActivos();
-    List<AreaDropdownDTO> getAllAreasActivas();
+
+    List<DropdownDTO> getClientes();
+    List<DropdownDTO> getAreas();
+    List<DropdownDTO> getProyectos();
+    List<DropdownDTO> getFases();
+    List<DropdownDTO> getSites();
+    List<DropdownDTO> getRegiones();
+    List<DropdownDTO> getOtsActivas();
 }

@@ -32,7 +32,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                 "/api/auth/**",
                                 "/v3/api-docs/**",
-                                "/api/dropdown/**",
+                                "/api/dropdowns/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
                                 "/swagger-ui/index.html",           // ← A veces necesario en versiones recientes

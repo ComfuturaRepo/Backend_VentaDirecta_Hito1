@@ -1,29 +1,51 @@
 package com.backend.comfutura.controller;
-import com.backend.comfutura.dto.DropTown.AreaDropdownDTO;
-import com.backend.comfutura.dto.DropTown.ClienteDropdownDTO;
+
+import com.backend.comfutura.record.DropdownDTO;
 import com.backend.comfutura.service.DropdownService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
+import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/dropdown")
-@CrossOrigin(origins = "http://localhost:4200")
+@RequestMapping("/api/dropdowns")
+@RequiredArgsConstructor
 public class DropdownController {
 
-    @Autowired
-    private DropdownService dropdownService;
+    private final DropdownService dropdownService;
 
     @GetMapping("/clientes")
-    public ResponseEntity<List<ClienteDropdownDTO>> getClientes() {
-        return ResponseEntity.ok(dropdownService.getAllClientesActivos());
+    public List<DropdownDTO> getClientes() {
+        return dropdownService.getClientes();
     }
 
     @GetMapping("/areas")
-    public ResponseEntity<List<AreaDropdownDTO>> getAreas() {
-        return ResponseEntity.ok(dropdownService.getAllAreasActivas());
+    public List<DropdownDTO> getAreas() {
+        return dropdownService.getAreas();
     }
 
+    @GetMapping("/proyectos")
+    public List<DropdownDTO> getProyectos() {
+        return dropdownService.getProyectos();
+    }
+
+    @GetMapping("/fases")
+    public List<DropdownDTO> getFases() {
+        return dropdownService.getFases();
+    }
+
+    @GetMapping("/sites")
+    public List<DropdownDTO> getSites() {
+        return dropdownService.getSites();
+    }
+
+    @GetMapping("/regiones")
+    public List<DropdownDTO> getRegiones() {
+        return dropdownService.getRegiones();
+    }
+
+    @GetMapping("/ots")
+    public List<DropdownDTO> getOtsActivas() {
+        return dropdownService.getOtsActivas();
+    }
 }
