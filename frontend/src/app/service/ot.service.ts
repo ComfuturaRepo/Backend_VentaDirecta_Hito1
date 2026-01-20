@@ -16,18 +16,18 @@ export interface OtCreateRequest {
   idFase: number;
   idSite: number;
   idRegion: number;
-  idOtsAnterior?: number | null;
-  descripcion?: string;
-  diasAsignados?: number;
+  descripcion: string;
+  diasAsignados: number;
+  idOtsAnterior: number | null;
 
-  // Campos de responsables (opcionales)
-  jefaturaClienteSolicitante?: string;
-  analistaClienteSolicitante?: string;
-  coordinadoresTiCwPextEnergia?: string;
-  jefaturaResponsable?: string;
-  liquidador?: string;
-  ejecutante?: string;
-  analistaContable?: string;
+  idJefaturaClienteSolicitante?: number | null;
+  idAnalistaClienteSolicitante?: number | null;
+  idCoordinadorTiCw?: number | null;               // si solo uno
+  coordinadoresTiCwPextEnergia?: string | null;    // si permites varios en texto
+  idJefaturaResponsable?: number | null;
+  idLiquidador?: number | null;
+  idEjecutante?: number | null;
+  idAnalistaContable?: number | null;
 }
 
 export interface OtTrabajadorRequest {

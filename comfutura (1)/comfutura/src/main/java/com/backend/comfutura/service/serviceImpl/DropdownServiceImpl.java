@@ -1,5 +1,6 @@
 package com.backend.comfutura.service.serviceImpl;
 
+import com.backend.comfutura.model.*;
 import com.backend.comfutura.record.DropdownDTO;
 import com.backend.comfutura.repository.*;
 import com.backend.comfutura.service.DropdownService;
@@ -13,6 +14,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 public class DropdownServiceImpl implements DropdownService {
 
+    // Repositorios existentes
     private final ClienteRepository clienteRepository;
     private final AreaRepository areaRepository;
     private final ProyectoRepository proyectoRepository;
@@ -21,9 +23,19 @@ public class DropdownServiceImpl implements DropdownService {
     private final RegionRepository regionRepository;
     private final OtsRepository otsRepository;
 
-    /**
-     * Retorna todos los clientes activos para el dropdown
-     */
+    // Nuevos repositorios para los responsables (agrega estos en tu proyecto)
+    private final JefaturaClienteSolicitanteRepository jefaturaClienteSolicitanteRepository;
+    private final AnalistaClienteSolicitanteRepository analistaClienteSolicitanteRepository;
+    private final CoordinadorTiCwRepository coordinadorTiCwRepository;
+    private final JefaturaResponsableRepository jefaturaResponsableRepository;
+    private final LiquidadorRepository liquidadorRepository;
+    private final EjecutanteRepository ejecutanteRepository;
+    private final AnalistaContableRepository analistaContableRepository;
+
+    // ────────────────────────────────────────────────────────
+    // Métodos existentes (sin cambios)
+    // ────────────────────────────────────────────────────────
+
     @Override
     public List<DropdownDTO> getClientes() {
         return clienteRepository.findByActivoTrueOrderByRazonSocialAsc()
@@ -32,20 +44,15 @@ public class DropdownServiceImpl implements DropdownService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retorna las áreas activas de un cliente específico
-     */
     @Override
     public List<DropdownDTO> getAreasByCliente(Integer idCliente) {
+        // Asumiendo que tienes un método en AreaRepository que filtra por cliente
         return areaRepository.findByClienteIdAndActivoTrue(idCliente)
                 .stream()
                 .map(a -> new DropdownDTO(a.getId(), a.getNombre()))
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retorna todos los proyectos activos
-     */
     @Override
     public List<DropdownDTO> getProyectos() {
         return proyectoRepository.findByActivoTrueOrderByNombreAsc()
@@ -54,9 +61,6 @@ public class DropdownServiceImpl implements DropdownService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retorna todas las fases activas ordenadas por nombre
-     */
     @Override
     public List<DropdownDTO> getFases() {
         return faseRepository.findByActivoTrueOrderByNombreAsc()
@@ -65,9 +69,6 @@ public class DropdownServiceImpl implements DropdownService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retorna todos los sites activos ordenados por nombre
-     */
     @Override
     public List<DropdownDTO> getSites() {
         return siteRepository.findByActivoTrueOrderByNombreAsc()
@@ -76,9 +77,6 @@ public class DropdownServiceImpl implements DropdownService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Retorna todas las regiones activas
-     */
     @Override
     public List<DropdownDTO> getRegiones() {
         return regionRepository.findByActivoTrueOrderByNombreAsc()
@@ -87,14 +85,71 @@ public class DropdownServiceImpl implements DropdownService {
                 .collect(Collectors.toList());
     }
 
-    /**
-     * Opcional: Retorna todas las OTs activas con formato "OT XXX"
-     */
     @Override
     public List<DropdownDTO> getOtsActivas() {
         return otsRepository.findByActivoTrueOrderByOtAsc()
                 .stream()
                 .map(ot -> new DropdownDTO(ot.getIdOts(), "OT " + ot.getOt()))
+                .collect(Collectors.toList());
+    }
+
+    // ────────────────────────────────────────────────────────
+    // Nuevos métodos para los responsables (dropdowns)
+    // ────────────────────────────────────────────────────────
+
+    @Override
+    public List<DropdownDTO> getJefaturasClienteSolicitante() {
+        return jefaturaClienteSolicitanteRepository.findByActivoTrueOrderByDescripcionAsc()
+                .stream()
+                .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getAnalistasClienteSolicitante() {
+        return analistaClienteSolicitanteRepository.findByActivoTrueOrderByDescripcionAsc()
+                .stream()
+                .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getCoordinadoresTiCw() {
+        return coordinadorTiCwRepository.findByActivoTrueOrderByDescripcionAsc()
+                .stream()
+                .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getJefaturasResponsable() {
+        return jefaturaResponsableRepository.findByActivoTrueOrderByDescripcionAsc()
+                .stream()
+                .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getLiquidador() {
+        return liquidadorRepository.findByActivoTrueOrderByDescripcionAsc()
+                .stream()
+                .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getEjecutantes() {
+        return ejecutanteRepository.findByActivoTrueOrderByDescripcionAsc()
+                .stream()
+                .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getAnalistasContable() {
+        return analistaContableRepository.findByActivoTrueOrderByDescripcionAsc()
+                .stream()
+                .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
                 .collect(Collectors.toList());
     }
 }

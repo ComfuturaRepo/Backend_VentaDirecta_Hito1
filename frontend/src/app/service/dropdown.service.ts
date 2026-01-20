@@ -2,14 +2,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, forkJoin } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { environment } from '../../environment';
 
 export interface DropdownItem {
   id: number;
   label: string;
 }
-
 
 @Injectable({
   providedIn: 'root'
@@ -20,12 +18,16 @@ export class DropdownService {
 
   constructor(private http: HttpClient) {}
 
+  // =============================
+  // BÁSICOS - Maestros principales
+  // =============================
+
   getClientes(): Observable<DropdownItem[]> {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/clientes`);
   }
 
-  getAreas(): Observable<DropdownItem[]> {
-    return this.http.get<DropdownItem[]>(`${this.apiUrl}/areas`);
+  getAreasByCliente(idCliente: number): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/clientes/${idCliente}/areas`);
   }
 
   getProyectos(): Observable<DropdownItem[]> {
@@ -44,10 +46,103 @@ export class DropdownService {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/regiones`);
   }
 
+  // =============================
+  // RESPONSABLES (nuevos)
+  // =============================
+
+  getJefaturasClienteSolicitante(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/jefaturas-cliente-solicitante`);
+  }
+
+  getAnalistasClienteSolicitante(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/analistas-cliente-solicitante`);
+  }
+
+  getCoordinadoresTiCw(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/coordinadores-ti-cw`);
+  }
+
+  getJefaturasResponsable(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/jefaturas-responsable`);
+  }
+
+  getLiquidador(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/liquidadores`);
+  }
+
+  getEjecutantes(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/ejecutantes`);
+  }
+
+  getAnalistasContable(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/analistas-contable`);
+  }
+
+  // =============================
+  // ORDEN DE COMPRA
+  // =============================
+
   getOtsActivas(): Observable<DropdownItem[]> {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/ots`);
   }
-getAreasByCliente(idCliente: number): Observable<DropdownItem[]> {
-  return this.http.get<DropdownItem[]>(`${this.apiUrl}/clientes/${idCliente}/areas`);
-}
+
+  getMaestroCodigos(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/maestro-codigos`);
+  }
+
+  getProveedores(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/proveedores`);
+  }
+
+  // =============================
+  // CARGA MASIVA - Formularios completos
+  // =============================
+
+  /**
+   * Carga TODOS los dropdowns necesarios para crear/editar una OT
+   */
+  loadOtFormDropdowns(): Observable<{
+    clientes: DropdownItem[];
+    proyectos: DropdownItem[];
+    fases: DropdownItem[];
+    sites: DropdownItem[];
+    regiones: DropdownItem[];
+    jefaturasClienteSolicitante: DropdownItem[];
+    analistasClienteSolicitante: DropdownItem[];
+    coordinadoresTiCw: DropdownItem[];
+    jefaturasResponsable: DropdownItem[];
+    liquidadores: DropdownItem[];
+    ejecutantes: DropdownItem[];
+    analistasContable: DropdownItem[];
+  }> {
+    return forkJoin({
+      clientes: this.getClientes(),
+      proyectos: this.getProyectos(),
+      fases: this.getFases(),
+      sites: this.getSites(),
+      regiones: this.getRegiones(),
+      jefaturasClienteSolicitante: this.getJefaturasClienteSolicitante(),
+      analistasClienteSolicitante: this.getAnalistasClienteSolicitante(),
+      coordinadoresTiCw: this.getCoordinadoresTiCw(),
+      jefaturasResponsable: this.getJefaturasResponsable(),
+      liquidadores: this.getLiquidador(),
+      ejecutantes: this.getEjecutantes(),
+      analistasContable: this.getAnalistasContable()
+    });
+  }
+
+  /**
+   * Carga TODOS los dropdowns necesarios para crear una Orden de Compra
+   */
+  loadOrdenCompraDropdowns(): Observable<{
+    ots: DropdownItem[];
+    maestros: DropdownItem[];
+    proveedores: DropdownItem[];
+  }> {
+    return forkJoin({
+      ots: this.getOtsActivas(),
+      maestros: this.getMaestroCodigos(),
+      proveedores: this.getProveedores()
+    });
+  }
 }
