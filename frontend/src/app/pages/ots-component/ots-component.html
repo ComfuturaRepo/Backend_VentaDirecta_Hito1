@@ -1,115 +1,154 @@
-<mat-card class="ots-card mat-elevation-z4">
-  <mat-card-header class="card-header">
-    <mat-icon class="header-icon">assignment</mat-icon>
-    <div class="header-text">
-      <mat-card-title>Órdenes de Trabajo</mat-card-title>
-      <mat-card-subtitle>Gestión y seguimiento de OTs</mat-card-subtitle>
-    </div>
-  </mat-card-header>
-
-  <mat-card-content class="card-content">
-    <!-- Controles superiores -->
-    <div class="top-controls">
-      <mat-form-field appearance="outline" class="filter-field">
-        <mat-label>Estado</mat-label>
-        <mat-select [(ngModel)]="activoFilter" (selectionChange)="onFilterChange()">
-          <mat-option [value]="null">Todas</mat-option>
-          <mat-option [value]="true">Activas</mat-option>
-          <mat-option [value]="false">Inactivas</mat-option>
-        </mat-select>
-      </mat-form-field>
-
-      <div class="spacer"></div>
-
-      <button mat-flat-button color="primary" class="btn-new" (click)="goToCreate()">
-        <mat-icon>add</mat-icon>
-        Nueva Orden
-      </button>
+<div class="container-fluid py-4">
+  <div class="card shadow-lg border-0 rounded-4">
+    <!-- Header azul elegante -->
+    <div class="card-header bg-gradient-primary text-white d-flex align-items-center gap-3 py-4">
+      <i class="bi bi-file-earmark-text fs-3"></i>
+      <div>
+        <h4 class="mb-0 fw-semibold">Órdenes de Trabajo</h4>
+        <small class="opacity-75">Gestión y seguimiento de OTs</small>
+      </div>
     </div>
 
-    <!-- Loading -->
-    <div class="loading-wrapper" *ngIf="loading">
-      <mat-progress-spinner mode="indeterminate" diameter="56" strokeWidth="6"></mat-progress-spinner>
-      <p class="loading-text">Cargando órdenes de trabajo...</p>
-    </div>
+    <div class="card-body p-4">
+      <!-- Controles superiores -->
+      <div class="d-flex flex-wrap gap-3 mb-4 align-items-end">
+        <div class="flex-grow-1">
+          <label class="form-label fw-semibold">Estado</label>
+          <select class="form-select w-auto" [(ngModel)]="activoFilter" (change)="onFilterChange()">
+            <option [ngValue]="null">Todas</option>
+            <option [ngValue]="true">Activas</option>
+            <option [ngValue]="false">Inactivas</option>
+          </select>
+        </div>
 
-    <!-- Error -->
-    <mat-error class="error-box" *ngIf="errorMessage">
-      {{ errorMessage }}
-    </mat-error>
-
-    <!-- Tabla + contenido principal -->
-    <div class="table-wrapper" *ngIf="!loading && otsPage">
-
-      <div class="no-records" *ngIf="dataSource.length === 0">
-        <mat-icon class="empty-icon">playlist_remove</mat-icon>
-        <p>No se encontraron órdenes de trabajo</p>
+        <button class="btn btn-primary btn-lg d-flex align-items-center gap-2" (click)="goToCreate()">
+          <i class="bi bi-plus-lg"></i>
+          Nueva Orden
+        </button>
       </div>
 
-      <table mat-table [dataSource]="dataSource" class="modern-table"
-             *ngIf="dataSource.length > 0">
+      <!-- Loading -->
+      <div *ngIf="loading" class="text-center py-5">
+        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-3 text-muted">Cargando órdenes de trabajo...</p>
+      </div>
 
-        <!-- N° OT -->
-        <ng-container matColumnDef="ot">
-          <th mat-header-cell *matHeaderCellDef>N° OT</th>
-          <td mat-cell *matCellDef="let element" class="cell-ot">
-            {{ element.ot }}
-          </td>
-        </ng-container>
+      <!-- Error -->
+      <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show" role="alert">
+        {{ errorMessage }}
+        <button type="button" class="btn-close" (click)="errorMessage = null"></button>
+      </div>
 
-        <!-- Descripción -->
-        <ng-container matColumnDef="descripcion">
-          <th mat-header-cell *matHeaderCellDef>Descripción</th>
-          <td mat-cell *matCellDef="let element" class="cell-desc">
-            {{ element.descripcion || '—' }}
-          </td>
-        </ng-container>
+      <!-- Contenido principal -->
+      <div *ngIf="!loading && otsPage">
+        <!-- No hay datos -->
+        <div *ngIf="dataSource.length === 0" class="text-center py-5">
+          <i class="bi bi-clipboard-x display-1 text-muted"></i>
+          <p class="mt-3 text-muted fs-5">No se encontraron órdenes de trabajo</p>
+        </div>
 
-        <!-- Fecha Creación -->
-        <ng-container matColumnDef="fechaCreacion">
-          <th mat-header-cell *matHeaderCellDef>Creación</th>
-          <td mat-cell *matCellDef="let element">
-            {{ element.fechaCreacion | date:'dd MMM yyyy • HH:mm' }}
-          </td>
-        </ng-container>
+        <!-- Tabla -->
+        <div *ngIf="dataSource.length > 0" class="table-responsive">
+          <table class="table table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th scope="col">N° OT</th>
+                <th scope="col">Descripción</th>
+                <th scope="col">Creación</th>
+                <th scope="col" class="text-center">Estado</th>
+                <th scope="col" class="text-center">Acciones</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ot of dataSource">
+                <td class="fw-semibold text-primary">{{ ot.ot }}</td>
+                <td>{{ ot.descripcion || '—' }}</td>
+                <td>{{ ot.fechaCreacion | date:'dd MMM yyyy • HH:mm' }}</td>
+                <td class="text-center">
+                  <span class="badge rounded-pill px-3 py-2"
+                        [ngClass]="ot.activo ? 'bg-success' : 'bg-danger'">
+                    {{ ot.activo ? 'Activa' : 'Inactiva' }}
+                  </span>
+                </td>
+                <td class="text-center">
+  <!-- Ver detalle -->
+  <button class="btn btn-sm btn-outline-primary rounded-circle me-2"
+          (click)="viewDetail(ot)"
+          title="Ver detalle">
+    <i class="bi bi-eye"></i>
+  </button>
 
-        <!-- Estado -->
-      <!-- Dentro de la columna 'activo' -->
-<ng-container matColumnDef="activo">
-  <th mat-header-cell *matHeaderCellDef>Estado</th>
-  <td mat-cell *matCellDef="let element" class="cell-status">
-    <mat-chip-listbox>
-      <mat-chip [color]="element.activo ? 'primary' : 'warn'" selected>
-        {{ element.activo ? 'Activa' : 'Inactiva' }}
-      </mat-chip>
-    </mat-chip-listbox>
-  </td>
-</ng-container>
-        <!-- Acciones -->
-        <ng-container matColumnDef="acciones">
-          <th mat-header-cell *matHeaderCellDef>Acciones</th>
-          <td mat-cell *matCellDef="let element" class="cell-actions">
-            <button mat-icon-button color="primary" (click)="viewDetail(element)" matTooltip="Ver detalle">
-              <mat-icon>visibility</mat-icon>
-            </button>
-            <!-- Puedes agregar más botones aquí en el futuro -->
-          </td>
-        </ng-container>
+  <!-- Toggle -->
+  <button class="btn btn-sm rounded-pill px-3 py-1 fw-semibold"
+          [ngClass]="{
+            'btn-outline-danger': ot.activo,
+            'btn-outline-success': !ot.activo
+          }"
+          (click)="toggleEstado(ot)"
+          title="{{ ot.activo ? 'Desactivar OT' : 'Activar OT' }}">
+    {{ ot.activo ? 'Desactivar' : 'Activar' }}
+  </button>
+</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
 
-        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
-        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover-row"></tr>
-      </table>
+        <!-- Paginación empresarial -->
+        <div *ngIf="totalElements > 0" class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3 mt-4">
+          <div class="text-muted">
+            Mostrando {{ dataSource.length }} de {{ totalElements }} registros
+          </div>
 
-      <!-- Paginador -->
-      <mat-paginator class="modern-paginator"
-        *ngIf="otsPage && totalElements > 0"
-        [length]="totalElements"
-        [pageSize]="pageSize"
-        [pageIndex]="pageIndex"
-        [pageSizeOptions]="[5, 10, 15, 25, 50]"
-        (page)="onPageChange($event)"
-        showFirstLastButtons>
-      </mat-paginator>
+          <nav aria-label="Paginación">
+            <ul class="pagination mb-0">
+              <li class="page-item" [class.disabled]="pageIndex === 0">
+                <button class="page-link" (click)="goToFirst()" aria-label="Primera">
+                  <i class="bi bi-chevron-double-left"></i>
+                </button>
+              </li>
+              <li class="page-item" [class.disabled]="pageIndex === 0">
+                <button class="page-link" (click)="goToPrevious()">
+                  <i class="bi bi-chevron-left"></i>
+                </button>
+              </li>
+
+              <li class="page-item" *ngFor="let p of visiblePages"
+                  [class.active]="p === pageIndex">
+                <button class="page-link" (click)="goToPage(p)">
+                  {{ p + 1 }}
+                </button>
+              </li>
+
+              <li class="page-item" [class.disabled]="pageIndex >= totalPages - 1">
+                <button class="page-link" (click)="goToNext()">
+                  <i class="bi bi-chevron-right"></i>
+                </button>
+              </li>
+              <li class="page-item" [class.disabled]="pageIndex >= totalPages - 1">
+                <button class="page-link" (click)="goToLast()" aria-label="Última">
+                  <i class="bi bi-chevron-double-right"></i>
+                </button>
+              </li>
+            </ul>
+          </nav>
+
+          <div class="d-flex align-items-center gap-2">
+            <label class="form-label mb-0 me-2">Filas:</label>
+            <select class="form-select form-select-sm w-auto"
+                    [(ngModel)]="pageSize"
+                    (change)="changePageSize(pageSize)">
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="15">15</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+        </div>
+      </div>
     </div>
-  </mat-card-content>
-</mat-card>
+  </div>
+</div>

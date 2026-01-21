@@ -4,8 +4,8 @@ import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http'
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { environment } from '../../environment';  // Ajusta la ruta si es necesario
-import { CrearOtCompletaRequest, OtResponse, Page } from '../model/ots';
 
+import { CrearOtCompletaRequest, OtResponse, Page } from '../model/ots';
 
 @Injectable({
   providedIn: 'root'
@@ -43,9 +43,21 @@ export class OtService {
 
   /**
    * Obtiene una OT por su ID
+   * Endpoint: GET /api/ots/{id}
    */
-  obtenerOtPorId(id: number): Observable<OtResponse> {
+  obtenerPorId(id: number): Observable<OtResponse> {
     return this.http.get<OtResponse>(`${this.apiUrl}/${id}`).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Alterna el estado activo/inactivo de una OT
+   * Endpoint: POST /api/ots/{id}/toggle
+   * Retorna void (solo 200 OK si éxito)
+   */
+  toggleEstado(id: number): Observable<void> {
+    return this.http.post<void>(`${this.apiUrl}/${id}/toggle`, {}).pipe(
       catchError(this.handleError)
     );
   }

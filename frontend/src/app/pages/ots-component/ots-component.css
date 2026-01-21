@@ -151,3 +151,60 @@ td.mat-cell {
   border-top: 1px solid #eee;
   background: #fafafa;
 }
+/* Gradiente azul corporativo */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
+}
+
+/* Tabla elegante */
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+.table th {
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  color: #495057;
+  letter-spacing: 0.5px;
+}
+
+.badge {
+  font-size: 0.9rem;
+  font-weight: 500;
+  padding: 0.5em 1em;
+}
+
+/* Botones de paginación */
+.page-link {
+  border-radius: 8px !important;
+  margin: 0 4px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+.page-link:hover:not(.disabled) {
+  background-color: #e7f1ff;
+  border-color: #0d6efd;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .d-flex.flex-wrap.gap-3 {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .w-auto {
+    width: 100% !important;
+  }
+}

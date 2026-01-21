@@ -44,3 +44,60 @@
 .bg-gradient-primary {
   background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
 }
+/* ot-form.component.css */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+}
+
+.card {
+  border-radius: 1.25rem;
+}
+
+.card-header {
+  padding: 1.25rem 1.5rem;
+}
+
+.form-floating > label {
+  padding: 1rem 0.75rem;
+  color: #6c757d;
+}
+
+.form-floating > .form-control,
+.form-floating > .form-select {
+  height: calc(3.5rem + 2px);
+  line-height: 1.25;
+  padding: 1rem 0.75rem;
+}
+
+.form-floating > .form-control:focus,
+.form-floating > .form-select:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+}
+
+.form-floating > .form-control-plaintext ~ label,
+.form-floating > .form-control:focus ~ label,
+.form-floating > .form-control:not(:placeholder-shown) ~ label,
+.form-floating > .form-select ~ label {
+  color: #0d6efd;
+  transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
+}
+
+.shadow-lg {
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.175) !important;
+}
+
+.btn-primary {
+  background: linear-gradient(90deg, #0d6efd, #0a58ca);
+  border: none;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: linear-gradient(90deg, #0b5ed7, #084298);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 15px rgba(13, 110, 253, 0.25);
+}
+
+.form-text {
+  font-size: 0.8rem;
+}
