@@ -3,6 +3,8 @@ package com.backend.comfutura.controller;
 import com.backend.comfutura.dto.request.CrearOtCompletaRequest;
 import com.backend.comfutura.dto.request.OtCreateRequest;
 import com.backend.comfutura.dto.response.OtResponse;
+import com.backend.comfutura.model.Ots;
+import com.backend.comfutura.repository.OtsRepository;
 import com.backend.comfutura.service.OtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -14,6 +16,8 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/ots")
@@ -38,14 +42,22 @@ public class OtController {
     // ==============================
     @GetMapping
     public ResponseEntity<Page<OtResponse>> listar(
-            @RequestParam(defaultValue = "true") Boolean activo,
-            @PageableDefault(size = 10, sort = "ot", direction = Sort.Direction.DESC)
-            Pageable pageable
+            @RequestParam Boolean activo,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
     ) {
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.DESC, "idOts")
+        );
+
         return ResponseEntity.ok(
                 otService.listarPorEstado(activo, pageable)
         );
     }
+
+
 
     // ==============================
     // Listado POR ID  OT COMPLETO
