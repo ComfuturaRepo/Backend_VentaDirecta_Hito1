@@ -1,0 +1,153 @@
+.ots-card {
+  border-radius: 16px;
+  overflow: hidden;
+  background: white;
+  margin: 24px auto;
+  max-width: 1480px;
+}
+
+.card-header {
+  background: linear-gradient(135deg, #1976d2 0%, #1565c0 100%);
+  color: white;
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.header-icon {
+  font-size: 40px;
+  width: 40px;
+  height: 40px;
+}
+
+.header-text mat-card-title {
+  font-size: 1.5rem;
+  font-weight: 500;
+  margin: 0;
+}
+
+.header-text mat-card-subtitle {
+  color: rgba(255,255,255,0.85);
+  margin-top: 4px;
+}
+
+.card-content {
+  padding: 24px;
+}
+
+.top-controls {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+
+.filter-field {
+  min-width: 180px;
+}
+
+.btn-new {
+  padding: 0 20px;
+  height: 48px;
+  font-weight: 500;
+  border-radius: 12px;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.loading-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 80px 0;
+  color: #555;
+}
+
+.loading-text {
+  margin-top: 16px;
+  font-size: 1.1rem;
+  color: #757575;
+}
+
+.error-box {
+  padding: 16px 20px;
+  border-radius: 8px;
+  background: #ffebee;
+  color: #c62828;
+  margin: 16px 0;
+}
+
+.table-wrapper {
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid #e0e0e0;
+}
+
+.modern-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+th.mat-header-cell {
+  background: #f5f7fa;
+  color: #1a237e;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.82rem;
+  letter-spacing: 0.4px;
+  padding: 16px 12px !important;
+  border-bottom: 2px solid #1976d2 !important;
+}
+
+td.mat-cell {
+  padding: 16px 12px !important;
+  color: #333;
+  border-bottom: 1px solid #eee;
+}
+
+.hover-row:hover {
+  background: #f8fbff;
+  transition: background 0.15s;
+}
+
+.cell-ot {
+  font-family: 'Roboto Mono', monospace;
+  font-weight: 500;
+  color: #0d47a1;
+}
+
+.cell-desc {
+  color: #424242;
+}
+
+.cell-status {
+  text-align: center;
+}
+
+.cell-actions {
+  text-align: center;
+}
+
+.no-records {
+  text-align: center;
+  padding: 60px 20px;
+  color: #78909c;
+}
+
+.no-records mat-icon {
+  font-size: 64px;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 16px;
+  color: #b0bec5;
+}
+
+.modern-paginator {
+  border-top: 1px solid #eee;
+  background: #fafafa;
+}

@@ -4,8 +4,9 @@ import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angula
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 import { DropdownItem, DropdownService } from '../../../service/dropdown.service';
-import { CrearOtCompletaRequest, OtCreateRequest, OtResponse, OtService } from '../../../service/ot.service';
 import { AuthService } from '../../../service/auth.service';
+import { OtService } from '../../../service/ot.service';
+import { CrearOtCompletaRequest, OtCreateRequest, OtResponse } from '../../../model/ots';
 
 
 @Component({

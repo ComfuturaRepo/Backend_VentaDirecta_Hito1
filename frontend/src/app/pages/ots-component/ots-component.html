@@ -1,1 +1,115 @@
-<p>ots-component works!</p>
+<mat-card class="ots-card mat-elevation-z4">
+  <mat-card-header class="card-header">
+    <mat-icon class="header-icon">assignment</mat-icon>
+    <div class="header-text">
+      <mat-card-title>Órdenes de Trabajo</mat-card-title>
+      <mat-card-subtitle>Gestión y seguimiento de OTs</mat-card-subtitle>
+    </div>
+  </mat-card-header>
+
+  <mat-card-content class="card-content">
+    <!-- Controles superiores -->
+    <div class="top-controls">
+      <mat-form-field appearance="outline" class="filter-field">
+        <mat-label>Estado</mat-label>
+        <mat-select [(ngModel)]="activoFilter" (selectionChange)="onFilterChange()">
+          <mat-option [value]="null">Todas</mat-option>
+          <mat-option [value]="true">Activas</mat-option>
+          <mat-option [value]="false">Inactivas</mat-option>
+        </mat-select>
+      </mat-form-field>
+
+      <div class="spacer"></div>
+
+      <button mat-flat-button color="primary" class="btn-new" (click)="goToCreate()">
+        <mat-icon>add</mat-icon>
+        Nueva Orden
+      </button>
+    </div>
+
+    <!-- Loading -->
+    <div class="loading-wrapper" *ngIf="loading">
+      <mat-progress-spinner mode="indeterminate" diameter="56" strokeWidth="6"></mat-progress-spinner>
+      <p class="loading-text">Cargando órdenes de trabajo...</p>
+    </div>
+
+    <!-- Error -->
+    <mat-error class="error-box" *ngIf="errorMessage">
+      {{ errorMessage }}
+    </mat-error>
+
+    <!-- Tabla + contenido principal -->
+    <div class="table-wrapper" *ngIf="!loading && otsPage">
+
+      <div class="no-records" *ngIf="dataSource.length === 0">
+        <mat-icon class="empty-icon">playlist_remove</mat-icon>
+        <p>No se encontraron órdenes de trabajo</p>
+      </div>
+
+      <table mat-table [dataSource]="dataSource" class="modern-table"
+             *ngIf="dataSource.length > 0">
+
+        <!-- N° OT -->
+        <ng-container matColumnDef="ot">
+          <th mat-header-cell *matHeaderCellDef>N° OT</th>
+          <td mat-cell *matCellDef="let element" class="cell-ot">
+            {{ element.ot }}
+          </td>
+        </ng-container>
+
+        <!-- Descripción -->
+        <ng-container matColumnDef="descripcion">
+          <th mat-header-cell *matHeaderCellDef>Descripción</th>
+          <td mat-cell *matCellDef="let element" class="cell-desc">
+            {{ element.descripcion || '—' }}
+          </td>
+        </ng-container>
+
+        <!-- Fecha Creación -->
+        <ng-container matColumnDef="fechaCreacion">
+          <th mat-header-cell *matHeaderCellDef>Creación</th>
+          <td mat-cell *matCellDef="let element">
+            {{ element.fechaCreacion | date:'dd MMM yyyy • HH:mm' }}
+          </td>
+        </ng-container>
+
+        <!-- Estado -->
+      <!-- Dentro de la columna 'activo' -->
+<ng-container matColumnDef="activo">
+  <th mat-header-cell *matHeaderCellDef>Estado</th>
+  <td mat-cell *matCellDef="let element" class="cell-status">
+    <mat-chip-listbox>
+      <mat-chip [color]="element.activo ? 'primary' : 'warn'" selected>
+        {{ element.activo ? 'Activa' : 'Inactiva' }}
+      </mat-chip>
+    </mat-chip-listbox>
+  </td>
+</ng-container>
+        <!-- Acciones -->
+        <ng-container matColumnDef="acciones">
+          <th mat-header-cell *matHeaderCellDef>Acciones</th>
+          <td mat-cell *matCellDef="let element" class="cell-actions">
+            <button mat-icon-button color="primary" (click)="viewDetail(element)" matTooltip="Ver detalle">
+              <mat-icon>visibility</mat-icon>
+            </button>
+            <!-- Puedes agregar más botones aquí en el futuro -->
+          </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" class="hover-row"></tr>
+      </table>
+
+      <!-- Paginador -->
+      <mat-paginator class="modern-paginator"
+        *ngIf="otsPage && totalElements > 0"
+        [length]="totalElements"
+        [pageSize]="pageSize"
+        [pageIndex]="pageIndex"
+        [pageSizeOptions]="[5, 10, 15, 25, 50]"
+        (page)="onPageChange($event)"
+        showFirstLastButtons>
+      </mat-paginator>
+    </div>
+  </mat-card-content>
+</mat-card>

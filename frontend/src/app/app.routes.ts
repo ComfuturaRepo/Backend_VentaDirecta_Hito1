@@ -5,6 +5,7 @@ import { DashboardComponent } from './pages/dashboard-componente/dashboard-compo
 import { authGuard } from './auth/auth.guard';
 import { LayoutComponent } from './component/layaout-component/layaout-component';
 import { OtsComponent } from './pages/ots-component/ots-component';
+import { FormOtsComponent } from './pages/ots-component/form-ots-component/form-ots-component';
 
 export const routes: Routes = [
   {
@@ -22,11 +23,17 @@ export const routes: Routes = [
       },
       {
         path: 'ot',
-        component: OtsComponent,
+        children: [                          // ← convierte 'ot' en contenedor de hijos
+          {
+            path: '',                        // ruta por defecto → lista
+            component: OtsComponent,
+          },
+          {
+            path: 'nuevo',                   // crear nueva
+            component: FormOtsComponent,
+          },
+        ]
       },
-      // NO DEBES TENER NADA DE ESTO aquí:
-      // { path: '', redirectTo: 'dashboard', pathMatch: 'full' }
-      // { path: '**', redirectTo: 'dashboard' }
     ]
   },
   {
