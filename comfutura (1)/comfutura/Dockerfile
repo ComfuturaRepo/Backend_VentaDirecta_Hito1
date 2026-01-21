@@ -8,7 +8,7 @@ COPY frontend/package*.json ./
 RUN npm install
 
 COPY frontend/ .
-RUN npm run build --prod
+RUN npm run build
 
 # =========================
 # 2️⃣ BUILD SPRING BOOT
@@ -28,11 +28,11 @@ RUN mvn clean package -DskipTests
 FROM eclipse-temurin:17-jre-alpine
 WORKDIR /app
 
-# Copiamos el JAR
+# JAR
 COPY --from=backend-build /app/backend/target/*.jar app.jar
 
-# Copiamos Angular al static de Spring
-COPY --from=frontend-build /app/frontend/dist /app/static
+# Angular → Spring static
+COPY --from=frontend-build /app/frontend/dist/* /app/static/
 
 ENV PORT=8080
 EXPOSE 8080
