@@ -1,0 +1,24 @@
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+}
+
+.card {
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.12) !important;
+  }
+}
+
+.row > div {
+  padding: 0.35rem 0;
+}
+
+.badge {
+  font-weight: 500;
+}
+
+.bi {
+  vertical-align: -0.125em;
+}

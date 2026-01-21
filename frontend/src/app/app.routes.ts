@@ -22,14 +22,15 @@ export const routes: Routes = [
         path: 'dashboard',
         component: DashboardComponent,
       },
-      {
-        path: 'ot',
+     {
+  path: 'ot',
   children: [
-    { path: '', component: OtsComponent },          // lista
-    { path: 'nuevo', component: FormOtsComponent }, // crear
-    { path: ':id', component: OtDetailComponent }   // ← detalle por ID
+    { path: '', component: OtsComponent },           // lista
+    { path: 'nuevo', component: FormOtsComponent },  // crear
+    { path: 'editar/:id', component: FormOtsComponent },  // editar ← agregar esta línea
+    { path: ':id', component: OtDetailComponent }    // detalle
   ]
-      },
+},
     ]
   },
   {
