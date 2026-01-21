@@ -13,4 +13,5 @@ public class OrdenCompraRequestDTO {
     private BigDecimal cantidad;
     private BigDecimal costoUnitario;
     private String observacion;
+
 }

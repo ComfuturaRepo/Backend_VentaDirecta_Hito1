@@ -36,7 +36,7 @@ export class CreateOtComponent implements OnInit {
   sites: DropdownItem[] = [];
   regiones: DropdownItem[] = [];
 
-  // Nuevos dropdowns para responsables
+  // Dropdowns de responsables
   jefaturasCliente: DropdownItem[] = [];
   analistasCliente: DropdownItem[] = [];
   coordinadoresTiCw: DropdownItem[] = [];
@@ -57,83 +57,61 @@ export class CreateOtComponent implements OnInit {
     const user = this.authService.currentUser;
     this.usernameLogueado = user?.username || '—';
     this.trabajadorIdLogueado = user?.idTrabajador ?? null;
-// Carga con tipado explícito
-  this.dropdownService.getJefaturasClienteSolicitante().subscribe((d: DropdownItem[]) => {
-    this.jefaturasCliente = d || [];
-  });
 
-  this.dropdownService.getAnalistasClienteSolicitante().subscribe((d: DropdownItem[]) => {
-    this.analistasCliente = d || [];
-  });
+    // Cargar dropdowns
+    this.cargarTodosLosDropdowns();
 
-  this.dropdownService.getCoordinadoresTiCw().subscribe((d: DropdownItem[]) => {
-    this.coordinadoresTiCw = d || [];
-  });
-
-  this.dropdownService.getJefaturasResponsable().subscribe((d: DropdownItem[]) => {
-    this.jefaturasResponsable = d || [];
-  });
-
-  this.dropdownService.getLiquidador().subscribe((d: DropdownItem[]) => {
-    this.liquidadores = d || [];
-  });
-
-  this.dropdownService.getEjecutantes().subscribe((d: DropdownItem[]) => {
-    this.ejecutantes = d || [];
-  });
-
-  this.dropdownService.getAnalistasContable().subscribe((d: DropdownItem[]) => {
-    this.analistasContable = d || [];
-  });
+    // Inicializar formulario
     this.form = this.fb.group({
       idCliente: ['', Validators.required],
-      idArea: ['', Validators.required],
+      idArea: [{ value: '', disabled: true }, Validators.required],  // inicia deshabilitado
       idProyecto: ['', Validators.required],
       idFase: ['', Validators.required],
       idSite: ['', Validators.required],
       idRegion: ['', Validators.required],
       descripcion: [{ value: '', disabled: true }, Validators.required],
-
       fechaApertura: ['', Validators.required],
 
-      // Dropdowns obligatorios u opcionales
       idJefaturaClienteSolicitante: [null],
       idAnalistaClienteSolicitante: [null],
-      coordinadoresTiCwPextEnergia: ['', Validators.maxLength(500)], // texto libre para varios
+      idCoordinadorTiCw: [null],
       idJefaturaResponsable: [null],
       idLiquidador: [null],
       idEjecutante: [null],
-      idAnalistaContable: [null]
+      idAnalistaContable: [null],
+
+      idOtsAnterior: [null, [Validators.min(1), Validators.pattern('^[0-9]+$')]]
     });
 
     // Suscripciones
     this.form.valueChanges.subscribe(() => this.actualizarDescripcion());
 
     this.form.get('idCliente')?.valueChanges.subscribe(clienteId => {
+      const areaControl = this.form.get('idArea');
+
       if (clienteId) {
         this.cargarAreasPorCliente(Number(clienteId));
-        this.form.get('idArea')?.reset();
+        areaControl?.enable();
+        areaControl?.reset();
       } else {
         this.areas = [];
-        this.form.get('idArea')?.reset();
+        areaControl?.disable();
+        areaControl?.reset();
       }
     });
 
-    this.cargarTodosLosDropdowns();
     this.actualizarDescripcion();
   }
 
   get f() { return this.form.controls; }
 
   private cargarTodosLosDropdowns(): void {
-    // Dropdowns principales
     this.dropdownService.getClientes().subscribe(d => this.clientes = d || []);
     this.dropdownService.getProyectos().subscribe(d => this.proyectos = d || []);
     this.dropdownService.getFases().subscribe(d => this.fases = d || []);
     this.dropdownService.getSites().subscribe(d => this.sites = d || []);
     this.dropdownService.getRegiones().subscribe(d => this.regiones = d || []);
 
-    // Nuevos dropdowns de responsables
     this.dropdownService.getJefaturasClienteSolicitante().subscribe(d => this.jefaturasCliente = d || []);
     this.dropdownService.getAnalistasClienteSolicitante().subscribe(d => this.analistasCliente = d || []);
     this.dropdownService.getCoordinadoresTiCw().subscribe(d => this.coordinadoresTiCw = d || []);
@@ -148,22 +126,24 @@ export class CreateOtComponent implements OnInit {
       next: (areas) => this.areas = areas || [],
       error: () => {
         this.areas = [];
-        Swal.fire('Error', 'No se pudieron cargar las áreas', 'error');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error al cargar áreas',
+          text: 'No se pudieron obtener las áreas asociadas al cliente seleccionado.',
+          confirmButtonColor: '#dc3545'
+        });
       }
     });
   }
 
   private actualizarDescripcion(): void {
-    const values = this.form.value;
-
+    const values = this.form.getRawValue();
     const proyecto = this.proyectos.find(p => p.id === Number(values.idProyecto))?.label || '';
     const area     = this.areas.find(a => a.id === Number(values.idArea))?.label || '';
     const siteId   = values.idSite ? String(values.idSite) : '';
     const site     = this.sites.find(s => s.id === Number(values.idSite))?.label || '';
 
-    let desc = [proyecto, area, siteId, site]
-      .filter(Boolean)
-      .join(' - ');
+    let desc = [proyecto, area, siteId, site].filter(Boolean).join(' - ');
 
     if (!desc.trim()) {
       desc = 'Completar campos principales para generar descripción';
@@ -172,23 +152,36 @@ export class CreateOtComponent implements OnInit {
     this.form.get('descripcion')?.setValue(desc, { emitEvent: false });
   }
 
-  onSubmit(): void {
-    this.submitted = true;
-    this.form.markAllAsTouched();
+onSubmit(): void {
+  this.submitted = true;
+  this.form.markAllAsTouched();
 
-    if (this.form.invalid) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Formulario incompleto',
-        text: 'Por favor completa los campos obligatorios',
-        confirmButtonColor: '#3085d6'
-      });
-      return;
-    }
+  if (this.form.invalid) {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Formulario incompleto',
+      text: 'Por favor completa todos los campos obligatorios correctamente.',
+      confirmButtonColor: '#ffc107',
+      confirmButtonText: 'Entendido'
+    });
+    return;
+  }
+
+  Swal.fire({
+    title: '¿Confirmar creación?',
+    text: 'Se registrará una nueva Orden de Trabajo',
+    icon: 'question',
+    showCancelButton: true,
+    confirmButtonColor: '#3085d6',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, crear OT',
+    cancelButtonText: 'Cancelar'
+  }).then((result) => {
+    if (!result.isConfirmed) return;
 
     this.loading = true;
 
-    const values = this.form.value;
+    const values = this.form.getRawValue();
 
     const otPayload: OtCreateRequest = {
       idCliente: Number(values.idCliente),
@@ -197,58 +190,88 @@ export class CreateOtComponent implements OnInit {
       idFase: Number(values.idFase),
       idSite: Number(values.idSite),
       idRegion: Number(values.idRegion),
-      descripcion: values.descripcion?.trim() || '',
+      descripcion: (values.descripcion || '').trim(),
       diasAsignados: 0,
-      idOtsAnterior: null,
+      idOtsAnterior: values.idOtsAnterior ? Number(values.idOtsAnterior) : null,
 
-      // IDs de las tablas maestras (FKs)
+      // ─── NUEVO ───
+      fechaApertura: values.fechaApertura,   // "YYYY-MM-DD" directamente del input date
+
       idJefaturaClienteSolicitante: values.idJefaturaClienteSolicitante || null,
       idAnalistaClienteSolicitante: values.idAnalistaClienteSolicitante || null,
-      idCoordinadorTiCw: null, // ← si solo permites uno, usa el dropdown; si varios → ver nota abajo
+      idCoordinadorTiCw: values.idCoordinadorTiCw || null,
       idJefaturaResponsable: values.idJefaturaResponsable || null,
       idLiquidador: values.idLiquidador || null,
       idEjecutante: values.idEjecutante || null,
       idAnalistaContable: values.idAnalistaContable || null,
-
-      // Campo de texto libre para múltiples coordinadores (como antes)
-      coordinadoresTiCwPextEnergia: values.coordinadoresTiCwPextEnergia?.trim() || null
     };
-
-    // Nota: si quieres que coordinadores sea solo dropdown (uno), elimina el campo de texto
-    // y usa idCoordinadorTiCw: values.idCoordinadorTiCw || null
 
     const payload: CrearOtCompletaRequest = {
       ot: otPayload,
-      trabajadores: [],          // ← ya no se usa
+      trabajadores: [],
       detalles: []
     };
+
+    // Opcional: log para verificar
+    console.log('Payload enviado:', payload);
 
     this.otService.crearOtCompleta(payload).subscribe({
       next: (res: OtResponse) => {
         Swal.fire({
           icon: 'success',
-          title: '¡Orden creada!',
-          html: `OT <strong>#${res.ot}</strong> registrada exitosamente`,
+          title: '¡Orden creada exitosamente!',
+          html: `La OT <strong>#${res.ot}</strong> ha sido registrada.<br>Redirigiendo al listado...`,
           timer: 3500,
-          showConfirmButton: false
+          timerProgressBar: true,
+          showConfirmButton: false,
+          allowOutsideClick: false
         });
-        this.router.navigate(['/ots/list']);
+        setTimeout(() => this.router.navigate(['/ots/list']), 3500);
       },
       error: (err) => {
         Swal.fire({
           icon: 'error',
-          title: 'Error al crear OT',
-          text: err.error?.message || 'Ocurrió un problema inesperado'
+          title: 'Error al crear la OT',
+          text: err.error?.message || 'Ocurrió un problema inesperado. Intenta nuevamente.',
+          confirmButtonColor: '#dc3545',
+          confirmButtonText: 'Aceptar'
         });
+        this.loading = false;
       },
       complete: () => this.loading = false
+
     });
-  }
+  });
+}
 
   resetForm(): void {
-    this.form.reset();
-    this.submitted = false;
-    this.areas = [];
-    this.actualizarDescripcion();
+    Swal.fire({
+      title: '¿Limpiar formulario?',
+      text: 'Se perderán todos los datos ingresados hasta ahora.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc3545',
+      cancelButtonColor: '#6c757d',
+      confirmButtonText: 'Sí, limpiar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.form.reset();
+        this.submitted = false;
+        this.areas = [];
+        this.form.get('idArea')?.disable();  // mantener deshabilitado al resetear
+        this.actualizarDescripcion();
+
+        Swal.fire({
+          icon: 'info',
+          title: 'Formulario limpiado',
+          text: 'Todos los campos han sido restablecidos.',
+          timer: 2000,
+          showConfirmButton: false,
+          position: 'top-end',
+          toast: true
+        });
+      }
+    });
   }
 }

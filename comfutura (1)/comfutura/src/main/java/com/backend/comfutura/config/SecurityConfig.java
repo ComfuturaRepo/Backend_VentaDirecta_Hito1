@@ -48,8 +48,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()   // ← Esto resuelve la mayoría de 403 en preflight
                         .requestMatchers(
                                 "/api/auth/**",
-                                "/api/dropdowns/**",   // confirma que esté aquí
-                                "/api/ordenes-compra/**",   // confirma que esté aquí
+                                "/api/dropdowns/**",
+                                "/api/ordenes-compra/**",
+                                "/api/ots/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
