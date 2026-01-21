@@ -318,10 +318,6 @@ CREATE TABLE ots (
                      activo TINYINT(1) DEFAULT 1,
                      fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    -- Claves foráneas existentes
-                     CONSTRAINT fk_ots_padre
-                         FOREIGN KEY (id_ots_anterior) REFERENCES ots(id_ots),
-
                      CONSTRAINT fk_ots_cliente
                          FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
 

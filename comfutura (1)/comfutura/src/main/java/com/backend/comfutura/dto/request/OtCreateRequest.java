@@ -16,7 +16,16 @@ public class OtCreateRequest {
     private Integer idFase;
     private Integer idSite;
     private Integer idRegion;
+    private LocalDate fechaApertura;
 
     private String descripcion;
     private Integer diasAsignados;
+    // ─── CAMPOS FALTANTES (los 7 que necesitas) ───
+    private Integer idJefaturaClienteSolicitante;
+    private Integer idAnalistaClienteSolicitante;
+    private Integer idCoordinadorTiCw;
+    private Integer idJefaturaResponsable;
+    private Integer idLiquidador;
+    private Integer idEjecutante;
+    private Integer idAnalistaContable;
 }

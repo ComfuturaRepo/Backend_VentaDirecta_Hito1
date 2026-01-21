@@ -25,9 +25,8 @@ public class Ots {
     @Column(name = "ot", nullable = false, unique = true)
     private Integer ot;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_ots_anterior")
-    private Ots otsAnterior;
+    @Column(name = "id_ots_anterior")
+    private Integer otsAnterior;
 
     @ManyToOne(optional = false, fetch = FetchType.LAZY)
     @JoinColumn(name = "id_cliente")

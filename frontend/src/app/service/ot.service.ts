@@ -19,7 +19,7 @@ export interface OtCreateRequest {
   descripcion: string;
   diasAsignados: number;
   idOtsAnterior: number | null;
-
+fechaApertura: string;  // Enviamos como string "YYYY-MM-DD" porque es lo que <input type="date"> genera
   idJefaturaClienteSolicitante?: number | null;
   idAnalistaClienteSolicitante?: number | null;
   idCoordinadorTiCw?: number | null;               // si solo uno
