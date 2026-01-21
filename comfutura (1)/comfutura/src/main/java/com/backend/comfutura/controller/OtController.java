@@ -1,6 +1,7 @@
 package com.backend.comfutura.controller;
 
 import com.backend.comfutura.dto.request.CrearOtCompletaRequest;
+import com.backend.comfutura.dto.response.OtFullDetailResponse;
 import com.backend.comfutura.dto.response.OtFullResponse;
 import com.backend.comfutura.dto.response.OtResponse;
 import com.backend.comfutura.service.OtService;
@@ -21,75 +22,43 @@ public class OtController {
 
     private final OtService otService;
 
-    // ==============================
-    // CREAR o ACTUALIZAR OT COMPLETA (UPSERT)
-    // ==============================
-    @PostMapping("/completa")
-    public ResponseEntity<OtResponse> saveOtCompleta(
-            @Valid @RequestBody CrearOtCompletaRequest request
-    ) {
-        OtResponse response = otService.saveOtCompleta(request);
-
-        // Si es creación nueva → 201 Created
-        // Si es actualización → 200 OK
-        // Como no tenemos forma directa de saber si fue create o update desde aquí,
-        // usamos 200 OK para ambos (es más simple y común en APIs REST modernas)
-        // Alternativa: podrías devolver 201 solo si el idOts no venía en el request
-        return ResponseEntity.ok(response);
-    }
-
-    // Alternativa: si quieres diferenciar creación y actualización con endpoints separados
-    // @PostMapping → create
-    // @PutMapping("/{id}") → update
-    // Pero como ya unificaste en saveOtCompleta, este enfoque es válido y más simple
-
-    // ==============================
-    // LISTADO DE OTs CON FILTROS
-    // ==============================
+    // Listado paginado
     @GetMapping
-    public ResponseEntity<Page<OtResponse>> listarOts(
-            @RequestParam(required = false) Integer ot,           // número de OT exacto
-            @RequestParam(required = false) Boolean activo,       // null = todos, true/false = filtrar
+    public ResponseEntity<Page<OtResponse>> listar(
+            @RequestParam(required = false) Boolean activo,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "idOts,desc") String sort  // ej: "ot,asc" o "fechaCreacion,desc"
-    ) {
-        // Parsear sort (campo,direccion)
-        String[] sortParts = sort.split(",");
-        Sort.Direction direction = sortParts.length > 1 && "asc".equalsIgnoreCase(sortParts[1])
-                ? Sort.Direction.ASC
-                : Sort.Direction.DESC;
+            @RequestParam(defaultValue = "idOts,desc") String sort) {
 
-        Sort sortBy = Sort.by(direction, sortParts[0]);
+        String[] parts = sort.split(",");
+        Sort.Direction dir = parts.length > 1 && "asc".equalsIgnoreCase(parts[1])
+                ? Sort.Direction.ASC : Sort.Direction.DESC;
 
-        Pageable pageable = PageRequest.of(page, size, sortBy);
+        Pageable pageable = PageRequest.of(page, size, Sort.by(dir, parts[0]));
 
-        Page<OtResponse> pageResult = otService.listarOts(ot, activo, pageable);
-
-        return ResponseEntity.ok(pageResult);
+        return ResponseEntity.ok(otService.listarOts(activo, pageable));
     }
 
-    // ==============================
-    // OBTENER OT BÁSICA POR ID
-    // ==============================
+    // Detalle completo por ID (principal para vista y edición)
     @GetMapping("/{id}")
-    public ResponseEntity<OtResponse> obtenerPorId(@PathVariable Integer id) {
-        OtResponse response = otService.obtenerPorId(id);
+    public ResponseEntity<OtFullDetailResponse> obtenerDetalle(@PathVariable Integer id) {
+        return ResponseEntity.ok(otService.obtenerDetalleCompleto(id));
+    }
+
+    // Detalle por número OT legible (opcional, muy útil)
+    @GetMapping("/numero/{numeroOt}")
+    public ResponseEntity<OtFullDetailResponse> obtenerPorNumero(@PathVariable Integer numeroOt) {
+        return ResponseEntity.ok(otService.obtenerPorNumeroOt(numeroOt));
+    }
+
+    // Crear o editar OT completa
+    @PostMapping("/completa")
+    public ResponseEntity<OtResponse> guardarCompleta(@Valid @RequestBody CrearOtCompletaRequest request) {
+        OtResponse response = otService.saveOtCompleta(request);
         return ResponseEntity.ok(response);
     }
 
-    // ==============================
-    // OBTENER OT COMPLETA PARA EDICIÓN
-    // ==============================
-    @GetMapping("/{id}/full")
-    public ResponseEntity<OtFullResponse> obtenerOtParaEdicion(@PathVariable Integer id) {
-        OtFullResponse response = otService.getOtForEdit(id);
-        return ResponseEntity.ok(response);
-    }
-
-    // ==============================
-    // TOGGLE ACTIVO / INACTIVO
-    // ==============================
+    // Toggle activo/inactivo
     @PostMapping("/{id}/toggle")
     public ResponseEntity<Void> toggleEstado(@PathVariable Integer id) {
         otService.toggleEstado(id);

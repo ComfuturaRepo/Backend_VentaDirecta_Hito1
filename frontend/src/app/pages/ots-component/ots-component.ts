@@ -47,43 +47,37 @@ export class OtsComponent implements OnInit {
     this.loadOts();
   }
 
-  // Cargar la lista con filtros actuales
   loadOts(page: number = this.pageIndex): void {
-    this.loading = true;
-    this.errorMessage = null;
+  this.loading = true;
+  this.errorMessage = null;
 
-    // Mapear el filtro de estado
-    let activoParam: boolean | null = null;
-    if (this.activoFilter === 'activas') activoParam = true;
-    else if (this.activoFilter === 'inactivas') activoParam = false;
-    // 'todas' → null (backend devuelve todas)
+  let activoParam: boolean | null = null;
+  if (this.activoFilter === 'activas') activoParam = true;
+  else if (this.activoFilter === 'inactivas') activoParam = false;
 
-    // Construir sort string
-    const sort = `${this.sortField},${this.sortDirection}`;
+  const sort = `${this.sortField},${this.sortDirection}`;
 
-    this.otService.listarOts(
-      this.otFilter ?? undefined,
-      activoParam,
-      page,
-      this.pageSize,
-      sort
-    ).subscribe({
-      next: (pageData) => {
-        this.otsPage = pageData;
-        this.dataSource = pageData.content || [];
-        this.totalElements = pageData.totalElements || 0;
-        this.pageIndex = pageData.number || 0;
-        this.pageSize = pageData.size || this.pageSize;
-        this.totalPages = pageData.totalPages || 1;
-        this.loading = false;
-      },
-      error: (err) => {
-        this.errorMessage = err.message || 'No se pudieron cargar las órdenes de trabajo';
-        this.loading = false;
-
-      }
-    });
-  }
+  this.otService.listarOts(
+    activoParam,          // solo este parámetro de filtro
+    page,
+    this.pageSize,
+    sort
+  ).subscribe({
+    next: (pageData) => {
+      this.otsPage = pageData;
+      this.dataSource = pageData.content || [];
+      this.totalElements = pageData.totalElements || 0;
+      this.pageIndex = pageData.number || 0;
+      this.pageSize = pageData.size || this.pageSize;
+      this.totalPages = pageData.totalPages || 1;
+      this.loading = false;
+    },
+    error: (err) => {
+      this.errorMessage = err.message || 'No se pudieron cargar las órdenes de trabajo';
+      this.loading = false;
+    }
+  });
+}
 
   // ────────────────────────────────────────────────
   // Filtros y búsqueda

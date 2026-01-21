@@ -10,13 +10,14 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 public class OtServiceImpl implements OtService {
@@ -31,145 +32,20 @@ public class OtServiceImpl implements OtService {
     private final TrabajadorRepository trabajadorRepository;
     private final OtTrabajadorRepository otTrabajadorRepository;
 
+    // ───────────────────────────────────────────────
+    // LISTADO PAGINADO
+    // ───────────────────────────────────────────────
     @Override
-    @Transactional
-    public OtResponse saveOtCompleta(CrearOtCompletaRequest request) {
-        Ots ots;
+    @Transactional(readOnly = true)
+    public Page<OtResponse> listarOts(Boolean activo, Pageable pageable) {
+        Page<Ots> page = (activo == null)
+                ? otsRepository.findAll(pageable)
+                : otsRepository.findByActivo(activo, pageable);
 
-        if (request.getOt().getIdOts() != null) {
-            // Edición
-            ots = otsRepository.findById(request.getOt().getIdOts())
-                    .orElseThrow(() -> new ResourceNotFoundException("OT no encontrada con id: " + request.getOt().getIdOts()));
-            updateOtFields(ots, request.getOt());
-        } else {
-            // Creación
-            ots = createOtBase(request.getOt());
-        }
-
-        updateTrabajadores(ots, request.getTrabajadores());
-        ots = otsRepository.save(ots);
-
-        return mapToResponse(ots);
+        return page.map(this::mapToBasicResponse);
     }
 
-    private Ots createOtBase(OtCreateRequest request) {
-        // Generar número OT secuencial
-        Integer ultimaOt = otsRepository.findTopByOrderByOtDesc()
-                .map(Ots::getOt)
-                .orElse(999);
-        Integer nuevaOt = ultimaOt + 1;
-
-        Cliente cliente = clienteRepository.findById(request.getIdCliente())
-                .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado"));
-        Area area = areaRepository.findById(request.getIdArea())
-                .orElseThrow(() -> new ResourceNotFoundException("Área no encontrada"));
-        Proyecto proyecto = proyectoRepository.findById(request.getIdProyecto())
-                .orElseThrow(() -> new ResourceNotFoundException("Proyecto no encontrado"));
-        Fase fase = faseRepository.findById(request.getIdFase())
-                .orElseThrow(() -> new ResourceNotFoundException("Fase no encontrada"));
-        Site site = siteRepository.findById(request.getIdSite())
-                .orElseThrow(() -> new ResourceNotFoundException("Site no encontrado"));
-        Region region = regionRepository.findById(request.getIdRegion())
-                .orElseThrow(() -> new ResourceNotFoundException("Región no encontrada"));
-
-        Ots ots = Ots.builder()
-                .ot(nuevaOt)
-                .otsAnterior(request.getIdOtsAnterior())
-                .cliente(cliente)
-                .area(area)
-                .proyecto(proyecto)
-                .fase(fase)
-                .site(site)
-                .region(region)
-                .descripcion(request.getDescripcion())
-                .fechaApertura(request.getFechaApertura())
-                .activo(true)
-                .build();
-
-        // Asignar responsables (solo IDs)
-        setResponsable(ots::setJefaturaClienteSolicitante, request.getIdJefaturaClienteSolicitante(), JefaturaClienteSolicitante.class);
-        setResponsable(ots::setAnalistaClienteSolicitante, request.getIdAnalistaClienteSolicitante(), AnalistaClienteSolicitante.class);
-        setResponsable(ots::setCoordinadorTiCw, request.getIdCoordinadorTiCw(), CoordinadorTiCwPextEnergia.class); // ← corrige nombre si es diferente
-        setResponsable(ots::setJefaturaResponsable, request.getIdJefaturaResponsable(), JefaturaResponsable.class);
-        setResponsable(ots::setLiquidador, request.getIdLiquidador(), Liquidador.class);
-        setResponsable(ots::setEjecutante, request.getIdEjecutante(), Ejecutante.class);
-        setResponsable(ots::setAnalistaContable, request.getIdAnalistaContable(), AnalistaContable.class);
-
-        return ots;
-    }
-
-    private <T> void setResponsable(java.util.function.Consumer<T> setter, Integer id, Class<T> clazz) {
-        if (id != null) {
-            try {
-                T entity = clazz.getDeclaredConstructor().newInstance();
-                clazz.getMethod("setId", Integer.class).invoke(entity, id);
-                setter.accept(entity);
-            } catch (Exception e) {
-                throw new RuntimeException("Error creando stub de responsable", e);
-            }
-        }
-    }
-
-    private void updateOtFields(Ots ots, OtCreateRequest req) {
-        if (req.getIdCliente() != null) {
-            ots.setCliente(clienteRepository.findById(req.getIdCliente())
-                    .orElseThrow(() -> new ResourceNotFoundException("Cliente no encontrado")));
-        }
-        if (req.getIdArea() != null) {
-            ots.setArea(areaRepository.findById(req.getIdArea())
-                    .orElseThrow(() -> new ResourceNotFoundException("Área no encontrada")));
-        }
-        if (req.getIdProyecto() != null) {
-            ots.setProyecto(proyectoRepository.findById(req.getIdProyecto())
-                    .orElseThrow(() -> new ResourceNotFoundException("Proyecto no encontrado")));
-        }
-        if (req.getIdFase() != null) {
-            ots.setFase(faseRepository.findById(req.getIdFase())
-                    .orElseThrow(() -> new ResourceNotFoundException("Fase no encontrada")));
-        }
-        if (req.getIdSite() != null) {
-            ots.setSite(siteRepository.findById(req.getIdSite())
-                    .orElseThrow(() -> new ResourceNotFoundException("Site no encontrado")));
-        }
-        if (req.getIdRegion() != null) {
-            ots.setRegion(regionRepository.findById(req.getIdRegion())
-                    .orElseThrow(() -> new ResourceNotFoundException("Región no encontrada")));
-        }
-
-        if (req.getDescripcion() != null) ots.setDescripcion(req.getDescripcion());
-        if (req.getFechaApertura() != null) ots.setFechaApertura(req.getFechaApertura());
-        if (req.getIdOtsAnterior() != null) ots.setOtsAnterior(req.getIdOtsAnterior());
-
-        setResponsable(ots::setJefaturaClienteSolicitante, req.getIdJefaturaClienteSolicitante(), JefaturaClienteSolicitante.class);
-        setResponsable(ots::setAnalistaClienteSolicitante, req.getIdAnalistaClienteSolicitante(), AnalistaClienteSolicitante.class);
-        setResponsable(ots::setCoordinadorTiCw, req.getIdCoordinadorTiCw(), CoordinadorTiCwPextEnergia.class);
-        setResponsable(ots::setJefaturaResponsable, req.getIdJefaturaResponsable(), JefaturaResponsable.class);
-        setResponsable(ots::setLiquidador, req.getIdLiquidador(), Liquidador.class);
-        setResponsable(ots::setEjecutante, req.getIdEjecutante(), Ejecutante.class);
-        setResponsable(ots::setAnalistaContable, req.getIdAnalistaContable(), AnalistaContable.class);
-    }
-
-    private void updateTrabajadores(Ots ots, List<OtTrabajadorRequest> trabajadores) {
-        otTrabajadorRepository.deleteByOts(ots);
-
-        if (trabajadores != null) {
-            for (OtTrabajadorRequest req : trabajadores) {
-                Trabajador trabajador = trabajadorRepository.findById(req.getIdTrabajador())
-                        .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado: " + req.getIdTrabajador()));
-
-                OtTrabajador otTrabajador = OtTrabajador.builder()
-                        .ots(ots)
-                        .trabajador(trabajador)
-                        .rolEnOt(req.getRolEnOt())
-                        .activo(true)
-                        .build();
-
-                otTrabajadorRepository.save(otTrabajador);
-            }
-        }
-    }
-
-    private OtResponse mapToResponse(Ots ots) {
+    private OtResponse mapToBasicResponse(Ots ots) {
         return OtResponse.builder()
                 .idOts(ots.getIdOts())
                 .ot(ots.getOt())
@@ -179,75 +55,303 @@ public class OtServiceImpl implements OtService {
                 .build();
     }
 
+    // ───────────────────────────────────────────────
+    // DETALLE COMPLETO (por ID interno)
+    // ───────────────────────────────────────────────
     @Override
-    public Page<OtResponse> listarOts(Integer ot, Boolean activo, Pageable pageable) {
-        if (ot != null) {
-            Optional<Ots> otsOptional = otsRepository.findByOt(ot);
-            if (otsOptional.isEmpty()) {
-                return Page.empty(pageable);
-            }
-            OtResponse response = mapToResponse(otsOptional.get());
-            return new PageImpl<>(List.of(response), pageable, 1);
-        }
-        else if (activo == null) {
-            return otsRepository.findAll(pageable).map(this::mapToResponse);
-        }
-        else {
-            return otsRepository.findByActivo(activo, pageable).map(this::mapToResponse);
+    @Transactional(readOnly = true)
+    public OtFullDetailResponse obtenerDetalleCompleto(Integer idOts) {
+        Ots ots = otsRepository.findById(idOts)
+                .orElseThrow(() -> new ResourceNotFoundException("OT no encontrada con id: " + idOts));
+
+        return mapToFullDetailResponse(ots);
+    }
+
+    // ───────────────────────────────────────────────
+    // DETALLE COMPLETO (por número OT legible)
+    // ───────────────────────────────────────────────
+    @Override
+    @Transactional(readOnly = true)
+    public OtFullDetailResponse obtenerPorNumeroOt(Integer numeroOt) {
+        Ots ots = otsRepository.findByOt(numeroOt)
+                .orElseThrow(() -> new ResourceNotFoundException("No se encontró OT con número: " + numeroOt));
+
+        return mapToFullDetailResponse(ots);
+    }
+
+
+    // Helpers genéricos
+    private <T> Integer getId(T entity) {
+        if (entity == null) return null;
+        try {
+            return (Integer) entity.getClass().getMethod("getId").invoke(entity);
+        } catch (Exception e) {
+            return null;
         }
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public OtFullResponse getOtForEdit(Integer id) {
-        Ots ots = otsRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("OT no encontrada"));
+    private <T> String getNombre(T entity) {
+        if (entity == null) return null;
+        try {
+            return (String) entity.getClass().getMethod("getNombre").invoke(entity);
+        } catch (Exception ignored) {
+            try {
+                return (String) entity.getClass().getMethod("getNombreCompleto").invoke(entity);
+            } catch (Exception e2) {
+                try {
+                    return (String) entity.getClass().getMethod("getRazonSocial").invoke(entity);
+                } catch (Exception e3) {
+                    return null;
+                }
+            }
+        }
+    }
 
-        return OtFullResponse.builder()
+    // ───────────────────────────────────────────────
+    // CREATE + UPDATE
+    // ───────────────────────────────────────────────
+    @Override
+    @Transactional
+    public OtResponse saveOtCompleta(CrearOtCompletaRequest request) {
+        Ots ots;
+
+        if (request.getOt().getIdOts() != null) {
+            // UPDATE
+            ots = otsRepository.findById(request.getOt().getIdOts())
+                    .orElseThrow(() -> new ResourceNotFoundException("OT no encontrada: " + request.getOt().getIdOts()));
+            updateOtFields(ots, request.getOt());
+        } else {
+            // CREATE
+            ots = createNewOt(request.getOt());
+        }
+
+        // Siempre actualizamos trabajadores (borra y recrea)
+        updateTrabajadores(ots, request.getTrabajadores());
+
+        ots = otsRepository.saveAndFlush(ots);
+
+        return mapToBasicResponse(ots);
+    }
+
+    private Ots createNewOt(OtCreateRequest req) {
+        Integer ultimaOt = otsRepository.findTopByOrderByOtDesc()
+                .map(Ots::getOt)
+                .orElse(999);
+        Integer nuevaOt = ultimaOt + 1;
+
+        Ots ots = Ots.builder()
+                .ot(nuevaOt)
+                .otsAnterior(req.getIdOtsAnterior())
+                .descripcion(req.getDescripcion())
+                .fechaApertura(req.getFechaApertura())
+                .activo(true)
+                .build();
+
+        // Relaciones obligatorias / requeridas
+        ots.setCliente(findByIdOrThrow(clienteRepository, req.getIdCliente(), "Cliente"));
+        ots.setArea(findByIdOrThrow(areaRepository, req.getIdArea(), "Área"));
+        ots.setProyecto(findByIdOrThrow(proyectoRepository, req.getIdProyecto(), "Proyecto"));
+        ots.setFase(findByIdOrThrow(faseRepository, req.getIdFase(), "Fase"));
+        ots.setSite(findByIdOrThrow(siteRepository, req.getIdSite(), "Site"));
+        ots.setRegion(findByIdOrThrow(regionRepository, req.getIdRegion(), "Región"));
+
+        // Responsables (opcionales)
+        setResponsableIfPresent(ots::setJefaturaClienteSolicitante, req.getIdJefaturaClienteSolicitante(), JefaturaClienteSolicitante.class);
+        setResponsableIfPresent(ots::setAnalistaClienteSolicitante, req.getIdAnalistaClienteSolicitante(), AnalistaClienteSolicitante.class);
+        setResponsableIfPresent(ots::setCoordinadorTiCw, req.getIdCoordinadorTiCw(), CoordinadorTiCwPextEnergia.class);
+        setResponsableIfPresent(ots::setJefaturaResponsable, req.getIdJefaturaResponsable(), JefaturaResponsable.class);
+        setResponsableIfPresent(ots::setLiquidador, req.getIdLiquidador(), Liquidador.class);
+        setResponsableIfPresent(ots::setEjecutante, req.getIdEjecutante(), Ejecutante.class);
+        setResponsableIfPresent(ots::setAnalistaContable, req.getIdAnalistaContable(), AnalistaContable.class);
+
+        return ots;
+    }
+
+    private <T> T findByIdOrThrow(JpaRepository<T, Integer> repo, Integer id, String entityName) {
+        if (id == null) {
+            throw new IllegalArgumentException(entityName + " es requerido");
+        }
+        return repo.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(entityName + " no encontrado: " + id));
+    }
+
+    private void updateOtFields(Ots ots, OtCreateRequest req) {
+        if (req.getIdCliente() != null) ots.setCliente(findByIdOrThrow(clienteRepository, req.getIdCliente(), "Cliente"));
+        if (req.getIdArea() != null) ots.setArea(findByIdOrThrow(areaRepository, req.getIdArea(), "Área"));
+        if (req.getIdProyecto() != null) ots.setProyecto(findByIdOrThrow(proyectoRepository, req.getIdProyecto(), "Proyecto"));
+        if (req.getIdFase() != null) ots.setFase(findByIdOrThrow(faseRepository, req.getIdFase(), "Fase"));
+        if (req.getIdSite() != null) ots.setSite(findByIdOrThrow(siteRepository, req.getIdSite(), "Site"));
+        if (req.getIdRegion() != null) ots.setRegion(findByIdOrThrow(regionRepository, req.getIdRegion(), "Región"));
+
+        if (req.getDescripcion() != null) ots.setDescripcion(req.getDescripcion());
+        if (req.getFechaApertura() != null) ots.setFechaApertura(req.getFechaApertura());
+        if (req.getIdOtsAnterior() != null) ots.setOtsAnterior(req.getIdOtsAnterior());
+
+        // Responsables
+        setResponsableIfPresent(ots::setJefaturaClienteSolicitante, req.getIdJefaturaClienteSolicitante(), JefaturaClienteSolicitante.class);
+        setResponsableIfPresent(ots::setAnalistaClienteSolicitante, req.getIdAnalistaClienteSolicitante(), AnalistaClienteSolicitante.class);
+        setResponsableIfPresent(ots::setCoordinadorTiCw, req.getIdCoordinadorTiCw(), CoordinadorTiCwPextEnergia.class);
+        setResponsableIfPresent(ots::setJefaturaResponsable, req.getIdJefaturaResponsable(), JefaturaResponsable.class);
+        setResponsableIfPresent(ots::setLiquidador, req.getIdLiquidador(), Liquidador.class);
+        setResponsableIfPresent(ots::setEjecutante, req.getIdEjecutante(), Ejecutante.class);
+        setResponsableIfPresent(ots::setAnalistaContable, req.getIdAnalistaContable(), AnalistaContable.class);
+    }
+
+    private <T> void setResponsableIfPresent(Consumer<T> setter, Integer id, Class<T> clazz) {
+        if (id == null) {
+            setter.accept(null);
+            return;
+        }
+        try {
+            T instance = clazz.getDeclaredConstructor().newInstance();
+            clazz.getMethod("setId", Integer.class).invoke(instance, id);
+            setter.accept(instance);
+        } catch (Exception e) {
+            throw new RuntimeException("Error al instanciar responsable: " + clazz.getSimpleName(), e);
+        }
+    }
+
+    private void updateTrabajadores(Ots ots, List<OtTrabajadorRequest> trabajadores) {
+        otTrabajadorRepository.deleteByOts(ots);
+
+        if (trabajadores == null || trabajadores.isEmpty()) {
+            return;
+        }
+
+        for (OtTrabajadorRequest req : trabajadores) {
+            Trabajador trabajador = trabajadorRepository.findById(req.getIdTrabajador())
+                    .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado: " + req.getIdTrabajador()));
+
+            OtTrabajador otTrab = OtTrabajador.builder()
+                    .ots(ots)
+                    .trabajador(trabajador)
+                    .rolEnOt(req.getRolEnOt())
+                    .activo(true)
+                    .build();
+
+            otTrabajadorRepository.save(otTrab);
+        }
+    }
+
+    // ───────────────────────────────────────────────
+    // TOGGLE ACTIVO
+    // ───────────────────────────────────────────────
+    @Override
+    @Transactional
+    public void toggleEstado(Integer idOts) {
+        Ots ots = otsRepository.findById(idOts)
+                .orElseThrow(() -> new ResourceNotFoundException("OT no encontrada: " + idOts));
+        ots.setActivo(!ots.getActivo());
+        otsRepository.save(ots);
+    }
+    private OtFullDetailResponse mapToFullDetailResponse(Ots ots) {
+        OtFullDetailResponse dto = OtFullDetailResponse.builder()
                 .idOts(ots.getIdOts())
                 .ot(ots.getOt())
                 .idOtsAnterior(ots.getOtsAnterior())
-
-                // Solo IDs para los selects/combos del formulario
-                .idCliente(Optional.ofNullable(ots.getCliente()).map(Cliente::getId).orElse(null))
-                .idArea(Optional.ofNullable(ots.getArea()).map(Area::getId).orElse(null))
-                .idProyecto(Optional.ofNullable(ots.getProyecto()).map(Proyecto::getIdProyecto).orElse(null))
-                .idFase(Optional.ofNullable(ots.getFase()).map(Fase::getIdFase).orElse(null))
-                .idSite(Optional.ofNullable(ots.getSite()).map(Site::getIdSite).orElse(null))
-                .idRegion(Optional.ofNullable(ots.getRegion()).map(Region::getIdRegion).orElse(null))
-
                 .descripcion(ots.getDescripcion())
                 .fechaApertura(ots.getFechaApertura())
-
-                // Solo IDs de responsables (para selects)
-                .idJefaturaClienteSolicitante(Optional.ofNullable(ots.getJefaturaClienteSolicitante()).map(JefaturaClienteSolicitante::getId).orElse(null))
-                .idAnalistaClienteSolicitante(Optional.ofNullable(ots.getAnalistaClienteSolicitante()).map(AnalistaClienteSolicitante::getId).orElse(null))
-                .idCoordinadorTiCw(Optional.ofNullable(ots.getCoordinadorTiCw()).map(CoordinadorTiCwPextEnergia::getId).orElse(null))
-                .idJefaturaResponsable(Optional.ofNullable(ots.getJefaturaResponsable()).map(JefaturaResponsable::getId).orElse(null))
-                .idLiquidador(Optional.ofNullable(ots.getLiquidador()).map(Liquidador::getId).orElse(null))
-                .idEjecutante(Optional.ofNullable(ots.getEjecutante()).map(Ejecutante::getId).orElse(null))
-                .idAnalistaContable(Optional.ofNullable(ots.getAnalistaContable()).map(AnalistaContable::getId).orElse(null))
-
-                .activo(ots.getActivo())
                 .fechaCreacion(ots.getFechaCreacion())
+                .activo(ots.getActivo())
 
+                // Entidades relacionadas (maestras)
+                .idCliente(ots.getCliente() != null ? ots.getCliente().getId() : null)
+                .clienteRazonSocial(ots.getCliente() != null ? ots.getCliente().getRazonSocial() : null)
 
+                .idArea(ots.getArea() != null ? ots.getArea().getId() : null)
+                .areaNombre(ots.getArea() != null ? ots.getArea().getNombre() : null)
+
+                .idProyecto(ots.getProyecto() != null ? ots.getProyecto().getIdProyecto() : null)
+                .proyectoNombre(ots.getProyecto() != null ? ots.getProyecto().getNombre() : null)
+
+                .idFase(ots.getFase() != null ? ots.getFase().getIdFase() : null)
+                .faseNombre(ots.getFase() != null ? ots.getFase().getNombre() : null)
+
+                .idSite(ots.getSite() != null ? ots.getSite().getIdSite() : null)
+                .siteNombre(ots.getSite() != null ? ots.getSite().getNombre() : null)
+
+                .idRegion(ots.getRegion() != null ? ots.getRegion().getIdRegion() : null)
+                .regionNombre(ots.getRegion() != null ? ots.getRegion().getNombre() : null)
+
+                // Responsables
+                .idJefaturaClienteSolicitante(
+                        ots.getJefaturaClienteSolicitante() != null ?
+                                ots.getJefaturaClienteSolicitante().getId() : null)
+                .jefaturaClienteSolicitanteNombre(
+                        ots.getJefaturaClienteSolicitante() != null ?
+                                ots.getJefaturaClienteSolicitante().getDescripcion() : null)
+
+                .idAnalistaClienteSolicitante(
+                        ots.getAnalistaClienteSolicitante() != null ?
+                                ots.getAnalistaClienteSolicitante().getId() : null)
+                .analistaClienteSolicitanteNombre(
+                        ots.getAnalistaClienteSolicitante() != null ?
+                                ots.getAnalistaClienteSolicitante().getDescripcion() : null)
+
+                .idCoordinadorTiCw(
+                        ots.getCoordinadorTiCw() != null ?
+                                ots.getCoordinadorTiCw().getId() : null)
+                .coordinadorTiCwNombre(
+                        ots.getCoordinadorTiCw() != null ?
+                                ots.getCoordinadorTiCw().getDescripcion() : null)
+
+                .idJefaturaResponsable(
+                        ots.getJefaturaResponsable() != null ?
+                                ots.getJefaturaResponsable().getId() : null)
+                .jefaturaResponsableNombre(
+                        ots.getJefaturaResponsable() != null ?
+                                ots.getJefaturaResponsable().getDescripcion() : null)
+
+                .idLiquidador(
+                        ots.getLiquidador() != null ?
+                                ots.getLiquidador().getId() : null)
+                .liquidadorNombre(
+                        ots.getLiquidador() != null ?
+                                ots.getLiquidador().getDescripcion() : null)
+
+                .idEjecutante(
+                        ots.getEjecutante() != null ?
+                                ots.getEjecutante().getId() : null)
+                .ejecutanteNombre(
+                        ots.getEjecutante() != null ?
+                                ots.getEjecutante().getDescripcion() : null)
+
+                .idAnalistaContable(
+                        ots.getAnalistaContable() != null ?
+                                ots.getAnalistaContable().getId() : null)
+                .analistaContableNombre(
+                        ots.getAnalistaContable() != null ?
+                                ots.getAnalistaContable().getDescripcion() : null)
+
+                // Trabajadores asignados (solo activos)
+                .trabajadoresAsignados(
+                        otTrabajadorRepository.findByOtsAndActivoTrue(ots).stream()
+                                .map(otTrab -> OtFullDetailResponse.TrabajadorEnOtDto.builder()
+                                        .idTrabajador(otTrab.getTrabajador().getId())
+                                        .nombresCompletos(
+                                                otTrab.getTrabajador().getNombres() + " " +
+                                                        otTrab.getTrabajador().getApellidos())
+                                        .cargoNombre(
+                                                otTrab.getTrabajador().getCargo() != null ?
+                                                        otTrab.getTrabajador().getCargo().getNombre() : null)
+                                        .areaTrabajadorNombre(
+                                                otTrab.getTrabajador().getArea() != null ?
+                                                        otTrab.getTrabajador().getArea().getNombre() : null)
+                                        .rolEnOt(otTrab.getRolEnOt())
+                                        .activo(otTrab.getActivo())
+                                        .build())
+                                .collect(Collectors.toList())
+                )
                 .build();
-    }
-    @Override
-    @Transactional(readOnly = true)
-    public OtResponse obtenerPorId(Integer id) {
-        Ots ots = otsRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("OT no encontrada"));
-        return mapToResponse(ots);
-    }
 
+        return dto;
+    }
+    // Compatibilidad opcional
     @Override
-    @Transactional
-    public void toggleEstado(Integer id) {
-        Ots ots = otsRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("OT no encontrada"));
-        ots.setActivo(!ots.getActivo());
-        otsRepository.save(ots);
+    public OtResponse obtenerPorId(Integer id) {
+        return mapToBasicResponse(
+                otsRepository.findById(id)
+                        .orElseThrow(() -> new ResourceNotFoundException("OT no encontrada"))
+        );
     }
 }

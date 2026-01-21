@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
@@ -8,7 +8,7 @@ import { forkJoin } from 'rxjs';
 import { DropdownItem, DropdownService } from '../../../service/dropdown.service';
 import { AuthService } from '../../../service/auth.service';
 import { OtService } from '../../../service/ot.service';
-import { CrearOtCompletaRequest, OtCreateRequest, OtResponse, OtFullResponse } from '../../../model/ots';
+import { CrearOtCompletaRequest, OtCreateRequest, OtResponse, OtFullDetailResponse } from '../../../model/ots';
 
 @Component({
   selector: 'app-form-ots-component',
@@ -18,9 +18,16 @@ import { CrearOtCompletaRequest, OtCreateRequest, OtResponse, OtFullResponse } f
   styleUrl: './form-ots-component.css'
 })
 export class FormOtsComponent implements OnInit {
+  private fb = inject(FormBuilder);
+  private otService = inject(OtService);
+  private dropdownService = inject(DropdownService);
+  private authService = inject(AuthService);
+  private router = inject(Router);
+  private route = inject(ActivatedRoute);
+
   form!: FormGroup;
   submitted = false;
-  loading = true;           // inicia en true para mostrar spinner
+  loading = true;
   isEditMode = false;
   otId: number | null = null;
   otNumber: string | null = null;
@@ -44,41 +51,30 @@ export class FormOtsComponent implements OnInit {
   ejecutantes: DropdownItem[] = [];
   analistasContable: DropdownItem[] = [];
 
-  constructor(
-    private fb: FormBuilder,
-    private otService: OtService,
-    private dropdownService: DropdownService,
-    private authService: AuthService,
-    private router: Router,
-    private route: ActivatedRoute
-  ) {
-    // Creamos el formulario INMEDIATAMENTE (antes de ngOnInit)
+  constructor() {
     this.crearFormularioBase();
   }
 
   ngOnInit(): void {
-    // Usuario logueado
     const user = this.authService.currentUser;
     this.usernameLogueado = user?.username || '—';
     this.trabajadorIdLogueado = user?.idTrabajador ?? null;
 
-    // Detectar modo edición
-    this.route.paramMap.subscribe(params => {
-      const idParam = params.get('id');
-      if (idParam && !isNaN(Number(idParam))) {
-        this.otId = Number(idParam);
-        this.isEditMode = true;
-        this.cargarDatosEdicion(this.otId);
-      } else {
-        this.isEditMode = false;
-        this.loading = false; // ya podemos mostrar el form en creación
-      }
-    });
+    // Detectar si es edición
+    const idParam = this.route.snapshot.paramMap.get('id');
+    if (idParam && !isNaN(Number(idParam))) {
+      this.otId = Number(idParam);
+      this.isEditMode = true;
+      this.cargarDatosEdicion(this.otId);
+    } else {
+      this.isEditMode = false;
+      this.loading = false;
+    }
 
-    // Cargar dropdowns comunes (siempre)
+    // Cargar catálogos independientes
     this.cargarDropdownsComunes();
 
-    // Suscripciones reactivas (solo si ya existe el form)
+    // Suscripciones reactivas
     this.suscribirCambiosFormulario();
   }
 
@@ -93,8 +89,8 @@ export class FormOtsComponent implements OnInit {
       idFase: [null, Validators.required],
       idSite: [null, Validators.required],
       idRegion: [null, Validators.required],
-      descripcion: [{ value: '', disabled: !this.isEditMode }, Validators.required],
-      fechaApertura: [hoy, Validators.required],
+      descripcion: ['', Validators.required],
+      fechaApertura: [hoy, [Validators.required]],
 
       idJefaturaClienteSolicitante: [null],
       idAnalistaClienteSolicitante: [null],
@@ -106,23 +102,28 @@ export class FormOtsComponent implements OnInit {
 
       idOtsAnterior: [null, [Validators.min(1), Validators.pattern('^[0-9]+$')]]
     });
+
+    // En modo creación la descripción se genera automáticamente
+    if (!this.isEditMode) {
+      this.form.get('descripcion')?.disable();
+    }
   }
 
   private suscribirCambiosFormulario(): void {
-    // Cascada: áreas según cliente
+    // Cascada: áreas según cliente seleccionado
     this.form.get('idCliente')?.valueChanges.subscribe(clienteId => {
       const areaCtrl = this.form.get('idArea');
       if (clienteId) {
         this.cargarAreasPorCliente(Number(clienteId));
-        areaCtrl?.enable();
+        areaCtrl?.enable({ emitEvent: false });
       } else {
         this.areas = [];
-        areaCtrl?.disable();
-        areaCtrl?.setValue(null);
+        areaCtrl?.disable({ emitEvent: false });
+        areaCtrl?.setValue(null, { emitEvent: false });
       }
     });
 
-    // Descripción automática SOLO en creación
+    // Generación automática de descripción (solo creación)
     if (!this.isEditMode) {
       ['idProyecto', 'idArea', 'idSite'].forEach(field => {
         this.form.get(field)?.valueChanges.subscribe(() => this.actualizarDescripcion());
@@ -158,19 +159,24 @@ export class FormOtsComponent implements OnInit {
         this.liquidadores = data.liquidadores || [];
         this.ejecutantes = data.ejecutantes || [];
         this.analistasContable = data.analistasCont || [];
+
+        // Si estamos en edición, ya cargamos áreas después
+        if (!this.isEditMode) {
+          this.loading = false;
+        }
       },
       error: () => {
-        Swal.fire('Error', 'No se pudieron cargar los catálogos', 'error');
+        Swal.fire('Error', 'No se pudieron cargar los catálogos necesarios', 'error');
+        this.loading = false;
       }
     });
   }
 
   private cargarDatosEdicion(id: number): void {
-    this.otService.obtenerOtParaEdicion(id).subscribe({
-      next: (ot: OtFullResponse) => {
+    this.otService.getOtDetalleCompleto(id).subscribe({   // ← nombre corregido
+      next: (ot: OtFullDetailResponse) => {
         this.otNumber = ot.ot?.toString() ?? null;
 
-        // Parcheamos valores
         this.form.patchValue({
           idOts: ot.idOts,
           idCliente: ot.idCliente,
@@ -179,8 +185,8 @@ export class FormOtsComponent implements OnInit {
           idFase: ot.idFase,
           idSite: ot.idSite,
           idRegion: ot.idRegion,
-          descripcion: ot.descripcion,
-          fechaApertura: ot.fechaApertura?.split('T')[0] ?? '',
+          descripcion: ot.descripcion || '',
+          fechaApertura: ot.fechaApertura ? ot.fechaApertura.split('T')[0] : '',
           idJefaturaClienteSolicitante: ot.idJefaturaClienteSolicitante,
           idAnalistaClienteSolicitante: ot.idAnalistaClienteSolicitante,
           idCoordinadorTiCw: ot.idCoordinadorTiCw,
@@ -191,7 +197,7 @@ export class FormOtsComponent implements OnInit {
           idOtsAnterior: ot.idOtsAnterior
         });
 
-        // Forzamos carga de áreas si hay cliente
+        // Cargar áreas del cliente seleccionado
         if (ot.idCliente) {
           this.cargarAreasPorCliente(ot.idCliente);
         }
@@ -199,7 +205,12 @@ export class FormOtsComponent implements OnInit {
         this.loading = false;
       },
       error: () => {
-        Swal.fire('Error', 'No se pudo cargar la OT para edición', 'error');
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo cargar la información de la OT',
+          confirmButtonText: 'Aceptar'
+        });
         this.router.navigate(['/ot']);
       }
     });
@@ -207,10 +218,13 @@ export class FormOtsComponent implements OnInit {
 
   private cargarAreasPorCliente(idCliente: number): void {
     this.dropdownService.getAreasByCliente(idCliente).subscribe({
-      next: areas => this.areas = areas || [],
+      next: (areas) => {
+        this.areas = areas || [];
+        // Si estamos en edición y ya hay área seleccionada, se mantiene
+      },
       error: () => {
         this.areas = [];
-        Swal.fire('Error', 'No se pudieron cargar las áreas', 'error');
+        Swal.fire('Atención', 'No se pudieron cargar las áreas del cliente', 'warning');
       }
     });
   }
@@ -224,13 +238,14 @@ export class FormOtsComponent implements OnInit {
     const area     = this.areas.find(a => a.id === Number(v.idArea))?.label || '';
     const site     = this.sites.find(s => s.id === Number(v.idSite))?.label || '';
 
-    const toSlug = (str: string) => str
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, '_')
-      .replace(/[^a-z0-9_]/g, '')
-      .replace(/_+/g, '_')
-      .replace(/^_+|_+$/g, '');
+    const toSlug = (str: string) =>
+      str
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '_')
+        .replace(/[^a-z0-9_]/g, '')
+        .replace(/_+/g, '_')
+        .replace(/^_+|_+$/g, '');
 
     const partes = [
       toSlug(proyecto),
@@ -239,11 +254,13 @@ export class FormOtsComponent implements OnInit {
       toSlug(site)
     ].filter(Boolean);
 
-    const desc = partes.join('_') || '';
+    const desc = partes.join('_') || 'OT sin descripción automática';
     this.form.get('descripcion')?.setValue(desc, { emitEvent: false });
   }
 
-  get f() { return this.form.controls; }
+  get f() {
+    return this.form.controls;
+  }
 
   onSubmit(): void {
     this.submitted = true;
@@ -253,13 +270,13 @@ export class FormOtsComponent implements OnInit {
       Swal.fire({
         icon: 'warning',
         title: 'Formulario incompleto',
-        text: 'Revisa los campos marcados.',
+        text: 'Por favor completa los campos obligatorios.',
         confirmButtonColor: '#ffc107'
       });
       return;
     }
 
-    const title = this.isEditMode ? '¿Guardar cambios?' : '¿Crear OT?';
+    const title = this.isEditMode ? '¿Guardar cambios?' : '¿Crear nueva OT?';
     Swal.fire({
       title,
       icon: 'question',
@@ -295,22 +312,29 @@ export class FormOtsComponent implements OnInit {
         idAnalistaContable: values.idAnalistaContable || null,
       };
 
-      const payload: CrearOtCompletaRequest = { ot: otPayload, trabajadores: [] };
+      const payload: CrearOtCompletaRequest = {
+        ot: otPayload,
+        trabajadores: []   // ← aquí irían los trabajadores si los agregas después
+      };
 
       this.otService.saveOtCompleta(payload).subscribe({
         next: (res: OtResponse) => {
           Swal.fire({
             icon: 'success',
-            title: this.isEditMode ? '¡OT actualizada!' : '¡OT creada!',
-            html: `Número: <strong>#${res.ot}</strong>`,
+            title: this.isEditMode ? '¡OT actualizada!' : '¡OT creada con éxito!',
+            html: `Número OT: <strong>#${res.ot}</strong>`,
             timer: 2800,
             timerProgressBar: true,
             showConfirmButton: false
           });
-          setTimeout(() => this.router.navigate(['/ot']), 2800);
+          setTimeout(() => this.router.navigate(['/ot', 'detail', res.idOts]), 2800);
         },
-        error: err => {
-          Swal.fire('Error', err.error?.message || 'No se pudo guardar', 'error');
+        error: (err) => {
+          Swal.fire({
+            icon: 'error',
+            title: 'Error al guardar',
+            text: err.error?.message || 'Ocurrió un problema inesperado',
+          });
           this.loading = false;
         }
       });
@@ -319,7 +343,7 @@ export class FormOtsComponent implements OnInit {
 
   resetForm(): void {
     Swal.fire({
-      title: this.isEditMode ? '¿Descartar cambios?' : '¿Limpiar todo?',
+      title: this.isEditMode ? '¿Descartar cambios?' : '¿Limpiar formulario?',
       icon: 'warning',
       showCancelButton: true,
       confirmButtonColor: '#dc3545',
@@ -335,7 +359,9 @@ export class FormOtsComponent implements OnInit {
         this.submitted = false;
         this.areas = [];
         this.form.get('idArea')?.disable();
-        this.form.patchValue({ fechaApertura: new Date().toISOString().split('T')[0] });
+        this.form.patchValue({
+          fechaApertura: new Date().toISOString().split('T')[0]
+        });
         this.actualizarDescripcion();
       }
     });

@@ -1,9 +1,8 @@
 <div class="container py-5">
-  <!-- Card principal -->
   <div class="card shadow-lg border-0 rounded-4 overflow-hidden">
 
-    <!-- Header con gradiente -->
-    <div class="card-header bg-gradient-primary text-white py-4 px-4 px-md-5">
+    <!-- Header -->
+    <div class="card-header bg-gradient-primary text-white py-4 px-5">
       <div class="d-flex justify-content-between align-items-center flex-wrap gap-3">
         <h4 class="mb-0 fw-semibold">
           <i class="bi bi-file-earmark-text me-2"></i>
@@ -16,22 +15,22 @@
       </div>
     </div>
 
-    <!-- Contenido principal -->
+    <!-- Contenido -->
     <div class="card-body p-4 p-md-5">
 
-      <!-- Estado de carga -->
+      <!-- Loading -->
       <div *ngIf="loading" class="text-center py-5 my-5">
         <div class="spinner-border text-primary" style="width: 3.5rem; height: 3.5rem;" role="status">
           <span class="visually-hidden">Cargando...</span>
         </div>
-        <p class="mt-3 text-muted fs-5">Obteniendo información de la OT...</p>
+        <p class="mt-3 text-muted fs-5">Obteniendo detalle completo de la OT...</p>
       </div>
 
-      <!-- Contenido cuando hay datos -->
+      <!-- Contenido real -->
       <ng-container *ngIf="!loading && ot">
         <div class="row g-4">
 
-          <!-- Columna Izquierda - Información principal -->
+          <!-- Columna Izquierda - Información principal + entidades -->
           <div class="col-lg-6">
             <h5 class="fw-bold text-primary mb-4 border-bottom pb-2">
               Información Principal
@@ -56,48 +55,118 @@
               </div>
             </div>
 
-            <!-- Puedes agregar aquí más campos básicos cuando los necesites -->
+            <div class="row mb-3 align-items-center">
+              <div class="col-5 col-sm-4 fw-bold text-muted">Cliente:</div>
+              <div class="col-7 col-sm-8">{{ ot.clienteRazonSocial || '—' }}</div>
+            </div>
+
+            <div class="row mb-3 align-items-center">
+              <div class="col-5 col-sm-4 fw-bold text-muted">Área:</div>
+              <div class="col-7 col-sm-8">{{ ot.areaNombre || '—' }}</div>
+            </div>
+
+            <div class="row mb-3 align-items-center">
+              <div class="col-5 col-sm-4 fw-bold text-muted">Proyecto:</div>
+              <div class="col-7 col-sm-8">{{ ot.proyectoNombre || '—' }}</div>
+            </div>
+
+            <div class="row mb-3 align-items-center">
+              <div class="col-5 col-sm-4 fw-bold text-muted">Fase:</div>
+              <div class="col-7 col-sm-8">{{ ot.faseNombre || '—' }}</div>
+            </div>
+
+            <div class="row mb-3 align-items-center">
+              <div class="col-5 col-sm-4 fw-bold text-muted">Site:</div>
+              <div class="col-7 col-sm-8">{{ ot.siteNombre || '—' }}</div>
+            </div>
+
+            <div class="row mb-3 align-items-center">
+              <div class="col-5 col-sm-4 fw-bold text-muted">Región:</div>
+              <div class="col-7 col-sm-8">{{ ot.regionNombre || '—' }}</div>
+            </div>
           </div>
 
-          <!-- Columna Derecha - Detalles adicionales -->
+          <!-- Columna Derecha - Responsables -->
           <div class="col-lg-6">
             <h5 class="fw-bold text-primary mb-4 border-bottom pb-2">
-              Detalles Adicionales
+              Responsables
             </h5>
 
             <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">ID Interno:</div>
-              <div class="col-7 col-sm-8">{{ ot.idOts }}</div>
+              <div class="col-5 col-sm-4 fw-bold text-muted">Jefatura Cliente:</div>
+              <div class="col-7 col-sm-8">{{ ot.jefaturaClienteSolicitanteNombre || '—' }}</div>
             </div>
 
             <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Número OT:</div>
-              <div class="col-7 col-sm-8">{{ ot.ot }}</div>
+              <div class="col-5 col-sm-4 fw-bold text-muted">Analista Cliente:</div>
+              <div class="col-7 col-sm-8">{{ ot.analistaClienteSolicitanteNombre || '—' }}</div>
             </div>
 
             <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Estado:</div>
-              <div class="col-7 col-sm-8">
-                <span class="badge fs-6 px-4 py-2"
-                      [ngClass]="ot.activo ? 'bg-success' : 'bg-danger'">
-                  {{ ot.activo ? 'Activa' : 'Inactiva' }}
-                </span>
+              <div class="col-5 col-sm-4 fw-bold text-muted">Coord. TI/CW:</div>
+              <div class="col-7 col-sm-8">{{ ot.coordinadorTiCwNombre || '—' }}</div>
+            </div>
+
+            <div class="row mb-3 align-items-center">
+              <div class="col-5 col-sm-4 fw-bold text-muted">Jefatura Responsable:</div>
+              <div class="col-7 col-sm-8">{{ ot.jefaturaResponsableNombre || '—' }}</div>
+            </div>
+
+            <div class="row mb-3 align-items-center">
+              <div class="col-5 col-sm-4 fw-bold text-muted">Liquidador:</div>
+              <div class="col-7 col-sm-8">{{ ot.liquidadorNombre || '—' }}</div>
+            </div>
+
+            <div class="row mb-3 align-items-center">
+              <div class="col-5 col-sm-4 fw-bold text-muted">Ejecutante:</div>
+              <div class="col-7 col-sm-8">{{ ot.ejecutanteNombre || '—' }}</div>
+            </div>
+
+            <div class="row mb-3 align-items-center">
+              <div class="col-5 col-sm-4 fw-bold text-muted">Analista Contable:</div>
+              <div class="col-7 col-sm-8">{{ ot.analistaContableNombre || '—' }}</div>
+            </div>
+          </div>
+
+          <!-- Sección de Trabajadores Asignados -->
+          <div class="col-12 mt-5">
+            <h5 class="fw-bold text-primary mb-4 border-bottom pb-2">
+              <i class="bi bi-people-fill me-2"></i>Trabajadores Asignados
+            </h5>
+
+            <div *ngIf="ot.trabajadoresAsignados.length; else sinTrabajadores">
+              <div class="table-responsive">
+                <table class="table table-hover table-bordered">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Nombre Completo</th>
+                      <th>Rol en OT</th>
+                      <th>Cargo</th>
+                      <th>Área</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr *ngFor="let t of ot.trabajadoresAsignados">
+                      <td>{{ t.nombresCompletos }}</td>
+                      <td>{{ t.rolEnOt || '—' }}</td>
+                      <td>{{ t.cargoNombre || '—' }}</td>
+                      <td>{{ t.areaTrabajadorNombre || '—' }}</td>
+                    </tr>
+                  </tbody>
+                </table>
               </div>
             </div>
-
-            <!-- Espacio reservado para futuros campos -->
-            <!-- Ejemplo:
-            <div class="row mb-3 align-items-center">
-              <div class="col-5 col-sm-4 fw-bold text-muted">Cliente:</div>
-              <div class="col-7 col-sm-8">{{ ot.clienteNombre || '—' }}</div>
-            </div>
-            -->
+            <ng-template #sinTrabajadores>
+              <div class="alert alert-info text-center">
+                No hay trabajadores asignados a esta OT
+              </div>
+            </ng-template>
           </div>
 
         </div>
       </ng-container>
 
-      <!-- Caso: no encontrado o error -->
+      <!-- No encontrado -->
       <ng-container *ngIf="!loading && !ot">
         <div class="alert alert-warning text-center py-5 my-5 border-0 shadow-sm rounded-3">
           <i class="bi bi-exclamation-triangle-fill fs-1 text-warning d-block mb-3"></i>
@@ -110,13 +179,10 @@
 
     </div>
 
-    <!-- Footer con acciones -->
-    <div class="card-footer bg-light border-0 py-4 px-4 px-md-5 text-center">
-      <button class="btn btn-outline-secondary px-5 py-2 fw-semibold"
-              (click)="volver()"
-              type="button">
-        <i class="bi bi-arrow-left me-2"></i>
-        Volver al listado
+    <!-- Footer -->
+    <div class="card-footer bg-light border-0 py-4 text-center">
+      <button class="btn btn-outline-secondary px-5 py-2 fw-semibold" (click)="volver()">
+        <i class="bi bi-arrow-left me-2"></i>Volver al listado
       </button>
     </div>
 

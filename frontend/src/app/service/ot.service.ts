@@ -3,11 +3,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-
-// Interfaces / modelos (ajusta según tu estructura real)
 import { environment } from '../../environment';
-import { CrearOtCompletaRequest, OtResponse, OtFullResponse, Page } from '../model/ots'; // o la carpeta donde los tengas
 
+import { CrearOtCompletaRequest, OtResponse, OtFullDetailResponse, Page } from '../model/ots'; // ← ajusta la carpeta si es necesario
 
 @Injectable({
   providedIn: 'root'
@@ -19,8 +17,6 @@ export class OtService {
 
   /**
    * Crea o actualiza una OT completa (upsert)
-   * - Si request.ot.idOts existe → edición
-   * - Si no → creación nueva (genera ot secuencial en backend)
    */
   saveOtCompleta(payload: CrearOtCompletaRequest): Observable<OtResponse> {
     return this.http.post<OtResponse>(`${this.apiUrl}/completa`, payload).pipe(
@@ -29,15 +25,9 @@ export class OtService {
   }
 
   /**
-   * Lista OTs con filtros flexibles
-   * @param ot - número de OT exacto (opcional)
-   * @param activo - true = activas, false = inactivas, null/undefined = todas
-   * @param page - página (0-based)
-   * @param size - registros por página
-   * @param sort - formato "campo,direccion" ej: "ot,asc" o "fechaCreacion,desc"
+   * Lista paginada de OTs (básica)
    */
   listarOts(
-    ot?: number,
     activo?: boolean | null,
     page: number = 0,
     size: number = 10,
@@ -48,13 +38,9 @@ export class OtService {
       .set('size', size.toString())
       .set('sort', sort);
 
-    if (ot !== undefined && ot !== null) {
-      params = params.set('ot', ot.toString());
-    }
     if (activo !== undefined && activo !== null) {
       params = params.set('activo', activo.toString());
     }
-    // Si activo es null/undefined → no se envía → backend devuelve todas
 
     return this.http.get<Page<OtResponse>>(this.apiUrl, { params }).pipe(
       catchError(this.handleError)
@@ -62,55 +48,59 @@ export class OtService {
   }
 
   /**
-   * Obtiene una OT básica por su ID interno (id_ots)
-   * Endpoint: GET /api/ots/{id}
+   * Obtiene el detalle COMPLETO de una OT buscando por su número legible (ej: 1456)
+   * Este es el endpoint principal cuando el usuario ingresa el número de OT
    */
-  obtenerPorId(id: number): Observable<OtResponse> {
+  getOtByNumeroOt(ot: number): Observable<OtFullDetailResponse> {
+    const params = new HttpParams().set('ot', ot.toString());
+    return this.http.get<OtFullDetailResponse>(`${this.apiUrl}/by-ot`, { params }).pipe(
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Obtiene una OT básica por su ID interno (id_ots)
+   */
+  getOtById(id: number): Observable<OtResponse> {
     return this.http.get<OtResponse>(`${this.apiUrl}/${id}`).pipe(
       catchError(this.handleError)
     );
   }
 
   /**
-   * Obtiene TODA la información necesaria para editar una OT
-   * (IDs de selects, descripción, fecha, responsables, etc.)
-   * Endpoint: GET /api/ots/{id}/full
+   * Obtiene los datos necesarios para editar una OT (solo IDs + campos editables)
+   * Útil para precargar un formulario de edición
    */
-  obtenerOtParaEdicion(id: number): Observable<OtFullResponse> {
-    return this.http.get<OtFullResponse>(`${this.apiUrl}/${id}/full`).pipe(
+  getOtParaEdicion(id: number): Observable<OtFullDetailResponse> {   // ← puedes cambiar a OtFullResponse si prefieres la versión sin nombres
+    return this.http.get<OtFullDetailResponse>(`${this.apiUrl}/${id}/full`).pipe(
       catchError(this.handleError)
     );
   }
 
   /**
-   * Alterna el estado activo/inactivo de una OT
-   * Endpoint: POST /api/ots/{id}/toggle
+   * Alterna activo/inactivo
    */
   toggleEstado(id: number): Observable<void> {
     return this.http.post<void>(`${this.apiUrl}/${id}/toggle`, {}).pipe(
       catchError(this.handleError)
     );
   }
-
-  /**
-   * Manejo centralizado de errores HTTP
-   */
+getOtDetalleCompleto(id: number): Observable<OtFullDetailResponse> {
+  return this.http.get<OtFullDetailResponse>(`${this.apiUrl}/${id}`).pipe(
+    catchError(this.handleError)
+  );
+}
   private handleError(error: HttpErrorResponse): Observable<never> {
     let errorMessage = 'Ocurrió un error desconocido';
 
     if (error.error instanceof ErrorEvent) {
-      // Error del cliente (network, etc.)
+      // Error del lado del cliente
       errorMessage = `Error: ${error.error.message}`;
     } else {
-      // Error del servidor
+      // Error del backend
       errorMessage = error.error?.message || `Error ${error.status}: ${error.statusText}`;
-
-      // Puedes personalizar mensajes conocidos
-      if (error.status === 404) {
-        errorMessage = 'Recurso no encontrado';
-      } else if (error.status === 400) {
-        errorMessage = 'Datos inválidos';
-      }
+      if (error.status === 404) errorMessage = 'OT no encontrada';
+      if (error.status === 400) errorMessage = 'Datos inválidos o incompletos';
     }
 
     console.error('[OtService]', errorMessage, error);
