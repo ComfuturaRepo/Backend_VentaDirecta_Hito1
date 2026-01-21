@@ -184,12 +184,12 @@ public class OtServiceImpl implements OtService {
     // Listado
     // ==============================
     @Override
-    @Transactional(readOnly = true)
     public Page<OtResponse> listarPorEstado(Boolean activo, Pageable pageable) {
-
         return otsRepository.findByActivo(activo, pageable)
                 .map(this::mapToResponse);
     }
+    
+
 
 
     // ==============================

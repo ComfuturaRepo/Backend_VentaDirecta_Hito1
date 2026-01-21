@@ -13,17 +13,13 @@ import java.util.Optional;
 @Repository
 public interface OtsRepository extends JpaRepository<Ots, Integer> {
 
-    // Verifica si ya existe una OT con ese número
     boolean existsByOt(Integer ot);
-    Optional<Ots> findAllByActivoTrue();
-
-    // Para dropdowns (solo activos)
-    List<Ots> findByActivoTrueOrderByOtAsc();
-    Optional<Ots> findTopByOrderByOtDesc();
-
-    Page<Ots> findByActivoTrue(Pageable pageable);
 
     Page<Ots> findByActivo(Boolean activo, Pageable pageable);
+
+    List<Ots> findByActivoTrueOrderByOtAsc();
+
+    Optional<Ots> findTopByOrderByOtDesc();
 
 }
 

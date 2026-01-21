@@ -11,4 +11,5 @@ public interface OtService {
     Page<OtResponse> listarPorEstado(Boolean activo, Pageable pageable);
     OtResponse obtenerPorId(Integer id);
 
+
 }
