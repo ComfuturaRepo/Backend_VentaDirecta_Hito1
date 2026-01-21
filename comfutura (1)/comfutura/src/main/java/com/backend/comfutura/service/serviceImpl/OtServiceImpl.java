@@ -56,19 +56,20 @@ public class OtServiceImpl implements OtService {
         Region region = regionRepository.findById(request.getIdRegion())
                 .orElseThrow(() -> new ResourceNotFoundException("Región no encontrada"));
 
-        Ots otsAnterior = null;
-        if (request.getIdOtsAnterior() != null) {
-            otsAnterior = otsRepository.findById(request.getIdOtsAnterior())
-                    .orElseThrow(() -> new ResourceNotFoundException("OT anterior no encontrada"));
-        }
+//        Ots otsAnterior = null;
+//        if (request.getIdOtsAnterior() != null) {
+//            otsAnterior = otsRepository.findById(request.getIdOtsAnterior())
+//                    .orElseThrow(() -> new ResourceNotFoundException("OT anterior no encontrada"));
+//        }
 
         Ots ots = Ots.builder()
                 .ot(nuevaOt)
-                .otsAnterior(otsAnterior)
+                .otsAnterior(request.getIdOtsAnterior())
                 .cliente(cliente)
                 .area(area)
                 .proyecto(proyecto)
                 .fase(fase)
+                .fechaApertura(request.getFechaApertura())
                 .site(site)
                 .region(region)
                 .descripcion(request.getDescripcion())

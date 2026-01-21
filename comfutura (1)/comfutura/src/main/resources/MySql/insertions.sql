@@ -189,10 +189,10 @@ INSERT INTO rol (nombre, descripcion) VALUES
 
 -- 19. Usuarios (para login - ¡usa bcrypt/hashed en producción!)
 INSERT INTO usuario (username, password, id_trabajador) VALUES
-                                                            ('jespinoza',  '$2a$10$examplehashedpassword1234567890', 1),  -- admin2026 (hasheado)
-                                                            ('cramirez',   '$2a$10$examplehashedpassword0987654321', 2),
-                                                            ('rquispe',    '$2a$10$examplehashedpassword1122334455', 3),
-                                                            ('mtorres',    '$2a$10$examplehashedpassword6677889900', 5);
+                                                            ('jespinoza',  'admin2026', 1),  -- admin2026 (hasheado)
+                                                            ('cramirez',   'ramirez', 2),
+                                                            ('rquispe',    'rquispe', 3),
+                                                            ('mtorres',    'mtorres', 5);
 
 -- 20. Asignación de roles a usuarios
 INSERT INTO usuario_rol (id_usuario, id_rol) VALUES
