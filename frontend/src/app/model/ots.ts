@@ -1,93 +1,81 @@
-// ────────────────────────────────────────────────
-// Interfaces de REQUEST
-// ────────────────────────────────────────────────
-
-export interface OtCreateRequest {
-  idCliente: number;
-  idArea: number;
-  idProyecto: number;
-  idFase: number;
-  idSite: number;
-  idRegion: number;
+export interface OtResponse {
+  idOts: number;
+  ot: number;
   descripcion: string;
-  idOtsAnterior: number | null;
-  fechaApertura: string;
+  activo: boolean;
+  fechaCreacion: string; // ISO date string
+}
+
+export interface OtFullResponse {
+  idOts: number;
+  ot: number;
+  idOtsAnterior?: number | null;
+
+  idCliente?: number | null;
+  idArea?: number | null;
+  idProyecto?: number | null;
+  idFase?: number | null;
+  idSite?: number | null;
+  idRegion?: number | null;
+
+  descripcion?: string;
+  fechaApertura?: string; // 'YYYY-MM-DD'
+
   idJefaturaClienteSolicitante?: number | null;
   idAnalistaClienteSolicitante?: number | null;
   idCoordinadorTiCw?: number | null;
-  coordinadoresTiCwPextEnergia?: string | null;
+  idJefaturaResponsable?: number | null;
+  idLiquidador?: number | null;
+  idEjecutante?: number | null;
+  idAnalistaContable?: number | null;
+
+  activo: boolean;
+  fechaCreacion: string;
+  // NO incluye trabajadores (como lo decidiste)
+}
+
+export interface CrearOtCompletaRequest {
+  ot: OtCreateRequest;
+  trabajadores?: Array<{ idTrabajador: number; rolEnOt: string }>; // opcional
+}
+
+export interface OtCreateRequest {
+  idOts?: number;               // solo para edición
+  idOtsAnterior?: number | null;
+  idCliente?: number;
+  idArea?: number;
+  idProyecto?: number;
+  idFase?: number;
+  idSite?: number;
+  idRegion?: number;
+  descripcion?: string;
+  fechaApertura?: string;       // 'YYYY-MM-DD'
+  idJefaturaClienteSolicitante?: number | null;
+  idAnalistaClienteSolicitante?: number | null;
+  idCoordinadorTiCw?: number | null;
   idJefaturaResponsable?: number | null;
   idLiquidador?: number | null;
   idEjecutante?: number | null;
   idAnalistaContable?: number | null;
 }
 
-export interface OtTrabajadorRequest {
-  idTrabajador: number;
-  rolEnOt: string;
-}
-
-export interface OtDetalleRequest {
-  idMaestro: number;
-  idProveedor: number;
-  cantidad: number;
-  precioUnitario: number;
-}
-
-export interface CrearOtCompletaRequest {
-  ot: OtCreateRequest;
-  trabajadores?: OtTrabajadorRequest[];
-  detalles?: OtDetalleRequest[];
-}
-
-// ────────────────────────────────────────────────
-// Interfaces de RESPONSE
-// ────────────────────────────────────────────────
-
-export interface OtResponse {
-  idOts: number;
-  ot: number;
-  descripcion?: string;
-  fechaApertura: string | null;
-  diasAsignados: number | null;
-  activo: boolean;
-  fechaCreacion: string;
-
-  // Campos opcionales que podrías mapear si el backend los empieza a devolver
-  jefaturaClienteSolicitante?: string;
-  analistaClienteSolicitante?: string;
-  coordinadoresTiCwPextEnergia?: string;
-  jefaturaResponsable?: string;
-  liquidador?: string;
-  ejecutante?: string;
-  analistaContable?: string;
-}
-
 export interface Page<T> {
   content: T[];
   pageable: {
+    sort: { sorted: boolean; unsorted: boolean; empty: boolean };
+    offset: number;
     pageNumber: number;
     pageSize: number;
-    sort: {
-      empty: boolean;
-      sorted: boolean;
-      unsorted: boolean;
-    };
-    offset: number;
     paged: boolean;
     unpaged: boolean;
   };
-  totalElements: number;
-  totalPages: number;
   last: boolean;
+  totalPages: number;
+  totalElements: number;
   size: number;
   number: number;
-  numberOfElements: number;
-  sort: {
-    empty: boolean;
-    sorted: boolean;
-    unsorted: boolean;
-  };
+  sort: { sorted: boolean; unsorted: boolean; empty: boolean };
   first: boolean;
+  numberOfElements: number;
   empty: boolean;
 }

@@ -5,8 +5,8 @@ import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
 
+import { OtResponse, Page } from '../../model/ots';        // Ajusta la ruta según tu estructura
 import { OtService } from '../../service/ot.service';
-import { OtResponse, Page } from '../../model/ots';
 
 @Component({
   selector: 'app-ots-component',
@@ -22,8 +22,10 @@ export class OtsComponent implements OnInit {
   private otService = inject(OtService);
   private router = inject(Router);
 
+  // Columnas de la tabla
   displayedColumns: string[] = ['ot', 'descripcion', 'fechaCreacion', 'activo', 'acciones'];
 
+  // Datos de la tabla y paginación
   otsPage: Page<OtResponse> | null = null;
   dataSource: OtResponse[] = [];
 
@@ -32,8 +34,11 @@ export class OtsComponent implements OnInit {
   totalElements = 0;
   totalPages = 0;
 
-  // null = todas, true = activas, false = inactivas
-  activoFilter: boolean | null = true;
+  // Filtros
+  activoFilter: 'todas' | 'activas' | 'inactivas' = 'activas'; // valor por defecto
+  otFilter: number | null = null; // filtro por número OT exacto
+  sortField = 'idOts';            // campo por defecto
+  sortDirection = 'desc';         // asc o desc
 
   loading = false;
   errorMessage: string | null = null;
@@ -42,20 +47,34 @@ export class OtsComponent implements OnInit {
     this.loadOts();
   }
 
-  loadOts(page: number = this.pageIndex, size: number = this.pageSize): void {
+  // Cargar la lista con filtros actuales
+  loadOts(page: number = this.pageIndex): void {
     this.loading = true;
     this.errorMessage = null;
 
-    const filterValue: boolean = this.activoFilter !== null ? this.activoFilter : true;
+    // Mapear el filtro de estado
+    let activoParam: boolean | null = null;
+    if (this.activoFilter === 'activas') activoParam = true;
+    else if (this.activoFilter === 'inactivas') activoParam = false;
+    // 'todas' → null (backend devuelve todas)
 
-    this.otService.listarOts(filterValue, page, size).subscribe({
+    // Construir sort string
+    const sort = `${this.sortField},${this.sortDirection}`;
+
+    this.otService.listarOts(
+      this.otFilter ?? undefined,
+      activoParam,
+      page,
+      this.pageSize,
+      sort
+    ).subscribe({
       next: (pageData) => {
         this.otsPage = pageData;
         this.dataSource = pageData.content || [];
         this.totalElements = pageData.totalElements || 0;
         this.pageIndex = pageData.number || 0;
         this.pageSize = pageData.size || this.pageSize;
-        this.totalPages = Math.ceil(this.totalElements / this.pageSize) || 1;
+        this.totalPages = pageData.totalPages || 1;
         this.loading = false;
       },
       error: (err) => {
@@ -67,13 +86,32 @@ export class OtsComponent implements OnInit {
   }
 
   // ────────────────────────────────────────────────
+  // Filtros y búsqueda
+  // ────────────────────────────────────────────────
+
+  onFilterChange(): void {
+    this.pageIndex = 0; // resetear paginación al cambiar filtro
+    this.loadOts();
+  }
+
+  onOtFilterChange(value: string): void {
+    this.otFilter = value.trim() ? parseInt(value, 10) : null;
+    this.onFilterChange();
+  }
+
+  clearOtFilter(): void {
+    this.otFilter = null;
+    this.onFilterChange();
+  }
+
+  // ────────────────────────────────────────────────
   // Paginación
   // ────────────────────────────────────────────────
 
   goToPage(page: number): void {
     if (page < 0 || page >= this.totalPages || page === this.pageIndex) return;
     this.pageIndex = page;
-    this.loadOts();
+    this.loadOts(page);
   }
 
   goToFirst(): void { this.goToPage(0); }
@@ -94,12 +132,9 @@ export class OtsComponent implements OnInit {
     let start = Math.max(0, this.pageIndex - range);
     let end = Math.min(this.totalPages - 1, this.pageIndex + range);
 
-    if (end - start < range * 2) {
-      if (this.pageIndex <= range) end = Math.min(this.totalPages - 1, range * 2);
-      else start = Math.max(0, this.totalPages - 1 - range * 2);
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
     }
-
-    for (let i = start; i <= end; i++) pages.push(i);
     return pages;
   }
 
@@ -107,36 +142,19 @@ export class OtsComponent implements OnInit {
   // Acciones principales
   // ────────────────────────────────────────────────
 
-  onFilterChange(): void {
-    this.pageIndex = 0;
-    this.loadOts();
-  }
-
   goToCreate(): void {
     this.router.navigate(['/ot/nuevo']);
   }
 
-  // Ver detalle por ID (usa GET /api/ots/{id})
-  viewDetail(ot: OtResponse): void {
-    this.otService.obtenerPorId(ot.idOts).subscribe({
-      next: (detalle) => {
-        // Navegamos a la ruta de detalle (puedes cambiar a modal si prefieres)
-        this.router.navigate(['/ot', ot.idOts]);
-      },
-      error: (err) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'No se pudo cargar el detalle',
-          text: err.message || 'Error al obtener la OT',
-          confirmButtonColor: '#dc3545'
-        });
-      }
-    });
-  }
+ goToEdit(ot: OtResponse): void {
+  this.router.navigate(['/ot/editar', ot.idOts]);
+}
 
-  // Toggle Activar / Desactivar (usa POST /api/ots/{id}/toggle)
+viewDetail(ot: OtResponse): void {
+  this.router.navigate(['/ot', ot.idOts]);           // → /ot/123
+}
   toggleEstado(ot: OtResponse): void {
-    const nuevoEstado = ot.activo ? 'Inactiva' : 'Activa';
+    const nuevoEstado = ot.activo ? 'inactiva' : 'activa';
     const accion = ot.activo ? 'desactivar' : 'activar';
 
     Swal.fire({
@@ -160,18 +178,16 @@ export class OtsComponent implements OnInit {
             text: `La OT #${ot.ot} ahora está ${nuevoEstado}`,
             timer: 2200,
             showConfirmButton: false,
-            position: 'top-end',
-            toast: true
+            toast: true,
+            position: 'top-end'
           });
-
-          // Recargamos la lista manteniendo página y filtro actual
-          this.loadOts();
+          this.loadOts(); // recargar manteniendo filtros y página
         },
         error: (err) => {
           Swal.fire({
             icon: 'error',
-            title: 'Error al cambiar estado',
-            text: err.message || 'No se pudo actualizar el estado',
+            title: 'Error',
+            text: err.message || 'No se pudo cambiar el estado',
             confirmButtonColor: '#dc3545'
           });
         }

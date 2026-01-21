@@ -1,241 +1,254 @@
 <div class="container py-4 py-md-5">
   <div class="row justify-content-center">
     <div class="col-lg-10 col-xl-9">
-      <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
 
-        <!-- Header más compacto -->
-        <div class="card-header bg-gradient-primary text-white py-3 px-4 d-flex align-items-center justify-content-between flex-wrap gap-3">
-          <div class="d-flex align-items-center">
-            <i class="bi bi-file-earmark-plus-fill fs-4 me-3"></i>
-            <h5 class="mb-0 fw-semibold">Crear Orden de Trabajo</h5>
+      <!-- Spinner mientras carga -->
+      <div *ngIf="loading" class="text-center py-5 my-5">
+        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+          <span class="visually-hidden">Cargando...</span>
+        </div>
+        <p class="mt-3 text-muted fs-5">
+          {{ isEditMode ? 'Cargando datos de la OT...' : 'Preparando formulario...' }}
+        </p>
+      </div>
+
+      <!-- Formulario solo cuando ya no está cargando -->
+      <div *ngIf="!loading">
+        <div class="card border-0 shadow-lg rounded-4 overflow-hidden">
+
+          <!-- Header -->
+          <div class="card-header bg-gradient-primary text-white py-3 px-4 px-md-5 d-flex align-items-center justify-content-between flex-wrap gap-3">
+            <div class="d-flex align-items-center gap-3">
+              <i class="bi bi-file-earmark-plus-fill fs-4"></i>
+              <h5 class="mb-0 fw-semibold">
+                {{ isEditMode ? 'Editar Orden de Trabajo' : 'Nueva Orden de Trabajo' }}
+              </h5>
+            </div>
+            <div class="small opacity-85 text-end">
+              Creado por: <strong>{{ usernameLogueado }}</strong>
+              <span class="ms-2 text-white-50" *ngIf="trabajadorIdLogueado">(ID: {{ trabajadorIdLogueado }})</span>
+            </div>
           </div>
-          <div class="small opacity-85">
-            Creado por: <strong>{{ usernameLogueado }}</strong>
-            <span class="ms-2 text-white-50" *ngIf="trabajadorIdLogueado">(ID: {{ trabajadorIdLogueado }})</span>
+
+          <div class="card-body p-4 p-md-5">
+            <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
+
+              <!-- Sección 1: Datos principales -->
+              <h6 class="mb-4 pb-2 border-bottom border-primary text-primary fw-semibold">
+                <i class="bi bi-info-circle-fill me-2"></i> Información principal
+              </h6>
+
+              <div class="row g-3 g-md-4">
+                <div class="col-md-6 col-lg-4">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idCliente"
+                            [class.is-invalid]="submitted && f['idCliente'].invalid">
+                      <option [ngValue]="null">Seleccione cliente...</option>
+                      <option *ngFor="let c of clientes" [ngValue]="c.id">{{ c.label }}</option>
+                    </select>
+                    <label>Cliente <span class="text-danger">*</span></label>
+                    <div class="invalid-feedback">Obligatorio</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idArea"
+                            [class.is-invalid]="submitted && f['idArea'].invalid">
+                      <option [ngValue]="null">Seleccione área...</option>
+                      <option *ngFor="let a of areas" [ngValue]="a.id">{{ a.label }}</option>
+                    </select>
+                    <label>Área <span class="text-danger">*</span></label>
+                    <div class="invalid-feedback">Obligatorio</div>
+                  </div>
+                  <small class="form-text text-muted mt-1" *ngIf="!f['idCliente'].value">
+                    <i class="bi bi-info-circle me-1"></i>Selecciona un cliente primero
+                  </small>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                  <div class="form-floating">
+                    <input type="date" class="form-control" formControlName="fechaApertura"
+                           [class.is-invalid]="submitted && f['fechaApertura'].invalid">
+                    <label>Fecha Apertura <span class="text-danger">*</span></label>
+                    <div class="invalid-feedback">Obligatorio</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idProyecto"
+                            [class.is-invalid]="submitted && f['idProyecto'].invalid">
+                      <option [ngValue]="null">Seleccione proyecto...</option>
+                      <option *ngFor="let p of proyectos" [ngValue]="p.id">{{ p.label }}</option>
+                    </select>
+                    <label>Proyecto <span class="text-danger">*</span></label>
+                    <div class="invalid-feedback">Obligatorio</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idFase"
+                            [class.is-invalid]="submitted && f['idFase'].invalid">
+                      <option [ngValue]="null">Seleccione fase...</option>
+                      <option *ngFor="let f of fases" [ngValue]="f.id">{{ f.label }}</option>
+                    </select>
+                    <label>Fase <span class="text-danger">*</span></label>
+                    <div class="invalid-feedback">Obligatorio</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idSite"
+                            [class.is-invalid]="submitted && f['idSite'].invalid">
+                      <option [ngValue]="null">Seleccione site...</option>
+                      <option *ngFor="let s of sites" [ngValue]="s.id">{{ s.label }}</option>
+                    </select>
+                    <label>Site <span class="text-danger">*</span></label>
+                    <div class="invalid-feedback">Obligatorio</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idRegion"
+                            [class.is-invalid]="submitted && f['idRegion'].invalid">
+                      <option [ngValue]="null">Seleccione región...</option>
+                      <option *ngFor="let r of regiones" [ngValue]="r.id">{{ r.label }}</option>
+                    </select>
+                    <label>Región <span class="text-danger">*</span></label>
+                    <div class="invalid-feedback">Obligatorio</div>
+                  </div>
+                </div>
+
+                <div class="col-md-6">
+                  <div class="form-floating">
+                    <input type="number" class="form-control" formControlName="idOtsAnterior" min="1">
+                    <label>OT Anterior (opcional)</label>
+                  </div>
+                </div>
+
+                <div class="col-12">
+                  <div class="form-floating">
+                    <textarea class="form-control" formControlName="descripcion" rows="2"
+                              [readonly]="!isEditMode" placeholder="Descripción..."></textarea>
+                    <label>Descripción <span class="text-danger">*</span></label>
+                    <div class="invalid-feedback">Obligatorio</div>
+                  </div>
+                  <small class="form-text text-muted mt-1" *ngIf="!isEditMode">
+                    <i class="bi bi-magic me-1"></i>Generada automáticamente
+                  </small>
+                </div>
+              </div>
+
+              <!-- Responsables -->
+              <h6 class="mt-5 mb-4 pb-2 border-bottom border-primary text-primary fw-semibold">
+                <i class="bi bi-person-badge-fill me-2"></i> Responsables y solicitantes
+              </h6>
+
+              <div class="row g-3 g-md-4">
+                <div class="col-md-6 col-lg-3">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idJefaturaClienteSolicitante">
+                      <option [ngValue]="null">-- Seleccionar --</option>
+                      <option *ngFor="let j of jefaturasCliente" [ngValue]="j.id">{{ j.label }}</option>
+                    </select>
+                    <label>Jefatura Cliente</label>
+                  </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idAnalistaClienteSolicitante">
+                      <option [ngValue]="null">-- Seleccionar --</option>
+                      <option *ngFor="let a of analistasCliente" [ngValue]="a.id">{{ a.label }}</option>
+                    </select>
+                    <label>Analista Cliente</label>
+                  </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idCoordinadorTiCw">
+                      <option [ngValue]="null">-- Seleccionar --</option>
+                      <option *ngFor="let c of coordinadoresTiCw" [ngValue]="c.id">{{ c.label }}</option>
+                    </select>
+                    <label>Coord. TI/CW</label>
+                  </div>
+                </div>
+
+                <div class="col-md-6 col-lg-3">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idJefaturaResponsable">
+                      <option [ngValue]="null">-- Seleccionar --</option>
+                      <option *ngFor="let j of jefaturasResponsable" [ngValue]="j.id">{{ j.label }}</option>
+                    </select>
+                    <label>Jefatura Resp.</label>
+                  </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idLiquidador">
+                      <option [ngValue]="null">-- Seleccionar --</option>
+                      <option *ngFor="let l of liquidadores" [ngValue]="l.id">{{ l.label }}</option>
+                    </select>
+                    <label>Liquidador</label>
+                  </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idEjecutante">
+                      <option [ngValue]="null">-- Seleccionar --</option>
+                      <option *ngFor="let e of ejecutantes" [ngValue]="e.id">{{ e.label }}</option>
+                    </select>
+                    <label>Ejecutante</label>
+                  </div>
+                </div>
+
+                <div class="col-md-6 col-lg-4">
+                  <div class="form-floating">
+                    <select class="form-select" formControlName="idAnalistaContable">
+                      <option [ngValue]="null">-- Seleccionar --</option>
+                      <option *ngFor="let a of analistasContable" [ngValue]="a.id">{{ a.label }}</option>
+                    </select>
+                    <label>Analista Contable</label>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Botones -->
+              <div class="d-flex flex-column flex-sm-row gap-3 justify-content-end mt-5 pt-4 border-top">
+                <button type="button" class="btn btn-outline-secondary px-4 py-2"
+                        (click)="resetForm()" [disabled]="loading">
+                  <i class="bi bi-arrow-repeat me-2"></i>
+                  {{ isEditMode ? 'Descartar cambios' : 'Limpiar' }}
+                </button>
+
+                <button type="submit" class="btn btn-primary px-5 py-2 shadow"
+                        [disabled]="loading || form.invalid">
+                  <ng-container *ngIf="!loading">
+                    <i class="bi me-2" [ngClass]="isEditMode ? 'bi-save' : 'bi-check2-circle'"></i>
+                    {{ isEditMode ? 'Guardar Cambios' : 'Crear OT' }}
+                  </ng-container>
+                  <ng-container *ngIf="loading">
+                    <span class="spinner-border spinner-border-sm me-2"></span>
+                    Procesando...
+                  </ng-container>
+                </button>
+              </div>
+
+            </form>
           </div>
+
+          <div class="card-footer bg-light text-muted small text-center py-3">
+            Campos con <span class="text-danger">*</span> son obligatorios
+          </div>
+
         </div>
-
-        <div class="card-body p-4 p-md-5 bg-white">
-          <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
-
-            <!-- Sección 1: Información principal (más compacta con floating labels) -->
-            <h6 class="mb-3 pb-2 border-bottom border-primary text-primary fw-semibold">
-              <i class="bi bi-info-circle-fill me-2"></i> Datos principales
-            </h6>
-
-            <div class="row g-3 mb-4">
-              <div class="col-md-6">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idCliente"
-                          [class.is-invalid]="submitted && f['idCliente'].invalid">
-                    <option value="">Seleccione...</option>
-                    <option *ngFor="let c of clientes" [value]="c.id">{{ c.label }}</option>
-                  </select>
-                  <label>Cliente <span class="text-danger">*</span></label>
-                  <div class="invalid-feedback">Obligatorio</div>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idArea"
-                          [class.is-invalid]="submitted && f['idArea'].invalid">
-                    <option value="">Seleccione...</option>
-                    <option *ngFor="let a of areas" [value]="a.id">{{ a.label }}</option>
-                  </select>
-                  <label>Área <span class="text-danger">*</span></label>
-                  <div class="invalid-feedback">Obligatorio</div>
-                </div>
-                <small class="form-text text-muted mt-1" *ngIf="!f['idCliente'].value">
-                  <i class="bi bi-info-circle me-1"></i> Selecciona cliente primero
-                </small>
-              </div>
-            </div>
-
-            <div class="row g-3 mb-4">
-              <div class="col-md-4">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idProyecto"
-                          [class.is-invalid]="submitted && f['idProyecto'].invalid">
-                    <option value="">Seleccione...</option>
-                    <option *ngFor="let p of proyectos" [value]="p.id">{{ p.label }}</option>
-                  </select>
-                  <label>Proyecto <span class="text-danger">*</span></label>
-                  <div class="invalid-feedback">Obligatorio</div>
-                </div>
-              </div>
-
-              <div class="col-md-4">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idFase"
-                          [class.is-invalid]="submitted && f['idFase'].invalid">
-                    <option value="">Seleccione...</option>
-                    <option *ngFor="let f of fases" [value]="f.id">{{ f.label }}</option>
-                  </select>
-                  <label>Fase <span class="text-danger">*</span></label>
-                  <div class="invalid-feedback">Obligatorio</div>
-                </div>
-              </div>
-
-              <div class="col-md-4">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idSite"
-                          [class.is-invalid]="submitted && f['idSite'].invalid">
-                    <option value="">Seleccione...</option>
-                    <option *ngFor="let s of sites" [value]="s.id">{{ s.label }}</option>
-                  </select>
-                  <label>Site <span class="text-danger">*</span></label>
-                  <div class="invalid-feedback">Obligatorio</div>
-                </div>
-              </div>
-            </div>
-
-            <div class="row g-3 mb-4">
-              <div class="col-md-6">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idRegion"
-                          [class.is-invalid]="submitted && f['idRegion'].invalid">
-                    <option value="">Seleccione...</option>
-                    <option *ngFor="let r of regiones" [value]="r.id">{{ r.label }}</option>
-                  </select>
-                  <label>Región <span class="text-danger">*</span></label>
-                  <div class="invalid-feedback">Obligatorio</div>
-                </div>
-              </div>
-
-              <div class="col-md-6">
-                <div class="form-floating">
-                  <input type="number" class="form-control" formControlName="idOtsAnterior" placeholder="Ej: 1456" min="1">
-                  <label>OT Anterior (opcional)</label>
-                </div>
-                <small class="form-text text-muted">Continuación o relacionada</small>
-              </div>
-            </div>
-
-            <!-- Descripción (más corta) -->
-            <div class="mb-4">
-              <div class="form-floating">
-                <textarea class="form-control" formControlName="descripcion" rows="2" readonly></textarea>
-                <label>Descripción / Observaciones <span class="text-danger">*</span></label>
-              </div>
-              <small class="form-text text-muted mt-1">
-                <i class="bi bi-magic me-1"></i> Generada automáticamente
-              </small>
-            </div>
-
-            <!-- Fecha Apertura -->
-            <div class="mb-4">
-              <div class="form-floating">
-                <input type="date" class="form-control" formControlName="fechaApertura">
-                <label>Fecha de Apertura <span class="text-danger">*</span></label>
-                <div class="invalid-feedback">Obligatorio</div>
-              </div>
-            </div>
-
-            <!-- Sección 2: Responsables (más compacta, 4 columnas en desktop) -->
-            <h6 class="mb-3 pb-2 border-bottom border-primary text-primary fw-semibold">
-              <i class="bi bi-person-badge-fill me-2"></i> Responsables
-            </h6>
-
-            <div class="row g-3 mb-4">
-              <div class="col-md-3">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idJefaturaClienteSolicitante">
-                    <option value="">-- Seleccionar --</option>
-                    <option *ngFor="let j of jefaturasCliente" [value]="j.id">{{ j.label }}</option>
-                  </select>
-                  <label>Jefatura Cliente</label>
-                </div>
-              </div>
-
-              <div class="col-md-3">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idAnalistaClienteSolicitante">
-                    <option value="">-- Seleccionar --</option>
-                    <option *ngFor="let a of analistasCliente" [value]="a.id">{{ a.label }}</option>
-                  </select>
-                  <label>Analista Cliente</label>
-                </div>
-              </div>
-
-              <div class="col-md-3">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idCoordinadorTiCw">
-                    <option value="">-- Seleccionar --</option>
-                    <option *ngFor="let c of coordinadoresTiCw" [value]="c.id">{{ c.label }}</option>
-                  </select>
-                  <label>Coordinador TI/CW</label>
-                </div>
-              </div>
-
-              <div class="col-md-3">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idJefaturaResponsable">
-                    <option value="">-- Seleccionar --</option>
-                    <option *ngFor="let j of jefaturasResponsable" [value]="j.id">{{ j.label }}</option>
-                  </select>
-                  <label>Jefatura Resp.</label>
-                </div>
-              </div>
-            </div>
-
-            <div class="row g-3 mb-4">
-              <div class="col-md-4">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idLiquidador">
-                    <option value="">-- Seleccionar --</option>
-                    <option *ngFor="let l of liquidadores" [value]="l.id">{{ l.label }}</option>
-                  </select>
-                  <label>Liquidador</label>
-                </div>
-              </div>
-
-              <div class="col-md-4">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idEjecutante">
-                    <option value="">-- Seleccionar --</option>
-                    <option *ngFor="let e of ejecutantes" [value]="e.id">{{ e.label }}</option>
-                  </select>
-                  <label>Ejecutante</label>
-                </div>
-              </div>
-
-              <div class="col-md-4">
-                <div class="form-floating">
-                  <select class="form-select" formControlName="idAnalistaContable">
-                    <option value="">-- Seleccionar --</option>
-                    <option *ngFor="let a of analistasContable" [value]="a.id">{{ a.label }}</option>
-                  </select>
-                  <label>Analista Contable</label>
-                </div>
-              </div>
-            </div>
-
-            <!-- Botones más compactos -->
-            <div class="d-flex flex-column flex-sm-row gap-3 justify-content-end mt-4 pt-3 border-top">
-              <button type="button" class="btn btn-outline-secondary px-4 py-2"
-                      (click)="resetForm()" [disabled]="loading">
-                <i class="bi bi-arrow-repeat me-2"></i> Limpiar
-              </button>
-
-              <button type="submit" class="btn btn-primary px-5 py-2 shadow"
-                      [disabled]="loading || form.invalid">
-                <ng-container *ngIf="!loading">
-                  <i class="bi bi-check2-circle me-2"></i> Crear OT
-                </ng-container>
-                <ng-container *ngIf="loading">
-                  <span class="spinner-border spinner-border-sm me-2"></span> Procesando...
-                </ng-container>
-              </button>
-            </div>
-
-          </form>
-        </div>
-
-        <div class="card-footer bg-light text-muted small text-center py-2">
-          Campos con <span class="text-danger fw-bold">*</span> obligatorios • OT se genera automáticamente
-        </div>
-
       </div>
     </div>
   </div>
