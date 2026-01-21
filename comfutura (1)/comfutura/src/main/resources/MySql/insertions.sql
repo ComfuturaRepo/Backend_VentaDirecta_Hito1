@@ -209,3 +209,11 @@ INSERT INTO cliente_area (id_cliente, id_area) VALUES
                                                    (3,4), (3,5), (3,7), (3,9), (3,10), (3,12),
                                                    -- STL TELECOM
                                                    (4,4), (4,5), (4,7), (4,15);
+INSERT INTO estado_oc (nombre) VALUES
+                                   ('PENDIENTE'),
+                                   ('APROBADA'),
+                                   ('RECHAZADA'),
+                                   ('ANULADA'),
+                                   ('EN PROCESO'),
+                                   ('ATENDIDA'),
+                                   ('CERRADA');
