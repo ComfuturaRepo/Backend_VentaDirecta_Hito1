@@ -3,24 +3,18 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import Swal from 'sweetalert2';
+import { DropdownItem, DropdownService } from '../../../service/dropdown.service';
+import { CrearOtCompletaRequest, OtCreateRequest, OtResponse, OtService } from '../../../service/ot.service';
+import { AuthService } from '../../../service/auth.service';
 
-import { DropdownItem, DropdownService } from '../../service/dropdown.service';
-import {
-  OtCreateRequest,
-  CrearOtCompletaRequest,
-  OtResponse,
-  OtService
-} from '../../service/ot.service';
-import { AuthService } from '../../service/auth.service';
 
 @Component({
-  selector: 'app-create-ot',
-  standalone: true,
+  selector: 'app-form-ots-component',
   imports: [CommonModule, ReactiveFormsModule],
-  templateUrl: './ot-component.html',
-  styleUrl: './ot-component.css'
+  templateUrl: './form-ots-component.html',
+  styleUrl: './form-ots-component.css',
 })
-export class CreateOtComponent implements OnInit {
+export class FormOtsComponent implements OnInit {
   form!: FormGroup;
   submitted = false;
   loading = false;
@@ -191,7 +185,6 @@ onSubmit(): void {
       idSite: Number(values.idSite),
       idRegion: Number(values.idRegion),
       descripcion: (values.descripcion || '').trim(),
-      diasAsignados: 0,
       idOtsAnterior: values.idOtsAnterior ? Number(values.idOtsAnterior) : null,
 
       // ─── NUEVO ───
@@ -275,3 +268,4 @@ onSubmit(): void {
     });
   }
 }
+

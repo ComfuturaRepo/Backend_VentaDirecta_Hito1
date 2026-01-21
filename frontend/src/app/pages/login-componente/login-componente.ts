@@ -33,7 +33,7 @@ export class LoginComponent {
     });
 
     // Si ya está autenticado → redirigir
-    if (this.authService.isAuthenticated) {
+    if (this.authService.isAuthenticatedSync) {
       this.router.navigate(['/dashboard']);
     }
   }

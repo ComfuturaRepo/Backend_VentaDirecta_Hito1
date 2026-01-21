@@ -1,28 +1,33 @@
 // src/app/core/guards/auth.guard.ts
 import { inject } from '@angular/core';
-import { CanActivateFn, Router } from '@angular/router';
-import { map, take } from 'rxjs/operators';
+import { CanActivateFn, Router, UrlTree } from '@angular/router';
+import { Observable, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { AuthService } from '../service/auth.service';
 
-export const authGuard: CanActivateFn = (route, state) => {
+export const authGuard: CanActivateFn = (route, state): Observable<boolean | UrlTree> => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
+  // 1. Chequeo síncrono primero → evita el flicker y el race condition
+  if (authService.isAuthenticatedSync) {
+    return of(true);
+  }
+
+  // 2. Si no, esperamos el observable (por si hay refresh token en el futuro)
   return authService.authState$.pipe(
-    take(1),
     map(auth => {
       if (auth.isAuthenticated) {
         return true;
       }
 
-      // Guardamos la URL completa que el usuario intentó acceder
-      const returnUrl = state.url;
-
-      router.navigate(['/login'], {
-        queryParams: { returnUrl }
+      // Usamos UrlTree → más seguro, evita side-effects dobles
+      return router.createUrlTree(['/login'], {
+        queryParams: { returnUrl: state.url }
       });
-
-      return false;
-    })
+    }),
+    catchError(() => of(
+      router.createUrlTree(['/login'], { queryParams: { returnUrl: state.url } })
+    ))
   );
 };

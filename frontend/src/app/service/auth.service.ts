@@ -20,6 +20,7 @@ export interface UserJwtDto {
   username: string;
   activo: boolean;
   roles: string[];
+  // Agrega aquí otros campos que vengan en tu JWT (ej: exp, iat, nombre, etc.)
 }
 
 export interface AuthState {
@@ -50,6 +51,9 @@ export class AuthService {
     this.loadInitialState();
   }
 
+  /**
+   * Carga el estado inicial desde localStorage (solo en browser)
+   */
   private loadInitialState(): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
@@ -65,6 +69,9 @@ export class AuthService {
     this.setAuthState(token, userData);
   }
 
+  /**
+   * Inicia sesión y guarda el token
+   */
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials).pipe(
       tap(response => this.setToken(response.token)),
@@ -72,10 +79,16 @@ export class AuthService {
     );
   }
 
+  /**
+   * Cierra sesión y limpia todo
+   */
   logout(): void {
     this.clearAuthState();
   }
 
+  /**
+   * Guarda el token y actualiza el estado
+   */
   private setToken(token: string): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
@@ -108,19 +121,25 @@ export class AuthService {
     });
   }
 
+  /**
+   * Decodifica el payload del JWT (sin verificar firma, solo lectura)
+   */
   private decodeToken(token: string): UserJwtDto | null {
     try {
       const payload = token.split('.')[1];
       const decoded = JSON.parse(atob(payload));
-      // Ajusta según tu estructura real del JWT
-      // Ejemplos comunes: decoded.sub, decoded.data, decoded.usuario, etc.
-      return (decoded.data as UserJwtDto) ?? (decoded as UserJwtDto) ?? null;
+      // Ajusta según la estructura real de tu JWT
+      // Ejemplos comunes: decoded.sub, decoded.usuario, decoded.data, etc.
+      return decoded.data as UserJwtDto ?? decoded as UserJwtDto ?? null;
     } catch (e) {
-      console.error('Error al decodificar token:', e);
+      console.error('Error al decodificar JWT:', e);
       return null;
     }
   }
 
+  /**
+   * Verifica si el token ha expirado
+   */
   private isTokenExpired(token: string): boolean {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -132,31 +151,36 @@ export class AuthService {
     }
   }
 
-  // ── Getters públicos ────────────────────────────────────────
+  // ── Métodos públicos útiles ────────────────────────────────────────
+
+  /**
+   * Chequeo SINCRÓNICO (ideal para guards y evitar race conditions en refresh)
+   */
+  get isAuthenticatedSync(): boolean {
+    if (!isPlatformBrowser(this.platformId)) return false;
+
+    const token = localStorage.getItem(this.TOKEN_KEY);
+    if (!token) return false;
+
+    if (this.isTokenExpired(token)) {
+      this.logout();
+      return false;
+    }
+
+    return true;
+  }
 
   get currentUser(): UserJwtDto | null {
-    const user = this.authState.value.user;
-    const token = this.authState.value.token;
-
-    if (token && this.isTokenExpired(token)) {
+    const state = this.authState.value;
+    if (!state.token || this.isTokenExpired(state.token)) {
       this.logout();
       return null;
     }
-
-    return user;
+    return state.user;
   }
 
   get currentTrabajadorId(): number | null {
     return this.currentUser?.idTrabajador ?? null;
-  }
-
-  get isAuthenticated(): boolean {
-    const token = this.authState.value.token;
-    if (token && this.isTokenExpired(token)) {
-      this.logout();
-      return false;
-    }
-    return this.authState.value.isAuthenticated;
   }
 
   get token(): string | null {
@@ -168,10 +192,14 @@ export class AuthService {
     return t;
   }
 
-  // Opcional: método para refrescar el estado manualmente
-  refreshAuthState(): void {
+  /**
+   * Fuerza recarga del estado (útil después de refresh token o cambios)
+   */
+  public refreshAuthState(): void {
     this.loadInitialState();
   }
+
+  // ── Manejo de errores ──────────────────────────────────────────────
 
   private handleError(error: HttpErrorResponse): Observable<never> {
     let message = 'Ocurrió un error inesperado';

@@ -1,57 +1,56 @@
-<!-- layout.component.html -->
 <div class="layout-wrapper">
-
   <!-- Sidebar -->
-  <aside class="sidebar">
+  <aside class="sidebar" [ngClass]="{ 'collapsed': isCollapsed, 'mobile-open': isMobileOpen }">
     <div class="sidebar-header">
       <div class="logo">
-        <span class="logo-icon">🚀</span>
-        <h1>MiApp</h1>
+        <span class="logo-icon">C</span>
+        <h1 class="logo-text">Comfutura</h1>
       </div>
+
+      <button class="collapse-btn" (click)="toggleCollapse()" aria-label="Colapsar menú">
+        ←
+      </button>
     </div>
 
     <nav class="sidebar-menu">
       <ul>
         <li>
-          <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
-            <span class="icon">📊</span>
-            Dashboard
+          <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+            <span class="icon">D</span>
+            <span class="label">Dashboard</span>
           </a>
         </li>
         <li>
           <a routerLink="/ot" routerLinkActive="active">
-            <span class="icon">🛠️</span>
-            Crear OT
+            <span class="icon">OT</span>
+            <span class="label">Crear OT</span>
           </a>
         </li>
-        <!-- Agrega más fácilmente aquí -->
-        <!--
-        <li>
-          <a routerLink="/reportes">
-            <span class="icon">📈</span>
-            Reportes
-          </a>
-        </li>
-        -->
       </ul>
     </nav>
 
     <div class="sidebar-footer">
       <div class="user-info">
-        <span class="user-avatar">👤</span>
-        <span>{{ username }}</span>
+        <span class="user-avatar">U</span>
+        <span class="user-name">{{ username }}</span>
       </div>
-       <button class="dropdown-item text-danger" (click)="logout()">
-    Cerrar Sesión
-  </button>
+      <button class="logout-btn" (click)="logout()">Cerrar Sesión</button>
     </div>
   </aside>
+
+  <!-- Overlay para móvil -->
+  <div class="mobile-overlay" *ngIf="isMobileOpen" (click)="closeMobile()"></div>
 
   <!-- Contenido principal -->
   <div class="main-area">
     <header class="top-bar">
+      <button class="hamburger" (click)="toggleMobile()" aria-label="Abrir menú">
+        ☰
+      </button>
+
       <h2 class="page-title">
-        <!-- Puedes usar un servicio o resolver para título dinámico -->
+        <!-- Aquí puedes poner título dinámico -->
+        <ng-content select="[page-title]"></ng-content>
       </h2>
     </header>
 
@@ -59,5 +58,4 @@
       <router-outlet></router-outlet>
     </main>
   </div>
-
 </div>
