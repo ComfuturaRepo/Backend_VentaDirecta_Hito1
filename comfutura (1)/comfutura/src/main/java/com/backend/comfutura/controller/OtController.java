@@ -70,4 +70,15 @@ public class OtController {
         );
     }
 
+
+    //
+    // ==============================
+    // TOGGLE ACTIVO / INACTIVO
+    // ==============================
+    @PostMapping("/{id}/toggle")
+    public ResponseEntity<Void> toggleEstado(@PathVariable Integer id) {
+
+        otService.toggleEstado(id);
+        return ResponseEntity.ok().build();
+    }
 }

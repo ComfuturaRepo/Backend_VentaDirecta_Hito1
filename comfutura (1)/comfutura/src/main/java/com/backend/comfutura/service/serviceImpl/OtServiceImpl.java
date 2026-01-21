@@ -203,5 +203,20 @@ public class OtServiceImpl implements OtService {
 
         return mapToResponse(ots);
     }
+    // ==============================
+    // toggle
+    // ==============================
+
+    @Override
+    public void toggleEstado(Integer id) {
+
+        Ots ots = otsRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("OT no encontrada"));
+
+        // 🔁 TOGGLE
+        ots.setActivo(!ots.getActivo());
+
+        otsRepository.save(ots);
+    }
 
 }

@@ -12,4 +12,5 @@ public interface OtService {
     OtResponse obtenerPorId(Integer id);
 
 
+    void toggleEstado(Integer id);
 }
