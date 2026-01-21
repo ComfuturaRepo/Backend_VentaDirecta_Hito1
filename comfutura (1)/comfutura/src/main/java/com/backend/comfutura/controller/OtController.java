@@ -6,6 +6,11 @@ import com.backend.comfutura.dto.response.OtResponse;
 import com.backend.comfutura.service.OtService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -27,4 +32,30 @@ public class OtController {
         OtResponse response = otService.createOtCompleta(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(response);
     }
+
+    // ==============================
+    // Listado OT COMPLETO
+    // ==============================
+    @GetMapping
+    public ResponseEntity<Page<OtResponse>> listar(
+            @RequestParam(defaultValue = "true") Boolean activo,
+            @PageableDefault(size = 10, sort = "ot", direction = Sort.Direction.DESC)
+            Pageable pageable
+    ) {
+        return ResponseEntity.ok(
+                otService.listarPorEstado(activo, pageable)
+        );
+    }
+
+    // ==============================
+    // Listado POR ID  OT COMPLETO
+    // ==============================
+    @GetMapping("/{id}")
+    public ResponseEntity<OtResponse> obtenerPorId(@PathVariable Integer id) {
+
+        return ResponseEntity.ok(
+                otService.obtenerPorId(id)
+        );
+    }
+
 }

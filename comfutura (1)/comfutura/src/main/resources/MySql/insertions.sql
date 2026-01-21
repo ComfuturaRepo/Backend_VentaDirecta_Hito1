@@ -125,6 +125,8 @@ INSERT INTO unidad_medida (codigo, descripcion) VALUES
                                                     ('JUEGO','Juego (set)'),
                                                     ('ML',   'Metro Lineal');
 
+
+
 INSERT INTO maestro_codigo (codigo, descripcion, id_unidad_medida, precio_base) VALUES
                                                                                     ('S000001', 'Instalación punto cableado CAT6',           1,   85.00),
                                                                                     ('S000002', 'Horas hombre técnico fibra óptica',         2,   95.00),
@@ -201,6 +203,43 @@ INSERT INTO usuario_rol (id_usuario, id_rol) VALUES
 
 -- 21. Relación cliente - área
 INSERT INTO cliente_area (id_cliente, id_area) VALUES
+<<<<<<< HEAD
+-- COMFUTURA
+(1, 1),   -- RRHH
+(1, 2),   -- COSTOS
+(1, 3),   -- ADMINISTRATIVA
+(1, 10),  -- SSOMA
+(1, 11),  -- TI
+(1, 12),  -- CIERRE
+(1, 13),  -- CONTABILIDAD
+(1, 14),  -- LOGISTICA
+(1, 15),  -- GERENTE GENERAL
+
+-- CLARO PERÚ
+(2, 4),   -- ENERGIA
+(2, 5),   -- CW
+(2, 7),   -- PEXT
+(2, 9),   -- ENTEL (puedes renombrar luego si deseas)
+(2, 10),  -- SSOMA
+(2, 12),  -- CIERRE
+
+-- ENTEL PERÚ
+(3, 4),   -- ENERGIA
+(3, 5),   -- CW
+(3, 7),   -- PEXT
+(3, 9),   -- ENTEL
+(3, 10),  -- SSOMA
+(3, 12),  -- CIERRE
+
+-- STL TELECOM
+(4, 4),   -- ENERGIA
+(4, 5),   -- CW
+(4, 7),   -- PEXT
+(4, 15);  -- GERENTE GENERAL
+
+
+-- insertar estado_oc
+=======
                                                    -- COMFUTURA (propia)
                                                    (1,1), (1,2), (1,3), (1,10), (1,11), (1,12), (1,13), (1,14), (1,15),
                                                    -- CLARO PERÚ
@@ -209,6 +248,7 @@ INSERT INTO cliente_area (id_cliente, id_area) VALUES
                                                    (3,4), (3,5), (3,7), (3,9), (3,10), (3,12),
                                                    -- STL TELECOM
                                                    (4,4), (4,5), (4,7), (4,15);
+>>>>>>> origin/main
 INSERT INTO estado_oc (nombre) VALUES
                                    ('PENDIENTE'),
                                    ('APROBADA'),
@@ -216,4 +256,8 @@ INSERT INTO estado_oc (nombre) VALUES
                                    ('ANULADA'),
                                    ('EN PROCESO'),
                                    ('ATENDIDA'),
+<<<<<<< HEAD
                                    ('CERRADA');
+=======
+                                   ('CERRADA');
+>>>>>>> origin/main

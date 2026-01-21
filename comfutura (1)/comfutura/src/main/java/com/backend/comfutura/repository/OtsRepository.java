@@ -2,6 +2,8 @@ package com.backend.comfutura.repository;
 
 import com.backend.comfutura.model.Ots;
 import com.backend.comfutura.model.Region;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -18,6 +20,10 @@ public interface OtsRepository extends JpaRepository<Ots, Integer> {
     // Para dropdowns (solo activos)
     List<Ots> findByActivoTrueOrderByOtAsc();
     Optional<Ots> findTopByOrderByOtDesc();
+
+    Page<Ots> findByActivoTrue(Pageable pageable);
+
+    Page<Ots> findByActivo(Boolean activo, Pageable pageable);
 
 }
 

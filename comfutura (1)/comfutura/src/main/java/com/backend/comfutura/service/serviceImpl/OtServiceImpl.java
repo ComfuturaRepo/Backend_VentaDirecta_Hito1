@@ -7,6 +7,8 @@ import com.backend.comfutura.model.*;
 import com.backend.comfutura.repository.*;
 import com.backend.comfutura.service.OtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -129,4 +131,30 @@ public class OtServiceImpl implements OtService {
                 .fechaCreacion(ots.getFechaCreacion())
                 .build();
     }
+    // ==============================
+    // Listado
+    // ==============================
+    @Override
+    @Transactional(readOnly = true)
+    public Page<OtResponse> listarPorEstado(Boolean activo, Pageable pageable) {
+
+        return otsRepository.findByActivo(activo, pageable)
+                .map(this::mapToResponse);
+    }
+
+
+    // ==============================
+    // Listado por ID
+    // ==============================
+
+    @Override
+    @Transactional(readOnly = true)
+    public OtResponse obtenerPorId(Integer id) {
+
+        Ots ots = otsRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("OT no encontrada"));
+
+        return mapToResponse(ots);
+    }
+
 }
