@@ -10,4 +10,7 @@ public interface TrabajadorRepository extends JpaRepository<Trabajador, Integer>
 
     List<Trabajador> findByActivoTrueAndCargo_NombreOrderByApellidosAsc(String nombreCargo);
 
+    // Listado general
+
+
 }

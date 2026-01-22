@@ -54,6 +54,8 @@ public class SecurityConfig {
                                 "/api/analista-cliente-solicitante/**",
                                 "/api/jefatura-cliente-solicitante/**",
                                 "/api/site/**",
+                                "/api/empresas/**",
+                                "/api/trabajadores/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
