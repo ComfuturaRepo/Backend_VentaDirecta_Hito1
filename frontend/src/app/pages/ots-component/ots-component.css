@@ -1,90 +1,76 @@
-/* Gradiente principal */
+/* Header */
 .bg-gradient-primary {
-  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 100%);
+  background: linear-gradient(135deg, #0d6efd 0%, #0056d2 100%);
 }
 
-/* Sombras suaves */
-.shadow {
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08) !important;
+/* Card general */
+.card {
+  border-radius: 12px;
+  overflow: hidden;
 }
 
-/* Truncado de texto largo */
-.max-width-300 {
-  max-width: 300px;
+/* Tabla */
+.table th {
+  font-weight: 600;
+  color: #495057;
+  white-space: nowrap;
 }
 
-/* Mejora visual de badges */
-.badge.bg-success-subtle {
-  background-color: #d4edda !important;
-  color: #155724 !important;
+.table td {
+  vertical-align: middle;
 }
-.badge.bg-danger-subtle {
-  background-color: #f8d7da !important;
-  color: #721c24 !important;
+
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.06);
+}
+
+/* Badges más elegantes */
+.badge.rounded-pill {
+  font-weight: 500;
+  letter-spacing: 0.3px;
 }
 
 /* Botones de acción */
-.btn-outline-danger, .btn-outline-success {
-  transition: all 0.2s;
+.btn-group-sm .btn {
+  padding: 0.35rem 0.65rem;
 }
-.btn-outline-danger:hover {
-  background-color: #dc3545;
-  color: white;
-}
+
+.btn-outline-danger:hover,
 .btn-outline-success:hover {
-  background-color: #198754;
   color: white;
 }
 
-/* Paginación */
-.pagination-lg .page-link {
-  width: 46px;
-  height: 46px;
+/* Paginación moderna */
+.pagination-sm .page-link {
+  width: 34px;
+  height: 34px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 10px !important;
-  margin: 0 3px;
-  font-weight: 500;
+  border-radius: 8px;
+  margin: 0 2px;
+  font-size: 0.9rem;
 }
 
 .page-item.active .page-link {
   background-color: #0d6efd;
   border-color: #0d6efd;
-  box-shadow: 0 4px 14px rgba(13, 110, 253, 0.25);
-}
-
-.page-link:hover:not(.disabled) {
-  background-color: #e7f1ff;
-  color: #0d6efd;
-  border-color: #b3d4fc;
-}
-
-/* Hover en filas */
-.table-hover tbody tr:hover {
-  background-color: rgba(13, 110, 253, 0.04);
-  transition: background-color 0.18s;
+  box-shadow: 0 3px 10px rgba(13, 110, 253, 0.2);
 }
 
 /* Responsivo */
 @media (max-width: 992px) {
-  .table-responsive {
-    font-size: 0.95rem;
-  }
-  .max-width-300 {
-    max-width: 220px;
+  .table th, .table td {
+    font-size: 0.92rem;
   }
 }
 
 @media (max-width: 576px) {
   .card-body {
-    padding: 1.5rem !important;
+    padding: 1.25rem !important;
   }
-  .btn-lg {
+  .btn-md {
     width: 100%;
     justify-content: center;
-  }
-  .input-group-lg > .form-control {
-    font-size: 1rem;
   }
 }

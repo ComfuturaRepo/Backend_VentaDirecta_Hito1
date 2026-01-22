@@ -1,55 +1,79 @@
 <div class="layout-wrapper">
+
   <!-- Sidebar -->
   <aside class="sidebar" [ngClass]="{ 'collapsed': isCollapsed, 'mobile-open': isMobileOpen }">
+
+    <!-- Header del sidebar -->
     <div class="sidebar-header">
       <div class="logo">
-        <span class="logo-icon">C</span>
+        <i class="bi bi-buildings-fill logo-icon"></i>
         <h1 class="logo-text">Comfutura</h1>
       </div>
-
-      <button class="collapse-btn" (click)="toggleCollapse()" aria-label="Colapsar menú">
-        ←
+      <button class="collapse-btn" (click)="toggleCollapse()" title="Colapsar / Expandir menú">
+        <i class="bi" [ngClass]="isCollapsed ? 'bi-chevron-right' : 'bi-chevron-left'"></i>
       </button>
     </div>
 
+    <!-- Menú principal -->
     <nav class="sidebar-menu">
       <ul>
         <li>
           <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
-            <span class="icon">D</span>
+            <i class="bi bi-speedometer2"></i>
             <span class="label">Dashboard</span>
           </a>
         </li>
         <li>
           <a routerLink="/ot" routerLinkActive="active">
-            <span class="icon">OT</span>
-            <span class="label">Crear OT</span>
+            <i class="bi bi-list-check"></i>
+            <span class="label">Órdenes de Trabajo</span>
           </a>
         </li>
+
+        <!-- Puedes agregar más ítems aquí o usar *ngFor con un array -->
+        <!--
+        <li>
+          <a routerLink="/usuarios">
+            <i class="bi bi-people"></i>
+            <span class="label">Usuarios</span>
+          </a>
+        </li>
+        -->
       </ul>
     </nav>
 
+    <!-- Footer con info del usuario -->
     <div class="sidebar-footer">
       <div class="user-info">
-        <span class="user-avatar">U</span>
-        <span class="user-name">{{ username }}</span>
+        <div class="user-avatar">
+          {{ userInitial }}
+        </div>
+        <div class="user-details">
+          <span class="user-name">{{ username }}</span>
+          <!-- Opcional: mostrar rol o cargo si lo tienes -->
+          <!-- <span class="user-role" *ngIf="isAdmin">Administrador</span> -->
+        </div>
       </div>
-      <button class="logout-btn" (click)="logout()">Cerrar Sesión</button>
+
+      <button class="logout-btn" (click)="logout()">
+        <i class="bi bi-box-arrow-right"></i>
+        <span class="label">Cerrar sesión</span>
+      </button>
     </div>
   </aside>
 
-  <!-- Overlay para móvil -->
+  <!-- Overlay para cerrar menú en móvil -->
   <div class="mobile-overlay" *ngIf="isMobileOpen" (click)="closeMobile()"></div>
 
   <!-- Contenido principal -->
   <div class="main-area">
     <header class="top-bar">
-      <button class="hamburger" (click)="toggleMobile()" aria-label="Abrir menú">
-        ☰
+      <button class="hamburger" (click)="toggleMobile()" aria-label="Menú">
+        <i class="bi bi-list"></i>
       </button>
 
       <h2 class="page-title">
-        <!-- Aquí puedes poner título dinámico -->
+        <!-- Título dinámico (puedes usar @Input o un servicio) -->
         <ng-content select="[page-title]"></ng-content>
       </h2>
     </header>
@@ -58,4 +82,5 @@
       <router-outlet></router-outlet>
     </main>
   </div>
+
 </div>

@@ -1,90 +1,115 @@
-/* Gradiente principal más suave y moderno */
-.bg-gradient-primary {
-  background: linear-gradient(135deg, #0d6efd 0%, #0056b3 100%);
+/* Fondo general suave */
+.bg-gradient-light {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
 }
 
-/* Card más elegante */
+/* Gradiente header más vibrante y moderno */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #0d6efd 0%, #0a58ca 50%, #084298 100%);
+}
+
+/* Card con sombra suave y borde redondeado */
 .card {
   border-radius: 1.5rem;
-  overflow: hidden;
-  border: none;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.08), 0 10px 20px rgba(0, 0, 0, 0.06) !important;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.shadow-xl {
-  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15) !important;
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.12) !important;
 }
 
-/* Form floating más bonito */
+/* Form-floating mejorado - labels más bonitos y alineados */
 .form-floating > .form-control,
-.form-floating > .form-select {
-  height: calc(3.5rem + 2px);
-  line-height: 1.25;
-  padding: 1rem 0.75rem;
+.form-floating > .form-select,
+.form-floating > textarea.form-control {
+  background-color: white !important;
+  border: 1px solid #d1d8e0;
   border-radius: 0.75rem;
-  border: 1px solid #ced4da;
+  height: calc(3.6rem + 2px);
+  padding: 1.625rem 1rem 0.625rem 1rem;
   transition: all 0.25s ease;
 }
 
 .form-floating > label {
-  padding: 1rem 0.75rem;
   color: #6c757d;
+  padding: 1rem 1rem;
   transition: all 0.25s ease;
 }
 
 .form-floating > .form-control:focus,
-.form-floating > .form-select:focus {
+.form-floating > .form-control:not(:placeholder-shown),
+.form-floating > .form-select {
   border-color: #0d6efd;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.12);
 }
 
 .form-floating > .form-control:focus ~ label,
 .form-floating > .form-control:not(:placeholder-shown) ~ label,
 .form-floating > .form-select ~ label {
   color: #0d6efd;
-  transform: scale(0.85) translateY(-0.5rem) translateX(0.15rem);
-  background: white;
-  padding: 0 0.5rem;
+  opacity: 0.9;
+  transform: scale(0.85) translateY(-1.35rem) translateX(0.25rem);
+  font-weight: 500;
 }
 
-/* Tabs de pasos */
-.nav-pills .nav-link {
-  transition: all 0.3s ease;
+/* Date input específico */
+input[type="date"].form-control {
+  padding-top: 1.75rem !important;
 }
 
-.nav-pills .nav-link.active {
-  background-color: rgba(255, 255, 255, 0.25) !important;
-  font-weight: 700;
+/* Selects más consistentes */
+.form-floating > .form-select ~ label {
+  transform: scale(0.85) translateY(-1.4rem) translateX(0.3rem);
 }
 
-/* Botones más elegantes */
+/* Botones con gradiente y hover genial */
 .btn-primary {
   background: linear-gradient(90deg, #0d6efd, #0a58ca);
   border: none;
   transition: all 0.3s ease;
+  box-shadow: 0 4px 10px rgba(13, 110, 253, 0.25);
 }
 
-.btn-primary:hover:not(:disabled) {
+.btn-primary:hover {
+  background: linear-gradient(90deg, #0b5ed7, #084298);
   transform: translateY(-2px);
-  box-shadow: 0 10px 25px rgba(13, 110, 253, 0.4);
+  box-shadow: 0 8px 20px rgba(13, 110, 253, 0.35);
 }
 
-/* Responsivo extremo */
-@media (max-width: 576px) {
+.btn-outline-primary {
+  transition: all 0.3s ease;
+}
+
+.btn-outline-primary:hover {
+  background-color: #0d6efd;
+  color: white;
+  transform: translateY(-2px);
+}
+
+/* Pasos con mejor hover */
+.nav-pills .nav-link {
+  transition: all 0.3s ease;
+}
+
+.nav-pills .nav-link:hover {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  transform: scale(1.05);
+}
+
+.nav-pills .nav-link.active {
+  background-color: rgba(255, 255, 255, 0.35) !important;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.2);
+}
+
+/* Responsivo final */
+@media (max-width: 768px) {
   .card-body {
-    padding: 1.25rem !important;
+    padding: 1.5rem !important;
   }
-
-  .btn {
-    width: 100%;
-    margin-bottom: 0.75rem;
-  }
-
-  h6 {
-    font-size: 1.15rem;
-  }
-
   .nav-pills .nav-link {
+    padding: 0.6rem 0.8rem;
     font-size: 0.9rem;
-    padding: 0.5rem;
   }
 }

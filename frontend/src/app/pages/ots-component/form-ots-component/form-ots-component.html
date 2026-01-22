@@ -1,10 +1,10 @@
-<div class="container-fluid py-4 min-vh-100 d-flex flex-column">
+<div class="container-fluid py-5 min-vh-100 d-flex flex-column bg-gradient-light">
   <div class="row justify-content-center flex-grow-1">
-    <div class="col-12 col-xl-11">
+    <div class="col-12 col-xl-10">
 
-      <!-- Spinner mientras carga -->
+      <!-- Spinner de carga -->
       <div *ngIf="loading" class="text-center py-5 my-5">
-        <div class="spinner-border text-primary" style="width: 4rem; height: 4rem;" role="status">
+        <div class="spinner-border text-primary" style="width: 4.5rem; height: 4.5rem;" role="status">
           <span class="visually-hidden">Cargando...</span>
         </div>
         <p class="mt-4 text-muted fs-4 fw-light">
@@ -12,61 +12,64 @@
         </p>
       </div>
 
-      <!-- Formulario -->
+      <!-- Contenido principal -->
       <ng-container *ngIf="!loading">
-        <div class="card border-0 shadow-xl rounded-4 overflow-hidden bg-white">
+        <div class="card border-0 shadow-2xl rounded-4 overflow-hidden bg-white bg-opacity-95 backdrop-blur-sm">
 
           <!-- Header con pasos -->
-          <div class="card-header bg-gradient-primary text-white py-4 px-4 px-md-5">
-            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+          <div class="card-header bg-gradient-primary text-white py-4 px-4 px-md-5 position-relative overflow-hidden">
+            <div class="position-absolute top-0 end-0 opacity-10 fs-1">📋</div>
+
+            <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-4">
               <div class="d-flex align-items-center gap-3">
-                <i class="bi bi-file-earmark-plus-fill fs-3"></i>
-                <h4 class="mb-0 fw-semibold">
+                <i class="bi bi-file-earmark-plus-fill fs-2"></i>
+                <h4 class="mb-0 fw-bold">
                   {{ isEditMode ? 'Editar Orden de Trabajo' : 'Nueva Orden de Trabajo' }}
                 </h4>
               </div>
 
               <div class="small opacity-85 text-end">
-                Creado por: <strong>{{ usernameLogueado }}</strong>
+                Creado por: <strong class="text-white">{{ usernameLogueado }}</strong>
                 <span class="ms-2 text-white-50" *ngIf="trabajadorIdLogueado">(ID: {{ trabajadorIdLogueado }})</span>
               </div>
             </div>
 
             <!-- Barra de pasos -->
             <div class="mt-4">
-              <ul class="nav nav-pills nav-justified bg-white bg-opacity-10 rounded-pill p-1" role="tablist">
+              <ul class="nav nav-pills nav-justified bg-white bg-opacity-15 rounded-pill p-1 shadow-sm" role="tablist">
                 <li class="nav-item" role="presentation">
-                  <button class="nav-link text-white fw-semibold rounded-pill"
+                  <button class="nav-link text-white fw-semibold rounded-pill px-4 py-2 transition-all"
                           [class.active]="currentStep === 1" (click)="currentStep = 1">
-                    <i class="bi bi-1-circle me-2"></i> Principal
+                    <i class="bi bi-1-circle-fill me-2"></i> Principal
                   </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                  <button class="nav-link text-white fw-semibold rounded-pill"
+                  <button class="nav-link text-white fw-semibold rounded-pill px-4 py-2 transition-all"
                           [class.active]="currentStep === 2" (click)="currentStep = 2">
-                    <i class="bi bi-2-circle me-2"></i> Responsables
+                    <i class="bi bi-2-circle-fill me-2"></i> Responsables
                   </button>
                 </li>
                 <li class="nav-item" role="presentation">
-                  <button class="nav-link text-white fw-semibold rounded-pill"
+                  <button class="nav-link text-white fw-semibold rounded-pill px-4 py-2 transition-all"
                           [class.active]="currentStep === 3" (click)="currentStep = 3">
-                    <i class="bi bi-3-circle me-2"></i> Confirmar
+                    <i class="bi bi-3-circle-fill me-2"></i> Confirmar
                   </button>
                 </li>
               </ul>
             </div>
           </div>
 
+          <!-- Cuerpo del formulario -->
           <div class="card-body p-4 p-md-5">
             <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
 
               <!-- Paso 1: Información principal -->
               <div *ngIf="currentStep === 1">
-                <h6 class="mb-4 pb-2 border-bottom border-primary text-primary fw-semibold">
+                <h5 class="mb-4 pb-3 border-bottom border-primary-subtle text-primary fw-bold">
                   <i class="bi bi-info-circle-fill me-2"></i> Información principal
-                </h6>
+                </h5>
 
-                <div class="row g-3 g-md-4">
+                <div class="row g-4">
                   <div class="col-md-6 col-lg-4">
                     <div class="form-floating">
                       <select class="form-select" formControlName="idCliente"
@@ -94,10 +97,10 @@
                     </small>
                   </div>
 
-                  <!-- Resto de campos del Paso 1 -->
                   <div class="col-md-6 col-lg-4">
                     <div class="form-floating">
                       <input type="date" class="form-control" formControlName="fechaApertura"
+                             placeholder="yyyy-mm-dd"
                              [class.is-invalid]="submitted && f['fechaApertura'].invalid">
                       <label>Fecha Apertura <span class="text-danger">*</span></label>
                       <div class="invalid-feedback">Obligatorio</div>
@@ -161,8 +164,8 @@
 
                   <div class="col-12">
                     <div class="form-floating">
-                      <textarea class="form-control" formControlName="descripcion" rows="2"
-                                [readonly]="!isEditMode" placeholder="Descripción..."></textarea>
+                      <textarea class="form-control" formControlName="descripcion" rows="3"
+                                [readonly]="!isEditMode" placeholder="Describe el trabajo a realizar..."></textarea>
                       <label>Descripción <span class="text-danger">*</span></label>
                       <div class="invalid-feedback">Obligatorio</div>
                     </div>
@@ -172,21 +175,21 @@
                   </div>
                 </div>
 
-                <!-- Botones Paso 1 -->
-                <div class="d-flex justify-content-end mt-5">
-                  <button type="button" class="btn btn-primary px-5" (click)="currentStep = 2" [disabled]="form.invalid">
-                    Siguiente: Responsables <i class="bi bi-arrow-right ms-2"></i>
+                <div class="d-flex justify-content-end mt-5 gap-3">
+                  <button type="button" class="btn btn-outline-primary px-5 py-2"
+                          (click)="currentStep = 2" [disabled]="form.invalid || loading">
+                    Siguiente: Responsables <i class="bi bi-arrow-right-short ms-2"></i>
                   </button>
                 </div>
               </div>
 
               <!-- Paso 2: Responsables -->
               <div *ngIf="currentStep === 2">
-                <h6 class="mb-4 pb-2 border-bottom border-primary text-primary fw-semibold">
+                <h5 class="mb-4 pb-3 border-bottom border-primary-subtle text-primary fw-bold">
                   <i class="bi bi-person-badge-fill me-2"></i> Responsables y solicitantes
-                </h6>
+                </h5>
 
-                <div class="row g-3 g-md-4">
+                <div class="row g-4">
                   <div class="col-md-6 col-lg-3">
                     <div class="form-floating">
                       <select class="form-select" formControlName="idJefaturaClienteSolicitante">
@@ -207,7 +210,6 @@
                     </div>
                   </div>
 
-                  <!-- Resto de responsables (igual que antes) -->
                   <div class="col-md-6 col-lg-3">
                     <div class="form-floating">
                       <select class="form-select" formControlName="idCoordinadorTiCw">
@@ -259,77 +261,78 @@
                   </div>
                 </div>
 
-                <!-- Botones Paso 2 -->
-                <div class="d-flex justify-content-between mt-5">
-                  <button type="button" class="btn btn-outline-secondary px-5" (click)="currentStep = 1">
-                    <i class="bi bi-arrow-left me-2"></i> Regresar
+                <div class="d-flex justify-content-between mt-5 gap-3">
+                  <button type="button" class="btn btn-outline-secondary px-5 py-2"
+                          (click)="currentStep = 1">
+                    <i class="bi bi-arrow-left-short me-2"></i> Regresar
                   </button>
-                  <button type="button" class="btn btn-primary px-5" (click)="currentStep = 3">
-                    Siguiente: Confirmar <i class="bi bi-arrow-right ms-2"></i>
+                  <button type="button" class="btn btn-primary px-5 py-2"
+                          (click)="currentStep = 3" [disabled]="loading">
+                    Siguiente: Confirmar <i class="bi bi-arrow-right-short ms-2"></i>
                   </button>
                 </div>
               </div>
 
-            <!-- Paso 3: Resumen y Confirmar -->
-<div *ngIf="currentStep === 3">
-  <h6 class="mb-4 pb-2 border-bottom border-primary text-primary fw-semibold">
-    <i class="bi bi-check2-circle me-2"></i> Resumen y Confirmación
-  </h6>
+              <!-- Paso 3: Resumen y Confirmar -->
+              <div *ngIf="currentStep === 3">
+                <h5 class="mb-4 pb-3 border-bottom border-primary-subtle text-primary fw-bold">
+                  <i class="bi bi-check2-circle-fill me-2"></i> Resumen y Confirmación
+                </h5>
 
-  <div class="alert alert-light border-primary border-start border-5 p-4 mb-4">
-    <h5 class="text-primary mb-3">Resumen de la OT</h5>
-    <dl class="row mb-0">
-      <dt class="col-sm-4 fw-bold">Cliente:</dt>
-      <dd class="col-sm-8">{{ clienteNombre }}</dd>
+                <div class="alert alert-light border-primary border-start border-5 p-4 mb-5 shadow-sm">
+                  <h5 class="text-primary mb-4">Resumen de la OT</h5>
+                  <dl class="row mb-0 g-3">
+                    <dt class="col-sm-4 fw-semibold text-muted">Cliente:</dt>
+                    <dd class="col-sm-8">{{ clienteNombre || '—' }}</dd>
 
-      <dt class="col-sm-4 fw-bold">Área:</dt>
-      <dd class="col-sm-8">{{ areaNombre }}</dd>
+                    <dt class="col-sm-4 fw-semibold text-muted">Área:</dt>
+                    <dd class="col-sm-8">{{ areaNombre || '—' }}</dd>
 
-      <dt class="col-sm-4 fw-bold">Proyecto:</dt>
-      <dd class="col-sm-8">{{ proyectoNombre }}</dd>
+                    <dt class="col-sm-4 fw-semibold text-muted">Proyecto:</dt>
+                    <dd class="col-sm-8">{{ proyectoNombre || '—' }}</dd>
 
-      <dt class="col-sm-4 fw-bold">Fase:</dt>
-      <dd class="col-sm-8">{{ faseNombre }}</dd>
+                    <dt class="col-sm-4 fw-semibold text-muted">Fase:</dt>
+                    <dd class="col-sm-8">{{ faseNombre || '—' }}</dd>
 
-      <dt class="col-sm-4 fw-bold">Site:</dt>
-      <dd class="col-sm-8">{{ siteNombre }}</dd>
+                    <dt class="col-sm-4 fw-semibold text-muted">Site:</dt>
+                    <dd class="col-sm-8">{{ siteNombre || '—' }}</dd>
 
-      <dt class="col-sm-4 fw-bold">Región:</dt>
-      <dd class="col-sm-8">{{ regionNombre }}</dd>
+                    <dt class="col-sm-4 fw-semibold text-muted">Región:</dt>
+                    <dd class="col-sm-8">{{ regionNombre || '—' }}</dd>
 
-      <dt class="col-sm-4 fw-bold">Fecha Apertura:</dt>
-      <dd class="col-sm-8">{{ fechaAperturaFormatted }}</dd>
+                    <dt class="col-sm-4 fw-semibold text-muted">Fecha Apertura:</dt>
+                    <dd class="col-sm-8">{{ fechaAperturaFormatted || '—' }}</dd>
 
-      <dt class="col-sm-4 fw-bold">Descripción:</dt>
-      <dd class="col-sm-8">{{ form.value.descripcion || 'Generada automáticamente' }}</dd>
-    </dl>
-  </div>
+                    <dt class="col-sm-4 fw-semibold text-muted">Descripción:</dt>
+                    <dd class="col-sm-8">{{ form.value.descripcion || 'Generada automáticamente' }}</dd>
+                  </dl>
+                </div>
 
-  <!-- Botones finales -->
-  <div class="d-flex flex-column flex-sm-row gap-3 justify-content-end mt-5 pt-4 border-top">
-    <button type="button" class="btn btn-outline-secondary px-5 py-2"
-            (click)="currentStep = 2" [disabled]="loading">
-      <i class="bi bi-arrow-left me-2"></i> Regresar
-    </button>
+                <div class="d-flex flex-column flex-sm-row gap-3 justify-content-end mt-5 pt-4 border-top">
+                  <button type="button" class="btn btn-outline-secondary px-5 py-2"
+                          (click)="currentStep = 2" [disabled]="loading">
+                    <i class="bi bi-arrow-left-short me-2"></i> Regresar
+                  </button>
 
-    <button type="submit" class="btn btn-primary px-5 py-2 shadow-lg"
-            [disabled]="loading || form.invalid">
-      <ng-container *ngIf="!loading">
-        <i class="bi me-2" [ngClass]="isEditMode ? 'bi-save' : 'bi-check2-circle'"></i>
-        {{ isEditMode ? 'Guardar Cambios' : 'Crear OT' }}
-      </ng-container>
-      <ng-container *ngIf="loading">
-        <span class="spinner-border spinner-border-sm me-2"></span>
-        Procesando...
-      </ng-container>
-    </button>
-  </div>
-</div>
+                  <button type="submit" class="btn btn-primary px-5 py-2 shadow-lg"
+                          [disabled]="loading || form.invalid">
+                    <ng-container *ngIf="!loading">
+                      <i class="bi me-2" [ngClass]="isEditMode ? 'bi-save' : 'bi-check2-circle'"></i>
+                      {{ isEditMode ? 'Guardar Cambios' : 'Crear OT' }}
+                    </ng-container>
+                    <ng-container *ngIf="loading">
+                      <span class="spinner-border spinner-border-sm me-2"></span>
+                      Procesando...
+                    </ng-container>
+                  </button>
+                </div>
+              </div>
+
             </form>
           </div>
 
-          <div class="card-footer bg-light text-muted small text-center py-3">
-            Campos con <span class="text-danger">*</span> son obligatorios
+          <div class="card-footer bg-light-subtle text-muted small text-center py-3 border-0">
+            Campos con <span class="text-danger">*</span> son obligatorios • Todos los datos son confidenciales
           </div>
         </div>
       </ng-container>

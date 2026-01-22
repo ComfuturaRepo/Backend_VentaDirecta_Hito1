@@ -1,23 +1,18 @@
-// src/app/pages/login/login.component.ts
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router'; // ← importante agregar ActivatedRoute
 import Swal from 'sweetalert2';
 import { AuthService } from '../../service/auth.service';
 
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [
-    CommonModule,
-    ReactiveFormsModule
-  ],
-   templateUrl: './login-componente.html',
-  styleUrl: './login-componente.css',
+  imports: [CommonModule, ReactiveFormsModule],
+  templateUrl: './login-componente.html',
+  styleUrl: './login-componente.css'
 })
 export class LoginComponent {
-
   loginForm: FormGroup;
   isLoading = false;
   showPassword = false;
@@ -25,16 +20,17 @@ export class LoginComponent {
   constructor(
     private fb: FormBuilder,
     private authService: AuthService,
-    private router: Router
+    private router: Router,
+    private activatedRoute: ActivatedRoute // ← Necesario para leer queryParams
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required, Validators.minLength(3)]],
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
 
-    // Si ya está autenticado → redirigir
+    // Si ya está autenticado → redirigimos (muy buena práctica)
     if (this.authService.isAuthenticatedSync) {
-      this.router.navigate(['/dashboard']);
+      this.redirectToReturnUrlOrDashboard();
     }
   }
 
@@ -49,19 +45,16 @@ export class LoginComponent {
         icon: 'warning',
         title: 'Datos incompletos',
         text: 'Por favor completa todos los campos',
-        timer: 2500,
+        timer: 2200,
         showConfirmButton: false,
         toast: true,
         position: 'top-end'
       });
       return;
     }
-    if (this.loginForm.invalid) {
-      this.loginForm.markAllAsTouched();
-      return;
-    }
 
     this.isLoading = true;
+
     const credentials = this.loginForm.value;
 
     this.authService.login(credentials).subscribe({
@@ -81,10 +74,12 @@ export class LoginComponent {
           iconColor: '#155724'
         });
 
-        this.router.navigate(['/dashboard']);
+        // ← Aquí está la solución principal !!
+        this.redirectToReturnUrlOrDashboard();
       },
-      error: (err) => {
+      error: err => {
         this.isLoading = false;
+
         Swal.fire({
           title: 'Error',
           text: err.message || 'Credenciales incorrectas',
@@ -92,7 +87,22 @@ export class LoginComponent {
           confirmButtonColor: '#dc3545'
         });
       },
-      complete: () => this.isLoading = false
+      complete: () => (this.isLoading = false)
     });
+  }
+
+  /**
+   * Redirige al returnUrl si existe, sino va a dashboard
+   */
+  private redirectToReturnUrlOrDashboard() {
+    const returnUrl = this.activatedRoute.snapshot.queryParamMap.get('returnUrl');
+
+    // Si hay returnUrl → vamos ahí
+    // Si no → dashboard por defecto
+    if (returnUrl) {
+      this.router.navigateByUrl(returnUrl);
+    } else {
+      this.router.navigate(['/dashboard']);
+    }
   }
 }
