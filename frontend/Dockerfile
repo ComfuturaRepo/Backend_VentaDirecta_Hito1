@@ -1,32 +1,37 @@
-# ================= BUILD FRONTEND =================
-FROM node:18 AS build
+# ================================
+# 1️⃣ Build de Angular
+# ================================
+FROM node:20-alpine AS build
+
 WORKDIR /app
 
-# Copiar package.json y package-lock.json
+# Copiamos dependencias
 COPY package*.json ./
-RUN npm install --legacy-peer-deps
+RUN npm install
 
-# Copiar todo el proyecto
+# Copiamos el resto del proyecto
 COPY . .
 
-# Build Angular producción
-RUN npm run build -- --project StoreCollectionFrontEnd --configuration production
+# Build en producción (usa el nombre correcto: frontend)
+RUN npm run build -- --configuration production
 
-# ================= RUN IN NGINX =================
-FROM nginx:alpine
-WORKDIR /usr/share/nginx/html
+# ================================
+# 2️⃣ Imagen final (Node para SSR)
+# ================================
+FROM node:20-alpine
 
-# Limpiar contenido viejo
-RUN rm -rf ./*
+WORKDIR /app
 
-# Copiar build de Angular
-COPY --from=build /app/dist/store-collection-front-end/browser/ /usr/share/nginx/html/
+# Copiamos solo lo necesario del build
+COPY --from=build /app/dist ./dist
+COPY package*.json ./
 
-# Copiar nginx custom para SPA fallback
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+# Instalamos solo dependencias necesarias para producción
+RUN npm install --omit=dev
 
-# Exponer puerto 80
-EXPOSE 80
+# Railway usa la variable PORT
+ENV PORT=3000
+EXPOSE 3000
 
-# Ejecutar Nginx en foreground
-CMD ["nginx", "-g", "daemon off;"]
+# Comando para levantar Angular SSR
+CMD ["node", "dist/frontend/server/main.js"]
