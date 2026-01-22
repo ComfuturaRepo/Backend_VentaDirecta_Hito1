@@ -17,7 +17,7 @@ export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
-    data: { renderMode: 'server' } // SSR runtime
+    data: { renderMode: 'server' }
   },
   {
     path: '',
@@ -30,32 +30,19 @@ export const routes: Routes = [
         component: DashboardComponent,
         data: { renderMode: 'server' }
       },
+
+      // 🔥 TODO EL MÓDULO OT EN CLIENT
       {
         path: 'ot',
-        data: { renderMode: 'server' },
+        data: { renderMode: 'client' }, // 👈 CLAVE FINAL
         children: [
-          {
-            path: '',
-            component: OtsComponent,
-            data: { renderMode: 'server' }
-          },
-          {
-            path: 'nuevo',
-            component: FormOtsComponent,
-            data: { renderMode: 'server' }
-          },
-          {
-            path: 'editar/:id',
-            component: FormOtsComponent,
-            data: { renderMode: 'server' } // 👈 CLAVE
-          },
-          {
-            path: ':id',
-            component: OtDetailComponent,
-            data: { renderMode: 'server' } // 👈 CLAVE
-          }
+          { path: '', component: OtsComponent },
+          { path: 'nuevo', component: FormOtsComponent },
+          { path: 'editar/:id', component: FormOtsComponent },
+          { path: ':id', component: OtDetailComponent }
         ]
       },
+
       {
         path: 'site',
         component: SiteComponent,
