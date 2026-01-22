@@ -51,6 +51,7 @@ public class SecurityConfig {
                                 "/api/dropdowns/**",
                                 "/api/ordenes-compra/**",
                                 "/api/ots/**",
+                                "/api/analista-cliente-solicitante/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
