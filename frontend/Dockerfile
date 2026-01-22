@@ -9,7 +9,8 @@ COPY package*.json ./
 RUN npm install
 
 COPY . .
-RUN npm run build --configuration production
+
+RUN npx ng build frontend --configuration production
 
 # ================================
 # 2️⃣ Runtime SSR
