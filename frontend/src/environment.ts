@@ -1,6 +1,4 @@
-// src/environments/environment.ts
-
 export const environment = {
-  production: false,
-  baseUrl: 'http://localhost:8080',
+  production: true,
+  baseUrl: 'https://backend-production-24b3.up.railway.app',
 };
