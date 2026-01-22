@@ -53,6 +53,7 @@ public class SecurityConfig {
                                 "/api/ots/**",
                                 "/api/analista-cliente-solicitante/**",
                                 "/api/jefatura-cliente-solicitante/**",
+                                "/api/site/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
                                 "/swagger-ui.html",
