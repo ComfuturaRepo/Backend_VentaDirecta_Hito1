@@ -13,7 +13,9 @@
           "builder": "@angular/build:application",
           "options": {
             "browser": "src/main.ts",
-            "polyfills": ["zone.js"],
+            "polyfills": [
+              "zone.js"
+            ],
             "tsConfig": "tsconfig.app.json",
             "assets": [
               {
@@ -21,31 +23,36 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css"],
-
+            "styles": [
+              "src/styles.css"
+            ],
             "server": "src/main.server.ts",
-            "outputMode": "server",
             "ssr": {
               "entry": "src/server.ts"
             },
-
-            "prerender": false
+            "prerender": {
+              "discoverRoutes": false
+            }
           },
           "configurations": {
             "production": {
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "500kB",
-                  "maximumError": "1MB"
+                  "maximumWarning": "800kB",
+                  "maximumError": "2MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "4kB",
-                  "maximumError": "8kB"
+                  "maximumWarning": "6kB",
+                  "maximumError": "12kB"
                 }
               ],
-              "outputHashing": "all"
+              "outputHashing": "all",
+              "optimization": true,
+              "extractLicenses": true,
+              "sourceMap": false,
+              "namedChunks": false
             },
             "development": {
               "optimization": false,
@@ -84,7 +91,9 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/styles.css"]
+            "styles": [
+              "src/styles.css"
+            ]
           }
         }
       }

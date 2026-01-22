@@ -1,3 +1,4 @@
+// src/app/app.routes.ts   ← Rutas para el cliente (browser)
 import { Routes } from '@angular/router';
 
 import { LoginComponent } from './pages/login-componente/login-componente';
@@ -14,92 +15,33 @@ import { OrdenCompraComponent } from './pages/orden-compra-component/orden-compr
 import { authGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
-
-  /* =========================
-   * PUBLIC
-   * ========================= */
   {
     path: 'login',
     component: LoginComponent,
-    data: { renderMode: 'server' }
   },
-
-  /* =========================
-   * PRIVATE (LAYOUT)
-   * ========================= */
   {
     path: '',
     component: LayoutComponent,
     canActivateChild: [authGuard],
-    data: { renderMode: 'server' },
     children: [
-
-      /* Dashboard */
-      {
-        path: 'dashboard',
-        component: DashboardComponent,
-        data: { renderMode: 'server' }
-      },
-
-      /* =========================
-       * OT → FULL CLIENT (CRUD)
-       * ========================= */
+      { path: 'dashboard', component: DashboardComponent },
       {
         path: 'ot',
-        data: { renderMode: 'client' },
         children: [
-          {
-            path: '',
-            component: OtsComponent,
-            data: { renderMode: 'client' }
-          },
-          {
-            path: 'nuevo',
-            component: FormOtsComponent,
-            data: { renderMode: 'client' }
-          },
-          {
-            path: 'editar/:id',
-            component: FormOtsComponent,
-            data: { renderMode: 'client' }
-          },
-          {
-            path: ':id',
-            component: OtDetailComponent,
-            data: { renderMode: 'client' }
-          }
-        ]
+          { path: '', component: OtsComponent },
+          { path: 'nuevo', component: FormOtsComponent },
+          { path: 'editar/:id', component: FormOtsComponent },
+          { path: ':id', component: OtDetailComponent },
+        ],
       },
-
-      /* Otras páginas SSR */
-      {
-        path: 'site',
-        component: SiteComponent,
-        data: { renderMode: 'server' }
-      },
-      {
-        path: 'analista-cliente-solicitante',
-        component: AnalistaClienteSolicitanteComponent,
-        data: { renderMode: 'server' }
-      },
-      {
-        path: 'jefatura-cliente-solicitante',
-        component: JefaturaClienteSolicitanteComponent,
-        data: { renderMode: 'server' }
-      },
-      {
-        path: 'orden-compra',
-        component: OrdenCompraComponent,
-        data: { renderMode: 'server' }
-      }
-    ]
+      { path: 'site', component: SiteComponent },
+      { path: 'analista-cliente-solicitante', component: AnalistaClienteSolicitanteComponent },
+      { path: 'jefatura-cliente-solicitante', component: JefaturaClienteSolicitanteComponent },
+      { path: 'orden-compra', component: OrdenCompraComponent },
+    ],
   },
-
-  /* =========================
-   * FALLBACK
-   * ========================= */
   {
     path: '**',
-    redirectTo: 'login'
-  }
+    redirectTo: 'login',
+  },
 ];
