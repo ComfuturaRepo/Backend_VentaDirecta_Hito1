@@ -1,5 +1,5 @@
 # ================================
-# 1️⃣ Build
+# 1️⃣ Build Angular SSR
 # ================================
 FROM node:20-alpine AS build
 
@@ -10,10 +10,10 @@ RUN npm install
 
 COPY . .
 
-RUN npx ng build frontend --configuration production
+RUN npm run build -- --configuration production
 
 # ================================
-# 2️⃣ Runtime SSR
+# 2️⃣ Runtime (SSR)
 # ================================
 FROM node:20-alpine
 
@@ -27,4 +27,4 @@ RUN npm install --omit=dev
 ENV PORT=3000
 EXPOSE 3000
 
-CMD ["node", "dist/frontend/server/main.js"]
+CMD ["node", "dist/frontend/server/server.mjs"]
