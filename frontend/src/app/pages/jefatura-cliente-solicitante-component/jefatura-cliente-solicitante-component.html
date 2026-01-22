@@ -1,0 +1,111 @@
+<div class="container mt-4">
+  <h2>Gestión de Jefaturas Cliente Solicitante</h2>
+
+  <!-- Mensaje de error -->
+  <div *ngIf="errorMessage" class="alert alert-danger">
+    {{ errorMessage }}
+  </div>
+
+  <!-- Filtro + botón nuevo -->
+  <div class="row mb-3 align-items-center">
+    <div class="col-md-6">
+      <input
+        type="text"
+        class="form-control"
+        placeholder="Buscar por descripción..."
+        [(ngModel)]="searchDescripcion"
+        (input)="onSearchChange()"
+      />
+    </div>
+    <div class="col-md-6 text-end">
+      <button class="btn btn-primary" (click)="openCreateForm()">
+        + Nueva Jefatura
+      </button>
+    </div>
+  </div>
+
+  <!-- Formulario -->
+  <div *ngIf="showForm" class="card mb-4">
+    <div class="card-body">
+      <h5>{{ isEditMode ? 'Editar Jefatura' : 'Nueva Jefatura' }}</h5>
+
+      <form (ngSubmit)="saveJefatura()">
+        <div class="mb-3">
+          <label class="form-label">Descripción <span class="text-danger">*</span></label>
+          <input
+            type="text"
+            class="form-control"
+            [(ngModel)]="currentJefatura.descripcion"
+            name="descripcion"
+            required
+            maxlength="150"
+          />
+        </div>
+
+        <div class="d-flex gap-2">
+          <button
+            type="submit"
+            class="btn btn-success"
+            [disabled]="isLoading || !currentJefatura.descripcion.trim()"
+          >
+            {{ isLoading ? 'Guardando...' : 'Guardar' }}
+          </button>
+          <button type="button" class="btn btn-secondary" (click)="cancelForm()">
+            Cancelar
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Tabla -->
+  <div class="table-responsive" *ngIf="!isLoading || jefaturas.length > 0; else loading">
+    <table class="table table-striped table-hover">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>Descripción</th>
+          <th>Estado</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let jef of jefaturas">
+          <td>{{ jef.id }}</td>
+          <td>{{ jef.descripcion }}</td>
+          <td>
+            <span class="badge" [ngClass]="jef.activo ? 'bg-success' : 'bg-danger'">
+              {{ jef.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td>
+            <button class="btn btn-sm btn-outline-primary me-2" (click)="openEditForm(jef)">
+              Editar
+            </button>
+            <button
+              class="btn btn-sm"
+              [ngClass]="jef.activo ? 'btn-outline-danger' : 'btn-outline-success'"
+              (click)="toggleActivo(jef)"
+            >
+              {{ jef.activo ? 'Desactivar' : 'Activar' }}
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="jefaturas.length === 0 && !isLoading">
+          <td colspan="4" class="text-center text-muted py-4">
+            No se encontraron jefaturas
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Loading -->
+  <ng-template #loading>
+    <div class="text-center my-5">
+      <div class="spinner-border text-primary" role="status"></div>
+      <p>Cargando jefaturas...</p>
+    </div>
+  </ng-template>
+</div>
