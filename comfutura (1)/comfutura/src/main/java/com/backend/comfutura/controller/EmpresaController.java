@@ -23,10 +23,7 @@ public class EmpresaController {
         return ResponseEntity.ok(service.listar());
     }
 
-    @GetMapping("/paginado")
-    public ResponseEntity<Page<Empresa>> listarPaginado(Pageable pageable) {
-        return ResponseEntity.ok(service.listarPaginado(pageable));
-    }
+
 
     @PostMapping
     public ResponseEntity<Empresa> crear(@RequestBody Empresa empresa) {

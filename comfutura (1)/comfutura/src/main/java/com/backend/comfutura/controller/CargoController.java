@@ -3,8 +3,10 @@ package com.backend.comfutura.controller;
 import com.backend.comfutura.dto.request.CargoRequestDTO;
 import com.backend.comfutura.dto.response.CargoResponseDTO;
 import com.backend.comfutura.service.CargoService;
+import io.swagger.v3.oas.annotations.Parameter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -24,11 +26,19 @@ public class CargoController {
         return ResponseEntity.ok(service.guardar(dto));
     }
 
-    // LISTAR PAGINADO
+    // LISTAR PAGINADO SIN SORT, CON PARÁMETROS VISIBLES EN SWAGGER
     @GetMapping
-    public ResponseEntity<Page<CargoResponseDTO>> listar(Pageable pageable) {
+    public ResponseEntity<Page<CargoResponseDTO>> listar(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size
+    ) {
+        // Creamos un PageRequest usando page y size, sin sort
+        Pageable pageable = PageRequest.of(page, size);
+
         return ResponseEntity.ok(service.listar(pageable));
     }
+
+
 
     // TOGGLE
     @PostMapping("/{id}/toggle")
