@@ -2,6 +2,7 @@ import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../service/auth.service';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-layout',
@@ -17,6 +18,7 @@ import { AuthService } from '../../service/auth.service';
 })
 export class LayoutComponent {
   private authService = inject(AuthService);
+private router = inject(Router);
 
   isCollapsed  = false;
   isMobileOpen = false;
@@ -57,7 +59,9 @@ export class LayoutComponent {
     this.isMobileOpen = false;
   }
 
-  logout() {
-    this.authService.logout();
-  }
+ logout() {
+  this.authService.logout();      // limpia el token / sesión
+  this.router.navigate(['/login']); // redirige a la ruta de login
+}
+
 }

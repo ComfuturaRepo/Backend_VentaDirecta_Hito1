@@ -14,6 +14,7 @@ import { OrdenCompraComponent } from './pages/orden-compra-component/orden-compr
 
 import { authGuard } from './auth/auth.guard';
 
+
 export const routes: Routes = [
   {
     path: 'login',
