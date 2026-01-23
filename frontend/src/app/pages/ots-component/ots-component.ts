@@ -351,51 +351,65 @@ downloadRelationsModel(): void {
     this.modalRefs.push(modalRef);
   }
 
-  export(): void {
-    if (this.exportFiltroActivo && this.selectedOts.size === 0) {
-      Swal.fire('Advertencia', 'No hay OTs seleccionadas para exportar', 'warning');
-      return;
-    }
+export(): void {
+  let exportObservable: Observable<Blob>;
+  let exportType = '';
 
-    let exportObservable: Observable<Blob>;
-
-    if (this.exportFiltroActivo) {
-      // Exportar seleccionadas
-      const otIds = Array.from(this.selectedOts);
-      exportObservable = this.excelService.exportOts(otIds);
-    } else if (this.exportFiltroText || this.exportFechaDesde || this.exportFechaHasta) {
-      // Exportar con filtros
-      exportObservable = this.excelService.exportFilteredOts(
-        this.exportFiltroText,
-        this.exportFechaDesde || undefined,
-        this.exportFechaHasta || undefined
-      );
-    } else {
-      // Exportar todas
-      exportObservable = this.excelService.exportAllOts();
-    }
-
-    exportObservable.subscribe({
-      next: (blob) => {
-        const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '-');
-        const filename = this.getExportFilename();
-        this.excelService.downloadExcel(blob, filename);
-
-        Swal.fire({
-          icon: 'success',
-          title: '¡Exportación exitosa!',
-          text: 'El archivo Excel se ha descargado',
-          timer: 2000,
-          showConfirmButton: false
-        });
-
-        this.closeAllModals();
-      },
-      error: (err) => {
-        Swal.fire('Error', 'No se pudo exportar el archivo', 'error');
-      }
-    });
+  if (this.exportFiltroActivo && this.selectedCount > 0) {
+    // Exportar seleccionadas
+    const otIds = Array.from(this.selectedOts);
+    exportObservable = this.excelService.exportOts(otIds);
+    exportType = 'seleccionadas';
+  } else if (this.exportFiltroText || this.exportFechaDesde || this.exportFechaHasta) {
+    // Exportar con filtros
+    exportObservable = this.excelService.exportFilteredOts(
+      this.exportFiltroText || undefined,
+      this.exportFechaDesde || undefined,
+      this.exportFechaHasta || undefined
+    );
+    exportType = 'filtradas';
+  } else {
+    // Exportar todas
+    exportObservable = this.excelService.exportAllOts();
+    exportType = 'todas';
   }
+
+  // Mostrar loading usando el método correcto
+  Swal.fire({
+    title: 'Generando Excel...',
+    text: 'Por favor espera',
+    allowOutsideClick: false,
+    showConfirmButton: false,
+    willOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  exportObservable.subscribe({
+    next: (blob) => {
+      // Cerrar el loading
+      Swal.close();
+
+      const timestamp = new Date().toISOString().slice(0, 19).replace(/[:]/g, '-');
+      const filename = `ots_${exportType}_${timestamp}.xlsx`;
+      this.excelService.downloadExcel(blob, filename);
+
+      Swal.fire({
+        icon: 'success',
+        title: '¡Exportación exitosa!',
+        text: 'El archivo Excel se ha descargado',
+        timer: 2000,
+        showConfirmButton: false
+      });
+
+      this.closeAllModals();
+    },
+    error: (err) => {
+      Swal.close();
+      Swal.fire('Error', 'No se pudo exportar el archivo', 'error');
+    }
+  });
+}
 
   getExportFilename(): string {
     let base = 'ots_export_';

@@ -10,22 +10,53 @@
 
       <div class="action-buttons">
         <!-- Exportación dropdown -->
-        <div class="dropdown" ngbDropdown>
-          <button class="btn btn-success btn-lg" ngbDropdownToggle>
-            <i class="bi bi-download"></i> Exportar
-          </button>
-          <div class="dropdown-menu" ngbDropdownMenu>
-            <button class="dropdown-item" (click)="openExportModal()">
-              <i class="bi bi-gear"></i> Exportación avanzada
-            </button>
-            <button class="dropdown-item" (click)="exportSelectedOts()" [disabled]="selectedCount === 0">
-              <i class="bi bi-check-circle"></i> Exportar seleccionadas ({{selectedCount}})
-            </button>
-            <button class="dropdown-item" (click)="exportAllOts()">
-              <i class="bi bi-download"></i> Exportar todas
-            </button>
-          </div>
+      <!-- En el dropdown de exportación -->
+<div class="dropdown" ngbDropdown>
+  <button class="btn btn-success btn-lg" ngbDropdownToggle>
+    <i class="bi bi-download"></i> Exportar
+  </button>
+  <div class="dropdown-menu" ngbDropdownMenu>
+    <!-- Exportación avanzada -->
+    <button class="dropdown-item" (click)="openExportModal()">
+      <i class="bi bi-gear"></i> Exportación avanzada
+    </button>
+
+    <div class="dropdown-divider"></div>
+
+    <!-- Exportar seleccionadas -->
+    <button class="dropdown-item" (click)="exportSelectedOts()"
+            [disabled]="selectedCount === 0">
+      <div class="d-flex align-items-center justify-content-between">
+        <div>
+          <i class="bi bi-check-circle"></i> Exportar seleccionadas
         </div>
+        <span *ngIf="selectedCount > 0" class="badge bg-primary rounded-pill">
+          {{selectedCount}}
+        </span>
+      </div>
+    </button>
+
+    <!-- Exportar todas -->
+    <button class="dropdown-item" (click)="exportAllOts()">
+      <i class="bi bi-download"></i> Exportar todas ({{totalElements}})
+    </button>
+
+    <div class="dropdown-divider"></div>
+
+    <!-- Plantillas y modelos -->
+    <button class="dropdown-item" (click)="downloadImportTemplate()">
+      <i class="bi bi-file-earmark-arrow-down"></i> Descargar plantilla
+    </button>
+
+    <button class="dropdown-item" (click)="downloadDataModel()">
+      <i class="bi bi-diagram-3"></i> Modelo de datos
+    </button>
+
+    <button class="dropdown-item" (click)="downloadRelationsModel()">
+      <i class="bi bi-shuffle"></i> Modelo de relaciones
+    </button>
+  </div>
+</div>
 
         <button class="btn btn-primary btn-lg" (click)="openImportModal()">
           <i class="bi bi-upload"></i> Importar
@@ -172,61 +203,79 @@
   </div>
 </div>
 
-<!-- Modal de Exportación -->
+<!-- Modal de Exportación Avanzada -->
 <ng-template #exportModal>
   <div class="modal-content">
     <div class="modal-header bg-primary text-white">
       <h5 class="modal-title">
-        <i class="bi bi-download me-2"></i>Exportación de OTs
+        <i class="bi bi-download me-2"></i>Exportación Avanzada
       </h5>
       <button type="button" class="btn-close btn-close-white"
               (click)="closeAllModals()"></button>
     </div>
 
     <div class="modal-body">
-      <div class="export-options">
+      <div class="row g-4">
         <!-- Opción 1: Seleccionadas -->
-        <div class="form-check mb-4">
-          <input class="form-check-input" type="radio"
-                 id="exportSelected" [(ngModel)]="exportFiltroActivo" [value]="true">
-          <label class="form-check-label" for="exportSelected">
-            <strong>Exportar seleccionadas</strong>
-            <small class="d-block text-muted">
-              {{selectedCount}} OTs seleccionadas
-            </small>
-          </label>
+        <div class="col-md-6">
+          <div class="card h-100 border-primary"
+               [class.border-2]="exportFiltroActivo"
+               (click)="exportFiltroActivo = true">
+            <div class="card-body text-center">
+              <i class="bi bi-check-circle display-4 text-primary mb-3"></i>
+              <h5 class="card-title">Seleccionadas</h5>
+              <p class="card-text">
+                {{selectedCount}} OTs seleccionadas
+              </p>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox"
+                       [(ngModel)]="exportFiltroActivo">
+                <label class="form-check-label">Usar esta opción</label>
+              </div>
+            </div>
+          </div>
         </div>
 
         <!-- Opción 2: Todas -->
-        <div class="form-check mb-4">
-          <input class="form-check-input" type="radio"
-                 id="exportAll" [(ngModel)]="exportFiltroActivo" [value]="false">
-          <label class="form-check-label" for="exportAll">
-            <strong>Exportar todas</strong>
-            <small class="d-block text-muted">
-              {{totalElements}} OTs en total
-            </small>
-          </label>
+        <div class="col-md-6">
+          <div class="card h-100 border-info"
+               [class.border-2]="!exportFiltroActivo"
+               (click)="exportFiltroActivo = false">
+            <div class="card-body text-center">
+              <i class="bi bi-download display-4 text-info mb-3"></i>
+              <h5 class="card-title">Todas</h5>
+              <p class="card-text">
+                {{totalElements}} OTs en total
+              </p>
+              <div class="form-check form-switch">
+                <input class="form-check-input" type="checkbox"
+                       [(ngModel)]="exportFiltroActivo" [value]="false">
+                <label class="form-check-label">Usar esta opción</label>
+              </div>
+            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- Filtros adicionales -->
+      <!-- Filtros adicionales (solo si no está en modo seleccionadas) -->
+      <div *ngIf="!exportFiltroActivo" class="mt-4">
+        <h6 class="border-bottom pb-2">Filtros adicionales</h6>
+
         <div class="mb-3">
-          <label class="form-label">Filtrar por texto:</label>
+          <label class="form-label">Texto de búsqueda:</label>
           <input type="text" class="form-control"
                  [(ngModel)]="exportFiltroText"
-                 [disabled]="exportFiltroActivo">
+                 placeholder="Buscar en descripción, cliente, etc.">
         </div>
 
-        <div class="row mb-3">
-          <div class="col">
+        <div class="row">
+          <div class="col-md-6 mb-3">
             <label class="form-label">Fecha desde:</label>
-            <input type="date" class="form-control" [(ngModel)]="exportFechaDesde"
-                   [disabled]="exportFiltroActivo">
+            <input type="date" class="form-control" [(ngModel)]="exportFechaDesde">
           </div>
-          <div class="col">
+          <div class="col-md-6 mb-3">
             <label class="form-label">Fecha hasta:</label>
-            <input type="date" class="form-control" [(ngModel)]="exportFechaHasta"
-                   [disabled]="exportFiltroActivo">
+            <input type="date" class="form-control" [(ngModel)]="exportFechaHasta">
           </div>
         </div>
       </div>
@@ -236,8 +285,10 @@
       <button type="button" class="btn btn-secondary"
               (click)="closeAllModals()">Cancelar</button>
       <button type="button" class="btn btn-success"
-              (click)="export()">
-        <i class="bi bi-download me-2"></i>Exportar
+              (click)="export()"
+              [disabled]="exportFiltroActivo && selectedCount === 0">
+        <i class="bi bi-download me-2"></i>
+        {{exportFiltroActivo ? 'Exportar seleccionadas' : 'Exportar'}}
       </button>
     </div>
   </div>
