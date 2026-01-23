@@ -3,21 +3,21 @@ spring:
     url: ${SPRING_DATASOURCE_URL}
     username: ${SPRING_DATASOURCE_USERNAME}
     password: ${SPRING_DATASOURCE_PASSWORD}
-    driver-class-name: ${SPRING_DATASOURCE_DRIVER_CLASS_NAME}
+    driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
     hibernate:
-      ddl-auto: ${SPRING_JPA_HIBERNATE_DDL_AUTO}
-    show-sql: ${SPRING_JPA_SHOW_SQL}
+      ddl-auto: validate          # cambia a 'update' si quieres que Hibernate cree/modifique tablas automáticamente
+    show-sql: true
     properties:
       hibernate:
-        format_sql: ${SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL}
-        dialect: ${SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT}
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQLDialect
 
 server:
-  port: ${PORT:8080}
+  port: 8080
 
 security:
   jwt:
-    secret-key: ${SECURITY_JWT_SECRET_KEY}
-    expiration-minutes: ${SECURITY_JWT_EXPIRATION_MINUTES}
+    secret-key: 586B633834416E396D7436753879382F423F4428482B4C6250655367566B5970
+    expiration-minutes: 480
