@@ -5,6 +5,7 @@
   "projects": {
     "frontend": {
       "projectType": "application",
+      "schematics": {},
       "root": "",
       "sourceRoot": "src",
       "prefix": "app",
@@ -27,11 +28,9 @@
               "src/styles.css"
             ],
             "server": "src/main.server.ts",
+            "outputMode": "server",
             "ssr": {
               "entry": "src/server.ts"
-            },
-            "prerender": {
-              "discoverRoutes": false
             }
           },
           "configurations": {
@@ -39,20 +38,16 @@
               "budgets": [
                 {
                   "type": "initial",
-                  "maximumWarning": "800kB",
-                  "maximumError": "2MB"
+                  "maximumWarning": "500kB",
+                  "maximumError": "1MB"
                 },
                 {
                   "type": "anyComponentStyle",
-                  "maximumWarning": "6kB",
-                  "maximumError": "12kB"
+                  "maximumWarning": "4kB",
+                  "maximumError": "8kB"
                 }
               ],
-              "outputHashing": "all",
-              "optimization": true,
-              "extractLicenses": true,
-              "sourceMap": false,
-              "namedChunks": false
+              "outputHashing": "all"
             },
             "development": {
               "optimization": false,

@@ -30,8 +30,8 @@ export const routes: Routes = [
         children: [
           { path: '', component: OtsComponent },
           { path: 'nuevo', component: FormOtsComponent },
-          { path: 'editar/:id', component: FormOtsComponent },
-          { path: ':id', component: OtDetailComponent },
+         // { path: 'editar/:id', component: FormOtsComponent },
+         // { path: ':id', component: OtDetailComponent },
         ],
       },
       { path: 'site', component: SiteComponent },
