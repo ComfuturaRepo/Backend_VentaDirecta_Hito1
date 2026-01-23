@@ -2,9 +2,16 @@
 FROM node:20-alpine AS build
 WORKDIR /app
 
+# Copiar package.json y package-lock.json
 COPY package*.json ./
+
+# Instalar dependencias
 RUN npm install
 
+# Instalar Angular CLI globalmente
+RUN npm install -g @angular/cli
+
+# Copiar todo el proyecto
 COPY . .
 
 # Build Angular producción
@@ -16,7 +23,7 @@ FROM nginx:alpine
 # Limpiar contenido viejo
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copiar build de Angular SPA (browser) a Nginx
+# Copiar build de Angular
 COPY --from=build /app/dist/frontend/ /usr/share/nginx/html/
 
 # Copiar nginx custom
