@@ -27,14 +27,14 @@ export const routes: Routes = [
     children: [
       { path: 'dashboard', component: DashboardComponent },
       {
-        path: 'ot',
-        children: [
-          { path: '', component: OtsComponent },
-          { path: 'nuevo', component: FormOtsComponent },
-         // { path: 'editar/:id', component: FormOtsComponent },
-         // { path: ':id', component: OtDetailComponent },
-        ],
-      },
+      path: 'ot',
+      children: [
+        { path: '', component: OtsComponent },                 // /ot → lista
+        { path: 'nuevo', component: FormOtsComponent },        // /ot/nuevo
+        { path: 'editar/:id', component: FormOtsComponent },   // /ot/editar/123
+        { path: ':id', component: OtDetailComponent },         // /ot/123 → detalle
+      ]
+    },
       { path: 'site', component: SiteComponent },
       { path: 'analista-cliente-solicitante', component: AnalistaClienteSolicitanteComponent },
       { path: 'jefatura-cliente-solicitante', component: JefaturaClienteSolicitanteComponent },

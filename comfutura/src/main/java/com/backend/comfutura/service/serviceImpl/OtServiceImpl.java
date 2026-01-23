@@ -215,8 +215,8 @@ public class OtServiceImpl implements OtService {
         Trabajador creador = trabajadorRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Trabajador autenticado no encontrado"));
 
-        EstadoOt estadoPendiente = estadoOtRepository.findByDescripcion("PENDIENTE")
-                .orElseThrow(() -> new ResourceNotFoundException("Estado 'PENDIENTE' no encontrado"));
+        EstadoOt estadoPendiente = estadoOtRepository.findByDescripcion("ASIGNACION")
+                .orElseThrow(() -> new ResourceNotFoundException("Estado 'ASIGNACION' no encontrado"));
 
         Ots ots = Ots.builder()
                 .ot(nuevoOt)
