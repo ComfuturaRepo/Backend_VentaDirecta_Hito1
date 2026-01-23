@@ -20,14 +20,17 @@ RUN npm run build -- --configuration production
 # ================================
 FROM nginx:alpine
 
-# Copiamos build al Nginx html
+# Borramos el default welcome
+RUN rm -rf /usr/share/nginx/html/*
+
+# Copiamos build de Angular al html de Nginx
 COPY --from=build /app/dist/frontend /usr/share/nginx/html
 
-# Configuración de SPA para Angular
-RUN rm /etc/nginx/conf.d/default.conf
+# Copiamos configuración de Nginx para SPA
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 # Exponemos el puerto 80 para Railway
 EXPOSE 80
 
+# Ejecutamos Nginx
 CMD ["nginx", "-g", "daemon off;"]
