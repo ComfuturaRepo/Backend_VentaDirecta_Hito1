@@ -29,7 +29,7 @@ public class Usuario {
     @JoinColumn(name = "id_trabajador")
     private Trabajador trabajador;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_nivel")
     private Nivel nivel;
 
