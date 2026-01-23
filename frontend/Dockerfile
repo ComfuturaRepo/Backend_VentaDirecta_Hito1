@@ -3,7 +3,6 @@
 # ================================
 FROM node:20-alpine AS build
 
-# Carpeta de trabajo
 WORKDIR /app
 
 # Copiamos package.json e install
@@ -13,7 +12,7 @@ RUN npm install
 # Copiamos todo el proyecto
 COPY . .
 
-# Construimos Angular para producción
+# Build de producción
 RUN npm run build -- --configuration production
 
 # ================================
@@ -21,15 +20,14 @@ RUN npm run build -- --configuration production
 # ================================
 FROM nginx:alpine
 
-# Copiamos los archivos estáticos del build
+# Copiamos build al Nginx html
 COPY --from=build /app/dist/frontend /usr/share/nginx/html
 
-# Configuración para Nginx (opcional: evita cache, SPA routing)
+# Configuración de SPA para Angular
 RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Exponemos el puerto que Railway va a usar
+# Exponemos el puerto 80 para Railway
 EXPOSE 80
 
-# Comando para iniciar Nginx
 CMD ["nginx", "-g", "daemon off;"]
