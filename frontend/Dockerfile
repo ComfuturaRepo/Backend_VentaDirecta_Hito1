@@ -11,7 +11,7 @@ RUN npm install
 # Instalar Angular CLI globalmente
 RUN npm install -g @angular/cli
 
-# Copiar todo el proyecto
+# Copiar el proyecto
 COPY . .
 
 # Build Angular producción
@@ -20,13 +20,13 @@ RUN ng build --configuration production
 # ================= RUN IN NGINX =================
 FROM nginx:alpine
 
-# Limpiar contenido viejo
+# Limpiar contenido viejo de Nginx
 RUN rm -rf /usr/share/nginx/html/*
 
-# Copiar build de Angular
+# Copiar build de Angular al directorio de Nginx
 COPY --from=build /app/dist/frontend/ /usr/share/nginx/html/
 
-# Copiar nginx custom
+# Copiar nginx.conf personalizado
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
