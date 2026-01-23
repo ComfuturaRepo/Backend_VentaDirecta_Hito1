@@ -1,36 +1,25 @@
-# ================================
-# 1️⃣ Build Angular
-# ================================
+# ================= BUILD FRONTEND =================
 FROM node:20-alpine AS build
-
 WORKDIR /app
 
-# Copiamos package.json e install
 COPY package*.json ./
 RUN npm install
 
-# Copiamos todo el proyecto
 COPY . .
-
-# Build de producción
 RUN npm run build -- --configuration production
 
-# ================================
-# 2️⃣ Servir Angular con Nginx
-# ================================
+# ================= RUN IN NGINX =================
 FROM nginx:alpine
+WORKDIR /usr/share/nginx/html
 
-# Borramos el default welcome
-RUN rm -rf /usr/share/nginx/html/*
+# Limpiar contenido viejo
+RUN rm -rf ./*
 
-# Copiamos build de Angular al html de Nginx
-COPY --from=build /app/dist/frontend /usr/share/nginx/html
+# Copiar build correcto
+COPY --from=build /app/dist/frontend/ /usr/share/nginx/html/
 
-# Copiamos configuración de Nginx para SPA
+# Copiar nginx custom
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Exponemos el puerto 80 para Railway
 EXPOSE 80
-
-# Ejecutamos Nginx
 CMD ["nginx", "-g", "daemon off;"]
