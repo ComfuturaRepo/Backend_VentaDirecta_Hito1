@@ -1,30 +1,35 @@
 # ================================
-# 1️⃣ Build Angular SSR
+# 1️⃣ Build Angular
 # ================================
 FROM node:20-alpine AS build
 
+# Carpeta de trabajo
 WORKDIR /app
 
+# Copiamos package.json e install
 COPY package*.json ./
 RUN npm install
 
+# Copiamos todo el proyecto
 COPY . .
 
+# Construimos Angular para producción
 RUN npm run build -- --configuration production
 
 # ================================
-# 2️⃣ Runtime (SSR)
+# 2️⃣ Servir Angular con Nginx
 # ================================
-FROM node:20-alpine
+FROM nginx:alpine
 
-WORKDIR /app
+# Copiamos los archivos estáticos del build
+COPY --from=build /app/dist/frontend /usr/share/nginx/html
 
-COPY --from=build /app/dist ./dist
-COPY package*.json ./
+# Configuración para Nginx (opcional: evita cache, SPA routing)
+RUN rm /etc/nginx/conf.d/default.conf
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-RUN npm install --omit=dev
+# Exponemos el puerto que Railway va a usar
+EXPOSE 80
 
-ENV PORT=3000
-EXPOSE 3000
-
-CMD ["node", "dist/frontend/server/server.mjs"]
+# Comando para iniciar Nginx
+CMD ["nginx", "-g", "daemon off;"]
