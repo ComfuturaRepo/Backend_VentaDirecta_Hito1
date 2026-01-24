@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { AuthService } from '../../service/auth.service';
@@ -18,7 +18,7 @@ import Swal from 'sweetalert2';
   templateUrl: './layaout-component.html',
   styleUrl: './layaout-component.css',
 })
-export class LayoutComponent implements OnInit {
+export class LayoutComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
   private sanitizer = inject(DomSanitizer);
@@ -26,19 +26,55 @@ export class LayoutComponent implements OnInit {
   isCollapsed = false;
   isMobileOpen = false;
   logoUrl: SafeUrl | null = null;
+  isMobile = false;
+  private resizeObserver?: ResizeObserver;
 
   ngOnInit() {
     this.loadLogo();
+    this.checkScreenSize();
+    this.setupResizeObserver();
+    this.onResize();
+  }
+
+  ngOnDestroy() {
+    this.resizeObserver?.disconnect();
+    document.body.classList.remove('no-scroll');
   }
 
   private loadLogo() {
     try {
-      const logoPath = 'src/app/imgs/COMFUTURA LOGOTIPO-02.png';
-      this.logoUrl = this.sanitizer.bypassSecurityTrustUrl(logoPath);
+      // Usando la URL de Cloudinary que ya tienes en el HTML
+      const cloudinaryUrl = 'https://res.cloudinary.com/dqznlmig0/image/upload/v1769211282/COMFUTURA_LOGOTIPO-02_ubswoz.png';
+      this.logoUrl = this.sanitizer.bypassSecurityTrustUrl(cloudinaryUrl);
     } catch (error) {
       console.warn('Logo no encontrado, usando ícono por defecto');
     }
   }
+
+  private checkScreenSize() {
+    this.isMobile = window.innerWidth < 1200;
+    if (this.isMobile && this.isCollapsed) {
+      this.isCollapsed = false;
+    }
+  }
+
+  private setupResizeObserver() {
+    if (typeof ResizeObserver !== 'undefined') {
+      this.resizeObserver = new ResizeObserver(() => {
+        this.checkScreenSize();
+      });
+      
+      const mainContent = document.querySelector('.main-content');
+      if (mainContent) {
+        this.resizeObserver.observe(mainContent);
+      }
+    }
+  }
+
+@HostListener('window:resize')
+onResize() {
+  this.checkScreenSize();
+}
 
   get username(): string {
     return this.authService.currentUser?.username ?? 'Usuario';
@@ -69,21 +105,30 @@ export class LayoutComponent implements OnInit {
   }
 
   toggleCollapse() {
-    this.isCollapsed = !this.isCollapsed;
+    if (this.isMobile) {
+      this.isMobileOpen = !this.isMobileOpen;
+      this.updateBodyScroll();
+    } else {
+      this.isCollapsed = !this.isCollapsed;
+    }
   }
 
   toggleMobile() {
     this.isMobileOpen = !this.isMobileOpen;
+    this.updateBodyScroll();
+  }
+
+  closeMobile() {
+    this.isMobileOpen = false;
+    this.updateBodyScroll();
+  }
+
+  private updateBodyScroll() {
     if (this.isMobileOpen) {
       document.body.classList.add('no-scroll');
     } else {
       document.body.classList.remove('no-scroll');
     }
-  }
-
-  closeMobile() {
-    this.isMobileOpen = false;
-    document.body.classList.remove('no-scroll');
   }
 
   logout() {
@@ -96,7 +141,10 @@ export class LayoutComponent implements OnInit {
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Sí, cerrar sesión',
       cancelButtonText: 'Cancelar',
-      reverseButtons: true
+      reverseButtons: true,
+      customClass: {
+        container: 'swal-container'
+      }
     }).then((result) => {
       if (result.isConfirmed) {
         this.authService.logout();
@@ -107,7 +155,10 @@ export class LayoutComponent implements OnInit {
           title: 'Sesión cerrada',
           text: 'Has salido del sistema correctamente',
           timer: 1500,
-          showConfirmButton: false
+          showConfirmButton: false,
+          customClass: {
+            container: 'swal-container'
+          }
         });
       }
     });
@@ -115,6 +166,8 @@ export class LayoutComponent implements OnInit {
 
   // Método para verificar si hay notificaciones
   get hasNotifications(): boolean {
-    return false; // Implementa lógica real si tienes notificaciones
+    // Implementa lógica real si tienes notificaciones
+    // Por ahora, devuelve false para ocultar el badge
+    return false;
   }
 }

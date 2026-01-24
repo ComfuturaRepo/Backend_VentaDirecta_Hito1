@@ -1,97 +1,172 @@
-<p>login works!</p>
 <!-- login.component.html -->
-<div class="container d-flex justify-content-center align-items-center min-vh-100">
-  <div class="card login-card shadow-lg border-0 overflow-hidden">
-    <div class="row g-0">
-      <!-- Lado izquierdo - Imagen/Decoración -->
-      <div class="col-lg-6 d-none d-lg-block bg-gradient-primary position-relative">
-        <div class="overlay"></div>
-        <div class="content-overlay d-flex flex-column justify-content-center align-items-center text-white p-5">
-          <h1 class="display-4 fw-bold mb-4">Comfutura</h1>
-          <p class="lead text-center opacity-75">
-            Gestión inteligente para tu empresa
-          </p>
-          <div class="mt-5">
-            <i class="bi bi-shield-lock-fill display-1"></i>
+<div class="login-container">
+  <!-- Sidebar con logo para desktop -->
+  <div class="login-sidebar">
+    <div class="sidebar-overlay"></div>
+    <div class="sidebar-content">
+      <!-- Logo Comfutura -->
+      <div class="logo-container">
+        <div class="logo-wrapper">
+          <div class="logo-circle">
+            <span class="logo-c">C</span>
           </div>
+          <div class="logo-text">
+            <h1 class="company-name">COMFUTURA</h1>
+            <p class="company-tagline">Gestión Inteligente</p>
+          </div>
+        </div>
+        
+        <div class="sidebar-message">
+          <h2 class="welcome-title">Bienvenido</h2>
+          <p class="welcome-text">
+            Sistema integral de gestión empresarial. Accede a todas las herramientas para optimizar tus operaciones.
+          </p>
+          
+          <div class="features">
+            <div class="feature-item">
+              <i class="bi bi-shield-check feature-icon"></i>
+              <span class="feature-text">Seguridad garantizada</span>
+            </div>
+            <div class="feature-item">
+              <i class="bi bi-graph-up feature-icon"></i>
+              <span class="feature-text">Reportes en tiempo real</span>
+            </div>
+            <div class="feature-item">
+              <i class="bi bi-people feature-icon"></i>
+              <span class="feature-text">Gestión colaborativa</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="sidebar-footer">
+          <p class="copyright">© 2024 Comfutura. Todos los derechos reservados.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Formulario de login -->
+  <div class="login-form-container">
+    <div class="form-wrapper">
+      <!-- Logo responsive -->
+      <div class="mobile-logo">
+        <div class="mobile-logo-wrapper">
+          <div class="mobile-logo-circle">
+            <span class="logo-c">C</span>
+          </div>
+          <h1 class="mobile-company-name">COMFUTURA</h1>
         </div>
       </div>
 
-      <!-- Lado derecho - Formulario -->
-      <div class="col-lg-6 col-12">
-        <div class="card-body p-5 p-lg-5">
-          <div class="text-center mb-5">
-            <h2 class="fw-bold text-primary">Iniciar Sesión</h2>
-            <p class="text-muted">Ingresa tus credenciales para continuar</p>
+      <div class="form-card">
+        <div class="form-header">
+          <h2 class="form-title">Iniciar Sesión</h2>
+          <p class="form-subtitle">Ingresa tus credenciales para acceder al sistema</p>
+        </div>
+
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="login-form">
+          <div class="form-group">
+            <label for="username" class="form-label">
+              <i class="bi bi-person-circle label-icon"></i>
+              Usuario o Email
+            </label>
+            <div class="input-with-icon">
+              <input
+                type="text"
+                id="username"
+                class="form-input"
+                formControlName="username"
+                placeholder="ejemplo@comfutura.com"
+                [class.error]="loginForm.get('username')?.touched && loginForm.get('username')?.invalid"
+              >
+              <i class="bi bi-person input-icon"></i>
+            </div>
+            <div class="error-message" *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.hasError('required')">
+              <i class="bi bi-exclamation-circle"></i>
+              El usuario es obligatorio
+            </div>
+            <div class="error-message" *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.hasError('minlength')">
+              <i class="bi bi-exclamation-circle"></i>
+              Mínimo 3 caracteres
+            </div>
           </div>
 
-          <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-            <div class="mb-4">
-              <label class="form-label fw-medium">Usuario</label>
-              <div class="input-group input-group-lg">
-                <span class="input-group-text bg-light border-end-0">
-                  <i class="bi bi-person-fill text-muted"></i>
-                </span>
-                <input
-                  type="text"
-                  class="form-control"
-                  formControlName="username"
-                  placeholder="ejemplo@empresa.com"
-                  [class.is-invalid]="loginForm.get('username')?.touched && loginForm.get('username')?.invalid"
-                >
-              </div>
-              <div class="invalid-feedback" *ngIf="loginForm.get('username')?.touched && loginForm.get('username')?.hasError('required')">
-                El usuario es obligatorio
-              </div>
-            </div>
-
-            <div class="mb-4">
-              <label class="form-label fw-medium">Contraseña</label>
-              <div class="input-group input-group-lg">
-                <span class="input-group-text bg-light border-end-0">
-                  <i class="bi bi-lock-fill text-muted"></i>
-                </span>
-                <input
-                  [type]="showPassword ? 'text' : 'password'"
-                  class="form-control"
-                  formControlName="password"
-                  placeholder="••••••••"
-                  [class.is-invalid]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
-                >
-                <button
-                  class="btn btn-outline-secondary"
-                  type="button"
-                  (click)="togglePassword()"
-                >
-                  <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
-                </button>
-              </div>
-              <div class="invalid-feedback" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')">
-                La contraseña es obligatoria
-              </div>
-            </div>
-
-            <div class="d-grid mb-4">
-              <button
-                type="submit"
-                class="btn btn-primary btn-lg fw-bold"
-                [disabled]="loginForm.invalid || isLoading"
+          <div class="form-group">
+            <label for="password" class="form-label">
+              <i class="bi bi-key-fill label-icon"></i>
+              Contraseña
+            </label>
+            <div class="input-with-icon">
+              <input
+                [type]="showPassword ? 'text' : 'password'"
+                id="password"
+                class="form-input"
+                formControlName="password"
+                placeholder="••••••••"
+                [class.error]="loginForm.get('password')?.touched && loginForm.get('password')?.invalid"
               >
-                <span *ngIf="!isLoading">Ingresar</span>
-                <span *ngIf="isLoading">
-                  <span class="spinner-border spinner-border-sm me-2" role="status"></span>
-                  Ingresando...
-                </span>
+              <i class="bi bi-lock input-icon"></i>
+              <button
+                type="button"
+                class="password-toggle"
+                (click)="togglePassword()"
+                [attr.aria-label]="showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+              >
+                <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash' : 'bi-eye'"></i>
               </button>
             </div>
-
-            <div class="text-center">
-              <small class="text-muted">
-                ¿Olvidaste tu contraseña? <a href="#" class="text-primary text-decoration-none">Recuperar</a>
-              </small>
+            <div class="error-message" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('required')">
+              <i class="bi bi-exclamation-circle"></i>
+              La contraseña es obligatoria
             </div>
-          </form>
-        </div>
+            <div class="error-message" *ngIf="loginForm.get('password')?.touched && loginForm.get('password')?.hasError('minlength')">
+              <i class="bi bi-exclamation-circle"></i>
+              Mínimo 6 caracteres
+            </div>
+          </div>
+
+          <div class="form-options">
+            <div class="remember-me">
+              <input type="checkbox" id="remember" class="remember-checkbox">
+              <label for="remember" class="remember-label">Recordar sesión</label>
+            </div>
+            <a href="#" class="forgot-password">
+              ¿Olvidaste tu contraseña?
+            </a>
+          </div>
+
+          <button
+            type="submit"
+            class="login-button"
+            [disabled]="loginForm.invalid || isLoading"
+            [class.loading]="isLoading"
+          >
+            <span class="button-text" *ngIf="!isLoading">
+              <i class="bi bi-box-arrow-in-right"></i>
+              Ingresar al Sistema
+            </span>
+            <span class="loading-spinner" *ngIf="isLoading">
+              <i class="bi bi-arrow-repeat"></i>
+              Ingresando...
+            </span>
+          </button>
+
+          <div class="divider">
+            <span class="divider-text">o</span>
+          </div>
+
+          <div class="alternative-login">
+            <p class="alternative-text">¿Necesitas ayuda para ingresar?</p>
+            <button type="button" class="support-button">
+              <i class="bi bi-headset"></i>
+              Contactar Soporte
+            </button>
+          </div>
+
+          <div class="version-info">
+            <p class="version-text">v2.1.4 • Sistema de Gestión Comfutura</p>
+          </div>
+        </form>
       </div>
     </div>
   </div>

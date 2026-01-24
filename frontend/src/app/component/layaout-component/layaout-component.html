@@ -9,7 +9,7 @@
       <div class="logo-container">
         <div class="logo-wrapper">
           <div *ngIf="logoUrl" class="logo-image-container">
-            <img src="https://res.cloudinary.com/dqznlmig0/image/upload/v1769211282/COMFUTURA_LOGOTIPO-02_ubswoz.png" alt="Comfutura Logo" class="logo-image" />
+            <img [src]="logoUrl" alt="Comfutura Logo" class="logo-image" />
           </div>
           <div *ngIf="!logoUrl" class="logo-fallback">
             <div class="logo-icon">
@@ -95,12 +95,12 @@
         </li>
 
         <!-- Separador para opciones de administración -->
-        <li class="menu-divider" >
+        <li class="menu-divider" *ngIf="!isCollapsed">
           <span class="divider-label">Administración</span>
         </li>
 
         <!-- Reportes (Solo Admin) -->
-        <li >
+        <li *ngIf="currentUser?.roles?.includes('ADMIN')">
           <a routerLink="/reportes" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-graph-up"></i>
@@ -110,7 +110,7 @@
         </li>
 
         <!-- Configuración (Solo Admin) -->
-        <li >
+        <li *ngIf="currentUser?.roles?.includes('ADMIN')">
           <a routerLink="/configuracion" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-gear-fill"></i>
