@@ -28,7 +28,7 @@ export class LoginComponent {
       password: ['', [Validators.required, Validators.minLength(6)]]
     });
 
-    // Si ya está autenticado → redirigimos
+    // Redirige si ya está autenticado
     if (this.authService.isAuthenticatedSync) {
       this.redirectToReturnUrlOrDashboard();
     }
@@ -65,8 +65,8 @@ export class LoginComponent {
         const username = this.authService.currentUser?.username || 'Usuario';
 
         Swal.fire({
-          title: '¡Acceso concedido!',
-          text: `Bienvenido ${username}`,
+          title: '¡Acceso Concedido!',
+          text: `Bienvenido ${username} al sistema Comfutura`,
           icon: 'success',
           timer: 1800,
           showConfirmButton: false,
@@ -86,14 +86,22 @@ export class LoginComponent {
         this.isLoading = false;
 
         Swal.fire({
-          title: 'Error de acceso',
-          text: err.message || 'Credenciales incorrectas. Verifica tus datos.',
+          title: 'Error de Acceso',
+          text: err.message || 'Credenciales incorrectas. Verifica tus datos e intenta nuevamente.',
           icon: 'error',
           confirmButtonColor: '#dc2626',
           background: '#fef2f2',
           color: '#991b1b',
           iconColor: '#dc2626',
-          confirmButtonText: 'Reintentar'
+          confirmButtonText: 'Reintentar',
+          showCancelButton: true,
+          cancelButtonText: '¿Necesitas ayuda?',
+          cancelButtonColor: '#6b7280'
+        }).then((result) => {
+          if (result.dismiss === Swal.DismissReason.cancel) {
+            // Aquí podrías redirigir a una página de ayuda
+            console.log('Usuario necesita ayuda');
+          }
         });
       },
       complete: () => (this.isLoading = false)

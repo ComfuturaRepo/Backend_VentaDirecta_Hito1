@@ -44,7 +44,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   private loadLogo() {
     try {
       // Usando la URL de Cloudinary que ya tienes en el HTML
-      const cloudinaryUrl = 'https://res.cloudinary.com/dqznlmig0/image/upload/v1769211282/COMFUTURA_LOGOTIPO-02_ubswoz.png';
+      const cloudinaryUrl = 'https://res.cloudinary.com/dqznlmig0/image/upload/v1769301735/COMFUTURA_LOGOTIPO-04_kwulpt.png';
       this.logoUrl = this.sanitizer.bypassSecurityTrustUrl(cloudinaryUrl);
     } catch (error) {
       console.warn('Logo no encontrado, usando ícono por defecto');
