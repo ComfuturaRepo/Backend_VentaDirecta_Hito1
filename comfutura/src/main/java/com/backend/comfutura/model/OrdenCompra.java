@@ -42,7 +42,7 @@ public class OrdenCompra {
     /* ================= DATOS ================= */
 
     @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal cantidad;
+    private BigDecimal cantidad; /* ================= ete ================= */
 
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal costoUnitario;
