@@ -9,13 +9,15 @@ import java.time.LocalDate;
 @Data
 @Builder
 public class OtListDto {
-    private Integer idOts;           // ← NUEVO: para toggle y edición
+    private Integer idOts;
     private Integer ot;
     private LocalDate fechaApertura;
     private String estadoOt;
-    private String regionNombre;
+    private String cliente_id;
     private String siteNombre;
-    private String faseNombre;
-    private String descripcion;
-    private Boolean activo;          // ← NUEVO: para el botón toggle y badge
+    private String site_descripcion;
+    private String cliente;
+    private String proyecto;
+    private String region;
+    private Boolean activo;
 }

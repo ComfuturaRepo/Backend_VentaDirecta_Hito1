@@ -89,9 +89,16 @@ INSERT INTO proyecto (nombre) VALUES
 
 -- 9. Fases
 INSERT INTO fase (nombre, orden) VALUES
-                                     ('Planificación', 10),
-                                     ('Ejecución', 20),
-                                     ('Cierre', 30);
+                                     ('Fase 1', 10),
+                                     ('Fase 2', 20),
+                                     ('Fase 3', 30),
+                                     ('Fase 4', 40),
+                                     ('Fase 5', 50),
+                                     ('Fase 6', 60),
+                                     ('Fase 7', 70),
+                                     ('Fase 8', 80),
+                                     ('Fase 9', 90),
+                                     ('Fase 10', 100);
 
 -- 10. Sites (códigos únicos)
 INSERT INTO site (codigo_sitio, descripcion) VALUES

@@ -2,10 +2,10 @@ package com.backend.comfutura.model;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.annotations.CreationTimestamp;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "orden_compra")
@@ -23,34 +23,43 @@ public class OrdenCompra {
 
     /* ================= RELACIONES ================= */
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "id_estado_oc")
-    private EstadoOc estadoOc;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_estado_oc", nullable = false)
+    private EstadoOc estadoOC;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "id_ots")
-    private Ots ots;
+    /* ================= CAMPOS ================= */
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "id_maestro")
-    private MaestroCodigo maestro;
+    @Column(name = "id_ots", nullable = false)
+    private Integer idOts;
 
-    @ManyToOne(optional = false)
-    @JoinColumn(name = "id_proveedor")
-    private Proveedor proveedor;
+    @Column(name = "id_proveedor", nullable = false)
+    private Integer idProveedor;
 
-    /* ================= DATOS ================= */
+    @Column(name = "forma_pago", length = 50)
+    private String formaPago;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal cantidad; /* ================= ete ================= */
+    private BigDecimal subtotal;
 
-    @Column(nullable = false, precision = 10, scale = 2)
-    private BigDecimal costoUnitario;
+    @Column(name = "igv_porcentaje")
+    private BigDecimal igvPorcentaje;
 
-    @CreationTimestamp
-    @Column(name = "fecha_oc", updatable = false)
+    @Column(name = "igv_total")
+    private BigDecimal igvTotal;
+
+    private BigDecimal total;
+
+    @Column(name = "fecha_oc")
     private LocalDateTime fechaOc;
 
-    @Column(length = 255)
+    @Column(columnDefinition = "TEXT")
     private String observacion;
+
+    /* ================= DETALLE ================= */
+
+    @OneToMany(
+            mappedBy = "ordenCompra",
+            cascade = CascadeType.ALL,
+            orphanRemoval = true
+    )
+    private List<OcDetalle> detalles;
 }

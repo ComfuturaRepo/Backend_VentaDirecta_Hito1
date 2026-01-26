@@ -7,12 +7,13 @@ export interface OtListDto {
   ot: number;
   fechaApertura?: string | null;
   estadoOt?: string | null;
-  regionNombre?: string | null;
+  cliente_id?: string | null;
   siteNombre?: string | null;
-  faseNombre?: string | null;
-  descripcion?: string | null;
+  site_descripcion?: string | null;
+  region?: string | null;
+  cliente?: string | null;
+  proyecto?: string | null;
   activo: boolean;
-  clienteNombre?: string | null;
 }
 
 // DTO para detalle completo (vista de detalle) - AHORA CON TODOS LOS IDs

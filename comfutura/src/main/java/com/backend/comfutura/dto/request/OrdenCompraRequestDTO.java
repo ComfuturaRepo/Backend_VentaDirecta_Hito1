@@ -1,17 +1,31 @@
+
 package com.backend.comfutura.dto.request;
 
-import lombok.Data;
+import lombok.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.List;
 
-@Data
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class OrdenCompraRequestDTO {
-    private Integer estadoOcId;
-    private Integer otsId;
-    private Integer maestroId;
-    private Integer proveedorId;
-    private BigDecimal cantidad;
-    private BigDecimal costoUnitario;
+
+    private Integer idEstadoOc;
+    private Integer idOts;
+    private Integer idProveedor;
+    private String formaPago;
+
+    private BigDecimal subtotal;
+    private BigDecimal igvPorcentaje;
+    private BigDecimal igvTotal;
+    private BigDecimal total;
+
+    private LocalDateTime fechaOc;
     private String observacion;
 
+    private List<OcDetalleRequestDTO> detalles;
 }

@@ -67,7 +67,7 @@ export class FormOtsComponent implements OnInit {
 
   ngOnInit(): void {
     this.isEditMode = this.mode === 'edit';
-    
+
     const user = this.authService.currentUser;
     this.usernameLogueado = user?.username || '—';
     this.trabajadorIdLogueado = user?.idTrabajador ?? null;
@@ -128,27 +128,27 @@ export class FormOtsComponent implements OnInit {
   get clienteNombre(): string {
     return this.clientes.find(c => c.id === this.form.value.idCliente)?.label || '—';
   }
-  
+
   get areaNombre(): string {
     return this.areas.find(a => a.id === this.form.value.idArea)?.label || '—';
   }
-  
+
   get proyectoNombre(): string {
     return this.proyectos.find(p => p.id === this.form.value.idProyecto)?.label || '—';
   }
-  
+
   get faseNombre(): string {
     return this.fases.find(f => f.id === this.form.value.idFase)?.label || '—';
   }
-  
+
   get siteNombre(): string {
     return this.sites.find(s => s.id === this.form.value.idSite)?.label || '—';
   }
-  
+
   get regionNombre(): string {
     return this.regiones.find(r => r.id === this.form.value.idRegion)?.label || '—';
   }
-  
+
   get fechaAperturaFormatted(): string {
     const fecha = this.form.value.fechaApertura;
     return fecha ? new Date(fecha).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
@@ -299,25 +299,34 @@ export class FormOtsComponent implements OnInit {
     });
   }
 
-  private actualizarDescripcion(): void {
-    if (this.isEditMode) return;
+ private actualizarDescripcion(): void {
+  if (this.isEditMode) return;
 
-    const v = this.form.getRawValue();
+  const v = this.form.getRawValue();
 
-    const proyecto = this.proyectos.find(p => p.id === Number(v.idProyecto))?.label || '';
-    const area     = this.areas.find(a => a.id === Number(v.idArea))?.label || '';
-    const site     = this.sites.find(s => s.id === Number(v.idSite))?.label || '';
+  const proyecto = this.proyectos.find(p => p.id === Number(v.idProyecto))?.label || '';
+  const area     = this.areas.find(a => a.id === Number(v.idArea))?.label || '';
+  const site     = this.sites.find(s => s.id === Number(v.idSite))?.label || '';
 
-    const toSlug = (str: string) =>
-      str.toLowerCase().trim().replace(/\s+/g, '_').replace(/[^a-z0-9_]/g, '')
-        .replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+  const toSlug = (str: string) =>
+    str
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, '_')
+      .replace(/[^a-z0-9_]/g, '')
+      .replace(/_+/g, '_')
+      .replace(/^_+|_+$/g, '');
 
-    const partes = [toSlug(proyecto), toSlug(area), v.idSite ? String(v.idSite) : '', toSlug(site)]
-      .filter(Boolean);
+  const partes = [
+    toSlug(proyecto),
+    toSlug(area),
+    toSlug(site)   // 👈 SOLO el nombre del site
+  ].filter(Boolean);
 
-    const desc = partes.join('_') || 'OT sin descripción automática';
-    this.form.get('descripcion')?.setValue(desc, { emitEvent: false });
-  }
+  const desc = partes.join('_') || 'ot_sin_descripcion_automatica';
+
+  this.form.get('descripcion')?.setValue(desc, { emitEvent: false });
+}
 
   onSubmit(): void {
     this.submitted = true;
@@ -329,7 +338,7 @@ export class FormOtsComponent implements OnInit {
       if (invalidElements.length > 0) {
         invalidElements[0].scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
-      
+
       Swal.fire({
         icon: 'warning',
         title: 'Formulario incompleto',
@@ -340,8 +349,8 @@ export class FormOtsComponent implements OnInit {
     }
 
     const title = this.isEditMode ? '¿Guardar cambios?' : '¿Crear nueva OT?';
-    const text = this.isEditMode 
-      ? 'Se actualizará la información de esta OT.' 
+    const text = this.isEditMode
+      ? 'Se actualizará la información de esta OT.'
       : 'Se creará una nueva Orden de Trabajo con los datos proporcionados.';
 
     Swal.fire({
@@ -395,7 +404,7 @@ export class FormOtsComponent implements OnInit {
 
           // Emitir evento guardado y cerrar modal
           this.saved.emit();
-          
+
           // Cerrar automáticamente después de mostrar el mensaje
           setTimeout(() => {
             this.onClose();
@@ -439,8 +448,8 @@ export class FormOtsComponent implements OnInit {
 
   resetForm(): void {
     const title = this.isEditMode ? '¿Descartar cambios?' : '¿Limpiar formulario?';
-    const text = this.isEditMode 
-      ? 'Perderá todos los cambios realizados.' 
+    const text = this.isEditMode
+      ? 'Perderá todos los cambios realizados.'
       : 'Se eliminarán todos los datos ingresados.';
 
     Swal.fire({
@@ -479,7 +488,7 @@ export class FormOtsComponent implements OnInit {
         this.areas = [];
         this.form.get('idArea')?.disable({ emitEvent: false });
         this.actualizarDescripcion();
-        
+
         // Scroll al inicio
         if (this.scrollContainer) {
           this.scrollContainer.nativeElement.scrollTop = 0;
@@ -495,7 +504,7 @@ export class FormOtsComponent implements OnInit {
       this.submitted = true;
       const controlesPaso1 = ['idCliente', 'idArea', 'idProyecto', 'idFase', 'idSite', 'idRegion', 'fechaApertura', 'descripcion'];
       const invalidos = controlesPaso1.filter(control => this.f[control].invalid);
-      
+
       if (invalidos.length > 0) {
         const elemento = document.querySelector(`[formControlName="${invalidos[0]}"]`);
         if (elemento) {
@@ -507,16 +516,16 @@ export class FormOtsComponent implements OnInit {
       // Validar paso 2 antes de continuar
       this.submitted = true;
       const controlesPaso2 = [
-        'idJefaturaClienteSolicitante', 
-        'idAnalistaClienteSolicitante', 
-        'idCoordinadorTiCw', 
-        'idJefaturaResponsable', 
-        'idLiquidador', 
-        'idEjecutante', 
+        'idJefaturaClienteSolicitante',
+        'idAnalistaClienteSolicitante',
+        'idCoordinadorTiCw',
+        'idJefaturaResponsable',
+        'idLiquidador',
+        'idEjecutante',
         'idAnalistaContable'
       ];
       const invalidos = controlesPaso2.filter(control => this.f[control].invalid);
-      
+
       if (invalidos.length > 0) {
         const elemento = document.querySelector(`[formControlName="${invalidos[0]}"]`);
         if (elemento) {
@@ -525,9 +534,9 @@ export class FormOtsComponent implements OnInit {
         return;
       }
     }
-    
+
     this.currentStep = siguientePaso;
-    
+
     // Scroll al inicio del paso
     setTimeout(() => {
       if (this.scrollContainer) {

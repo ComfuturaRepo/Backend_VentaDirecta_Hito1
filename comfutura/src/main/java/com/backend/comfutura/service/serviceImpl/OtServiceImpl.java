@@ -70,17 +70,17 @@ public class OtServiceImpl implements OtService {
 
     private OtListDto toOtListDto(Ots ots) {
         return OtListDto.builder()
-                .idOts(ots.getIdOts())                    // ← agregado
+                .idOts(ots.getIdOts())
                 .ot(ots.getOt())
                 .fechaApertura(ots.getFechaApertura())
                 .estadoOt(ofNullable(ots.getEstadoOt()).map(EstadoOt::getDescripcion).orElse("—"))
-                .regionNombre(ofNullable(ots.getRegion()).map(Region::getNombre).orElse("—"))
+                .proyecto(ofNullable(ots.getProyecto()).map(Proyecto::getNombre).orElse("—"))
                 .siteNombre(ofNullable(ots.getSite()).map(Site::getCodigoSitio).orElse("—"))
-                .faseNombre(ofNullable(ots.getFase()).map(Fase::getNombre).orElse("—"))
-                .descripcion(ots.getDescripcion() != null
-                        ? ots.getDescripcion().substring(0, Math.min(80, ots.getDescripcion().length())) + "..."
-                        : "—")
-                .activo(ots.getActivo())                  // ← agregado
+                .site_descripcion(ofNullable(ots.getSite()).map(Site::getDescripcion).orElse("—"))
+                .cliente(ofNullable(ots.getCliente()).map(Cliente::getRazonSocial).orElse("—"))
+                .cliente_id(ofNullable(ots.getCliente()).map(Cliente::getRuc).orElse("—"))
+                .region(ofNullable(ots.getRegion()).map(Region::getNombre).orElse("—"))
+                .activo(ots.getActivo())
                 .build();
     }
 
