@@ -3292,3 +3292,9 @@ INSERT INTO unidad_medida (codigo, descripcion) VALUES
                                                     ('BLD', 'BALDE');
 
 
+INSERT INTO estado_compra_directa (descripcion) VALUES
+                                                    ('REGISTRADO'),
+                                                    ('POR APROBACION PRESUPUESTO'),
+                                                    ('PRES. APROBADO'),
+                                                    ('RECHAZADO'),
+                                                    ('ANULADO');

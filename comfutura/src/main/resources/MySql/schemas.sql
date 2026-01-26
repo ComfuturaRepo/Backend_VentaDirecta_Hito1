@@ -605,6 +605,39 @@ CREATE TABLE planilla_trabajo_ot (
                                      CONSTRAINT fk_planilla_banco FOREIGN KEY (id_banco)
                                          REFERENCES banco(id_banco)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+CREATE TABLE estado_compra_directa (
+                                       id_estado_cd INT AUTO_INCREMENT PRIMARY KEY,
+                                       descripcion VARCHAR(50) NOT NULL UNIQUE,
+                                       activo TINYINT(1) DEFAULT 1
+);
+
+CREATE TABLE compra_directa (
+                                id_compra_directa INT AUTO_INCREMENT PRIMARY KEY,
+
+                                nro_requerimiento VARCHAR(50) NOT NULL UNIQUE,
+                                fecha_costo DATE NOT NULL,
+
+                                id_ots INT NOT NULL,
+                                id_estado_cd INT NOT NULL,
+
+                                tiempo_ejecucion INT DEFAULT 0,
+                                observacion TEXT,
+
+                                id_usuario_creacion INT NOT NULL,
+                                fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+
+                                activo TINYINT(1) DEFAULT 1,
+
+                                CONSTRAINT fk_cd_ots
+                                    FOREIGN KEY (id_ots) REFERENCES ots(id_ots),
+
+                                CONSTRAINT fk_cd_estado
+                                    FOREIGN KEY (id_estado_cd) REFERENCES estado_compra_directa(id_estado_cd),
+
+                                CONSTRAINT fk_cd_usuario
+                                    FOREIGN KEY (id_usuario_creacion) REFERENCES usuario(id_usuario)
+);
+
 
 CREATE INDEX idx_planilla_ots ON planilla_trabajo_ot(id_ots);
 CREATE INDEX idx_planilla_trab ON planilla_trabajo_ot(id_trabajador);
