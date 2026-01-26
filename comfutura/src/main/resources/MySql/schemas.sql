@@ -71,13 +71,13 @@ CREATE TABLE trabajador (
                             id_trabajador INT AUTO_INCREMENT PRIMARY KEY,
 
                             nombres VARCHAR(100) NOT NULL,
-                            apellidos VARCHAR(100) NOT NULL,
-                            dni CHAR(8) NOT NULL UNIQUE,
+                            apellidos VARCHAR(100)  NULL,
+                            dni CHAR(8)  NULL UNIQUE,
 
                             celular VARCHAR(15),
                             correo_corporativo VARCHAR(150),
 
-                            id_empresa INT NOT NULL,
+                            id_empresa INT NULL,
                             id_area INT NOT NULL,
                             id_cargo INT NOT NULL,
 
@@ -154,7 +154,7 @@ CREATE TABLE proveedor (
                            telefono VARCHAR(20),
                            correo VARCHAR(150),
 
-                           id_banco INT NOT NULL,
+                           id_banco INT NULL,
                            numero_cuenta VARCHAR(50) NOT NULL,
                            moneda VARCHAR(10) NOT NULL, -- PEN, USD
 
