@@ -94,6 +94,34 @@
           </a>
         </li>
 
+        <!-- Órdenes de Compra -->
+        <li>
+          <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-cart-check-fill"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Usuarios</span>
+          </a>
+        </li>
+
+         <li>
+          <a routerLink="/perfil" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-cart-check-fill"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Perfil</span>
+          </a>
+        </li>
+
+        <li>
+          <a routerLink="/trabajador" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-cart-check-fill"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Trabajador</span>
+          </a>
+        </li>
+
         <!-- Separador para opciones de administración -->
         <li class="menu-divider" *ngIf="!isCollapsed">
           <span class="divider-label">Administración</span>

@@ -46,6 +46,15 @@ export class DropdownService {
   getRegiones(): Observable<DropdownItem[]> {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/regiones`);
   }
+   getEmpresas(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/empresas`);
+  }
+  getAreas(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/areas`);
+  }
+  getCargos(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/cargos`);
+  }
 
   // =============================
   // RESPONSABLES (nuevos)

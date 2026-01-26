@@ -24,6 +24,8 @@ public class DropdownServiceImpl implements DropdownService {
     private final TrabajadorRepository trabajadorRepository;
     private final MaestroCodigoRepository maestroCodigoRepository;
     private final ProveedorRepository proveedorRepository;
+    private final CargoRepository cargoRepository;
+    private final EmpresaRepository empresaRepository;
 
     // Nuevos repositorios para los responsables (agrega estos en tu proyecto)
     private final JefaturaClienteSolicitanteRepository jefaturaClienteSolicitanteRepository;
@@ -46,6 +48,26 @@ public class DropdownServiceImpl implements DropdownService {
         return areaRepository.findByActivoTrueOrderByNombreAsc()
                 .stream()
                 .map(a -> new DropdownDTO(a.getIdArea(), a.getNombre()))
+                .collect(Collectors.toList());
+    }
+    @Override
+    public List<DropdownDTO> getCargos() {
+        return cargoRepository.findByActivoTrueOrderByNombreAsc()
+                .stream()
+                .map(c -> new DropdownDTO(
+                        c.getId(),
+                        c.getNombre()
+                ))
+                .collect(Collectors.toList());
+    }
+    @Override
+    public List<DropdownDTO> getEmpresas() {
+        return empresaRepository.findByActivoTrueOrderByNombreAsc()
+                .stream()
+                .map(e -> new DropdownDTO(
+                        e.getId(),
+                        e.getNombre()
+                ))
                 .collect(Collectors.toList());
     }
 
@@ -154,7 +176,7 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getCoordinadoresTiCw() {
         return trabajadorRepository
-                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("COORDINADOR TI CW")
+                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("COORDINADOR TI ")
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),

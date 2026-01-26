@@ -1,0 +1,163 @@
+/* Estilos específicos para el componente de usuarios */
+
+/* Estilos para la tabla */
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+/* Estilos para los badges */
+.badge {
+  font-size: 0.8em;
+  padding: 0.4em 0.8em;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+/* Estilos para los botones de acción */
+.btn-group-sm .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.2rem;
+}
+
+.btn-group-sm .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+
+/* Estilos para el modal */
+.modal-content {
+  border: none;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.modal-header {
+  border-bottom: 2px solid rgba(255,255,255,0.1);
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem;
+}
+
+/* Estilos para campos requeridos */
+.required::after {
+  content: " *";
+  color: #dc3545;
+}
+
+/* Estilos para paginación */
+.pagination {
+  margin-bottom: 0;
+}
+
+.page-link {
+  color: #495057;
+  border: 1px solid #dee2e6;
+  margin: 0 2px;
+  border-radius: 4px;
+}
+
+.page-link:hover {
+  color: #0d6efd;
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+/* Estilos para estados */
+.bg-success {
+  background-color: #198754 !important;
+}
+
+.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.bg-info {
+  background-color: #0dcaf0 !important;
+}
+
+/* Estilos para íconos */
+.fa-user {
+  color: #6c757d;
+}
+
+.fa-users {
+  color: #0d6efd;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card, .modal-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+
+  .btn-group-sm .btn {
+    flex: 1;
+    min-width: 40px;
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  .table-responsive {
+    font-size: 0.9rem;
+  }
+}
+
+/* Estilos para filtros */
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e3e6f0;
+}
+
+/* Estilos para el overlay del modal */
+.modal-backdrop {
+  opacity: 0.5;
+}
+
+/* Estilos para inputs con íconos */
+.input-group-text {
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+}
+
+/* Estilos para cards */
+.card {
+  border: 1px solid #e3e6f0;
+  border-radius: 0.35rem;
+}
+
+.card-header {
+  border-radius: 0.35rem 0.35rem 0 0 !important;
+}

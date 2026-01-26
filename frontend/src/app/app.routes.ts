@@ -10,6 +10,9 @@ import { OrdenCompraComponent } from './pages/orden-compra-component/orden-compr
 import { GestionCargosSolicitantesComponent } from './pages/gestion-cargos-solicitantes-component/gestion-cargos-solicitantes-component';
 
 import { authGuard } from './auth/auth.guard';
+import { UsuariosComponent } from './pages/usuarios-component/usuarios-component';
+import { UsuarioPerfilComponent } from './pages/usuario-perfil-component/usuario-perfil-component';
+import { TrabajadorComponent } from './pages/trabajador-component/trabajador-component';
 
 export const routes: Routes = [
   {
@@ -56,6 +59,21 @@ export const routes: Routes = [
         component: OrdenCompraComponent,
         // data: { title: 'Órdenes de Compra' }
       },
+      {
+        path: 'usuarios',
+        component: UsuariosComponent,
+        // data: { title: 'Órdenes de Compra' }
+      },
+      {
+        path: 'perfil',
+        component: UsuarioPerfilComponent,
+        // data: { title: 'Órdenes de Compra' }
+      },
+          {
+        path: 'trabajador',
+        component: TrabajadorComponent,
+        // data: { title: 'Órdenes de Compra' }
+      }
     ]
   },
 
