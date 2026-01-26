@@ -537,7 +537,7 @@ export class OtsComponent implements OnInit {
         modalRef.componentInstance.onClose = () => {
           modalRef.dismiss();
         };
-        
+
         this.modalRefs.push(modalRef);
       },
       error: (err) => {
@@ -554,7 +554,7 @@ export class OtsComponent implements OnInit {
   // ==================== UTILITARIOS ====================
   getEstadoClass(estado: string | undefined | null): string {
     if (!estado) return 'badge-secondary';
-    
+
     const estadoUpper = estado.toUpperCase();
     switch (estadoUpper) {
       case 'FINALIZADA': return 'badge-success';
