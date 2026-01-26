@@ -15,7 +15,8 @@ public interface DropdownService {
     List<DropdownDTO> getRegiones();
     List<DropdownDTO> getEstadosOt(); // <-- AGREGAR este método
     List<DropdownDTO> getOtsActivas();
-
+    List<DropdownDTO> getCargos();
+    List<DropdownDTO> getEmpresas();
     // Nuevos métodos para responsables
     List<DropdownDTO> getJefaturasClienteSolicitante();
     List<DropdownDTO> getAnalistasClienteSolicitante();

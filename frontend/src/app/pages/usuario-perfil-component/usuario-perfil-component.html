@@ -1,0 +1,328 @@
+<div class="container-fluid py-4">
+  <!-- Encabezado -->
+  <div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="h3 mb-0 text-gray-800">
+      <i class="fas fa-user-circle me-2"></i>Mi Perfil
+    </h1>
+    <button class="btn btn-outline-primary" (click)="showEditProfile = true">
+      <i class="fas fa-edit me-2"></i>Editar Perfil
+    </button>
+  </div>
+
+  <div class="row">
+    <!-- Columna izquierda: Información personal -->
+    <div class="col-lg-4 col-xl-3 mb-4">
+      <!-- Tarjeta de perfil -->
+      <div class="card shadow border-0">
+        <div class="card-body text-center p-4">
+          <!-- Avatar -->
+          <div class="avatar-circle mb-3 mx-auto">
+            <span class="avatar-text">{{ getIniciales() }}</span>
+          </div>
+
+          <!-- Nombre -->
+          <h4 class="card-title mb-1">{{ personalInfo.nombre }}</h4>
+          <p class="text-muted mb-3">{{ personalInfo.cargo }}</p>
+
+          <!-- Info usuario -->
+          <div class="mb-3" *ngIf="usuario">
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Username:</span>
+              <span class="fw-bold">{{ usuario.username }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Nivel:</span>
+              <span class="badge bg-info">{{ usuario.nivelNombre || 'N/A' }}</span>
+            </div>
+            <div class="d-flex justify-content-between mb-2">
+              <span class="text-muted">Estado:</span>
+              <span class="badge" [class.bg-success]="usuario.activo"
+                    [class.bg-danger]="!usuario.activo">
+                {{ usuario.activo ? 'Activo' : 'Inactivo' }}
+              </span>
+            </div>
+            <div class="d-flex justify-content-between">
+              <span class="text-muted">Miembro desde:</span>
+              <span>{{ formatFecha(usuario.fechaCreacion) }}</span>
+            </div>
+          </div>
+
+          <!-- Botón cambio de contraseña -->
+          <button class="btn btn-outline-primary w-100 mt-3"
+                  (click)="showChangePassword = true">
+            <i class="fas fa-key me-2"></i>Cambiar Contraseña
+          </button>
+        </div>
+      </div>
+
+      <!-- Estadísticas -->
+      <div class="card shadow border-0 mt-4">
+        <div class="card-header bg-white py-3">
+          <h6 class="mb-0">
+            <i class="fas fa-chart-bar me-2"></i>Mis Estadísticas
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row text-center">
+            <div class="col-6 mb-3">
+              <div class="stat-card">
+                <div class="stat-number text-primary">{{ estadisticas.otsCompletadas }}</div>
+                <div class="stat-label">OTs Completadas</div>
+              </div>
+            </div>
+            <div class="col-6 mb-3">
+              <div class="stat-card">
+                <div class="stat-number text-warning">{{ estadisticas.otsPendientes }}</div>
+                <div class="stat-label">OTs Pendientes</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-card">
+                <div class="stat-number text-success">{{ estadisticas.proyectosActivos }}</div>
+                <div class="stat-label">Proyectos Activos</div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="stat-card">
+                <div class="stat-number text-info">{{ estadisticas.diasTrabajados }}</div>
+                <div class="stat-label">Días Trabajados</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Columna derecha: Información detallada -->
+    <div class="col-lg-8 col-xl-9">
+      <!-- Información de contacto -->
+      <div class="card shadow border-0 mb-4">
+        <div class="card-header bg-white py-3 d-flex justify-content-between align-items-center">
+          <h6 class="mb-0">
+            <i class="fas fa-address-card me-2"></i>Información de Contacto
+          </h6>
+          <span class="badge bg-light text-dark">
+            <i class="fas fa-building me-1"></i>{{ personalInfo.area }}
+          </span>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-6 mb-3">
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-envelope me-2 text-primary"></i>Email Corporativo
+                </div>
+                <div class="info-value">{{ personalInfo.email }}</div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-phone me-2 text-primary"></i>Teléfono
+                </div>
+                <div class="info-value">{{ personalInfo.telefono }}</div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-map-marker-alt me-2 text-primary"></i>Dirección
+                </div>
+                <div class="info-value">{{ personalInfo.direccion }}</div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-calendar-alt me-2 text-primary"></i>Fecha de Ingreso
+                </div>
+                <div class="info-value">{{ formatFecha(personalInfo.fechaIngreso) }}</div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-briefcase me-2 text-primary"></i>Cargo
+                </div>
+                <div class="info-value">{{ personalInfo.cargo }}</div>
+              </div>
+            </div>
+            <div class="col-md-6 mb-3">
+              <div class="info-item">
+                <div class="info-label">
+                  <i class="fas fa-users me-2 text-primary"></i>Cliente Asignado
+                </div>
+                <div class="info-value">{{ personalInfo.cliente }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Últimas actividades -->
+      <div class="card shadow border-0">
+        <div class="card-header bg-white py-3">
+          <h6 class="mb-0">
+            <i class="fas fa-history me-2"></i>Actividad Reciente
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="timeline">
+            <div class="timeline-item">
+              <div class="timeline-marker bg-success"></div>
+              <div class="timeline-content">
+                <div class="timeline-title">OT #2025-001 completada</div>
+                <div class="timeline-time">Hoy, 10:30 AM</div>
+                <div class="timeline-description">
+                  Finalizaste la orden de trabajo para instalación de servidores
+                </div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-marker bg-info"></div>
+              <div class="timeline-content">
+                <div class="timeline-title">Nuevo proyecto asignado</div>
+                <div class="timeline-time">Ayer, 3:45 PM</div>
+                <div class="timeline-description">
+                  Te asignaron el proyecto "Modernización de Infraestructura"
+                </div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-marker bg-warning"></div>
+              <div class="timeline-content">
+                <div class="timeline-title">Actualización de perfil</div>
+                <div class="timeline-time">2 días atrás, 9:15 AM</div>
+                <div class="timeline-description">
+                  Actualizaste tu información de contacto
+                </div>
+              </div>
+            </div>
+            <div class="timeline-item">
+              <div class="timeline-marker bg-primary"></div>
+              <div class="timeline-content">
+                <div class="timeline-title">Reunión de equipo</div>
+                <div class="timeline-time">1 semana atrás, 11:00 AM</div>
+                <div class="timeline-description">
+                  Participaste en la reunión de revisión de proyectos Q1
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar Perfil -->
+<div class="modal fade show" [class.d-block]="showEditProfile" tabindex="-1" role="dialog"
+     [class.show]="showEditProfile" *ngIf="showEditProfile">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-user-edit me-2"></i>Editar Perfil
+        </h5>
+        <button type="button" class="btn-close btn-close-white"
+                (click)="cancelarEdicionPerfil()"></button>
+      </div>
+
+      <div class="modal-body">
+        <form #profileForm="ngForm">
+          <div class="mb-3">
+            <label class="form-label required">Email Corporativo</label>
+            <input type="email" class="form-control"
+                   [(ngModel)]="editProfileForm.email"
+                   name="email"
+                   required
+                   placeholder="tucorreo@empresa.com">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Teléfono</label>
+            <input type="tel" class="form-control"
+                   [(ngModel)]="editProfileForm.telefono"
+                   name="telefono"
+                   placeholder="+51 987 654 321">
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label">Dirección</label>
+            <textarea class="form-control"
+                      [(ngModel)]="editProfileForm.direccion"
+                      name="direccion"
+                      rows="3"
+                      placeholder="Tu dirección actual"></textarea>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cancelarEdicionPerfil()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="guardarPerfil()">
+          <i class="fas fa-save me-1"></i>Guardar Cambios
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Cambiar Contraseña -->
+<div class="modal fade show" [class.d-block]="showChangePassword" tabindex="-1" role="dialog"
+     [class.show]="showChangePassword" *ngIf="showChangePassword">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header bg-primary text-white">
+        <h5 class="modal-title">
+          <i class="fas fa-key me-2"></i>Cambiar Contraseña
+        </h5>
+        <button type="button" class="btn-close btn-close-white"
+                (click)="cancelarCambioContrasena()"></button>
+      </div>
+
+      <div class="modal-body">
+        <form #passwordForm="ngForm">
+          <div class="mb-3">
+            <label class="form-label required">Contraseña Actual</label>
+            <input type="password" class="form-control"
+                   [(ngModel)]="changePasswordForm.currentPassword"
+                   name="currentPassword"
+                   required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label required">Nueva Contraseña</label>
+            <input type="password" class="form-control"
+                   [(ngModel)]="changePasswordForm.newPassword"
+                   name="newPassword"
+                   required>
+            <small class="form-text text-muted">Mínimo 6 caracteres</small>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label required">Confirmar Nueva Contraseña</label>
+            <input type="password" class="form-control"
+                   [(ngModel)]="changePasswordForm.confirmPassword"
+                   name="confirmPassword"
+                   required>
+          </div>
+        </form>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cancelarCambioContrasena()">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn-primary" (click)="cambiarContrasena()">
+          <i class="fas fa-sync-alt me-1"></i>Cambiar Contraseña
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Overlay para modales -->
+<div class="modal-backdrop fade show" *ngIf="showEditProfile || showChangePassword"></div>

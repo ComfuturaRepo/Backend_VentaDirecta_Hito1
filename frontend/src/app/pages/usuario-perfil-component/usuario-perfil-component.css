@@ -1,0 +1,271 @@
+/* Estilos específicos para el perfil de usuario */
+
+/* Avatar circular */
+.avatar-circle {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  transition: transform 0.3s ease;
+}
+
+.avatar-circle:hover {
+  transform: scale(1.05);
+}
+
+.avatar-text {
+  color: white;
+  font-size: 2.5rem;
+  font-weight: bold;
+  text-shadow: 1px 1px 3px rgba(0,0,0,0.3);
+}
+
+/* Tarjetas de estadísticas */
+.stat-card {
+  padding: 1rem;
+  border-radius: 8px;
+  background-color: #f8f9fa;
+  transition: all 0.3s ease;
+  border: 1px solid #e9ecef;
+}
+
+.stat-card:hover {
+  background-color: #e9ecef;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.stat-number {
+  font-size: 1.8rem;
+  font-weight: bold;
+  margin-bottom: 0.25rem;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Items de información */
+.info-item {
+  padding: 0.75rem;
+  border-radius: 6px;
+  background-color: #fff;
+  border: 1px solid #e9ecef;
+  transition: all 0.2s ease;
+}
+
+.info-item:hover {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+.info-label {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-bottom: 0.25rem;
+  display: flex;
+  align-items: center;
+}
+
+.info-value {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #212529;
+}
+
+/* Timeline de actividades */
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 0.7rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background-color: #e9ecef;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 1.5rem;
+  padding-left: 1.5rem;
+}
+
+.timeline-item:last-child {
+  margin-bottom: 0;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -0.5rem;
+  top: 0.5rem;
+  width: 1.2rem;
+  height: 1.2rem;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.timeline-content {
+  background: white;
+  padding: 1rem;
+  border-radius: 6px;
+  border: 1px solid #e9ecef;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.timeline-title {
+  font-weight: 600;
+  color: #212529;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-time {
+  font-size: 0.85rem;
+  color: #6c757d;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-description {
+  font-size: 0.95rem;
+  color: #495057;
+  line-height: 1.5;
+}
+
+/* Colores para timeline markers */
+.bg-success {
+  background-color: #198754 !important;
+}
+
+.bg-info {
+  background-color: #0dcaf0 !important;
+}
+
+.bg-warning {
+  background-color: #ffc107 !important;
+}
+
+.bg-primary {
+  background-color: #0d6efd !important;
+}
+
+/* Badges personalizados */
+.badge {
+  padding: 0.35em 0.65em;
+  font-weight: 500;
+  border-radius: 6px;
+}
+
+/* Modales */
+.modal-content {
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+.modal-header {
+  border-bottom: 2px solid rgba(255,255,255,0.1);
+  border-radius: 10px 10px 0 0;
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .avatar-circle {
+    width: 100px;
+    height: 100px;
+  }
+
+  .avatar-text {
+    font-size: 2rem;
+  }
+
+  .stat-number {
+    font-size: 1.5rem;
+  }
+
+  .timeline {
+    padding-left: 1.5rem;
+  }
+
+  .timeline::before {
+    left: 0.45rem;
+  }
+
+  .timeline-marker {
+    left: -0.35rem;
+    width: 1rem;
+    height: 1rem;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* Transiciones suaves */
+.info-item, .stat-card, .timeline-content {
+  transition: all 0.3s ease;
+}
+
+/* Mejoras para formularios */
+.form-label.required::after {
+  content: " *";
+  color: #dc3545;
+}
+
+/* Estilos para inputs en modales */
+.form-control:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Custom scrollbar para modales largos */
+.modal-body {
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.modal-body::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-body::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.modal-body::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}

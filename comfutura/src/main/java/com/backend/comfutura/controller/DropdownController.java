@@ -33,6 +33,18 @@ public class DropdownController {
     public ResponseEntity<List<DropdownDTO>> getProyectos() {
         return ResponseEntity.ok(dropdownService.getProyectos());
     }
+    @GetMapping("/areas")
+    public ResponseEntity<List<DropdownDTO>> getAreas() {
+        return ResponseEntity.ok(dropdownService.getAreas());
+    }
+    @GetMapping("/cargos")
+    public ResponseEntity<List<DropdownDTO>> getCargos() {
+        return ResponseEntity.ok(dropdownService.getCargos());
+    }
+    @GetMapping("/empresas")
+    public ResponseEntity<List<DropdownDTO>> getEmpresas() {
+        return ResponseEntity.ok(dropdownService.getEmpresas());
+    }
 
     @GetMapping("/fases")
     public ResponseEntity<List<DropdownDTO>> getFases() {

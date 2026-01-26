@@ -1,10 +1,10 @@
-package com.backend.comfutura.dto;
+package com.backend.comfutura.dto.request;
 
 import lombok.Data;
 import jakarta.validation.constraints.*;
 
 @Data
-public class TrabajadorRequestDTO {
+public class TrabajadorUpdateDTO {
 
     @NotBlank(message = "Los nombres son obligatorios")
     @Size(min = 2, max = 100, message = "Los nombres deben tener entre 2 y 100 caracteres")
@@ -31,6 +31,4 @@ public class TrabajadorRequestDTO {
     private Integer cargoId;
 
     private Integer empresaId;
-
-    private Boolean activo = true;
 }

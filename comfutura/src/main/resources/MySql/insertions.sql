@@ -59,7 +59,98 @@ INSERT INTO area (nombre) VALUES
                               ('LIMPIEZA'),
                               ('ENERGÍA - CLARO'),
                               ('ENERGÍA - ENTEL');
+-- Insertar relaciones cliente-área
+INSERT INTO cliente_area (id_cliente, id_area) VALUES
+-- COMFUTURA (SUDCOM GROUP S.A.C.)
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'ADMINISTRATIVA')),
 
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'COMERCIAL')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'CONTABILIDAD')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'FINANZAS')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'GERENCIA GENERAL')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'LOGÍSTICA')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'RRHH')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'SSOMA')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'ENERGÍA')),
+
+-- CLARO (AMERICA MOVIL PERU S.A.C.)
+((SELECT id_cliente FROM cliente WHERE razon_social = 'AMERICA MOVIL PERU S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'CW')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'AMERICA MOVIL PERU S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'ENERGÍA')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'AMERICA MOVIL PERU S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'ENERGÍA - CLARO')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'AMERICA MOVIL PERU S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'PEXT')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'AMERICA MOVIL PERU S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'SAQ')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'AMERICA MOVIL PERU S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'TI')),
+
+-- ENTEL (ENTEL PERU S.A.)
+((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL PERU S.A.'),
+ (SELECT id_area FROM area WHERE nombre = 'CW')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL PERU S.A.'),
+ (SELECT id_area FROM area WHERE nombre = 'ENERGÍA')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL PERU S.A.'),
+ (SELECT id_area FROM area WHERE nombre = 'ENERGÍA - ENTEL')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL PERU S.A.'),
+ (SELECT id_area FROM area WHERE nombre = 'ENTEL')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL PERU S.A.'),
+ (SELECT id_area FROM area WHERE nombre = 'PEXT')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL PERU S.A.'),
+ (SELECT id_area FROM area WHERE nombre = 'TI')),
+
+-- GYGA (GYGA CONSULTING S.A.C.)
+((SELECT id_cliente FROM cliente WHERE razon_social = 'GYGA CONSULTING S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'PEXT')),
+
+-- SDP (SITES DEL PERU S.A.C.)
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SITES DEL PERU S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'ENERGÍA')),
+
+-- STL (SOLUCIONES TECNOLOGICAS LATINOAMERICA S.A.C.)
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SOLUCIONES TECNOLOGICAS LATINOAMERICA S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'CW')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SOLUCIONES TECNOLOGICAS LATINOAMERICA S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'ENERGÍA')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SOLUCIONES TECNOLOGICAS LATINOAMERICA S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'PEXT')),
+
+((SELECT id_cliente FROM cliente WHERE razon_social = 'SOLUCIONES TECNOLOGICAS LATINOAMERICA S.A.C.'),
+ (SELECT id_area FROM area WHERE nombre = 'TI')),
+
+-- INGETEC (INGETEC CONSULTORES & EJECUTORES S.R.L.)
+((SELECT id_cliente FROM cliente WHERE razon_social = 'INGETEC CONSULTORES & EJECUTORES S.R.L. – INGETEC C & E S.R.L.'),
+ (SELECT id_area FROM area WHERE nombre = 'PEXT'));
 INSERT INTO cargo (nombre, id_nivel) VALUES
                                          ('ASISTENTE DE RRHH', (SELECT id_nivel FROM nivel WHERE codigo = 'L3')),
                                          ('ANALISTA FINANCIERO', (SELECT id_nivel FROM nivel WHERE codigo = 'L2')),
