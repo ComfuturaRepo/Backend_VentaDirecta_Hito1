@@ -368,3 +368,242 @@ CREATE TABLE IF NOT EXISTS oc_detalle (
     FOREIGN KEY (id_oc)
     REFERENCES orden_compra(id_oc)
     );
+
+CREATE TABLE maestro_partida (
+                                 id_maestro_partida INT AUTO_INCREMENT PRIMARY KEY,
+                                 codigo VARCHAR(20) NOT NULL UNIQUE,
+                                 descripcion VARCHAR(255) NOT NULL,
+                                 activo TINYINT(1) DEFAULT 1,
+                                 CONSTRAINT uk_maestro_partida_codigo UNIQUE (codigo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_maestro_partida_codigo ON maestro_partida(codigo);
+
+-- Maestro Servicios
+CREATE TABLE maestro_servicio (
+                                  id_maestro_servicio INT AUTO_INCREMENT PRIMARY KEY,
+                                  codigo VARCHAR(20) NOT NULL UNIQUE,
+                                  descripcion VARCHAR(255) NOT NULL,
+                                  id_unidad_medida INT NULL,
+                                  costo_base DECIMAL(12,2) DEFAULT 0,
+                                  activo TINYINT(1) DEFAULT 1,
+                                  CONSTRAINT fk_maestro_servicio_um FOREIGN KEY (id_unidad_medida)
+                                      REFERENCES unidad_medida(id_unidad_medida),
+                                  CONSTRAINT uk_maestro_servicio_codigo UNIQUE (codigo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_maestro_servicio_codigo ON maestro_servicio(codigo);
+
+-- Maestro Materiales
+CREATE TABLE maestro_material (
+                                  id_maestro_material INT AUTO_INCREMENT PRIMARY KEY,
+                                  codigo VARCHAR(20) NOT NULL UNIQUE,
+                                  descripcion VARCHAR(255) NOT NULL,
+                                  id_unidad_medida INT NULL,
+                                  costo_base DECIMAL(12,2) DEFAULT 0,
+                                  activo TINYINT(1) DEFAULT 1,
+                                  CONSTRAINT fk_maestro_material_um FOREIGN KEY (id_unidad_medida)
+                                      REFERENCES unidad_medida(id_unidad_medida),
+                                  CONSTRAINT uk_maestro_material_codigo UNIQUE (codigo)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_maestro_material_codigo ON maestro_material(codigo);
+
+-- =====================================================
+-- 1. TABLA CRONOGRAMA_OT
+-- Propósito: Partidas/fases del proyecto por OT
+-- =====================================================
+
+CREATE TABLE cronograma_ot (
+                               id_cronograma INT AUTO_INCREMENT PRIMARY KEY,
+                               id_ots INT NOT NULL,
+                               id_maestro_partida INT NOT NULL,
+                               duracion_dias DECIMAL(10,2) DEFAULT 0,
+                               fecha_inicio DATE,
+                               fecha_fin DATE,
+                               activo TINYINT(1) DEFAULT 1,
+                               CONSTRAINT fk_cronograma_ots FOREIGN KEY (id_ots)
+                                   REFERENCES ots(id_ots) ON DELETE CASCADE,
+                               CONSTRAINT fk_cronograma_maestro_partida FOREIGN KEY (id_maestro_partida)
+                                   REFERENCES maestro_partida(id_maestro_partida)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_cronograma_ots ON cronograma_ot(id_ots);
+CREATE INDEX idx_cronograma_maestro ON cronograma_ot(id_maestro_partida);
+
+-- =====================================================
+-- 2. TABLA RESUMEN_OT
+-- Propósito: Resumen de costos por tipo (flexible)
+-- =====================================================
+
+CREATE TABLE resumen_ot (
+                            id_resumen INT AUTO_INCREMENT PRIMARY KEY,
+                            id_ots INT NOT NULL,
+                            tipo_gasto VARCHAR(50) NOT NULL,
+                            monto DECIMAL(12,2) DEFAULT 0,
+                            activo TINYINT(1) DEFAULT 1,
+                            CONSTRAINT fk_resumen_ots FOREIGN KEY (id_ots)
+                                REFERENCES ots(id_ots) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_resumen_ots ON resumen_ot(id_ots);
+
+-- =====================================================
+-- 3. TABLA MATERIAL_OT
+-- Propósito: Materiales/productos requeridos por OT
+-- =====================================================
+
+CREATE TABLE material_ot (
+                             id_material_ot INT AUTO_INCREMENT PRIMARY KEY,
+                             id_ots INT NOT NULL,
+                             id_maestro_material INT NULL,
+                             id_unidad_medida INT NULL,
+                             cantidad DECIMAL(12,2) DEFAULT 1,
+                             costo_unitario DECIMAL(12,2) DEFAULT 0,
+                             total DECIMAL(12,2) DEFAULT 0,
+                             moneda VARCHAR(10) DEFAULT 'PEN',
+                             activo TINYINT(1) DEFAULT 1,
+                             CONSTRAINT fk_material_ots FOREIGN KEY (id_ots)
+                                 REFERENCES ots(id_ots) ON DELETE CASCADE,
+                             CONSTRAINT fk_material_maestro FOREIGN KEY (id_maestro_material)
+                                 REFERENCES maestro_material(id_maestro_material),
+                             CONSTRAINT fk_material_um FOREIGN KEY (id_unidad_medida)
+                                 REFERENCES unidad_medida(id_unidad_medida)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_material_ots ON material_ot(id_ots);
+CREATE INDEX idx_material_maestro ON material_ot(id_maestro_material);
+CREATE INDEX idx_material_um ON material_ot(id_unidad_medida);
+
+-- =====================================================
+-- 4. TABLA CONTRATISTA_OT
+-- Propósito: Servicios de terceros/contratistas por OT
+-- =====================================================
+
+CREATE TABLE contratista_ot (
+                                id_contratista_ot INT AUTO_INCREMENT PRIMARY KEY,
+                                id_ots INT NOT NULL,
+                                id_maestro_servicio INT NULL,
+                                id_unidad_medida INT NULL,
+                                id_proveedor INT NULL,
+                                cantidad DECIMAL(12,2) DEFAULT 1,
+                                costo_unitario DECIMAL(12,2) DEFAULT 0,
+                                total DECIMAL(12,2) DEFAULT 0,
+                                activo TINYINT(1) DEFAULT 1,
+                                CONSTRAINT fk_contratista_ots FOREIGN KEY (id_ots)
+                                    REFERENCES ots(id_ots) ON DELETE CASCADE,
+                                CONSTRAINT fk_contratista_maestro FOREIGN KEY (id_maestro_servicio)
+                                    REFERENCES maestro_servicio(id_maestro_servicio),
+                                CONSTRAINT fk_contratista_um FOREIGN KEY (id_unidad_medida)
+                                    REFERENCES unidad_medida(id_unidad_medida),
+                                CONSTRAINT fk_contratista_prov FOREIGN KEY (id_proveedor)
+                                    REFERENCES proveedor(id_proveedor)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_contratista_ots ON contratista_ot(id_ots);
+CREATE INDEX idx_contratista_maestro ON contratista_ot(id_maestro_servicio);
+CREATE INDEX idx_contratista_prov ON contratista_ot(id_proveedor);
+
+-- =====================================================
+-- 5. TABLA GASTO_LOGISTICO_OT
+-- Propósito: Gastos de transporte/logística por OT
+-- =====================================================
+
+CREATE TABLE gasto_logistico_ot (
+                                    id_gasto_log INT AUTO_INCREMENT PRIMARY KEY,
+                                    id_ots INT NOT NULL,
+                                    concepto VARCHAR(150) NOT NULL,
+                                    id_unidad_medida INT NULL,
+                                    cantidad DECIMAL(12,2) DEFAULT 1,
+                                    precio DECIMAL(12,2) DEFAULT 0,
+                                    total DECIMAL(12,2) DEFAULT 0,
+                                    id_proveedor INT NULL,
+                                    activo TINYINT(1) DEFAULT 1,
+                                    CONSTRAINT fk_gl_ots FOREIGN KEY (id_ots)
+                                        REFERENCES ots(id_ots) ON DELETE CASCADE,
+                                    CONSTRAINT fk_gl_um FOREIGN KEY (id_unidad_medida)
+                                        REFERENCES unidad_medida(id_unidad_medida),
+                                    CONSTRAINT fk_gl_proveedor FOREIGN KEY (id_proveedor)
+                                        REFERENCES proveedor(id_proveedor)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_gl_ots ON gasto_logistico_ot(id_ots);
+CREATE INDEX idx_gl_prov ON gasto_logistico_ot(id_proveedor);
+CREATE INDEX idx_gl_um ON gasto_logistico_ot(id_unidad_medida);
+
+-- =====================================================
+-- 6. TABLA VIATICO_OT
+-- Propósito: Viáticos, pasajes, cajas (unificado)
+-- =====================================================
+
+CREATE TABLE viatico_ot (
+                            id_viatico INT AUTO_INCREMENT PRIMARY KEY,
+                            id_ots INT NOT NULL,
+                            tipo ENUM('MOVILIDAD_CAJA','PASAJE','CAJA_CHICA','VIATICO') NOT NULL,
+                            concepto VARCHAR(150),
+                            id_unidad_medida INT NULL,
+                            cantidad DECIMAL(12,2) DEFAULT 1,
+                            precio DECIMAL(12,2) DEFAULT 0,
+                            costo_dia DECIMAL(12,2) DEFAULT 0,
+                            cant_dias DECIMAL(12,2) DEFAULT 0,
+                            total DECIMAL(12,2) DEFAULT 0,
+                            id_trabajador INT NULL,
+                            id_proveedor INT NULL,
+                            fecha DATE,
+                            tipo_doc VARCHAR(20),
+                            ruc_dni VARCHAR(20),
+                            id_banco INT NULL,
+                            moneda VARCHAR(10) DEFAULT 'PEN',
+                            cuenta VARCHAR(50),
+                            cci VARCHAR(50),
+                            activo TINYINT(1) DEFAULT 1,
+                            CONSTRAINT fk_viatico_ots FOREIGN KEY (id_ots)
+                                REFERENCES ots(id_ots) ON DELETE CASCADE,
+                            CONSTRAINT fk_viatico_trab FOREIGN KEY (id_trabajador)
+                                REFERENCES trabajador(id_trabajador),
+                            CONSTRAINT fk_viatico_prov FOREIGN KEY (id_proveedor)
+                                REFERENCES proveedor(id_proveedor),
+                            CONSTRAINT fk_viatico_um FOREIGN KEY (id_unidad_medida)
+                                REFERENCES unidad_medida(id_unidad_medida),
+                            CONSTRAINT fk_viatico_banco FOREIGN KEY (id_banco)
+                                REFERENCES banco(id_banco)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_viatico_ots ON viatico_ot(id_ots);
+CREATE INDEX idx_viatico_tipo ON viatico_ot(tipo);
+CREATE INDEX idx_viatico_trab ON viatico_ot(id_trabajador);
+
+-- =====================================================
+-- 7. TABLA PLANILLA_TRABAJO_OT
+-- Propósito: Planilla de trabajo/mano de obra por OT
+-- =====================================================
+
+CREATE TABLE planilla_trabajo_ot (
+                                     id_planilla INT AUTO_INCREMENT PRIMARY KEY,
+                                     id_ots INT NOT NULL,
+                                     id_trabajador INT NULL,
+                                     id_cargo INT NULL,
+                                     fecha DATE,
+                                     costo_dia DECIMAL(12,2) DEFAULT 0,
+                                     cant_dias DECIMAL(12,2) DEFAULT 0,
+                                     total DECIMAL(12,2) DEFAULT 0,
+                                     tipo_doc VARCHAR(20),
+                                     ruc_dni VARCHAR(20),
+                                     id_banco INT NULL,
+                                     moneda VARCHAR(10) DEFAULT 'PEN',
+                                     cuenta VARCHAR(50),
+                                     cci VARCHAR(50),
+                                     activo TINYINT(1) DEFAULT 1,
+                                     CONSTRAINT fk_planilla_ots FOREIGN KEY (id_ots)
+                                         REFERENCES ots(id_ots) ON DELETE CASCADE,
+                                     CONSTRAINT fk_planilla_trab FOREIGN KEY (id_trabajador)
+                                         REFERENCES trabajador(id_trabajador),
+                                     CONSTRAINT fk_planilla_cargo FOREIGN KEY (id_cargo)
+                                         REFERENCES cargo(id_cargo),
+                                     CONSTRAINT fk_planilla_banco FOREIGN KEY (id_banco)
+                                         REFERENCES banco(id_banco)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+
+CREATE INDEX idx_planilla_ots ON planilla_trabajo_ot(id_ots);
+CREATE INDEX idx_planilla_trab ON planilla_trabajo_ot(id_trabajador);
+CREATE INDEX idx_planilla_cargo ON planilla_trabajo_ot(id_cargo);

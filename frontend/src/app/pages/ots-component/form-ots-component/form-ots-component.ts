@@ -308,25 +308,23 @@ export class FormOtsComponent implements OnInit {
   const area     = this.areas.find(a => a.id === Number(v.idArea))?.label || '';
   const site     = this.sites.find(s => s.id === Number(v.idSite))?.label || '';
 
-  const toSlug = (str: string) =>
+  const normalize = (str: string) =>
     str
-      .toLowerCase()
       .trim()
-      .replace(/\s+/g, '_')
-      .replace(/[^a-z0-9_]/g, '')
-      .replace(/_+/g, '_')
-      .replace(/^_+|_+$/g, '');
+      .replace(/[^\w\s]/g, '')   // quita símbolos raros, mantiene espacios
+      .replace(/\s+/g, ' ');     // normaliza múltiples espacios
 
   const partes = [
-    toSlug(proyecto),
-    toSlug(area),
-    toSlug(site)   // 👈 SOLO el nombre del site
+    normalize(proyecto),
+    normalize(area),
+    normalize(site)
   ].filter(Boolean);
 
-  const desc = partes.join('_') || 'ot_sin_descripcion_automatica';
+  const desc = partes.join('_') || 'OT SIN DESCRIPCION AUTOMATICA';
 
   this.form.get('descripcion')?.setValue(desc, { emitEvent: false });
 }
+
 
   onSubmit(): void {
     this.submitted = true;

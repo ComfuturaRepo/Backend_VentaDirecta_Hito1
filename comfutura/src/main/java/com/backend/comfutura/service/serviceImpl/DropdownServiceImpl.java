@@ -109,7 +109,8 @@ public class DropdownServiceImpl implements DropdownService {
                 .stream()
                 .map(s -> new DropdownDTO(
                         s.getIdSite(),
-                        s.getCodigoSitio() + " - " + s.getDescripcion()
+                        s.getCodigoSitio() ,
+                        s.getDescripcion()
                 ))
                 .collect(Collectors.toList());
     }

@@ -31,9 +31,9 @@
             </p>
           </div>
         </div>
-        
+
         <!-- Botón cerrar -->
-        <button type="button" class="btn-close btn-close-white opacity-75" 
+        <button type="button" class="btn-close btn-close-white opacity-75"
                 (click)="onCancel()" aria-label="Cerrar">
         </button>
       </div>
@@ -186,24 +186,32 @@
                 </div>
               </div>
 
-              <!-- Site -->
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label class="form-label fw-medium">
-                    Site <span class="text-danger">*</span>
-                  </label>
-                  <select class="form-select form-select-lg" formControlName="idSite"
-                          [class.is-invalid]="submitted && f['idSite'].invalid">
-                    <option [ngValue]="null">Seleccione site...</option>
-                    <option *ngFor="let s of sites" [ngValue]="s.id">
-                      {{ s.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idSite'].invalid" class="invalid-feedback">
-                    Debe seleccionar un site
-                  </div>
-                </div>
-              </div>
+           <!-- Site -->
+<div class="col-md-6">
+  <div class="form-group">
+    <label class="form-label fw-medium">
+      Site <span class="text-danger">*</span>
+    </label>
+
+    <select
+      class="form-select form-select-lg"
+      formControlName="idSite"
+      [class.is-invalid]="submitted && f['idSite']?.invalid">
+
+      <option [ngValue]="null">Seleccione site...</option>
+
+      <option *ngFor="let s of sites" [ngValue]="s.id">
+        {{ s.label }} - {{ s.adicional || 'SIN DESCRIPCIÓN' }}
+      </option>
+
+    </select>
+
+    <div *ngIf="submitted && f['idSite']?.invalid" class="invalid-feedback">
+      Debe seleccionar un site
+    </div>
+  </div>
+</div>
+
 
               <!-- Región -->
               <div class="col-md-6">
@@ -299,7 +307,7 @@
                   <i class="bi bi-building me-2"></i>
                   Cliente Solicitante
                 </h6>
-                
+
                 <!-- Jefatura Cliente -->
                 <div class="form-group mb-4">
                   <label class="form-label fw-medium">
@@ -513,7 +521,7 @@
                         </div>
                       </div>
                     </div>
-                    
+
                     <div class="mt-4">
                       <small class="text-muted d-block mb-1">Descripción</small>
                       <div class="bg-light p-3 rounded border">
@@ -589,7 +597,7 @@
                   <i class="bi bi-arrow-left me-2"></i>
                   Regresar
                 </button>
-                
+
                 <div class="d-flex gap-3">
                   <button type="button" class="btn btn-outline-danger btn-lg px-4"
                           (click)="onCancel()">
@@ -617,7 +625,7 @@
     <!-- Footer -->
     <div class="form-footer bg-light border-top p-3 text-center text-muted small">
       <i class="bi bi-shield-lock me-1"></i>
-      <span class="text-danger">*</span> Todos los campos son obligatorios • 
+      <span class="text-danger">*</span> Todos los campos son obligatorios •
       Único campo opcional: OT Anterior
     </div>
   </ng-container>
