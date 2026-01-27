@@ -22,4 +22,10 @@ public interface OtService {
     void toggleActivo(Integer idOts);
 
     List<OtDetailResponse> saveOtsMasivo(List<OtCreateRequest> requests);
+
+    Integer getUltimoOtCorrelativo();
+
+    Integer buscarIdPorOt(Integer ot);
+
+    boolean existeOt(Integer ot);
 }

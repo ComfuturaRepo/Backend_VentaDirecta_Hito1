@@ -24,6 +24,7 @@ import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 import static java.util.Optional.ofNullable;
 
@@ -290,6 +291,25 @@ public class OtServiceImpl implements OtService {
         ot.setActivo(!ot.getActivo());
         otsRepository.save(ot);
     }
+
+    @Override
+    public Integer getUltimoOtCorrelativo() {
+        Optional<Ots> ultimaOt = otsRepository.findTopByOrderByOtDesc();
+        return ultimaOt.map(Ots::getOt).orElse(null);
+    }
+
+    @Override
+    public Integer buscarIdPorOt(Integer ot) {
+        return otsRepository.findByOt(ot)
+                .map(Ots::getIdOts)
+                .orElse(null);
+    }
+
+    @Override
+    public boolean existeOt(Integer ot) {
+        return otsRepository.findByOt(ot).isPresent();
+    }
+
     @Transactional
     public List<OtDetailResponse> saveOtsMasivo(List<OtCreateRequest> requests) {
         List<OtDetailResponse> responses = new ArrayList<>();

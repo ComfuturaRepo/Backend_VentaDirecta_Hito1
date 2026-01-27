@@ -225,21 +225,7 @@ export class OtsComponent implements OnInit {
     });
   }
 
-  exportFilteredOts(): void {
-    if (!this.exportFiltroText && !this.exportFechaDesde && !this.exportFechaHasta) {
-      this.exportAllOts();
-      return;
-    }
 
-    this.exportToExcel(
-      () => this.excelService.exportFilteredOts(
-        this.exportFiltroText || undefined,
-        this.exportFechaDesde || undefined,
-        this.exportFechaHasta || undefined
-      ),
-      'filtradas'
-    );
-  }
 
   private exportToExcel(exportFn: () => Observable<Blob>, type: string): void {
     Swal.fire({
@@ -298,9 +284,7 @@ export class OtsComponent implements OnInit {
   export(): void {
     if (this.exportFiltroActivo && this.selectedCount > 0) {
       this.exportSelectedOts();
-    } else if (this.exportFiltroText || this.exportFechaDesde || this.exportFechaHasta) {
-      this.exportFilteredOts();
-    } else {
+    }  else {
       this.exportAllOts();
     }
     this.closeAllModals();
@@ -366,9 +350,7 @@ export class OtsComponent implements OnInit {
     if (!this.importFile) return;
 
     this.importing = true;
-    const importService = this.importMode === 'normal'
-      ? this.excelService.importOts(this.importFile)
-      : this.excelService.importMasivo(this.importFile);
+    const importService = this.excelService.importMasivo(this.importFile);
 
     importService.subscribe({
       next: (result) => {
@@ -409,37 +391,9 @@ export class OtsComponent implements OnInit {
     });
   }
 
-  downloadDataModel(): void {
-    this.excelService.downloadModel().subscribe({
-      next: (blob) => {
-        this.excelService.downloadExcel(blob, 'modelo_datos_ots.xlsx');
-      },
-      error: (err) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo descargar el modelo',
-          confirmButtonColor: '#dc3545'
-        });
-      }
-    });
-  }
 
-  downloadRelationsModel(): void {
-    this.excelService.downloadRelationsModel().subscribe({
-      next: (blob) => {
-        this.excelService.downloadExcel(blob, 'modelo_relaciones_ots.xlsx');
-      },
-      error: (err) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo descargar el modelo de relaciones',
-          confirmButtonColor: '#dc3545'
-        });
-      }
-    });
-  }
+
+
 
   // ==================== MODALES DE OT ====================
   openCreateModal(): void {

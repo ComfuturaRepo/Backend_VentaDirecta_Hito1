@@ -31,20 +31,6 @@ export class ExcelService {
     });
   }
 
-  /**
-   * Exporta OTs con filtros específicos
-   */
-  exportFilteredOts(search?: string, fechaDesde?: Date, fechaHasta?: Date): Observable<Blob> {
-    let params = new HttpParams();
-    if (search) params = params.set('search', search);
-    if (fechaDesde) params = params.set('fechaDesde', fechaDesde.toISOString().split('T')[0]);
-    if (fechaHasta) params = params.set('fechaHasta', fechaHasta.toISOString().split('T')[0]);
-
-    return this.http.get(`${this.apiUrl}/export/filtered`, {
-      params,
-      responseType: 'blob'
-    });
-  }
 
   // ==================== IMPORTACIÓN ====================
 
@@ -57,14 +43,7 @@ export class ExcelService {
     });
   }
 
-  /**
-   * Importa OTs desde un archivo Excel
-   */
-  importOts(file: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('file', file);
-    return this.http.post(`${this.apiUrl}/import/ots`, formData);
-  }
+
 
   /**
    * Importación masiva (para muchos registros)
@@ -84,14 +63,7 @@ export class ExcelService {
     });
   }
 
-  /**
-   * Descarga el modelo de relaciones
-   */
-  downloadRelationsModel(): Observable<Blob> {
-    return this.http.get(`${this.apiUrl}/modelo/relaciones`, {
-      responseType: 'blob'
-    });
-  }
+
 
   // ==================== UTILITARIOS ====================
 
@@ -109,12 +81,7 @@ export class ExcelService {
     window.URL.revokeObjectURL(url);
   }
 
-  /**
-   * Obtiene estadísticas del servicio
-   */
-  getStats(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/estadisticas`);
-  }
+
 
   /**
    * Test de conexión
