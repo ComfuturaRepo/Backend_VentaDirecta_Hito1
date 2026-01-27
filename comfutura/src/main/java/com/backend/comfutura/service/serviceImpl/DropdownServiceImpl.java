@@ -176,7 +176,7 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getCoordinadoresTiCw() {
         return trabajadorRepository
-                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("COORDINADOR TI ")
+                .findActivosConCargoCoordinador()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
@@ -188,7 +188,7 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getJefaturasResponsable() {
         return trabajadorRepository
-                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("JEFATURA RESPONSABLE")
+                .findActivosConCargoJefe()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
@@ -200,7 +200,7 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getLiquidador() {
         return trabajadorRepository
-                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("LIQUIDADOR")
+                .findJefesDeCierre()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
@@ -212,7 +212,7 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getEjecutantes() {
         return trabajadorRepository
-                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("EJECUTANTE")
+                .findAll()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
@@ -224,7 +224,7 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getAnalistasContable() {
         return trabajadorRepository
-                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("ANALISTA CONTABLE")
+                .findActivosConCargoContabilidad()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),

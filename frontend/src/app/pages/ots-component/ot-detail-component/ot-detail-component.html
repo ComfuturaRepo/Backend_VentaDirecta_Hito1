@@ -14,7 +14,7 @@
             </p>
           </div>
         </div>
-        
+
         <div class="d-flex align-items-center gap-3">
           <div class="text-end">
             <div class="badge status-badge fs-6 fw-normal px-3 py-2"
@@ -27,7 +27,7 @@
               {{ ot?.fechaApertura ? (ot?.fechaApertura | date:'dd/MM/yyyy') : '—' }}
             </div>
           </div>
-          
+
           <!-- Botón cerrar -->
           <button type="button" class="btn-close btn-close-white btn-close-lg"
                   (click)="onClose()" aria-label="Cerrar">
@@ -46,8 +46,8 @@
           </span>
         </div>
         <div class="progress bg-white bg-opacity-20" style="height: 8px;">
-          <div class="progress-bar bg-white progress-bar-striped progress-bar-animated" 
-               role="progressbar" 
+          <div class="progress-bar bg-white progress-bar-striped progress-bar-animated"
+               role="progressbar"
                [style.width.%]="progressPercentage"
                [attr.aria-valuenow]="progressPercentage">
           </div>
@@ -132,7 +132,7 @@
                   </div>
                   <div class="info-item">
                     <span class="info-label">Días Asignados</span>
-                    <span class="info-value fw-bold">{{ ot.diasAsignados || '—' }} días</span>
+                    <span class="info-value fw-bold">{{ ot.diasAsignados  }} días</span>
                   </div>
                   <div class="info-item">
                     <span class="info-label">Estado</span>
@@ -183,7 +183,7 @@
                   </div>
                 </div>
               </div>
-              
+
               <div class="col-md-6">
                 <h6 class="section-subtitle mb-3">
                   <i class="bi bi-gear me-2"></i>Lado Ejecutivo
@@ -227,16 +227,16 @@
                 <div class="timeline-line"></div>
                 <div class="timeline-items">
                   <ng-container *ngFor="let estado of estados; let i = index">
-                    <div class="timeline-step" 
+                    <div class="timeline-step"
                          [class.completed]="i <= currentEstadoIndex"
                          [class.current]="i === currentEstadoIndex"
                          [class.future]="i > currentEstadoIndex"
                          [class.cancelled]="ot.estadoOt === 'CANCELADA' && i === estados.length - 1">
-                      
+
                       <div class="timeline-marker">
                         <i class="bi" [ngClass]="getIconoEstado(i)"></i>
                       </div>
-                      
+
                       <div class="timeline-content">
                         <div class="timeline-label">{{ estado }}</div>
                         <div class="timeline-status">
@@ -281,14 +281,14 @@
           <i class="bi bi-info-circle me-1"></i>
           ID Interno: {{ ot?.idOts || '—' }} • Última actualización: {{ formatDateTime(ot?.fechaCreacion) }}
         </div>
-        
+
         <div class="d-flex gap-3">
           <button class="btn btn-outline-secondary px-4" (click)="onClose()">
             <i class="bi bi-x-lg me-2"></i>Cerrar
           </button>
-          <button *ngIf="ot" class="btn btn-primary px-4" (click)="editarOt()">
+       <!--    <button *ngIf="ot" class="btn btn-primary px-4" (click)="editarOt()">
             <i class="bi bi-pencil-square me-2"></i>Editar OT
-          </button>
+          </button>-->
         </div>
       </div>
     </div>

@@ -106,7 +106,7 @@ export class OtDetailComponent implements OnInit {
 
   getEstadoIcon(estado?: string | null): string {
     if (!estado) return 'bi-question-circle';
-    
+
     const estadoUpper = estado.toUpperCase();
     if (estadoUpper.includes('FINALIZADO')) return 'bi-check2-circle';
     if (estadoUpper.includes('CANCELADA')) return 'bi-x-octagon';
@@ -116,7 +116,7 @@ export class OtDetailComponent implements OnInit {
     if (estadoUpper.includes('PRESUPUESTO')) return 'bi-envelope-paper';
     if (estadoUpper.includes('ASIGNACION')) return 'bi-person-plus';
     if (estadoUpper.includes('CREACION')) return 'bi-cart-check';
-    
+
     return 'bi-clock';
   }
 
@@ -126,7 +126,7 @@ export class OtDetailComponent implements OnInit {
     const estadoUpper = estado.toUpperCase();
     if (estadoUpper.includes('FINALIZADO')) return 'bg-success';
     if (estadoUpper.includes('CANCELADA')) return 'bg-danger';
-    if (estadoUpper.includes('EJECUCION') || estadoUpper.includes('LIQUIDACION') || 
+    if (estadoUpper.includes('EJECUCION') || estadoUpper.includes('LIQUIDACION') ||
         estadoUpper.includes('FACTURACION') || estadoUpper.includes('CREACION')) {
       return 'bg-warning';
     }
@@ -183,7 +183,7 @@ export class OtDetailComponent implements OnInit {
   editarOt(): void {
     if (this.ot?.idOts) {
       this.onClose();
-      
+
       setTimeout(() => {
         if (this.ot?.idOts) {
           this.router.navigate(['/ot/edit', this.ot.idOts]);

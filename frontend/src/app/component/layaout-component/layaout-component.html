@@ -54,6 +54,11 @@
           </a>
         </li>
 
+        <!-- Separador para gestión -->
+        <li class="menu-divider" *ngIf="!isCollapsed">
+          <span class="divider-label">Gestión Principal</span>
+        </li>
+
         <!-- Órdenes de Trabajo -->
         <li>
           <a routerLink="/ot" routerLinkActive="active" (click)="closeMobile()">
@@ -74,13 +79,13 @@
           </a>
         </li>
 
-        <!-- Gestión -->
+        <!-- Gestión Jefatura/Analista -->
         <li>
           <a routerLink="/gestion-jefatura-analista" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-person-gear"></i>
             </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Gestión</span>
+            <span class="menu-label" *ngIf="!isCollapsed">Gestión Jefatura/Analista</span>
           </a>
         </li>
 
@@ -94,40 +99,42 @@
           </a>
         </li>
 
-        <!-- Órdenes de Compra -->
-        <li>
+        <!-- Separador para administración -->
+        <li class="menu-divider" *ngIf="!isCollapsed">
+          <span class="divider-label">Administración</span>
+        </li>
+
+        <!-- Usuarios -->
+        <li *ngIf="currentUser?.roles?.includes('ADMIN')">
           <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
-              <i class="bi bi-cart-check-fill"></i>
+              <i class="bi bi-people-fill"></i>
             </div>
             <span class="menu-label" *ngIf="!isCollapsed">Usuarios</span>
           </a>
         </li>
 
-         <li>
-          <a routerLink="/perfil" routerLinkActive="active" (click)="closeMobile()">
-            <div class="menu-icon-wrapper">
-              <i class="bi bi-cart-check-fill"></i>
-            </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Perfil</span>
-          </a>
-        </li>
-
-        <li>
+        <!-- Trabajadores -->
+        <li *ngIf="currentUser?.roles?.includes('ADMIN')">
           <a routerLink="/trabajador" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
-              <i class="bi bi-cart-check-fill"></i>
+              <i class="bi bi-person-badge-fill"></i>
             </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Trabajador</span>
+            <span class="menu-label" *ngIf="!isCollapsed">Trabajadores</span>
           </a>
         </li>
 
-        <!-- Separador para opciones de administración -->
-        <li class="menu-divider" *ngIf="!isCollapsed">
-          <span class="divider-label">Administración</span>
+        <!-- Configuración -->
+        <li *ngIf="currentUser?.roles?.includes('ADMIN')">
+          <a routerLink="/configuracion" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-gear-fill"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Configuración</span>
+          </a>
         </li>
 
-        <!-- Reportes (Solo Admin) -->
+        <!-- Reportes -->
         <li *ngIf="currentUser?.roles?.includes('ADMIN')">
           <a routerLink="/reportes" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
@@ -137,11 +144,26 @@
           </a>
         </li>
 
-        <!-- Configuración (Solo Admin) -->
-        <li *ngIf="currentUser?.roles?.includes('ADMIN')">
-          <a routerLink="/configuracion" routerLinkActive="active" (click)="closeMobile()">
+        <!-- Separador para usuario -->
+        <li class="menu-divider" *ngIf="!isCollapsed">
+          <span class="divider-label">Mi Cuenta</span>
+        </li>
+
+        <!-- Perfil -->
+        <li>
+          <a routerLink="/perfil" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
-              <i class="bi bi-gear-fill"></i>
+              <i class="bi bi-person-circle"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Mi Perfil</span>
+          </a>
+        </li>
+
+        <!-- Configuración Personal -->
+        <li>
+          <a routerLink="/configuracion-personal" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-sliders"></i>
             </div>
             <span class="menu-label" *ngIf="!isCollapsed">Configuración</span>
           </a>
@@ -151,7 +173,7 @@
 
     <!-- Footer con Usuario -->
     <div class="sidebar-footer">
-      <div class="user-profile" (click)="toggleMobile()" *ngIf="!isCollapsed">
+      <div class="user-profile" (click)="toggleUserMenu()" *ngIf="!isCollapsed">
         <div class="user-avatar" [ngClass]="userBadgeClass">
           {{ userInitial }}
           <div class="online-indicator"></div>
@@ -160,10 +182,27 @@
           <div class="user-name">{{ username }}</div>
           <div class="user-role">{{ mainRole || 'Usuario' }}</div>
         </div>
-        <i class="bi bi-chevron-down user-dropdown-icon"></i>
+        <i class="bi bi-chevron-down user-dropdown-icon" [class.rotated]="showUserMenu"></i>
       </div>
 
-      <div class="logout-section" *ngIf="!isCollapsed">
+      <!-- Menú desplegable del usuario -->
+      <div class="user-menu-dropdown" *ngIf="showUserMenu && !isCollapsed">
+        <a routerLink="/perfil" (click)="closeUserMenu()">
+          <i class="bi bi-person-circle"></i>
+          <span>Mi Perfil</span>
+        </a>
+        <a routerLink="/configuracion-personal" (click)="closeUserMenu()">
+          <i class="bi bi-sliders"></i>
+          <span>Configuración</span>
+        </a>
+        <div class="user-menu-divider"></div>
+        <a href="javascript:void(0)" (click)="logout(); closeUserMenu()" class="logout-menu-item">
+          <i class="bi bi-box-arrow-right"></i>
+          <span>Cerrar Sesión</span>
+        </a>
+      </div>
+
+      <div class="logout-section" *ngIf="!isCollapsed && !showUserMenu">
         <button class="logout-btn" (click)="logout()">
           <i class="bi bi-box-arrow-right"></i>
           <span>Cerrar Sesión</span>
@@ -200,23 +239,83 @@
 
       <div class="top-bar-right">
         <!-- Notificaciones -->
-        <button class="topbar-btn notification-btn" [class.has-notifications]="hasNotifications">
+        <button class="topbar-btn notification-btn" [class.has-notifications]="hasNotifications" (click)="toggleNotifications()">
           <i class="bi bi-bell"></i>
           <span class="notification-badge" *ngIf="hasNotifications">3</span>
         </button>
 
         <!-- Perfil de usuario -->
         <div class="user-dropdown">
-          <div class="user-dropdown-trigger">
+          <div class="user-dropdown-trigger" (click)="toggleTopUserMenu()">
             <div class="user-mini-avatar" [ngClass]="userBadgeClass">
               {{ userInitial }}
             </div>
             <span class="user-mini-name">{{ username }}</span>
             <i class="bi bi-chevron-down"></i>
           </div>
+
+          <!-- Menú desplegable top -->
+          <div class="top-user-menu-dropdown" *ngIf="showTopUserMenu">
+            <a routerLink="/perfil" (click)="closeTopUserMenu()">
+              <i class="bi bi-person-circle"></i>
+              <span>Mi Perfil</span>
+            </a>
+            <a routerLink="/configuracion-personal" (click)="closeTopUserMenu()">
+              <i class="bi bi-sliders"></i>
+              <span>Configuración</span>
+            </a>
+            <div class="user-menu-divider"></div>
+            <a href="javascript:void(0)" (click)="logout(); closeTopUserMenu()" class="logout-menu-item">
+              <i class="bi bi-box-arrow-right"></i>
+              <span>Cerrar Sesión</span>
+            </a>
+          </div>
         </div>
       </div>
     </header>
+
+    <!-- Notificaciones Panel -->
+    <div class="notifications-panel" *ngIf="showNotifications">
+      <div class="notifications-header">
+        <h3>Notificaciones</h3>
+        <button class="close-notifications" (click)="closeNotifications()">
+          <i class="bi bi-x-lg"></i>
+        </button>
+      </div>
+      <div class="notifications-list">
+        <!-- Contenido de notificaciones -->
+        <div class="notification-item unread">
+          <div class="notification-icon">
+            <i class="bi bi-check-circle-fill text-success"></i>
+          </div>
+          <div class="notification-content">
+            <p class="notification-text">Orden de trabajo #1234 ha sido aprobada</p>
+            <span class="notification-time">Hace 5 minutos</span>
+          </div>
+        </div>
+        <div class="notification-item unread">
+          <div class="notification-icon">
+            <i class="bi bi-exclamation-circle-fill text-warning"></i>
+          </div>
+          <div class="notification-content">
+            <p class="notification-text">Site "Los Olivos" requiere atención</p>
+            <span class="notification-time">Hace 1 hora</span>
+          </div>
+        </div>
+        <div class="notification-item">
+          <div class="notification-icon">
+            <i class="bi bi-info-circle-fill text-info"></i>
+          </div>
+          <div class="notification-content">
+            <p class="notification-text">Nueva actualización del sistema disponible</p>
+            <span class="notification-time">Ayer</span>
+          </div>
+        </div>
+      </div>
+      <div class="notifications-footer">
+        <a routerLink="/notificaciones" (click)="closeNotifications()">Ver todas las notificaciones</a>
+      </div>
+    </div>
 
     <!-- Contenido de la Página -->
     <div class="content-wrapper">

@@ -1,3 +1,4 @@
+// layout.component.ts
 import { Component, inject, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
@@ -15,7 +16,7 @@ import Swal from 'sweetalert2';
     RouterLink,
     RouterLinkActive
   ],
-  templateUrl: './layaout-component.html',
+   templateUrl: './layaout-component.html',
   styleUrl: './layaout-component.css',
 })
 export class LayoutComponent implements OnInit, OnDestroy {
@@ -25,6 +26,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   isCollapsed = false;
   isMobileOpen = false;
+  showUserMenu = false;
+  showTopUserMenu = false;
+  showNotifications = false;
   logoUrl: SafeUrl | null = null;
   isMobile = false;
   private resizeObserver?: ResizeObserver;
@@ -43,7 +47,6 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   private loadLogo() {
     try {
-      // Usando la URL de Cloudinary que ya tienes en el HTML
       const cloudinaryUrl = 'https://res.cloudinary.com/dqznlmig0/image/upload/v1769301735/COMFUTURA_LOGOTIPO-04_kwulpt.png';
       this.logoUrl = this.sanitizer.bypassSecurityTrustUrl(cloudinaryUrl);
     } catch (error) {
@@ -63,7 +66,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
       this.resizeObserver = new ResizeObserver(() => {
         this.checkScreenSize();
       });
-      
+
       const mainContent = document.querySelector('.main-content');
       if (mainContent) {
         this.resizeObserver.observe(mainContent);
@@ -71,10 +74,28 @@ export class LayoutComponent implements OnInit, OnDestroy {
     }
   }
 
-@HostListener('window:resize')
-onResize() {
-  this.checkScreenSize();
-}
+  @HostListener('window:resize')
+  onResize() {
+    this.checkScreenSize();
+  }
+
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    // Cerrar menús al hacer clic fuera
+    const target = event.target as HTMLElement;
+
+    if (this.showUserMenu && !target.closest('.user-profile') && !target.closest('.user-menu-dropdown')) {
+      this.closeUserMenu();
+    }
+
+    if (this.showTopUserMenu && !target.closest('.user-dropdown')) {
+      this.closeTopUserMenu();
+    }
+
+    if (this.showNotifications && !target.closest('.notification-btn') && !target.closest('.notifications-panel')) {
+      this.closeNotifications();
+    }
+  }
 
   get username(): string {
     return this.authService.currentUser?.username ?? 'Usuario';
@@ -91,8 +112,7 @@ onResize() {
 
   get mainRole(): string {
     const roles = this.currentUser?.roles;
-    if (!roles || roles.length === 0) return '';
-    // Priorizar ADMIN si existe
+    if (!roles || roles.length === 0) return 'Usuario';
     const adminRole = roles.find(r => r.includes('ADMIN'));
     return adminRole || roles[0];
   }
@@ -102,6 +122,10 @@ onResize() {
     if (role.includes('admin')) return 'admin-badge';
     if (role.includes('gerente') || role.includes('jefe')) return 'manager-badge';
     return 'user-badge';
+  }
+
+  get hasNotifications(): boolean {
+    return true; // Cambiar con lógica real
   }
 
   toggleCollapse() {
@@ -129,6 +153,30 @@ onResize() {
     } else {
       document.body.classList.remove('no-scroll');
     }
+  }
+
+  toggleUserMenu() {
+    this.showUserMenu = !this.showUserMenu;
+  }
+
+  closeUserMenu() {
+    this.showUserMenu = false;
+  }
+
+  toggleTopUserMenu() {
+    this.showTopUserMenu = !this.showTopUserMenu;
+  }
+
+  closeTopUserMenu() {
+    this.showTopUserMenu = false;
+  }
+
+  toggleNotifications() {
+    this.showNotifications = !this.showNotifications;
+  }
+
+  closeNotifications() {
+    this.showNotifications = false;
   }
 
   logout() {
@@ -162,12 +210,5 @@ onResize() {
         });
       }
     });
-  }
-
-  // Método para verificar si hay notificaciones
-  get hasNotifications(): boolean {
-    // Implementa lógica real si tienes notificaciones
-    // Por ahora, devuelve false para ocultar el badge
-    return false;
   }
 }

@@ -47,5 +47,41 @@ public interface TrabajadorRepository extends JpaRepository<Trabajador, Integer>
     // Contar trabajadores por cargo
     @Query("SELECT COUNT(t) FROM Trabajador t WHERE t.cargo.id = :cargoId AND t.activo = true")
     long countByCargo(@Param("cargoId") Integer cargoId);
-    }
+
+
+    //ESTO ES PARA EL DROPTOWN
+    @Query("""
+    SELECT t
+    FROM Trabajador t
+    WHERE t.activo = true
+      AND LOWER(t.cargo.nombre) LIKE 'jefe%'
+""")
+    List<Trabajador> findActivosConCargoJefe();
+    @Query("""
+    SELECT t
+    FROM Trabajador t
+    WHERE t.activo = true
+      AND LOWER(t.cargo.nombre) IN (
+          'jefe de cierre',
+          'jefe de cierre y liquidaciones'
+      )
+""")
+    List<Trabajador> findJefesDeCierre();
+    @Query("""
+    SELECT t
+    FROM Trabajador t
+    WHERE t.activo = true
+      AND LOWER(t.cargo.nombre) LIKE '%contabilidad%'
+""")
+    List<Trabajador> findActivosConCargoContabilidad();
+
+    @Query("""
+    SELECT t
+    FROM Trabajador t
+    WHERE t.activo = true
+      AND LOWER(t.cargo.nombre) LIKE '%coordinador%'
+""")
+    List<Trabajador> findActivosConCargoCoordinador();
+
+}
 
