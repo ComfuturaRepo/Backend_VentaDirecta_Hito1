@@ -3,7 +3,9 @@ package com.backend.comfutura.service;
 import com.backend.comfutura.dto.request.ExcelImportDTO;
 import com.backend.comfutura.dto.request.ImportResultDTO;
 import com.backend.comfutura.dto.request.OtCreateRequest;
+import com.backend.comfutura.model.Site;
 import com.backend.comfutura.record.DropdownDTO;
+import com.backend.comfutura.repository.SiteRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.poi.ss.usermodel.*;
@@ -30,6 +32,7 @@ public class ExcelImportService {
 
     private final OtService otService;
     private final DropdownService dropdownService;
+    private final SiteRepository siteRepository;
 
     // ================ IMPORTACIÓN DE EXCEL ================
     @Transactional
@@ -766,12 +769,17 @@ public class ExcelImportService {
         OtCreateRequest request = new OtCreateRequest();
         request.setFechaApertura(importDTO.getFechaApertura());
         request.setActivo(true);
-
+        Site sitio = siteRepository
+                .findByCodigoSitio(importDTO.getSite())
+                .orElseThrow(() -> new RuntimeException(
+                        "No se encontró el Site con código: " + importDTO.getSite()
+                ));
         // Generar descripción automáticamente
-        String descripcion = String.format("%s_%s_%s",
+        String descripcion = String.format("%s_%s_%s_%s",
                 importDTO.getProyecto() != null ? normalizeForDescripcion(importDTO.getProyecto()) : "",
                 importDTO.getArea() != null ? normalizeForDescripcion(importDTO.getArea()) : "",
-                importDTO.getSite() != null ? normalizeForDescripcion(importDTO.getSite()) : ""
+                importDTO.getSite() != null ? normalizeForDescripcion(importDTO.getSite()) : "",
+                importDTO.getSite() != null ? normalizeForDescripcion(sitio.getDescripcion()) : ""
         ).replace("__", "_").replace("__", "_");
 
         if (descripcion.endsWith("_")) {

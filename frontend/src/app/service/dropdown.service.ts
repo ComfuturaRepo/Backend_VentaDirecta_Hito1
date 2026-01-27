@@ -104,6 +104,10 @@ export class DropdownService {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/proveedores`);
   }
 
+  getEstadoOt(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/estado-ot`);
+  }
+
   // =============================
   // CARGA MASIVA - Formularios completos
   // =============================
@@ -124,6 +128,7 @@ export class DropdownService {
     liquidadores: DropdownItem[];
     ejecutantes: DropdownItem[];
     analistasContable: DropdownItem[];
+    estadoOt: DropdownItem[];
   }> {
     return forkJoin({
       clientes: this.getClientes(),
@@ -137,7 +142,8 @@ export class DropdownService {
       jefaturasResponsable: this.getJefaturasResponsable(),
       liquidadores: this.getLiquidador(),
       ejecutantes: this.getEjecutantes(),
-      analistasContable: this.getAnalistasContable()
+      analistasContable: this.getAnalistasContable(),
+      estadoOt:this.getEstadoOt()
     });
   }
 

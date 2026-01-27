@@ -251,26 +251,26 @@
   .form-header {
     padding: 1.5rem !important;
   }
-  
+
   .step-btn {
     padding: 0.5rem 1rem !important;
     font-size: 0.9rem;
   }
-  
+
   .step-divider {
     display: none !important;
   }
-  
+
   .btn-lg {
     width: 100%;
     margin-bottom: 0.5rem;
   }
-  
+
   .step-actions .d-flex {
     flex-direction: column;
     gap: 1rem;
   }
-  
+
   .step-actions .btn {
     width: 100%;
   }
@@ -280,13 +280,13 @@
   .form-header h3 {
     font-size: 1.5rem;
   }
-  
+
   .header-icon {
     width: 50px;
     height: 50px;
     padding: 0.75rem !important;
   }
-  
+
   .header-icon i {
     font-size: 1.5rem !important;
   }

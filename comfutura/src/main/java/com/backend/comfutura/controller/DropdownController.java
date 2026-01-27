@@ -95,6 +95,11 @@ public class DropdownController {
         return ResponseEntity.ok(dropdownService.getLiquidador());
     }
 
+    @GetMapping("/estado-ot")
+    public ResponseEntity<List<DropdownDTO>> getEstadoOt() {
+        return ResponseEntity.ok(dropdownService.getEstadosOt());
+    }
+
     @GetMapping("/ejecutantes")
     public ResponseEntity<List<DropdownDTO>> getEjecutantes() {
         return ResponseEntity.ok(dropdownService.getEjecutantes());

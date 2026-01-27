@@ -28,6 +28,7 @@ public class OtFullResponse {
     private Integer idAnalistaClienteSolicitante;
 
     private Integer idCreador;                    // readonly
+    private Integer idEstadoOt;                    // readonly
     private Integer idCoordinadorTiCw;
     private Integer idJefaturaResponsable;
     private Integer idLiquidador;

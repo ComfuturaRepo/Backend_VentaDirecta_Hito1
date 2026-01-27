@@ -187,6 +187,7 @@ public class OtServiceImpl implements OtService {
                 .idAnalistaContable(ofNullable(ots.getAnalistaContable()).map(Trabajador::getIdTrabajador).orElse(null))
                 .activo(ots.getActivo())
                 .fechaCreacion(ots.getFechaCreacion())
+                .idEstadoOt(ots.getEstadoOt().getIdEstadoOt())
                 .build();
     }
 
@@ -239,7 +240,8 @@ public class OtServiceImpl implements OtService {
         if (req.getDescripcion() != null) ots.setDescripcion(req.getDescripcion());
         if (req.getFechaApertura() != null) ots.setFechaApertura(req.getFechaApertura());
         if (req.getIdOtsAnterior() != null) ots.setIdOtsAnterior(req.getIdOtsAnterior());
-
+        if (req.getIdEstadoOt() != null)
+            ots.setEstadoOt(find(estadoOtRepository, req.getIdEstadoOt(), "EstadoOt"));
         setRelations(ots, req);
     }
 
@@ -256,6 +258,7 @@ public class OtServiceImpl implements OtService {
             ots.setSite(find(siteRepository, req.getIdSite(), "Site"));
         if (req.getIdRegion() != null)
             ots.setRegion(find(regionRepository, req.getIdRegion(), "Región"));
+
 
         ots.setJefaturaClienteSolicitante(
                 req.getIdJefaturaClienteSolicitante() != null ?

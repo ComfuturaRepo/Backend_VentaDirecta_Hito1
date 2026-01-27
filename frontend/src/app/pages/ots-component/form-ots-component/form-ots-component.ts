@@ -60,6 +60,7 @@ export class FormOtsComponent implements OnInit {
   liquidadores: DropdownItem[] = [];
   ejecutantes: DropdownItem[] = [];
   analistasContable: DropdownItem[] = [];
+  estadoOT: DropdownItem[] = [];
 
   constructor() {
     this.crearFormularioBase();
@@ -116,7 +117,7 @@ export class FormOtsComponent implements OnInit {
       idAnalistaContable: [null, Validators.required],
 
       // ÚNICO CAMPO OPCIONAL
-      idOtsAnterior: [null]
+  idEstadoOt: [null],
     });
 
     if (!this.isEditMode) {
@@ -264,7 +265,8 @@ export class FormOtsComponent implements OnInit {
       jefaturasResp: this.dropdownService.getJefaturasResponsable(),
       liquidadores: this.dropdownService.getLiquidador(),
       ejecutantes: this.dropdownService.getEjecutantes(),
-      analistasCont: this.dropdownService.getAnalistasContable()
+      analistasCont: this.dropdownService.getAnalistasContable(),
+      estadoOt:this.dropdownService.getEstadoOt()
     }).pipe(
       tap(data => {
         this.clientes = data.clientes || [];
@@ -279,6 +281,7 @@ export class FormOtsComponent implements OnInit {
         this.liquidadores = data.liquidadores || [];
         this.ejecutantes = data.ejecutantes || [];
         this.analistasContable = data.analistasCont || [];
+        this.estadoOT = data.estadoOt || [];
       })
     );
   }
@@ -389,6 +392,7 @@ export class FormOtsComponent implements OnInit {
         idLiquidador: Number(values.idLiquidador),
         idEjecutante: Number(values.idEjecutante),
         idAnalistaContable: Number(values.idAnalistaContable),
+idEstadoOt: Number(values.idEstadoOt)
       };
 
       this.otService.saveOt(payload).subscribe({

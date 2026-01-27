@@ -26,11 +26,11 @@ public class DropdownServiceImpl implements DropdownService {
     private final ProveedorRepository proveedorRepository;
     private final CargoRepository cargoRepository;
     private final EmpresaRepository empresaRepository;
+    private final EstadoOtRepository estadoOtRepository;
 
     // Nuevos repositorios para los responsables (agrega estos en tu proyecto)
     private final JefaturaClienteSolicitanteRepository jefaturaClienteSolicitanteRepository;
     private final AnalistaClienteSolicitanteRepository analistaClienteSolicitanteRepository;
-    private final EstadoOtRepository estadoOtRepository; // <-- AGREGAR este repositorio
 
     // ────────────────────────────────────────────────────────
     // Métodos existentes (sin cambios)
@@ -60,6 +60,7 @@ public class DropdownServiceImpl implements DropdownService {
                 ))
                 .collect(Collectors.toList());
     }
+
     @Override
     public List<DropdownDTO> getEmpresas() {
         return empresaRepository.findByActivoTrueOrderByNombreAsc()
@@ -70,7 +71,6 @@ public class DropdownServiceImpl implements DropdownService {
                 ))
                 .collect(Collectors.toList());
     }
-
     @Override
     public List<DropdownDTO> getEstadosOt() {
         return estadoOtRepository.findByActivoTrueOrderByDescripcionAsc()

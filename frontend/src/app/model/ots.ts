@@ -85,6 +85,7 @@ export interface OtCreateRequest {
   idFase: number;
   idSite: number;
   idRegion: number;
+  idEstadoOt: number;
 
   descripcion?: string;
   fechaApertura?: string;
