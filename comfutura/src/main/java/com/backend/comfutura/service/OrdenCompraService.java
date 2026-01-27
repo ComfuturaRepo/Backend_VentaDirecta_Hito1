@@ -14,4 +14,10 @@ public interface OrdenCompraService {
             String sortBy,
             String direction
     );
+
+
+
+    // 🔹 HTML con empresa seleccionada (NUEVO)
+    String generarHtml(Integer idOc, Integer idEmpresa);
+
 }

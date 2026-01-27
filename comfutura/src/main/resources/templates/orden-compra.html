@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+
+    <style>
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            background: #f4f4f4;
+        }
+
+        .document {
+            width: 800px;
+            margin: 20px auto;
+            background: #fff;
+            padding: 20px;
+            border: 1px solid #000;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .logo {
+            font-size: 28px;
+            font-weight: bold;
+        }
+
+        .header-right {
+            text-align: right;
+            font-size: 12px;
+        }
+
+        .order-box {
+            border: 1px solid #000;
+            padding: 5px 10px;
+            margin-top: 5px;
+            display: inline-block;
+        }
+
+        h4 {
+            margin: 5px 0;
+            font-size: 13px;
+            text-align: center;
+            background: #eaeaea;
+            border: 1px solid #000;
+            padding: 4px;
+        }
+
+        .section {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .box {
+            flex: 1;
+            border: 1px solid #000;
+            padding: 8px;
+            font-size: 12px;
+        }
+
+        .box p {
+            margin: 4px 0;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        table, th, td {
+            border: 1px solid #000;
+        }
+
+        th {
+            background: #eaeaea;
+            padding: 5px;
+        }
+
+        td {
+            padding: 6px;
+            height: 25px;
+        }
+
+        .totals {
+            width: 300px;
+            float: right;
+            margin-top: 10px;
+        }
+
+        .totals table td {
+            padding: 6px;
+        }
+
+        .notes {
+            font-size: 11px;
+            margin-top: 20px;
+        }
+
+        .observations {
+            border: 1px solid #000;
+            padding: 8px;
+            margin-top: 10px;
+            font-size: 12px;
+        }
+
+        .footer {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 40px;
+            font-size: 12px;
+        }
+
+        .signature {
+            width: 30%;
+        }
+
+        .signature p {
+            margin: 5px 0;
+        }
+
+        .clear {
+            clear: both;
+        }
+    </style>
+</head>
+<body>
+
+<div class="document">
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="logo">
+            <img src="https://res.cloudinary.com/dqznlmig0/image/upload/v1769300761/COMFUTURA_LOGOTIPO-01_hfldcb.png"
+                 alt="Comfutura"
+                 style="height: 80px;">
+        </div>
+
+        <div class="header-right">
+            Fecha Impresión: <span th:text="${fechaImpresion}">20/01/2026</span><br>
+            Página <span th:text="${paginaActual}">1</span> de <span th:text="${totalPaginas}">1</span><br><br>
+
+            <div class="order-box">
+                <strong>ORDEN DE COMPRA</strong><br>
+                N° <span th:text="${oc.getIdOc()}">2025-02391</span><br>
+                Fecha: <span th:text="${oc.getFechaOc()}">12/12/2025</span>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- PROVEEDOR / COMPRADOR -->
+    <div class="section">
+        <div class="box">
+            <h4 >PROVEEDOR</h4>
+            <strong >Nombre:</strong> <span th:text="${oc.proveedorNombre}">Proveedor Ejemplo</span><p>
+            <strong>RUC:</strong> <span th:text="${oc.proveedorRuc}">12345678901</span><p>
+            <strong>Dirección:</strong><span th:text="${oc.proveedorDireccion}">Av. Ejemplo 123</span><p>
+            <p><strong>Contacto:</strong><span th:text="${oc.proveedorContacto}">Juan Perez</span><p>
+            <p><strong>Banco:</strong><span th:text="${oc.proveedorBanco}">Banco Ejemplo</span>
+        </div>
+
+        <div class="box">
+            <h4>COMPRADOR</h4>
+
+            <p>
+                <strong>Nombre:</strong>
+                <span th:text="${empresa.nombre}">COMFUTURA SAC</span>
+            </p>
+
+            <p>
+                <strong>RUC:</strong>
+                <span th:text="${empresa.ruc}">20123456789</span>
+            </p>
+
+            <p>
+                <strong>Dirección:</strong>
+                <span th:text="${empresa.direccion}">Av. Principal 123</span>
+            </p>
+
+            <!-- ⚠️ CAMBIADO -->
+            <p>
+                <strong>N° O.T.:</strong>
+                <span th:text="${oc.ot}">1</span>
+            </p>
+
+            <!-- ⚠️ SIN PARÉNTESIS -->
+            <p>
+                <strong>Descripción:</strong>
+                <span th:text="${oc.otsDescripcion}">Mantenimiento eléctrico</span>
+            </p>
+        </div>
+
+
+    </div>
+
+    <!-- DETALLE -->
+    <table>
+        <thead>
+        <tr>
+            <th>CÓDIGO</th>
+            <th>CANTIDAD</th>
+            <th>UNID.</th>
+            <th>DESCRIPCIÓN</th>
+            <th>P. UNIT.</th>
+            <th>P. TOTAL</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr>
+        <tr th:each="d : ${oc.detalles}">
+            <td th:text="${d.codigo}">COD</td>
+            <td th:text="${d.cantidad}">0</td>
+            <td th:text="${d.unidad}">UND</td>
+            <td th:text="${d.descripcion}">DESC</td>
+            <td th:text="${d.precioUnitario}">0.00</td>
+            <td th:text="${d.total}">0.00</td>
+        </tr>
+
+        </tr>
+        <tr><td colspan="6"></td></tr>
+        <tr><td colspan="6"></td></tr>
+        </tbody>
+    </table>
+
+    <!-- CONDICIONES + TOTALES -->
+    <div style="display: flex; gap: 8px;">
+
+        <!-- CONDICIONES (IZQUIERDA) -->
+        <div style="flex: 1; font-size: 8px; border: 1px solid #000; padding: 8px;">
+            <p style="margin: 0;">1. El Importe TOTAL sí incluye IGV.</p>
+            <p style="margin: 0;">2. Los materiales y/o equipos están sujetos a inspección en destino; aquellos que resultaran defectuosos o no cumplan con las normas y especificaciones técnicas requeridas serán reemplazados en el más breve plazo. Los gastos ocasionados serán por cuenta del proveedor.</p>
+            <p style="margin: 0;">3. La inspección y aceptación por parte de la empresa no desliga al proveedor de su responsabilidad por defectos y/o vicios ocultos o aparentes no detectados en el momento de su inspección.</p>
+            <p style="margin: 0;">4. En su factura deberá indicar ítem, cantidad, descripción del material, N° de Guía y N° de la O/C.</p>
+            <p style="margin: 0;">5. A su factura adjuntar copia de la O/C y la Guía firmada y sellada en señal de conformidad.</p>
+            <p style="margin: 0;">6. Los plazos de pago acordados en la O/C comenzarán a contarse a partir de la fecha de recepción de la factura.</p>
+            <p style="margin: 0;">7. En caso de incumplimiento del plazo de entrega, la empresa podrá cancelar la O/C.</p>
+            <p style="margin: 0;">8. El proveedor entregará catálogos, protocolos de prueba y certificados de calidad de los materiales y/o equipos suministrados.</p>
+            <p style="margin: 0;">9. Los gastos que generen las pruebas de los materiales serán asumidos por el proveedor.</p>
+        </div>
+
+        <!-- TOTALES (DERECHA) -->
+        <div class="totals">
+            <table>
+                <tr>
+                    <td>SUB TOTAL</td>
+                    <td align="right" th:text="${oc.subtotal}">0.00</td>
+                </tr>
+                <tr>
+                    <td>IGV 18%</td>
+                    <td align="right" th:text="${oc.igvTotal}">0.00</td>
+                </tr>
+                <tr>
+                    <td><strong>TOTAL</strong></td>
+                    <td align="right">
+                        <strong th:text="${oc.total}">0.00</strong>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+    </div>
+
+
+    <div class="clear"></div>
+
+    <!-- NOTAS -->
+    <div class="notes">
+        <p>SON: DOS MIL CIEN Y 00/100 SOLES</p>
+    </div>
+
+    <!-- OBSERVACIONES -->
+    <div class="observations">
+        <p><strong>OBSERVACIONES</strong></p>
+        <strong th:text="${oc.getObservacion()}">0.00</strong>
+
+
+        <p>Forma de Pago:  <strong th:text="${oc.getFormaPago()}">0.00</strong>
+    </div>
+
+    <!-- FIRMAS -->
+    <div class="footer">
+        <div class="signature">
+            <p>Solicita:LEONARDO MELGAREJO </p>
+            <p>Genera:LEONARDO MELGAREJO </p>
+        </div>
+
+        <div class="signature">
+            <p>Aprobado 1:</p>
+            <p>Aprobado 2:</p>
+            <p>Aprobado 3: OLIVER MASIAS</p>
+        </div>
+    </div>
+
+</div>
+
+</body>
+</html>

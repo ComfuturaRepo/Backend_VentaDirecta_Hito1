@@ -1,14 +1,21 @@
-
 package com.backend.comfutura.controller;
 
 import com.backend.comfutura.dto.request.OrdenCompraRequestDTO;
 import com.backend.comfutura.dto.response.OrdenCompraResponseDTO;
+import com.backend.comfutura.dto.response.OcDetalleResponseDTO;
+import com.backend.comfutura.model.Empresa;
 import com.backend.comfutura.service.OcDetalleService;
 import com.backend.comfutura.service.OrdenCompraService;
+import com.backend.comfutura.service.EmpresaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/ordenes-compra")
@@ -17,12 +24,11 @@ public class OrdenCompraController {
 
     private final OrdenCompraService ordenCompraService;
     private final OcDetalleService ocDetalleService;
+    private final EmpresaService empresaService;
 
     /* ================= CREAR OC ================= */
     @PostMapping
-    public ResponseEntity<OrdenCompraResponseDTO> crear(
-            @RequestBody OrdenCompraRequestDTO dto
-    ) {
+    public ResponseEntity<OrdenCompraResponseDTO> crear(@RequestBody OrdenCompraRequestDTO dto) {
         OrdenCompraResponseDTO oc = ordenCompraService.guardar(null, dto);
 
         if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {
@@ -58,5 +64,29 @@ public class OrdenCompraController {
         return ResponseEntity.ok(
                 ordenCompraService.listarPaginado(page, size, sortBy, direction)
         );
+    }
+
+    /* ================= VER HTML DE OC ================= */
+    @GetMapping("/{idOc}/html")
+    public String generarHtmlOrdenCompra(
+            @PathVariable Integer idOc,
+            @RequestParam Integer idEmpresa
+    ) {
+        return ordenCompraService.generarHtml(idOc, idEmpresa);
+    }
+
+    /* ================= DESCARGAR HTML DE OC ================= */
+    @GetMapping("/{idOc}/descargar-html")
+    public ResponseEntity<byte[]> descargarHtml(
+            @PathVariable Integer idOc,
+            @RequestParam Integer idEmpresa
+    ) {
+        String html = ordenCompraService.generarHtml(idOc, idEmpresa);
+        byte[] htmlBytes = html.getBytes(StandardCharsets.UTF_8);
+
+        return ResponseEntity.ok()
+                .header("Content-Disposition", "attachment; filename=orden-compra-" + idOc + ".html")
+                .header("Content-Type", "text/html")
+                .body(htmlBytes);
     }
 }

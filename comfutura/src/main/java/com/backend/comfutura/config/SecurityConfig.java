@@ -43,6 +43,8 @@ public class SecurityConfig {
                                 "/api/auth/**",
                                 "/api/dropdowns/**",
                                 "/api/ordenes-compra/**",
+                                "/api/oc-detalles/**",
+
                                 "/api/ots/**",
                                 "/api/excel/**",
                                 "/api/usuarios/**",
