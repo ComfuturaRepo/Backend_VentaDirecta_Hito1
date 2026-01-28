@@ -184,6 +184,9 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
                 .collect(Collectors.toList());
     }
+
+
+
     @Override
     public List<DropdownDTO> getCoordinadoresTiCw() {
         return trabajadorRepository
@@ -196,10 +199,11 @@ public class DropdownServiceImpl implements DropdownService {
                 .collect(Collectors.toList());
     }
 
+    //CAMBIADO POR TODO
     @Override
     public List<DropdownDTO> getJefaturasResponsable() {
         return trabajadorRepository
-                .findActivosConCargoJefe()
+                .findAllByActivoTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
@@ -207,11 +211,11 @@ public class DropdownServiceImpl implements DropdownService {
                 ))
                 .collect(Collectors.toList());
     }
-
+    //CAMBIADO POR TODO
     @Override
     public List<DropdownDTO> getLiquidador() {
         return trabajadorRepository
-                .findJefesDeCierre()
+                .findAllByActivoTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
@@ -223,7 +227,7 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getEjecutantes() {
         return trabajadorRepository
-                .findAll()
+                .findAllByActivoTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
