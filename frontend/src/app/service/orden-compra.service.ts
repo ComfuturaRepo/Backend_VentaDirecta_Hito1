@@ -3,9 +3,9 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
-
+import { Page } from '../model/page.interface';
 import { environment } from '../../environment';
-import { OrdenCompraRequest, OrdenCompraResponse, PageOrdenCompra } from '../model/orden-compra.model';
+import { OcDetalleResponse, OrdenCompraRequest, OrdenCompraResponse, PageOrdenCompra } from '../model/orden-compra.model';
 
 @Injectable({
   providedIn: 'root'
@@ -13,6 +13,7 @@ import { OrdenCompraRequest, OrdenCompraResponse, PageOrdenCompra } from '../mod
 export class OrdenCompraService {
 
   private apiUrl = `${environment.baseUrl}/api/ordenes-compra`; // ej: http://localhost:8080/api/ordenes-compra
+  private apiDetalleUrl = `${environment.baseUrl}/api/oc-detalles`;
 
   constructor(private http: HttpClient) {}
 
@@ -52,7 +53,23 @@ export class OrdenCompraService {
       );
   }
 
+ // ───────────────────────────────
+  // NUEVO: obtener detalles de una OC
+obtenerDetallesPorOc(idOc: number): Observable<Page<OcDetalleResponse>> {
+  return this.http.get<Page<OcDetalleResponse>>(
+`${this.apiDetalleUrl}/${idOc}`,
+    this.getAuthHeaders()
+  );
+}
 
+private getAuthHeaders() {
+  const token = localStorage.getItem('token');
+  return {
+    headers: {
+      Authorization: `Bearer ${token}`
+    }
+  };
+}
 
   // Manejo básico de errores
   private handleError(error: any): Observable<never> {
