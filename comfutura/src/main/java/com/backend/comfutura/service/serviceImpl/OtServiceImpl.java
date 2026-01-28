@@ -323,7 +323,7 @@ public class OtServiceImpl implements OtService {
             }
 
             // Si no hay OTs para el año actual, generar número base
-            Integer nuevoOt = inicio + 1; // 20250001
+            Integer nuevoOt = inicio ; // 20250001
             return nuevoOt;
 
         } catch (Exception e) {
