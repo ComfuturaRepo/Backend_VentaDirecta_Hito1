@@ -13,6 +13,7 @@ import com.backend.comfutura.service.TrabajadorService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,8 +35,37 @@ public class TrabajadorServiceImpl implements TrabajadorService {
     @Transactional(readOnly = true)
     public PageResponseDTO<TrabajadorSimpleDTO> findAllTrabajadores(Pageable pageable) {
         Page<Trabajador> page = trabajadorRepository.findAll(pageable);
-        return toPageResponseDTO(page.map(trabajadorMapper::toSimpleDTO));
+        return toPageResponseDTO2(page.map(trabajadorMapper::toSimpleDTO));
     }
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<TrabajadorSimpleDTO> findActivos(Pageable pageable) {
+        Page<Trabajador> page = trabajadorRepository.findByActivoTrue(pageable);
+        return toPageResponseDTO2(page.map(trabajadorMapper::toSimpleDTO));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<TrabajadorSimpleDTO> searchTrabajadores(String search, Pageable pageable) {
+        Specification<Trabajador> spec = (root, query, cb) -> {
+            if (search == null || search.trim().isEmpty()) {
+                return cb.conjunction();
+            }
+
+            String pattern = "%" + search.toLowerCase().trim() + "%";
+
+            return cb.or(
+                    cb.like(cb.lower(root.get("nombres")), pattern),
+                    cb.like(cb.lower(root.get("apellidos")), pattern),
+                    cb.like(cb.lower(root.get("dni")), pattern),
+                    cb.like(cb.lower(root.get("email")), pattern)
+            );
+        };
+
+        Page<Trabajador> page = trabajadorRepository.findAll(spec, pageable);
+        return toPageResponseDTO2(page.map(trabajadorMapper::toSimpleDTO));
+    }
+
 
     @Override
     @Transactional(readOnly = true)
@@ -205,5 +235,16 @@ public class TrabajadorServiceImpl implements TrabajadorService {
         response.setPageSize(page.getSize());
 
         return response;
+    }
+    private <T> PageResponseDTO<T> toPageResponseDTO2(Page<T> page) {
+        return new PageResponseDTO<>(
+                page.getContent(),
+                page.getNumber(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast(),
+                page.getSize()
+        );
     }
 }

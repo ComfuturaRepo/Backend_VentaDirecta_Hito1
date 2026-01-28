@@ -18,4 +18,7 @@ public class UsuarioRequestDTO {
 
     @NotNull(message = "El nivel es obligatorio")
     private Integer nivelId;
+
+
+    private Boolean activo;
 }

@@ -161,3 +161,121 @@
 .card-header {
   border-radius: 0.35rem 0.35rem 0 0 !important;
 }
+/* Estilos específicos para el componente de usuarios */
+
+/* Hover en filas */
+.hover-shadow {
+  transition: all 0.2s ease-in-out;
+}
+
+.hover-shadow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+  background-color: #f8f9fa !important;
+}
+
+/* Avatar circular */
+.avatar-sm {
+  width: 36px;
+  height: 36px;
+}
+
+/* Badges personalizados */
+.badge {
+  font-weight: 500;
+  letter-spacing: 0.3px;
+}
+
+/* Botones de acción */
+.btn-group-sm .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+}
+
+.btn-outline-primary:hover {
+  background-color: #0d6efd;
+  color: white;
+}
+
+.btn-outline-info:hover {
+  background-color: #0dcaf0;
+  color: white;
+}
+
+.btn-outline-warning:hover {
+  background-color: #ffc107;
+  color: black;
+}
+
+.btn-outline-danger:hover {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Input group personalizado */
+.input-group .input-group-text {
+  background-color: #f8f9fa;
+  border-color: #dee2e6;
+}
+
+/* Modal personalizado */
+.modal-content {
+  border: none;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .btn-group-sm {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn-group-sm .btn {
+    margin: 1px;
+    border-radius: 0.25rem !important;
+  }
+
+  .table-responsive {
+    font-size: 0.9rem;
+  }
+}
+
+/* Transiciones suaves */
+.fade-in {
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Estilos para campos obligatorios */
+.required::after {
+  content: " *";
+  color: #dc3545;
+}
+
+/* Scroll personalizado */
+.table-responsive::-webkit-scrollbar {
+  height: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}

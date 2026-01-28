@@ -15,17 +15,18 @@ import com.backend.comfutura.repository.TrabajadorRepository;
 import com.backend.comfutura.repository.NivelRepository;
 import com.backend.comfutura.repository.UsuarioRepository;
 import com.backend.comfutura.service.UsuarioService;
+import jakarta.persistence.criteria.Predicate;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -41,7 +42,34 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Transactional(readOnly = true)
     public PageResponseDTO<UsuarioSimpleDTO> findAllUsuarios(Pageable pageable) {
         Page<Usuario> page = usuarioRepository.findAll(pageable);
+        return toPageResponseDTO(page.map(usuarioMapper::toSimpleDTO));
+    }
 
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<UsuarioSimpleDTO> findActivos(Pageable pageable) {
+        Page<Usuario> page = usuarioRepository.findByActivoTrue(pageable);
+        return toPageResponseDTO(page.map(usuarioMapper::toSimpleDTO));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<UsuarioSimpleDTO> searchUsuarios(String search, Pageable pageable) {
+        Specification<Usuario> spec = (root, query, cb) -> {
+            if (search == null || search.trim().isEmpty()) {
+                return cb.conjunction();
+            }
+
+            String pattern = "%" + search.toLowerCase().trim() + "%";
+
+            return cb.or(
+                    cb.like(cb.lower(root.get("username")), pattern),
+                    cb.like(cb.lower(root.join("trabajador").get("nombres")), pattern),
+                    cb.like(cb.lower(root.join("trabajador").get("apellidos")), pattern)
+            );
+        };
+
+        Page<Usuario> page = usuarioRepository.findAll(spec, pageable);
         return toPageResponseDTO(page.map(usuarioMapper::toSimpleDTO));
     }
 
@@ -49,7 +77,6 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Transactional(readOnly = true)
     public PageResponseDTO<UsuarioSimpleDTO> findUsuariosActivos(Pageable pageable) {
         Page<Usuario> page = usuarioRepository.findByActivoTrue(pageable);
-
         return toPageResponseDTO(page.map(usuarioMapper::toSimpleDTO));
     }
 
@@ -104,24 +131,61 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
         // Validar username único (si cambia)
-        if (!usuario.getUsername().equals(usuarioDTO.getUsername())) {
-            if (usuarioRepository.existsByUsername(usuarioDTO.getUsername())) {
+        if (usuarioDTO.getUsername() != null && !usuario.getUsername().equals(usuarioDTO.getUsername())) {
+            if (usuarioRepository.existsByUsernameAndIdUsuarioNot(usuarioDTO.getUsername(), id)) {
                 throw new RuntimeException("El nombre de usuario ya está en uso por otro usuario");
             }
+            usuario.setUsername(usuarioDTO.getUsername());
         }
 
-        // Obtener trabajador (si cambia)
+        // Actualizar otros campos
+        if (usuarioDTO.getNivelId() != null) {
+            Nivel nivel = nivelRepository.findById(usuarioDTO.getNivelId())
+                    .orElseThrow(() -> new RuntimeException("Nivel no encontrado"));
+            usuario.setNivel(nivel);
+        }
+
+        if (usuarioDTO.getTrabajadorId() != null) {
+            Trabajador trabajador = trabajadorRepository.findById(usuarioDTO.getTrabajadorId())
+                    .orElseThrow(() -> new RuntimeException("Trabajador no encontrado"));
+            usuario.setTrabajador(trabajador);
+        }
+
+        Usuario updatedUsuario = usuarioRepository.save(usuario);
+        return usuarioMapper.toDetailDTO(updatedUsuario);
+    }
+
+    @Override
+    @Transactional
+    public UsuarioDetailDTO updateUsuarioCompleto(Integer id, UsuarioRequestDTO usuarioDTO) {
+        Usuario usuario = usuarioRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
+
+        // Validar username único (si cambia)
+        if (!usuario.getUsername().equals(usuarioDTO.getUsername())) {
+            if (usuarioRepository.existsByUsernameAndIdUsuarioNot(usuarioDTO.getUsername(), id)) {
+                throw new RuntimeException("El nombre de usuario ya está en uso por otro usuario");
+            }
+            usuario.setUsername(usuarioDTO.getUsername());
+        }
+
+        // Obtener trabajador
         Trabajador trabajador = trabajadorRepository.findById(usuarioDTO.getTrabajadorId())
                 .orElseThrow(() -> new RuntimeException("Trabajador no encontrado"));
 
-        // Obtener nivel (si cambia)
+        // Obtener nivel
         Nivel nivel = nivelRepository.findById(usuarioDTO.getNivelId())
                 .orElseThrow(() -> new RuntimeException("Nivel no encontrado"));
 
-        // Actualizar
-        usuarioMapper.updateEntity(usuarioDTO, usuario);
+        // Actualizar todos los campos
         usuario.setTrabajador(trabajador);
         usuario.setNivel(nivel);
+        usuario.setActivo(usuarioDTO.getActivo());
+
+        // Actualizar contraseña solo si se proporciona una nueva
+        if (usuarioDTO.getPassword() != null && !usuarioDTO.getPassword().trim().isEmpty()) {
+            usuario.setPassword(passwordEncoder.encode(usuarioDTO.getPassword()));
+        }
 
         Usuario updatedUsuario = usuarioRepository.save(usuario);
         return usuarioMapper.toDetailDTO(updatedUsuario);
@@ -142,7 +206,7 @@ public class UsuarioServiceImpl implements UsuarioService {
         usuario.setPassword(passwordEncoder.encode(passwordDTO.getNewPassword()));
         usuarioRepository.save(usuario);
 
-        return usuarioMapper.toMessageResponse("Contraseña actualizada exitosamente");
+        return new MessageResponseDTO("Contraseña actualizada exitosamente", null);
     }
 
     @Override
@@ -164,39 +228,51 @@ public class UsuarioServiceImpl implements UsuarioService {
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado con ID: " + id));
 
         usuarioRepository.delete(usuario);
-        return usuarioMapper.toMessageResponse("Usuario eliminado exitosamente");
+        return new MessageResponseDTO("Usuario eliminado exitosamente", null);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponseDTO<UsuarioSimpleDTO> searchUsuarios(String search, Boolean activo, Integer nivelId, Pageable pageable) {
-        Page<Usuario> page;
+    public PageResponseDTO<UsuarioSimpleDTO> searchUsuariosWithFilters(
+            String search,
+            Boolean activo,
+            Integer nivelId,
+            Pageable pageable) {
 
-        if (search != null && !search.trim().isEmpty()) {
-            page = usuarioRepository.searchUsuarios(search.trim(), pageable);
-        } else if (activo != null && activo) {
-            page = usuarioRepository.findByActivoTrue(pageable);
-        } else {
-            page = usuarioRepository.findAll(pageable);
-        }
-
-        // Filtrar por nivel si se especifica (CORRECCIÓN)
-        if (nivelId != null) {
-            List<Usuario> filteredList = page.getContent()
-                    .stream()
-                    .filter(u -> u.getNivel() != null && u.getNivel().getId().equals(nivelId))
-                    .collect(Collectors.toList());
-
-            // Crear nueva página con resultados filtrados
-            page = new PageImpl<>(
-                    filteredList,
-                    pageable,
-                    filteredList.size()
-            );
-        }
+        Specification<Usuario> spec = buildSpecification(search, activo, nivelId);
+        Page<Usuario> page = usuarioRepository.findAll(spec, pageable);
 
         return toPageResponseDTO(page.map(usuarioMapper::toSimpleDTO));
     }
+
+    private Specification<Usuario> buildSpecification(String search, Boolean activo, Integer nivelId) {
+        return (root, query, cb) -> {
+            List<Predicate> predicates = new ArrayList<>();
+
+            // Filtro por búsqueda
+            if (search != null && !search.trim().isEmpty()) {
+                String pattern = "%" + search.toLowerCase().trim() + "%";
+                predicates.add(cb.or(
+                        cb.like(cb.lower(root.get("username")), pattern),
+                        cb.like(cb.lower(root.join("trabajador").get("nombres")), pattern),
+                        cb.like(cb.lower(root.join("trabajador").get("apellidos")), pattern)
+                ));
+            }
+
+            // Filtro por estado activo
+            if (activo != null) {
+                predicates.add(cb.equal(root.get("activo"), activo));
+            }
+
+            // Filtro por nivel
+            if (nivelId != null) {
+                predicates.add(cb.equal(root.get("nivel").get("idNivel"), nivelId));
+            }
+
+            return cb.and(predicates.toArray(new Predicate[0]));
+        };
+    }
+
     // Helper para convertir Page a PageResponseDTO
     private <T> PageResponseDTO<T> toPageResponseDTO(Page<T> page) {
         PageResponseDTO<T> response = new PageResponseDTO<>();

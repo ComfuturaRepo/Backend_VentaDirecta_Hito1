@@ -39,4 +39,6 @@ public class Usuario {
     @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime fechaCreacion;
+
+
 }

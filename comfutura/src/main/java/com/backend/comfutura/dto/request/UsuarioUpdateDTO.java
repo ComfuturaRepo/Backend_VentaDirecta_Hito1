@@ -14,4 +14,6 @@ public class UsuarioUpdateDTO {
 
     @NotNull(message = "El nivel es obligatorio")
     private Integer nivelId;
+
+
 }

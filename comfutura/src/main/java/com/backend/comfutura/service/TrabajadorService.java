@@ -15,7 +15,7 @@ public interface TrabajadorService {
     PageResponseDTO<TrabajadorSimpleDTO> findAllTrabajadores(Pageable pageable);
 
     PageResponseDTO<TrabajadorSimpleDTO> findTrabajadoresActivos(Pageable pageable);
-
+    PageResponseDTO<TrabajadorSimpleDTO> searchTrabajadores(String search, Pageable pageable);
     PageResponseDTO<TrabajadorSimpleDTO> searchTrabajadores(
             String search,
             Boolean activo,
@@ -26,7 +26,7 @@ public interface TrabajadorService {
 
     // Obtener por ID
     TrabajadorDetailDTO findTrabajadorById(Integer id);
-
+    PageResponseDTO<TrabajadorSimpleDTO> findActivos(Pageable pageable) ;
     // Obtener por DNI
     TrabajadorDetailDTO findTrabajadorByDni(String dni);
 

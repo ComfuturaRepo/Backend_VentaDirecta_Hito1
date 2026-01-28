@@ -43,10 +43,8 @@ public class UsuarioController {
 
         PageResponseDTO<UsuarioSimpleDTO> response;
 
-        if (search != null || nivelId != null) {
-            response = usuarioService.searchUsuarios(search, activos, nivelId, pageable);
-        } else if (activos != null && activos) {
-            response = usuarioService.findUsuariosActivos(pageable);
+        if (search != null || nivelId != null || activos != null) {
+            response = usuarioService.searchUsuariosWithFilters(search, activos, nivelId, pageable);
         } else {
             response = usuarioService.findAllUsuarios(pageable);
         }
@@ -77,13 +75,27 @@ public class UsuarioController {
         }
     }
 
-    // PUT: Actualizar usuario
+    // PUT: Actualizar usuario parcialmente
     @PutMapping("/{id}")
     public ResponseEntity<?> updateUsuario(
             @PathVariable Integer id,
             @Valid @RequestBody UsuarioUpdateDTO usuarioDTO) {
         try {
             UsuarioDetailDTO usuarioActualizado = usuarioService.updateUsuario(id, usuarioDTO);
+            return ResponseEntity.ok(usuarioActualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponseDTO(e.getMessage(), null));
+        }
+    }
+
+    // PUT: Actualizar todos los datos del usuario (nuevo endpoint)
+    @PutMapping("/{id}/completo")
+    public ResponseEntity<?> updateUsuarioCompleto(
+            @PathVariable Integer id,
+            @Valid @RequestBody UsuarioRequestDTO usuarioDTO) {
+        try {
+            UsuarioDetailDTO usuarioActualizado = usuarioService.updateUsuarioCompleto(id, usuarioDTO);
             return ResponseEntity.ok(usuarioActualizado);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
