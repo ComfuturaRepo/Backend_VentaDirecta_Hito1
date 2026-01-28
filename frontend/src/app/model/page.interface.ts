@@ -10,15 +10,15 @@ export interface PageResponse<T> {
 }
 
 export interface PaginationConfig {
-  showInfo?: boolean;          // Mostrar info de registros
-  showSizeSelector?: boolean;  // Mostrar selector de tamaño
-  showNavigation?: boolean;    // Mostrar botones de navegación
-  showJumpToPage?: boolean;    // Mostrar salto a página específica
-  showPageNumbers?: boolean;   // Mostrar números de página
-  pageSizes?: number[];        // Tamaños de página disponibles
-  maxPageNumbers?: number;     // Máximo de números a mostrar
-  align?: 'start' | 'center' | 'end'; // Alineación
-  size?: 'sm' | 'md' | 'lg';   // Tamaño del paginador
+  showInfo?: boolean;          // OPCIONAL
+  showSizeSelector?: boolean;  // OPCIONAL
+  showNavigation?: boolean;    // OPCIONAL
+  showJumpToPage?: boolean;    // OPCIONAL
+  showPageNumbers?: boolean;   // OPCIONAL
+  pageSizes?: number[];        // OPCIONAL
+  maxPageNumbers?: number;     // OPCIONAL
+  align?: 'start' | 'center' | 'end'; // OPCIONAL
+  size?: 'sm' | 'md' | 'lg';   // OPCIONAL
 }
 
 export const DEFAULT_PAGINATION_CONFIG: PaginationConfig = {

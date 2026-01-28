@@ -74,6 +74,7 @@ export const routes: Routes = [
         component: TrabajadorComponent,
         // data: { title: 'Órdenes de Compra' }
       }
+        
     ]
   },
 

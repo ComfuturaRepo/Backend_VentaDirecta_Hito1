@@ -249,7 +249,7 @@ export class UsuariosComponent implements OnInit {
 
       this.usuarioService.createUsuario(usuarioRequest).subscribe({
         next: (response) => {
-          this.usuarioService.showSuccess('Usuario creado exitosamente');
+          this.usuarioService.showSuccess('SUCCESS','Usuario creado exitosamente');
           this.closeModal();
           this.loadUsuarios();
         },
@@ -266,7 +266,7 @@ export class UsuariosComponent implements OnInit {
 
       this.usuarioService.updateUsuario(this.usuarioSeleccionado.idUsuario, usuarioUpdate).subscribe({
         next: (response) => {
-          this.usuarioService.showSuccess('Usuario actualizado exitosamente');
+          this.usuarioService.showSuccess('SUCCESS','Usuario actualizado exitosamente');
           this.closeModal();
           this.loadUsuarios();
         },
@@ -291,13 +291,13 @@ export class UsuariosComponent implements OnInit {
   toggleActivo(usuario: Usuario): void {
     const action = usuario.activo ? 'desactivar' : 'activar';
 
-    this.usuarioService.showConfirm(`¿Estás seguro de ${action} este usuario?`)
+    this.usuarioService.showConfirm('MENSAJE',`¿Estás seguro de ${action} este usuario?`)
       .then((result) => {
         if (result.isConfirmed) {
           this.usuarioService.toggleActivo(usuario.idUsuario).subscribe({
             next: (response) => {
               const message = usuario.activo ? 'Usuario desactivado' : 'Usuario activado';
-              this.usuarioService.showSuccess(message);
+              this.usuarioService.showSuccess('MENSAJE',message);
               this.loadUsuarios();
             },
             error: (error) => {
@@ -310,12 +310,12 @@ export class UsuariosComponent implements OnInit {
 
   // Eliminar usuario
   deleteUsuario(usuario: Usuario): void {
-    this.usuarioService.showConfirm('¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.')
+    this.usuarioService.showConfirm('MENSAJE','¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.')
       .then((result) => {
         if (result.isConfirmed) {
           this.usuarioService.deleteUsuario(usuario.idUsuario).subscribe({
             next: (response) => {
-              this.usuarioService.showSuccess('Usuario eliminado exitosamente');
+              this.usuarioService.showSuccess('MENSAJE','Usuario eliminado exitosamente');
               this.loadUsuarios();
             },
             error: (error) => {
@@ -326,54 +326,7 @@ export class UsuariosComponent implements OnInit {
       });
   }
 
-  // Cambiar contraseña
-  cambiarPassword(usuario: Usuario): void {
-    Swal.fire({
-      title: 'Cambiar Contraseña',
-      html: `
-        <input type="password" id="currentPassword" class="swal2-input" placeholder="Contraseña actual">
-        <input type="password" id="newPassword" class="swal2-input" placeholder="Nueva contraseña">
-        <input type="password" id="confirmPassword" class="swal2-input" placeholder="Confirmar nueva contraseña">
-      `,
-      focusConfirm: false,
-      showCancelButton: true,
-      confirmButtonText: 'Cambiar',
-      cancelButtonText: 'Cancelar',
-      preConfirm: () => {
-        const currentPassword = (document.getElementById('currentPassword') as HTMLInputElement).value;
-        const newPassword = (document.getElementById('newPassword') as HTMLInputElement).value;
-        const confirmPassword = (document.getElementById('confirmPassword') as HTMLInputElement).value;
 
-        if (!currentPassword || !newPassword || !confirmPassword) {
-          Swal.showValidationMessage('Todos los campos son obligatorios');
-          return false;
-        }
-
-        if (newPassword !== confirmPassword) {
-          Swal.showValidationMessage('Las contraseñas no coinciden');
-          return false;
-        }
-
-        if (newPassword.length < 6) {
-          Swal.showValidationMessage('La contraseña debe tener al menos 6 caracteres');
-          return false;
-        }
-
-        return { currentPassword, newPassword };
-      }
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.usuarioService.changePassword(usuario.idUsuario, result.value).subscribe({
-          next: (response) => {
-            this.usuarioService.showSuccess('Contraseña cambiada exitosamente');
-          },
-          error: (error) => {
-            console.error('Error al cambiar contraseña:', error);
-          }
-        });
-      }
-    });
-  }
 
   // Helper methods
   getEstadoClass(activo: boolean): string {

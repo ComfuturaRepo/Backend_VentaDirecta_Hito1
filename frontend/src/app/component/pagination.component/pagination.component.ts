@@ -18,6 +18,7 @@ export class PaginationComponent {
   @Input() showInfo: boolean = true;
   @Input() showSizeSelector: boolean = true;
   @Input() showNavigation: boolean = true;
+  @Input() showPageNumbers: boolean = true;
   @Input() showJumpToPage: boolean = true;
   @Input() pageSizes: number[] = [10, 20, 50, 100];
   @Input() align: 'start' | 'center' | 'end' = 'center';

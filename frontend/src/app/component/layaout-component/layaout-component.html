@@ -79,6 +79,15 @@
           </a>
         </li>
 
+         <li>
+          <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Usuarios</span>
+          </a>
+        </li>
+
         <!-- Gestión Jefatura/Analista -->
         <li>
           <a routerLink="/gestion-jefatura-analista" routerLinkActive="active" (click)="closeMobile()">

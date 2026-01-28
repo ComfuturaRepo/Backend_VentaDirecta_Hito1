@@ -16,14 +16,14 @@
         </div>
 
         <!-- Botón Nuevo Sitio -->
-        <button class="btn btn-primary btn-lg shadow-sm" (click)="openCreateModal()">
+        <button class="btn btn-primary btn-lg shadow-sm" (click)="openCreateModal()" [disabled]="isLoading">
           <i class="bi bi-plus-circle me-2"></i>
           Nuevo Sitio
         </button>
       </div>
     </div>
 
-    <!-- Barra de Búsqueda y Estadísticas -->
+    <!-- Barra de Búsqueda y Filtros -->
     <div class="search-section mb-4">
       <div class="row g-3 align-items-center">
         <div class="col-md-8 col-lg-6">
@@ -35,40 +35,58 @@
               type="text"
               class="form-control border-start-0"
               placeholder="Buscar por código, descripción o ID..."
-              [(ngModel)]="searchDescripcion"
+              [(ngModel)]="searchTerm"
               (input)="onSearchInput()"
+              [disabled]="isLoading"
             />
-            <button *ngIf="searchDescripcion"
+            <button *ngIf="searchTerm"
                     class="btn btn-outline-secondary"
                     type="button"
-                    (click)="clearSearch()">
+                    (click)="clearSearch()"
+                    [disabled]="isLoading">
               <i class="bi bi-x-lg"></i>
             </button>
           </div>
         </div>
 
-        <div class="col-md-4 col-lg-6">
-          <div class="stats-card bg-white rounded-3 p-3 shadow-sm">
-            <div class="row g-3 text-center">
-              <div class="col-4">
-                <div class="stat-value text-primary">{{ totalElements }}</div>
-                <div class="stat-label text-muted small">Total</div>
-              </div>
-              <div class="col-4">
-                <div class="stat-value text-success">
-                  {{ getActiveSitesCount() }}
-                </div>
-                <div class="stat-label text-muted small">Activos</div>
-              </div>
-              <div class="col-4">
-                <div class="stat-value text-secondary">
-                  {{ getInactiveSitesCount() }}
-                </div>
-                <div class="stat-label text-muted small">Inactivos</div>
-              </div>
-            </div>
-          </div>
+ <!-- En el archivo site.component.html -->
+<!-- Filtros de Estado -->
+<div class="col-md-4 col-lg-6">
+  <div class="filters-card bg-white rounded-3 p-3 shadow-sm">
+    <div class="d-flex justify-content-between align-items-center">
+      <div class="btn-group btn-group-sm" role="group">
+        <button type="button"
+                class="btn"
+                [ngClass]="getFilterButtonClass(undefined, filterActivos)"
+                (click)="changeFilterActivos(undefined)"
+                [disabled]="isLoading">
+          {{ getFilterButtonText(undefined) }}
+        </button>
+        <button type="button"
+                class="btn"
+                [ngClass]="getFilterButtonClass(true, filterActivos)"
+                (click)="changeFilterActivos(true)"
+                [disabled]="isLoading">
+          {{ getFilterButtonText(true) }}
+        </button>
+        <button type="button"
+                class="btn"
+                [ngClass]="getFilterButtonClass(false, filterActivos)"
+                (click)="changeFilterActivos(false)"
+                [disabled]="isLoading">
+          {{ getFilterButtonText(false) }}
+        </button>
+      </div>
+
+      <div class="text-end">
+        <div class="total-count">
+          <span class="fw-bold">{{ totalElements }}</span>
+          <span class="text-muted ms-1">sitios</span>
         </div>
+      </div>
+    </div>
+  </div>
+</div>
       </div>
     </div>
 
@@ -84,15 +102,15 @@
     <!-- Contenido Principal -->
     <div class="main-content">
       <!-- Loading de Tabla -->
-      <div *ngIf="isTableLoading && filteredSites.length === 0"
+      <div *ngIf="isTableLoading && sites.length === 0"
            class="loading-container text-center py-5">
         <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
         <p class="mt-3 text-muted">Cargando sitios...</p>
       </div>
 
       <!-- Grid de Tarjetas -->
-      <div *ngIf="!isTableLoading || filteredSites.length > 0" class="row g-4">
-        <ng-container *ngFor="let site of filteredSites">
+      <div *ngIf="!isTableLoading || sites.length > 0" class="row g-4">
+        <ng-container *ngFor="let site of sites">
           <div class="col-md-6 col-lg-4 col-xl-3">
             <div class="site-card" [class.inactive]="!site.activo">
               <div class="site-header">
@@ -113,7 +131,7 @@
                   <span class="ms-1 fw-medium">#{{ site.idSite }}</span>
                 </div>
 
-                <h5 class="site-code">{{ site.codigoSitio }}</h5>
+                <h5 class="site-code">{{ site.codigoSitio || 'Sin código' }}</h5>
 
                 <div class="site-description">
                   {{ site.descripcion || 'Sin descripción' }}
@@ -121,7 +139,9 @@
               </div>
 
               <div class="site-actions">
-                <button class="btn btn-outline-primary btn-sm" (click)="openEditModal(site)">
+                <button class="btn btn-outline-primary btn-sm"
+                        (click)="openEditModal(site)"
+                        [disabled]="isLoading">
                   <i class="bi bi-pencil-square me-1"></i>
                   Editar
                 </button>
@@ -132,30 +152,42 @@
                   <i class="bi me-1" [ngClass]="site.activo ? 'bi-toggle-off' : 'bi-toggle-on'"></i>
                   {{ site.activo ? 'Desactivar' : 'Activar' }}
                 </button>
+                <button class="btn btn-outline-danger btn-sm ms-2"
+                        (click)="deleteSite(site)"
+                        [disabled]="isLoading">
+                  <i class="bi bi-trash me-1"></i>
+                  Eliminar
+                </button>
               </div>
             </div>
           </div>
         </ng-container>
 
         <!-- Estado Vacío -->
-        <div *ngIf="filteredSites.length === 0 && !isTableLoading" class="col-12">
+        <div *ngIf="sites.length === 0 && !isTableLoading" class="col-12">
           <div class="empty-state text-center py-5">
             <div class="empty-icon mb-3">
               <i class="bi bi-buildings text-muted" style="font-size: 4rem;"></i>
             </div>
             <h4 class="text-muted mb-2">
-              {{ searchDescripcion ? 'No se encontraron resultados' : 'No hay sitios registrados' }}
+              {{ searchTerm ? 'No se encontraron resultados' : 'No hay sitios registrados' }}
             </h4>
             <p class="text-muted mb-4">
-              {{ searchDescripcion
+              {{ searchTerm
                 ? 'Intenta con otros términos de búsqueda'
                 : 'Comienza creando tu primer sitio en el sistema.' }}
             </p>
-            <button *ngIf="!searchDescripcion" class="btn btn-primary" (click)="openCreateModal()">
+            <button *ngIf="!searchTerm"
+                    class="btn btn-primary"
+                    (click)="openCreateModal()"
+                    [disabled]="isLoading">
               <i class="bi bi-plus-circle me-2"></i>
               Crear primer sitio
             </button>
-            <button *ngIf="searchDescripcion" class="btn btn-outline-secondary" (click)="clearSearch()">
+            <button *ngIf="searchTerm"
+                    class="btn btn-outline-secondary"
+                    (click)="clearSearch()"
+                    [disabled]="isLoading">
               <i class="bi bi-x-lg me-2"></i>
               Limpiar búsqueda
             </button>
@@ -163,70 +195,25 @@
         </div>
       </div>
 
-      <!-- Paginación -->
-      <div *ngIf="totalPages > 1 && filteredSites.length > 0" class="pagination-section mt-5">
-        <div class="pagination-info bg-white rounded-3 p-3 shadow-sm mb-3">
-          <div class="row align-items-center">
-            <div class="col-md-4">
-              <div class="text-muted">
-                Mostrando <strong>{{ getCurrentRange() }}</strong> de <strong>{{ totalElements }}</strong> sitios
-              </div>
-            </div>
-            <div class="col-md-4 text-center">
-              <div class="pagination-controls">
-                <button class="btn btn-outline-secondary btn-sm"
-                        (click)="previousPage()"
-                        [disabled]="currentPage === 0 || isTableLoading">
-                  <i class="bi bi-chevron-left"></i>
-                </button>
-
-                <div class="page-numbers d-inline-flex mx-2">
-                  <button *ngFor="let page of visiblePages"
-                          class="btn btn-sm mx-1"
-                          [class.btn-primary]="page === currentPage"
-                          [class.btn-outline-primary]="page !== currentPage"
-                          (click)="goToPage(page)"
-                          [disabled]="isTableLoading">
-                    {{ page + 1 }}
-                  </button>
-                </div>
-
-                <button class="btn btn-outline-secondary btn-sm"
-                        (click)="nextPage()"
-                        [disabled]="currentPage === totalPages - 1 || isTableLoading">
-                  <i class="bi bi-chevron-right"></i>
-                </button>
-              </div>
-            </div>
-            <div class="col-md-4 text-end">
-              <div class="dropdown">
-                <button class="btn btn-outline-secondary dropdown-toggle"
-                        type="button"
-                        data-bs-toggle="dropdown"
-                        [disabled]="isTableLoading">
-                  {{ pageSize }} por página
-                </button>
-                <ul class="dropdown-menu">
-                  <li><button class="dropdown-item" (click)="pageSize = 10; loadSites(0)">10 por página</button></li>
-                  <li><button class="dropdown-item" (click)="pageSize = 25; loadSites(0)">25 por página</button></li>
-                  <li><button class="dropdown-item" (click)="pageSize = 50; loadSites(0)">50 por página</button></li>
-                </ul>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div class="page-jump text-center">
-          <span class="text-muted me-2">Ir a página:</span>
-          <input type="number"
-                 class="form-control form-control-sm d-inline-block"
-                 style="width: 80px;"
-                 [value]="currentPage + 1"
-                 (change)="goToPage(getInputPage($event))"
-                 min="1"
-                 [max]="totalPages"
-                 [disabled]="isTableLoading">
-        </div>
+      <!-- Paginación Component -->
+      <div *ngIf="totalPages > 1 && sites.length > 0" class="pagination-section mt-5">
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalItems]="totalElements"
+          [totalPages]="totalPages"
+          [pageSize]="pageSize"
+          [showInfo]="paginationConfig.showInfo"
+          [showSizeSelector]="paginationConfig.showSizeSelector"
+          [showNavigation]="paginationConfig.showNavigation"
+          [showJumpToPage]="paginationConfig.showJumpToPage"
+          [pageSizes]="paginationConfig.pageSizes"
+          [align]="paginationConfig.align"
+          [size]="paginationConfig.size"
+          [isLoading]="isLoading"
+          (pageChange)="onPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)"
+          (refresh)="onRefresh()">
+        </app-pagination>
       </div>
     </div>
   </div>
@@ -257,25 +244,21 @@
             <!-- Campo Código -->
             <div class="form-group mb-4">
               <label class="form-label fw-medium">
-                Código de Sitio <span class="text-danger">*</span>
-                <span class="form-hint">(Máximo 20 caracteres)</span>
+                Código de Sitio
+                <span class="form-hint">(Opcional, máximo 150 caracteres)</span>
               </label>
               <input
                 type="text"
                 class="form-control form-control-lg"
                 [(ngModel)]="currentSite.codigoSitio"
                 name="codigoSitio"
-                required
-                maxlength="20"
+                maxlength="150"
                 placeholder="Ej: SIT-001"
-                [class.is-invalid]="formSubmitted && !currentSite.codigoSitio?.trim()"
+                [disabled]="isLoading"
               >
-              <div *ngIf="formSubmitted && !currentSite.codigoSitio?.trim()" class="invalid-feedback">
-                El código de sitio es obligatorio
-              </div>
               <div class="mt-1 text-end">
                 <small class="text-muted">
-                  {{ currentSite.codigoSitio?.length || 0 }}/20 caracteres
+                  {{ currentSite.codigoSitio?.length || 0 }}/150 caracteres
                 </small>
               </div>
             </div>
@@ -283,30 +266,41 @@
             <!-- Campo Descripción -->
             <div class="form-group mb-4">
               <label class="form-label fw-medium">
-                Descripción
-                <span class="form-hint">(Opcional, máximo 150 caracteres)</span>
+                Descripción <span class="text-danger">*</span>
+                <span class="form-hint">(Obligatorio, máximo 255 caracteres)</span>
               </label>
               <textarea
                 class="form-control"
                 [(ngModel)]="currentSite.descripcion"
                 name="descripcion"
                 rows="3"
-                maxlength="150"
+                maxlength="255"
                 placeholder="Descripción del sitio..."
+                required
+                [class.is-invalid]="formSubmitted && !currentSite.descripcion.trim()"
+                [disabled]="isLoading"
               ></textarea>
+              <div *ngIf="formSubmitted && !currentSite.descripcion.trim()" class="invalid-feedback">
+                La descripción es obligatoria
+              </div>
               <div class="mt-1 text-end">
                 <small class="text-muted">
-                  {{ (currentSite.descripcion || '').length }}/150 caracteres
+                  {{ (currentSite.descripcion || '').length }}/255 caracteres
                 </small>
               </div>
             </div>
 
-            <!-- Campo Estado (solo en edición) -->
-            <div class="form-group mb-4" *ngIf="isEditMode">
+            <!-- Campo Estado -->
+            <div class="form-group mb-4">
               <label class="form-label fw-medium">Estado</label>
               <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" role="switch"
-                       id="activoSwitch" [(ngModel)]="currentSite.activo" name="activo">
+                <input class="form-check-input"
+                       type="checkbox"
+                       role="switch"
+                       id="activoSwitch"
+                       [(ngModel)]="currentSite.activo"
+                       name="activo"
+                       [disabled]="isLoading">
                 <label class="form-check-label" for="activoSwitch">
                   {{ currentSite.activo ? 'Activo' : 'Inactivo' }}
                 </label>
@@ -324,12 +318,16 @@
 
             <!-- Botones del Modal -->
             <div class="modal-footer border-top pt-4">
-              <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">
+              <button type="button"
+                      class="btn btn-outline-secondary"
+                      (click)="closeModal()"
+                      [disabled]="isLoading">
                 <i class="bi bi-x-lg me-2"></i>
                 Cancelar
               </button>
-              <button type="submit" class="btn btn-primary"
-                      [disabled]="isLoading || (!currentSite.codigoSitio?.trim() && formSubmitted)">
+              <button type="submit"
+                      class="btn btn-primary"
+                      [disabled]="isLoading || (!currentSite.descripcion.trim() && formSubmitted)">
                 <ng-container *ngIf="!isLoading">
                   <i class="bi me-2" [ngClass]="isEditMode ? 'bi-save' : 'bi-plus-circle'"></i>
                   {{ isEditMode ? 'Guardar Cambios' : 'Crear Sitio' }}

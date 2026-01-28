@@ -368,61 +368,61 @@
   .page-header {
     padding: 1.25rem;
   }
-  
+
   .header-icon {
     width: 48px;
     height: 48px;
     font-size: 1.5rem;
   }
-  
+
   .page-title {
     font-size: 1.5rem;
   }
-  
+
   .search-section {
     padding: 1rem;
   }
-  
+
   .stats-card {
     padding: 1rem;
   }
-  
+
   .stat-value {
     font-size: 1.25rem;
   }
-  
+
   .site-card {
     padding: 1.25rem;
   }
-  
+
   .site-actions {
     flex-direction: column;
   }
-  
+
   .site-actions .btn {
     width: 100%;
     margin-left: 0 !important;
     margin-top: 0.5rem;
   }
-  
+
   .pagination-info {
     padding: 1rem;
   }
-  
+
   .pagination-info .row > div {
     margin-bottom: 1rem;
   }
-  
+
   .pagination-info .row > div:last-child {
     margin-bottom: 0;
   }
-  
+
   .modal-header,
   .modal-body,
   .modal-footer {
     padding: 1.25rem;
   }
-  
+
   .modal-container {
     max-width: 100%;
   }
@@ -432,15 +432,15 @@
   .page-title {
     font-size: 1.25rem;
   }
-  
+
   .page-subtitle {
     font-size: 0.85rem;
   }
-  
+
   .site-code {
     font-size: 1.1rem;
   }
-  
+
   .site-description {
     font-size: 0.85rem;
   }
@@ -561,4 +561,117 @@ textarea.form-control {
 .btn-outline-secondary:hover {
   background-color: #f3f4f6;
   color: #374151;
+}/* Filtros */
+.filters-card {
+  border: 1px solid #e2e8f0;
+}
+
+.filters-card .btn-group .btn {
+  border-radius: 8px;
+  margin: 0 2px;
+  font-size: 0.875rem;
+  padding: 0.375rem 0.75rem;
+}
+
+.filters-card .total-count {
+  font-size: 1.1rem;
+}
+
+/* Modal form validation */
+.invalid-feedback {
+  display: block;
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1060;
+}
+
+/* Ajustes adicionales para tarjetas */
+.site-card .site-code {
+  color: #1e293b;
+  font-weight: 700;
+  font-size: 1.1rem;
+  margin-bottom: 0.75rem;
+  line-height: 1.2;
+  min-height: 2.6rem;
+}
+
+.site-card .site-description {
+  color: #64748b;
+  font-size: 0.9rem;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 4.2rem;
+  margin-bottom: 1rem;
+}
+
+.site-card .site-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.site-card .site-actions .btn {
+  flex: 1;
+  min-width: calc(33.333% - 0.5rem);
+  padding: 0.375rem 0.5rem;
+  font-size: 0.8rem;
+  border-radius: 6px;
+}
+
+/* Pagination section improvements */
+.pagination-section {
+  background: transparent;
+  padding: 1rem 0;
+  box-shadow: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .filters-card .btn-group {
+    flex-wrap: wrap;
+    margin-bottom: 0.5rem;
+  }
+
+  .filters-card .btn-group .btn {
+    margin-bottom: 0.25rem;
+  }
+
+  .site-card .site-actions {
+    flex-direction: column;
+  }
+
+  .site-card .site-actions .btn {
+    width: 100%;
+    margin-left: 0 !important;
+    margin-top: 0.25rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .search-section .input-group-lg {
+    font-size: 0.9rem;
+  }
+
+  .search-section .input-group-text,
+  .search-section .form-control {
+    padding: 0.5rem 0.75rem;
+  }
 }
