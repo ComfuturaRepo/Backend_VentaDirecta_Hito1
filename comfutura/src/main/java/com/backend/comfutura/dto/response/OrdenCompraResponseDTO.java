@@ -25,6 +25,7 @@ public class OrdenCompraResponseDTO {
     private Integer ot;          // número de OT
 
 
+
     // Cliente
     private String clienteNombre;
     private String clienteRuc;
@@ -49,5 +50,6 @@ public class OrdenCompraResponseDTO {
 
     // Detalles
     private List<OcDetalleResponseDTO> detalles;
+
 
 }

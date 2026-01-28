@@ -331,7 +331,7 @@ CREATE TABLE IF NOT EXISTS orden_compra (
 
                                             id_estado_oc INT NOT NULL,
                                             id_ots INT NOT NULL,
-                                            id_proveedor INT NOT NULL,
+                                            id_proveedor INT  NULL,
 
                                             forma_pago VARCHAR(50),
 

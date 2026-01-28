@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -32,7 +33,7 @@ public class OrdenCompra {
     @Column(name = "id_ots", nullable = false)
     private Integer idOts;
 
-    @Column(name = "id_proveedor", nullable = false)
+    @Column(name = "id_proveedor")
     private Integer idProveedor;
 
     @Column(name = "forma_pago", length = 50)
@@ -45,7 +46,6 @@ public class OrdenCompra {
 
     @Column(name = "igv_total")
     private BigDecimal igvTotal;
-
     private BigDecimal total;
 
     @Column(name = "fecha_oc")
@@ -61,5 +61,6 @@ public class OrdenCompra {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private List<OcDetalle> detalles;
+    private List<OcDetalle> detalles = new ArrayList<>();
+
 }

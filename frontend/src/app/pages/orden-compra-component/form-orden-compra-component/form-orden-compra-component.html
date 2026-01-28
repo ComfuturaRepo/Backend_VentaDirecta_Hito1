@@ -22,25 +22,18 @@
             <!-- OT -->
             <div class="col-md-6">
               <label class="form-label required">Orden de Trabajo (OT)</label>
-              <select class="form-select" [(ngModel)]="form.otsId" name="otsId" required>
+              <select class="form-select" [(ngModel)]="form.idOts" name="otsId" required>
                 <option value="0" disabled>Seleccione OT...</option>
                 <option *ngFor="let ot of ots" [value]="ot.id">{{ ot.label }}</option>
               </select>
             </div>
 
-            <!-- Material (Maestro Código) -->
-            <div class="col-md-6">
-              <label class="form-label required">Material / Código</label>
-              <select class="form-select" [(ngModel)]="form.maestroId" name="maestroId" required>
-                <option value="0" disabled>Seleccione material...</option>
-                <option *ngFor="let mat of maestros" [value]="mat.id">{{ mat.label }}</option>
-              </select>
-            </div>
+
 
             <!-- Proveedor -->
             <div class="col-md-6">
               <label class="form-label required">Proveedor</label>
-              <select class="form-select" [(ngModel)]="form.proveedorId" name="proveedorId" required>
+              <select class="form-select" [(ngModel)]="form.idProveedor" name="proveedorId" required>
                 <option value="0" disabled>Seleccione proveedor...</option>
                 <option *ngFor="let prov of proveedores" [value]="prov.id">{{ prov.label }}</option>
               </select>
@@ -49,22 +42,13 @@
             <!-- Estado -->
             <div class="col-md-6">
               <label class="form-label required">Estado</label>
-              <select class="form-select" [(ngModel)]="form.estadoOcId" name="estadoOcId" required>
+              <select class="form-select" [(ngModel)]="form.idEstadoOc" name="estadoOcId" required>
                 <option *ngFor="let est of estados" [value]="est.id">{{ est.label }}</option>
               </select>
             </div>
 
-            <!-- Cantidad -->
-            <div class="col-md-6">
-              <label class="form-label required">Cantidad</label>
-              <input type="number" class="form-control" [(ngModel)]="form.cantidad" name="cantidad" min="1" required>
-            </div>
 
-            <!-- Costo Unitario -->
-            <div class="col-md-6">
-              <label class="form-label required">Costo Unitario (PEN)</label>
-              <input type="number" step="0.01" class="form-control" [(ngModel)]="form.costoUnitario" name="costoUnitario" min="0.01" required>
-            </div>
+
 
             <!-- Observación -->
             <div class="col-12">

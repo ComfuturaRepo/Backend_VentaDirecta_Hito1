@@ -52,18 +52,7 @@ export class OrdenCompraService {
       );
   }
 
-  // Eliminar orden de compra
-  eliminar(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`)
-      .pipe(
-        catchError(this.handleError)
-      );
-  }
 
-  // Opcional: calcular total en frontend (si no lo hace el backend)
-  calcularTotal(cantidad: number, costoUnitario: number): number {
-    return cantidad * costoUnitario;
-  }
 
   // Manejo básico de errores
   private handleError(error: any): Observable<never> {

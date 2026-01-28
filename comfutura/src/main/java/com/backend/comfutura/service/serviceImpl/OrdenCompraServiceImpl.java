@@ -1,4 +1,6 @@
 package com.backend.comfutura.service.serviceImpl;
+import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 import com.backend.comfutura.model.*;
 import com.backend.comfutura.repository.*;
@@ -14,10 +16,12 @@ import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import org.thymeleaf.context.Context;
+import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 
 @Service
@@ -39,16 +43,21 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     @Override
     @Transactional
     public OrdenCompraResponseDTO guardar(Integer idOc, OrdenCompraRequestDTO dto) {
-
         OrdenCompra oc;
 
+        // 1️⃣ Obtener OC existente o crear nueva
         if (idOc != null) {
             oc = ordenCompraRepository.findById(idOc)
                     .orElseThrow(() -> new RuntimeException("Orden de compra no existe"));
+            // Limpiar detalles existentes (se reemplazan)
+            if (oc.getDetalles() != null) {
+                oc.getDetalles().clear();
+            }
         } else {
             oc = new OrdenCompra();
         }
 
+        // 2️⃣ Setear datos básicos
         if (dto.getIdEstadoOc() != null) {
             EstadoOc estadoOC = estadoOCRepository.findById(dto.getIdEstadoOc())
                     .orElseThrow(() -> new RuntimeException("Estado OC no existe"));
@@ -58,15 +67,62 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
         if (dto.getIdOts() != null) oc.setIdOts(dto.getIdOts());
         if (dto.getIdProveedor() != null) oc.setIdProveedor(dto.getIdProveedor());
         if (dto.getFormaPago() != null) oc.setFormaPago(dto.getFormaPago());
-        if (dto.getSubtotal() != null) oc.setSubtotal(dto.getSubtotal());
-        if (dto.getIgvPorcentaje() != null) oc.setIgvPorcentaje(dto.getIgvPorcentaje());
-        if (dto.getIgvTotal() != null) oc.setIgvTotal(dto.getIgvTotal());
-        if (dto.getTotal() != null) oc.setTotal(dto.getTotal());
         if (dto.getFechaOc() != null) oc.setFechaOc(dto.getFechaOc());
         if (dto.getObservacion() != null) oc.setObservacion(dto.getObservacion());
 
+        // 3️⃣ Guardar OC primero (necesario para cascade con detalles)
+        oc = ordenCompraRepository.save(oc);
+        final OrdenCompra ocFinal = oc; // variable final para usar en lambda
+
+        // 4️⃣ Manejar detalles si vienen
+        AtomicReference<BigDecimal> subtotalRef = new AtomicReference<>(BigDecimal.ZERO); // subtotal total
+
+        if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {
+            List<OcDetalle> detalles = dto.getDetalles().stream().map(d -> {
+                OcDetalle detalle = new OcDetalle();
+                detalle.setIdMaestro(d.getIdMaestro());
+                detalle.setCantidad(d.getCantidad());
+                detalle.setPrecioUnitario(d.getPrecioUnitario());
+
+                // subtotal por detalle
+                BigDecimal sub = d.getPrecioUnitario().multiply(d.getCantidad());
+                detalle.setSubtotal(sub);
+
+                // actualizar subtotal total
+                subtotalRef.updateAndGet(current -> current.add(sub));
+
+                detalle.setOrdenCompra(ocFinal); // relacionar con OC
+                return detalle;
+            }).collect(Collectors.toList());
+
+            // inicializar lista de detalles si es null
+            if (oc.getDetalles() == null) {
+                oc.setDetalles(new ArrayList<>());
+            }
+
+            oc.getDetalles().addAll(detalles);
+
+            // Guardar todos los detalles
+            ordenCompraRepository.save(oc); // gracias a CascadeType.ALL
+        }
+
+        // 5️⃣ Calcular totales de OC
+        BigDecimal subtotalOc = subtotalRef.get();
+
+        BigDecimal igvPorcentaje = dto.getIgvPorcentaje() != null ? dto.getIgvPorcentaje() : BigDecimal.ZERO;
+        BigDecimal igvTotal = dto.getAplicarIgv() != null && dto.getAplicarIgv()
+                ? subtotalOc.multiply(igvPorcentaje).divide(BigDecimal.valueOf(100))
+                : BigDecimal.ZERO;
+
+        oc.setSubtotal(subtotalOc);
+        oc.setIgvPorcentaje(igvPorcentaje);
+        oc.setIgvTotal(igvTotal);
+        oc.setTotal(subtotalOc.add(igvTotal));
+
+        // Guardar OC final con totales
         OrdenCompra guardado = ordenCompraRepository.save(oc);
-        return mapToResponse(guardado);
+
+        return mapToResponseCompleto(guardado);
     }
 
     /* =====================================================

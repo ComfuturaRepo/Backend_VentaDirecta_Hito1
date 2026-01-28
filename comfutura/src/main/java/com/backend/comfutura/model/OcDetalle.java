@@ -38,6 +38,6 @@ public class OcDetalle {
     private BigDecimal precioUnitario;
 
     private BigDecimal subtotal;
-    private BigDecimal igv;
+    private BigDecimal igv;//booleam
     private BigDecimal total;
 }

@@ -49,46 +49,70 @@
       <table class="table table-hover table-striped align-middle mb-0">
         <thead class="table-dark">
           <tr>
-            <th>ID</th>
-            <th>OT / Descripción</th>
-            <th>Material</th>
-            <th>Proveedor</th>
-            <th>Estado</th>
-            <th class="text-end">Cant.</th>
-            <th class="text-end">C. Unit.</th>
-            <th class="text-end">Total</th>
-            <th>Fecha</th>
-            <th>Acciones</th>
+              <th>ID</th>
+              <th>OT / Descripción</th>
+              <th>Proveedor</th>
+              <th>Estado</th>
+              <th>formaPago</th>
+              <th>subtotal</th>
+              <th>igv%</th>
+              <th>igvTotal</th>
+              <th>TOTAL</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let oc of filteredOrdenes">
-            <td class="fw-bold">{{oc.idOc}}</td>
-            <td class="text-truncate" style="max-width: 240px;" [title]="oc.otsNombre">{{oc.otsNombre}}</td>
-            <td>{{oc.maestroCodigo}}</td>
-            <td>{{oc.proveedorNombre}}</td>
-            <td>
-              <span class="badge rounded-pill px-3 py-2" [ngClass]="getEstadoClass(oc.estadoOcNombre)">
-                {{oc.estadoOcNombre}}
-              </span>
-            </td>
-            <td class="text-end">{{oc.cantidad | number:'1.0-0'}}</td>
-            <td class="text-end">{{oc.costoUnitario | currency:'PEN ':'symbol':'1.2-2'}}</td>
-            <td class="text-end fw-bold">{{getTotal(oc) | currency:'PEN ':'symbol':'1.2-2'}}</td>
-            <td>{{oc.fechaOc | date:'dd/MM/yyyy HH:mm'}}</td>
-            <td>
-              <div class="btn-group btn-group-sm">
-                <button class="btn btn-outline-info"    (click)="verDetalle(oc)"    title="Ver detalle"><i class="bi bi-eye"></i></button>
-                <button class="btn btn-outline-primary" (click)="editarOrden(oc)"   title="Editar"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-outline-warning" (click)="toggleEstado(oc)"  title="Cambiar estado"><i class="bi bi-arrow-left-right"></i></button>
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="filteredOrdenes.length === 0">
-            <td colspan="10" class="text-center py-5 text-muted">
-              No se encontraron órdenes de compra
-            </td>
-          </tr>
+        <!-- ID OC -->
+      <td class="fw-bold">{{oc.idOc}}</td>
+         <!-- OT / Descripción -->
+          <td class="text-truncate" style="max-width: 240px;" [title]="oc.ot">
+            {{ oc.ot }}  <!-- muestra el código / descripción de la OT -->
+          </td>
+
+
+        <!-- Proveedor -->
+         <td>{{oc.idProveedor}}</td>
+           <!-- Estado -->
+          <td>
+            <span class="badge rounded-pill px-3 py-2" [ngClass]="getEstadoClass(oc.estadoNombre)">
+              {{ oc.estadoNombre }}
+            </span>
+          </td>
+          <!-- forma de pago -->
+          <td>{{oc.formaPago}}</td>
+        <!-- forma de pago -->
+                  <td>{{oc.subtotal}}</td>
+
+                  <!-- igv% -->
+                  <td>{{oc.igvPorcentaje}}</td>
+                      <!-- igv% -->
+                  <td>{{oc.igvTotal}}</td>
+                    <!-- total -->
+                <td>{{oc.total}}</td>
+      <td>{{ oc.fechaOc | date:'dd/MM/yyyy HH:mm' }}</td>
+
+      <td>
+        <div class="btn-group btn-group-sm">
+          <button class="btn btn-outline-info" (click)="verDetalle(oc)" title="Ver detalle">
+            <i class="bi bi-eye"></i>
+          </button>
+          <button class="btn btn-outline-primary" (click)="editarOrden(oc)" title="Editar">
+            <i class="bi bi-pencil"></i>
+          </button>
+          <button class="btn btn-outline-warning" (click)="toggleEstado(oc)" title="Cambiar estado">
+            <i class="bi bi-arrow-left-right"></i>
+          </button>
+        </div>
+      </td>
+    </tr>
+
+    <tr *ngIf="filteredOrdenes.length === 0">
+      <td colspan="9" class="text-center py-5 text-muted">
+        No se encontraron órdenes de compra
+      </td>
+    </tr>
         </tbody>
       </table>
     </div>
@@ -107,7 +131,7 @@
     </div>
   </div>
 
-  <!-- Modal Formulario -->
+  <!-- Modal Formulario-->
   <app-form-orden-compra-component
     *ngIf="showFormModal"
     [ocToEdit]="selectedOc"
