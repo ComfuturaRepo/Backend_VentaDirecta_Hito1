@@ -19,7 +19,9 @@ export class OrdenCompraComponent implements OnInit {
   pageData: PageOrdenCompra | null = null;
   ordenes: OrdenCompraResponse[] = [];
   filteredOrdenes: OrdenCompraResponse[] = [];
-
+// Dentro de OrdenCompraComponent
+selectedDetalles: OcDetalleResponse[] = []; // detalles cargados
+showDetallesModal: boolean = false;        // controla modal
   searchTerm: string = '';
   currentPage: number = 0;
   pageSize: number = 10;
@@ -90,23 +92,26 @@ export class OrdenCompraComponent implements OnInit {
   //            Acciones de la tabla
   // ──────────────────────────────────────────────
 
-  verDetalle(oc: OrdenCompraResponse): void {
-    Swal.fire({
-      title: `Orden #${oc.idOc}`,
-      html: `
-        <div class="text-start">
-          <p><strong>OT:</strong> ${oc.ot}</p>
-          <p><strong>Proveedor:</strong> ${oc.proveedorNombre}</p>
-          <p><strong>Estado:</strong> ${oc.estadoNombre}</p>
-          <p><strong>Fecha:</strong> ${new Date(oc.fechaOc).toLocaleString('es-PE')}</p>
+          verDetalle(oc: OrdenCompraResponse): void {
+        this.isLoading = true;
+        this.detalleOcSeleccionada = oc;
 
-          ${oc.observacion ? `<p><strong>Observación:</strong> ${oc.observacion}</p>` : ''}
-        </div>
-      `,
-      icon: 'info',
-      confirmButtonText: 'Cerrar'
-    });
-  }
+        this.ordenService.obtenerDetallesPorOc(oc.idOc).subscribe({
+          next: (detalles) => {
+            this.detallesOc = detalles;
+            this.showDetalleModal = true; // abre el modal
+            this.isLoading = false;
+          },
+          error: (err) => {
+            this.isLoading = false;
+            Swal.fire('Error', 'No se pudieron cargar los detalles', 'error');
+          }
+        });
+      }
+// Para el modal de detalles
+showDetalleModal: boolean = false;
+detalleOcSeleccionada: OrdenCompraResponse | null = null;
+detallesOc: OcDetalleResponse[] = [];
 
   editarOrden(oc: OrdenCompraResponse): void {
     this.selectedOc = { ...oc }; // copia para editar

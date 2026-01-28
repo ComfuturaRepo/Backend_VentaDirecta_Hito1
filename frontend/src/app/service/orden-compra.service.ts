@@ -5,7 +5,7 @@ import { Observable, throwError } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 
 import { environment } from '../../environment';
-import { OrdenCompraRequest, OrdenCompraResponse, PageOrdenCompra } from '../model/orden-compra.model';
+import { OcDetalleResponse, OrdenCompraRequest, OrdenCompraResponse, PageOrdenCompra } from '../model/orden-compra.model';
 
 @Injectable({
   providedIn: 'root'
@@ -52,7 +52,11 @@ export class OrdenCompraService {
       );
   }
 
-
+ // ───────────────────────────────
+  // NUEVO: obtener detalles de una OC
+  obtenerDetallesPorOc(idOc: number): Observable<OcDetalleResponse[]> {
+    return this.http.get<OcDetalleResponse[]>(`${this.apiUrl}/${idOc}/detalles`);
+  }
 
   // Manejo básico de errores
   private handleError(error: any): Observable<never> {

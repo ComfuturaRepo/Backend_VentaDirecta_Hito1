@@ -10,6 +10,8 @@ export interface OcDetalleRequest {
   subtotal: number;
   igv: number;
   total: number;
+    tipo?: 'MATERIAL' | 'SERVICIO'; // <-- NUEVO CAMPO
+
 }
 
 

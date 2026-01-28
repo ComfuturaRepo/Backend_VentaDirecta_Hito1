@@ -95,9 +95,10 @@
 
       <td>
         <div class="btn-group btn-group-sm">
-          <button class="btn btn-outline-info" (click)="verDetalle(oc)" title="Ver detalle">
-            <i class="bi bi-eye"></i>
-          </button>
+        <button class="btn btn-outline-info" (click)="verDetalle(oc)" title="Ver detalle">
+          <i class="bi bi-eye"></i>
+        </button>
+
           <button class="btn btn-outline-primary" (click)="editarOrden(oc)" title="Editar">
             <i class="bi bi-pencil"></i>
           </button>
@@ -130,6 +131,42 @@
       </nav>
     </div>
   </div>
+<!-- Modal Detalles -->
+<div class="modal fade show" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);" *ngIf="showDetalleModal">
+  <div class="modal-dialog modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Detalles Orden #{{detalleOcSeleccionada?.idOc}}</h5>
+        <button type="button" class="btn-close" (click)="showDetalleModal=false"></button>
+      </div>
+      <div class="modal-body">
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr>
+              <th>Material/Servicio</th>
+              <th class="text-end">Cantidad</th>
+              <th class="text-end">Precio Unit.</th>
+              <th class="text-end">Total</th>
+              <th>Observación</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let d of detallesOc">
+              <td>{{d.idDetalle}}</td>
+              <td class="text-end">{{d.cantidad}}</td>
+              <td class="text-end">{{d.precioUnitario | currency:'PEN':'symbol':'1.2-2'}}</td>
+              <td class="text-end">{{d.total | currency:'PEN':'symbol':'1.2-2'}}</td>
+              <td>{{d.observacion}}</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" (click)="showDetalleModal=false">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
 
   <!-- Modal Formulario-->
   <app-form-orden-compra-component
