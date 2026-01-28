@@ -498,15 +498,20 @@ INSERT INTO proveedor (ruc, razon_social, contacto, telefono, correo, id_banco, 
 
 INSERT INTO proyecto (nombre) VALUES
                                   ('ADECUACION'),
+                                  ('ADMIN'),
                                   ('AMPLIACION DE POTENCIA'),
                                   ('DENSIFICACION'),
+                                  ('EXPEDIENTE ELECTRICO'),
                                   ('DESMONTAJE'),
                                   ('EXPANSION'),
                                   ('IDEOS'),
                                   ('LIMPIEZA 3.5'),
                                   ('MANTENIMIENTO'),
+                                  ('CRA'),
+                                  ('REUBICACION'),
                                   ('OVERLAP'),
                                   ('RANCO'),
+                                  ('Autonomia'),
                                   ('ROLL OUT'),
                                   ('ARELLANO'),
                                   ('TRONCAL');
@@ -526,11 +531,14 @@ INSERT INTO fase (nombre, orden) VALUES
                                      ('10', 100);
 
 INSERT INTO site (codigo_sitio, descripcion) VALUES
+                                                 ('COMFUTURA', 'ARELLANO'),
+                                                 ('COMFUTURA', 'COMFUTURA'),
+                                                 ('COMFUTURA', 'ADMIN'),
                                                  ('LI0625', 'VOLVO'),
+                                                 (NULL, 'MODEM COMFUTURA'),
                                                  ('TJ1435', 'NAT_EL_HUARANCHAL'),
                                                  ('TL2410', 'AULAS _USS'),
                                                  ('TL0590', 'NAT_PARQUE_SANTIAGO'),
-                                                 ('COMFUTURA', 'COMFUTURA'),
                                                  ('TL5949', 'NAT_CASA_BLANCA_TUMAN'),
                                                  ('TL6477', 'NAT_AV_LAS_FLORES'),
                                                  ('TP0332', 'NAT_JR_D_MAITE'),
@@ -552,6 +560,8 @@ INSERT INTO site (codigo_sitio, descripcion) VALUES
                                                  ('TL5993', 'NAT_LLAMPAYEC'),
                                                  ('TL5949', 'NAT_LA_HACIENDA'),
                                                  ('LI4108', 'NAT_HUALCARA'),
+                                                 (NULL, 'NAT_LAURA CALLER'),
+                                                 (NULL, 'NAT_TORRE BLANCA'),
                                                  ('0133994', 'AN_Chimbote_Centro_2'),
                                                  ('0134198', 'LM_Ferretero_Paruro'),
                                                  ('0130849', 'IC_Entel_Ica'),
@@ -573,7 +583,9 @@ INSERT INTO site (codigo_sitio, descripcion) VALUES
                                                  ('LI3299', 'RESIDENCIAL VENTANILLA'),
                                                  ('LA2829', 'NAT GLORIETA'),
                                                  ('LA2826', 'NAT JOSE OLAYA 2'),
+                                                 ('-', 'NAT_ACHINAMIZA'),
                                                  ('LJ4222', 'NAT_FRANCISCO_CARLE'),
+                                                 ('-', 'BAJO MARIANKIARI'),
                                                  ('0135322', 'LM_Parque_Los_Pozos'),
                                                  ('0130280', 'LM_Villa_San_Roque'),
                                                  ('0133641', 'HU_Ccochaccasa'),
@@ -584,6 +596,10 @@ INSERT INTO site (codigo_sitio, descripcion) VALUES
                                                  ('0134312', 'LI_Salaverry_Plaza'),
                                                  ('0105840', 'LM_Hacienda_San_Juan'),
                                                  ('0100144', 'LM_Pamplona'),
+                                                 (NULL, 'NODO OVERLAP PRECO LMSC026-S'),
+                                                 (NULL, 'NODO OVERLAP PRECO LMSC018-S'),
+                                                 (NULL, 'NODO OVERLAP PRECO LMSC021-S'),
+                                                 (NULL, 'NODO OVERLAP PRECO LMSC035-S'),
                                                  ('0134301', 'LM_PS_Hiraoka'),
                                                  ('0134302', 'LM_PS_UCV_SJL'),
                                                  ('0135081', 'LM_PS_Dona_Marcela'),
@@ -605,7 +621,10 @@ INSERT INTO site (codigo_sitio, descripcion) VALUES
                                                  ('0133695', 'CS_Cusco_Antonio'),
                                                  ('013251509', 'LM_PS_Brigada_Especial_R1'),
                                                  ('013250668', 'LM_PS_Fronteras_Unidas'),
-                                                 ('LI0692', 'NAT_POLVORITA');
+                                                 ('LI0692', 'NAT_POLVORITA'),
+                                                 (NULL, 'NAT CONDORCANQUI VENT'),
+                                                 (NULL, 'NAT CUMBRE VENT'),
+                                                 (NULL, 'NAT LOS MAESTROS');
 
 -- 25 Regiones del Perú (24 departamentos + Provincia Constitucional del Callao)
 INSERT INTO region (nombre) VALUES
@@ -620,7 +639,7 @@ INSERT INTO region (nombre) VALUES
                                 ('Huancavelica'),
                                 ('Huánuco'),
                                 ('Ica'),
-                                ('Junín'),
+                                ('Junin'),
                                 ('La Libertad'),
                                 ('Lambayeque'),
                                 ('Lima'),  -- Departamento de Lima (no incluye la provincia de Lima)
@@ -698,7 +717,7 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'CW'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISORA DE OBRAS CIVILES')),
 
-                                                                                                                 ('CROSHBI', 'BRICEÑO MARAVI', '41589951', '993903920', 'cbriceno@comfutura.com',
+                                                                                                                 ('CROSBY', 'BRICEÑO MARAVI', '41589951', '993903920', 'cbriceno@comfutura.com',
                                                                                                                   (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'COMERCIAL'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'GERENTE DE CUENTA COMERCIAL')),
@@ -813,7 +832,7 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'LOGÍSTICA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'ASISTENTE LOGISTICO')),
 
-                                                                                                                 ('OLIVIER ANTONIO', 'MASIAS LAGOS', '40264069', '993585214', 'omasias@comfutura.com',
+                                                                                                                 ('OLIVER ANTONIO', 'MASIAS LAGOS', '40264069', '993585214', 'omasias@comfutura.com',
                                                                                                                   (SELECT id_empresa FROM empresa WHERE nombre = 'COMFUTURA'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'GERENCIA GENERAL'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'GERENTE')),
@@ -913,7 +932,7 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISOR DE ENERGIA')),
 
-                                                                                                                 ('JOHN DENNIS', 'SANCHEZ ALTAMIRANO', '17635270', '961715063', 'jsanchez@comfutura.com',
+                                                                                                                 ('JHON DENNIS', 'SANCHEZ ALTAMIRANO', '17635270', '961715063', 'jsanchez@comfutura.com',
                                                                                                                   (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'TI'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'PROJECT MANAGER')),

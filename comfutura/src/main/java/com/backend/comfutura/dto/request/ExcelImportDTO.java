@@ -12,28 +12,28 @@ public class ExcelImportDTO {
     // Generado automáticamente al importar
     private Integer ot;
 
-    // Campos de Excel (según tu especificación)
-    private LocalDate fechaApertura;           // Obligatorio
-    private String cliente;                    // Obligatorio
-    private String descripcion;                    // Obligatorio
-    private String area;                       // Obligatorio
-    private String proyecto;                   // Obligatorio
-    private String fase;                       // Obligatorio
-    private String site;                       // Obligatorio
-    private String siteDescripcion;                       // Obligatorio
-    private String region;                     // Obligatorio
-    private String estado = "ASIGNACION";      // Obligatorio, siempre ASIGNACION
+    // Temporal para guardar el request validado (necesario según el servicio)
+    private OtCreateRequest tempRequest;
 
-    private Integer otAnterior;                // Opcional
+    // Campos de Excel (según tu plantilla)
+    private LocalDate fechaApertura;           // Obligatorio - columna 0
+    private String cliente;                    // Obligatorio - columna 1
+    private String area;                       // Obligatorio - columna 2
+    private String proyecto;                   // Obligatorio - columna 3
+    private String fase;                       // Obligatorio - columna 4
+    private String site;                       // Obligatorio - columna 5
+    private String region;                     // Obligatorio - columna 6
+    private String estado = "ASIGNACION";      // Obligatorio, siempre ASIGNACION - columna 7
+    private Integer otAnterior;                // Opcional - columna 8
 
-    // Responsables (todos obligatorios según tu comentario)
-    private String JefaturaClienteSolicitante;    // Obligatorio
-    private String AnalistaClienteSolicitante;    // Obligatorio
-    private String CoordinadorTiCw;               // Obligatorio
-    private String JefaturaResponsable;           // Obligatorio
-    private String Liquidador;                    // Obligatorio
-    private String Ejecutante;                    // Obligatorio
-    private String AnalistaContable;              // Obligatorio
+    // Responsables - columna 9-15
+    private String jefaturaClienteSolicitante;    // Obligatorio - columna 9
+    private String analistaClienteSolicitante;    // Obligatorio - columna 10
+    private String coordinadorTiCw;               // Obligatorio - columna 11
+    private String jefaturaResponsable;           // Obligatorio - columna 12
+    private String liquidador;                    // Obligatorio - columna 13
+    private String ejecutante;                    // Obligatorio - columna 14
+    private String analistaContable;              // Obligatorio - columna 15
 
     // Getters y Setters generados automáticamente por @Data
 }

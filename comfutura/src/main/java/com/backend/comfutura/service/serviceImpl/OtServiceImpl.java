@@ -303,15 +303,35 @@ public class OtServiceImpl implements OtService {
 
     @Override
     public Integer getUltimoOtCorrelativo() {
+        try {
+            int anioActual = LocalDate.now().getYear();
 
-        int anioActual = LocalDate.now().getYear();
+            // Opción A: Por rango numérico
+            int inicio = anioActual * 10000;       // 20250000
+            int fin    = anioActual * 10000 + 9999; // 20259999
 
-        int inicio = anioActual * 10000;       // 20260000
-        int fin    = anioActual * 10000 + 9999; // 20269999
+            Optional<Integer> ultimoOt = otsRepository.findMaxOtInRange(inicio, fin);
 
-        return otsRepository.findUltimaOtDelAnio(inicio, fin)
-                .map(Ots::getOt)
-                .orElse(null);
+            if (ultimoOt.isPresent()) {
+                return ultimoOt.get();
+            }
+
+            // Opción B: Por año de fecha (alternativa)
+            Optional<Integer> ultimoPorFecha = otsRepository.findMaxOtByYear(anioActual);
+            if (ultimoPorFecha.isPresent()) {
+                return ultimoPorFecha.get();
+            }
+
+            // Si no hay OTs para el año actual, generar número base
+            Integer nuevoOt = inicio + 1; // 20250001
+            return nuevoOt;
+
+        } catch (Exception e) {
+
+            // Valor por defecto seguro
+            int anioActual = LocalDate.now().getYear();
+            return (anioActual * 10000) + 1;
+        }
     }
 
 
