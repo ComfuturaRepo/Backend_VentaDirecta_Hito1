@@ -4,7 +4,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { OrdenCompraService } from '../../service/orden-compra.service'; // ajusta ruta
-import { OrdenCompraResponse, PageOrdenCompra } from '../../model/orden-compra.model';
+import { OcDetalleResponse, OrdenCompraRequest, OrdenCompraResponse, PageOrdenCompra } from '../../model/orden-compra.model';
 import { FormOrdenCompraComponent } from "./form-orden-compra-component/form-orden-compra-component"; // ajusta ruta
 
 @Component({
@@ -60,21 +60,21 @@ export class OrdenCompraComponent implements OnInit {
     });
   }
 
-  aplicarFiltro(): void {
-    const term = this.searchTerm.trim().toLowerCase();
-    if (!term) {
-      this.filteredOrdenes = [...this.ordenes];
-      return;
-    }
-
-    this.filteredOrdenes = this.ordenes.filter(oc =>
-      oc.otsNombre.toLowerCase().includes(term) ||
-      oc.proveedorNombre.toLowerCase().includes(term) ||
-      oc.maestroCodigo.toLowerCase().includes(term) ||
-      oc.estadoOcNombre.toLowerCase().includes(term) ||
-      (oc.observacion?.toLowerCase().includes(term) ?? false)
-    );
+ aplicarFiltro(): void {
+  const term = this.searchTerm.trim().toLowerCase();
+  if (!term) {
+    this.filteredOrdenes = [...this.ordenes];
+    return;
   }
+
+  this.filteredOrdenes = this.ordenes.filter(oc =>
+    oc.ot.toString().toLowerCase().includes(term) ||           // número a string
+    oc.proveedorNombre?.toLowerCase().includes(term) ||
+    oc.estadoNombre?.toLowerCase().includes(term) ||
+    (oc.observacion?.toLowerCase().includes(term) ?? false)
+  );
+}
+
 
   onSearchChange(): void {
     this.aplicarFiltro();
@@ -95,14 +95,11 @@ export class OrdenCompraComponent implements OnInit {
       title: `Orden #${oc.idOc}`,
       html: `
         <div class="text-start">
-          <p><strong>OT:</strong> ${oc.otsNombre}</p>
-          <p><strong>Material:</strong> ${oc.maestroCodigo}</p>
+          <p><strong>OT:</strong> ${oc.ot}</p>
           <p><strong>Proveedor:</strong> ${oc.proveedorNombre}</p>
-          <p><strong>Estado:</strong> ${oc.estadoOcNombre}</p>
-          <p><strong>Cantidad:</strong> ${oc.cantidad}</p>
-          <p><strong>Costo unit.:</strong> ${oc.costoUnitario.toLocaleString('es-PE', { style: 'currency', currency: 'PEN' })}</p>
-          <p><strong>Total:</strong> ${(oc.cantidad * oc.costoUnitario).toLocaleString('es-PE', { style: 'currency', currency: 'PEN' })}</p>
+          <p><strong>Estado:</strong> ${oc.estadoNombre}</p>
           <p><strong>Fecha:</strong> ${new Date(oc.fechaOc).toLocaleString('es-PE')}</p>
+
           ${oc.observacion ? `<p><strong>Observación:</strong> ${oc.observacion}</p>` : ''}
         </div>
       `,
@@ -127,11 +124,11 @@ export class OrdenCompraComponent implements OnInit {
       'ANULADA': 'PENDIENTE'
     };
 
-    const nuevoEstadoNombre = nuevosEstadosPosibles[oc.estadoOcNombre as keyof typeof nuevosEstadosPosibles] || 'PENDIENTE';
+    const nuevoEstadoNombre = nuevosEstadosPosibles[oc.estadoNombre as keyof typeof nuevosEstadosPosibles] || 'PENDIENTE';
 
     Swal.fire({
       title: '¿Cambiar estado?',
-      text: `Pasar de "${oc.estadoOcNombre}" → "${nuevoEstadoNombre}"?`,
+      text: `Pasar de "${oc.estadoNombre}" → "${nuevoEstadoNombre}"?`,
       icon: 'question',
       showCancelButton: true,
       confirmButtonColor: '#3085d6',
@@ -141,15 +138,27 @@ export class OrdenCompraComponent implements OnInit {
       if (result.isConfirmed) {
         // Aquí deberías tener un endpoint o lógica para cambiar solo estado
         // Por simplicidad, suponemos que actualizamos todo el objeto (o crea método específico)
-        const request = {
-          estadoOcId: this.mapEstadoNombreToId(nuevoEstadoNombre), // necesitas implementar este mapeo
-          otsId: oc.idOc, // ← ojo: probablemente no es correcto, ajusta según modelo real
-          maestroId: 0,   // ← faltan datos reales → idealmente recargar o tenerlos
-          proveedorId: 0,
-          cantidad: oc.cantidad,
-          costoUnitario: oc.costoUnitario,
-          observacion: oc.observacion
-        };
+                  const request:  OrdenCompraRequest = {
+              idEstadoOc: this.mapEstadoNombreToId(nuevoEstadoNombre),
+              idOts: oc.idOts,               // correcto, no uses oc.idOc
+              idProveedor: oc.idProveedor,   // agrega proveedor real
+              formaPago: oc.formaPago ?? '', // si existe
+              subtotal: oc.subtotal ?? 0,
+              igvPorcentaje: oc.igvPorcentaje ?? 0,
+              igvTotal: oc.igvTotal ?? 0,
+              total: oc.total ?? 0,
+              fechaOc: oc.fechaOc ?? new Date().toISOString(),
+              observacion: oc.observacion ?? '',
+              detalles: oc.detalles?.map(d => ({
+                idProducto: d.idProducto,
+                cantidad: d.cantidad,
+                precioUnitario: d.precioUnitario,
+                total: d.total,
+                observacion: d.observacion
+              })) ?? [],
+              aplicarIgv: true // o según tu lógica
+            };
+
 
         this.ordenService.actualizar(oc.idOc, request).subscribe({
           next: () => {
@@ -215,7 +224,21 @@ export class OrdenCompraComponent implements OnInit {
     return map[estado] || 'bg-secondary';
   }
 
-  getTotal(oc: OrdenCompraResponse): number {
-    return oc.cantidad * oc.costoUnitario;
-  }
+getTotal(oc: OrdenCompraResponse): number {
+  // suma de cantidad * precioUnitario de cada detalle
+  return oc.detalles?.reduce(
+    (sum, d) => sum + ((d.cantidad ?? 0) * (d.precioUnitario ?? 0)),
+    0
+  ) ?? 0;
+}
+getCantidadTotal(oc: OrdenCompraResponse): number {
+  if (!oc.detalles) return 0;
+  return oc.detalles.reduce((sum, d) => sum + (d.cantidad ?? 0), 0);
+}
+
+getTotalDetalle(oc: OrdenCompraResponse): number {
+  if (!oc.detalles) return 0;
+  return oc.detalles.reduce((sum, d) => sum + ((d.cantidad ?? 0) * (d.precioUnitario ?? 0)), 0);
+}
+
 }

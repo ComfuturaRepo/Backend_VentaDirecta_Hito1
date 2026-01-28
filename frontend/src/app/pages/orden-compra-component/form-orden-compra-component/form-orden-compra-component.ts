@@ -87,14 +87,24 @@ export class FormOrdenCompraComponent implements OnInit, OnChanges {
 
   private aplicarValoresEdicion(): void {
     if (this.isEdit && this.ocToEdit) {
-      this.form = {
-        estadoOcId:   this.ocToEdit.estadoOcId   ?? 1,
-        otsId:        this.ocToEdit.otsId        ?? 0,
-        maestroId:    this.ocToEdit.maestroId    ?? 0,
-        proveedorId:  this.ocToEdit.proveedorId  ?? 0,
-        cantidad:     this.ocToEdit.cantidad     ?? 0,
-        costoUnitario: this.ocToEdit.costoUnitario ?? 0,
-        observacion:  this.ocToEdit.observacion  || ''
+     this.form = {
+      idEstadoOc: this.ocToEdit.idEstadoOc ?? 1,
+      idOts: this.ocToEdit.idOts ?? 0,
+      idProveedor: this.ocToEdit.idProveedor ?? 0,
+      formaPago: this.ocToEdit.formaPago ?? '',
+      subtotal: this.ocToEdit.subtotal ?? 0,
+      igvPorcentaje: this.ocToEdit.igvPorcentaje ?? 0,
+      igvTotal: this.ocToEdit.igvTotal ?? 0,
+      total: this.ocToEdit.total ?? 0,
+      fechaOc: this.ocToEdit.fechaOc ?? new Date().toISOString(),
+      observacion: this.ocToEdit.observacion || '',
+      detalles: this.ocToEdit.detalles?.map(d => ({
+        idProducto: d.idProducto,
+        cantidad: d.cantidad,
+        precioUnitario: d.precioUnitario,
+        total: d.total,
+        observacion: d.observacion})) ?? [],
+      aplicarIgv: true
       };
     } else {
       this.form = this.getDefaultForm();
@@ -102,28 +112,24 @@ export class FormOrdenCompraComponent implements OnInit, OnChanges {
   }
 
   private getDefaultForm(): OrdenCompraRequest {
-    return {
-      estadoOcId: 1,
-      otsId: 0,
-      maestroId: 0,
-      proveedorId: 0,
-      cantidad: 0,
-      costoUnitario: 0,
-      observacion: ''
-    };
+  return {
+    idEstadoOc: 1,
+    idOts: 0,
+    idProveedor: 0,
+    formaPago: '',
+    subtotal: 0,
+    igvPorcentaje: 0,
+    igvTotal: 0,
+    total: 0,
+    fechaOc: new Date().toISOString(),
+    observacion: '',
+    detalles: [],
+    aplicarIgv: true
+  };
   }
 
   guardar(): void {
-    if (this.formOrden.invalid) {
-      this.formOrden.control.markAllAsTouched();
-      Swal.fire('Atención', 'Complete todos los campos requeridos correctamente', 'warning');
-      return;
-    }
 
-    if (this.form.cantidad <= 0 || this.form.costoUnitario <= 0) {
-      Swal.fire('Atención', 'Cantidad y costo unitario deben ser mayores a 0', 'warning');
-      return;
-    }
 
     this.isSubmitting = true;
 

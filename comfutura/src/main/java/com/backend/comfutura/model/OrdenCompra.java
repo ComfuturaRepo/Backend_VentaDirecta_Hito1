@@ -33,7 +33,7 @@ public class OrdenCompra {
     @Column(name = "id_ots", nullable = false)
     private Integer idOts;
 
-    @Column(name = "id_proveedor", nullable = false)
+    @Column(name = "id_proveedor")
     private Integer idProveedor;
 
     @Column(name = "forma_pago", length = 50)
