@@ -94,21 +94,21 @@ showDetallesModal: boolean = false;        // controla modal
 
 detalles: OcDetalleResponse[] = [];
 
-verDetalle(oc: OrdenCompraResponse): void {
-  console.log('CLICK DETALLE', oc.idOc);
-
-  this.ordenService.obtenerDetallesPorOc(oc.idOc).subscribe({
-    next: (resp) => {
-      console.log('DETALLES RECIBIDOS', resp);
-
-      this.detalles = resp.content; // 🔥 SOLO EL ARRAY
-      this.mostrarModalDetalle();
-    },
-    error: () => {
-      Swal.fire('Error', 'No se pudieron cargar los detalles', 'error');
-    }
-  });
-}
+//verDetalle(oc: OrdenCompraResponse): void {
+//  console.log('CLICK DETALLE', oc.idOc);
+//
+ // this.ordenService.obtenerDetallesPorOc(oc.idOc).subscribe({
+  //  next: (resp) => {
+   //   console.log('DETALLES RECIBIDOS', resp);
+//
+ //     this.detalles = resp.content; // 🔥 SOLO EL ARRAY
+  //    this.mostrarModalDetalle();
+   // },
+    //error: () => {
+     // Swal.fire('Error', 'No se pudieron cargar los detalles', 'error');
+   // }
+  //});
+//}
 
 
 mostrarModalDetalle(): void {
