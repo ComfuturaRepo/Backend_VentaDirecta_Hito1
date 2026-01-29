@@ -48,7 +48,7 @@ public class DropdownServiceImpl implements DropdownService {
     public List<DropdownDTO> getAreas() {
         return areaRepository.findByActivoTrueOrderByNombreAsc()
                 .stream()
-                .map(a -> new DropdownDTO(a.getIdArea(), a.getNombre()))
+                .map(a -> new DropdownDTO(a.getIdArea(), a.getNombre() ,null,a.getActivo()))
                 .collect(Collectors.toList());
     }
     @Override
@@ -100,7 +100,8 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(e -> new DropdownDTO(
                         e.getId(),
                         e.getCodigo(),
-                        e.getNombre()
+                        e.getNombre(),
+                        null
                 ))
                 .collect(Collectors.toList());    }
 
@@ -118,7 +119,8 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(s -> new DropdownDTO(
                         s.getIdSite(),           // id sigue siendo útil
                         s.getDescripcion(),      // value = descripción (lo que se guarda/selecciona)
-                        s.getDescripcion()       // label = descripción (lo que ve el usuario)
+                        s.getDescripcion(),       // label = descripción (lo que ve el usuario)
+                        null
                 ))
                 .collect(Collectors.toList());
     }
@@ -176,7 +178,7 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(s -> new DropdownDTO(
                         s.getIdSite(),
                         s.getCodigoSitio() ,
-                        s.getDescripcion()
+                        s.getDescripcion(),null
                 ))
                 .collect(Collectors.toList());
     }

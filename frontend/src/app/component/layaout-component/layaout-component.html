@@ -78,6 +78,16 @@
             <span class="menu-label" *ngIf="!isCollapsed">Sites</span>
           </a>
         </li>
+
+        <li>
+          <a routerLink="/cliente" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Cliente</span>
+          </a>
+        </li>
+
         <li>
           <a routerLink="/trabajador" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
