@@ -1,4 +1,4 @@
-package com.backend.comfutura.dto.request;
+package com.backend.comfutura.dto.request.otDTO;
 
 import lombok.Data;
 import java.time.LocalDate;

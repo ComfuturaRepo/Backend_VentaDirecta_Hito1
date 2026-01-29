@@ -1,13 +1,12 @@
 package com.backend.comfutura.controller;
 
-import com.backend.comfutura.dto.*;
 import com.backend.comfutura.dto.Page.MessageResponseDTO;
 import com.backend.comfutura.dto.Page.PageResponseDTO;
-import com.backend.comfutura.dto.TrabajadorRequestDTO;
-import com.backend.comfutura.dto.request.TrabajadorUpdateDTO;
-import com.backend.comfutura.dto.response.TrabajadorDetailDTO;
-import com.backend.comfutura.dto.response.TrabajadorSimpleDTO;
-import com.backend.comfutura.dto.response.TrabajadorStatsDTO;
+import com.backend.comfutura.dto.request.trabajadorDTO.TrabajadorRequestDTO;
+import com.backend.comfutura.dto.request.trabajadorDTO.TrabajadorUpdateDTO;
+import com.backend.comfutura.dto.response.trabajadorDTO.TrabajadorDetailDTO;
+import com.backend.comfutura.dto.response.trabajadorDTO.TrabajadorSimpleDTO;
+import com.backend.comfutura.dto.response.trabajadorDTO.TrabajadorStatsDTO;
 import com.backend.comfutura.service.TrabajadorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

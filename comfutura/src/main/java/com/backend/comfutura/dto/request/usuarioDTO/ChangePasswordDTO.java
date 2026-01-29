@@ -1,4 +1,4 @@
-package com.backend.comfutura.dto.request;
+package com.backend.comfutura.dto.request.usuarioDTO;
 
 import lombok.Data;
 import jakarta.validation.constraints.*;

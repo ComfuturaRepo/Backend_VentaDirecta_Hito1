@@ -1,5 +1,5 @@
 // OtFullResponse.java  →  para edición (solo IDs + campos editables)
-package com.backend.comfutura.dto.response;
+package com.backend.comfutura.dto.response.otDTO;
 
 import lombok.Builder;
 import lombok.Data;

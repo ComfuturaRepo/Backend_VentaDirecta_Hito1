@@ -2,7 +2,7 @@ package com.backend.comfutura.service;
 
 import com.backend.comfutura.dto.request.ExcelImportDTO;
 import com.backend.comfutura.dto.request.ImportResultDTO;
-import com.backend.comfutura.dto.request.OtCreateRequest;
+import com.backend.comfutura.dto.request.otDTO.OtCreateRequest;
 import com.backend.comfutura.model.Site;
 import com.backend.comfutura.record.DropdownDTO;
 import com.backend.comfutura.repository.SiteRepository;
@@ -23,7 +23,6 @@ import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
