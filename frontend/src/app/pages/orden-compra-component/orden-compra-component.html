@@ -6,9 +6,7 @@
       <i class="bi bi-cart-check me-2"></i>Órdenes de Compra
     </h2>
     <div>
-      <button class="btn btn-success me-2" (click)="abrirModalCrear()">
-        <i class="bi bi-plus-lg me-1"></i>Nueva Orden
-      </button>
+     <button class="btn btn-success" (click)="abrirModalTipo()">Nueva Orden</button>
       <button class="btn btn-outline-secondary" (click)="cargarOrdenes()">
         <i class="bi bi-arrow-repeat"></i>
       </button>
@@ -136,7 +134,25 @@
         </ul>
       </nav>
     </div>
+
+
   </div>
+<!-- Modal compacto tipo Bootstrap -->
+<div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': showTipoModal}" aria-hidden="true">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Seleccione el tipo de detalle</h5>
+        <button type="button" class="btn-close" aria-label="Close" (click)="showTipoModal=false"></button>
+      </div>
+      <div class="modal-body text-center">
+        <button class="btn btn-primary m-1" (click)="abrirNuevaOrden('MATERIAL')">Material</button>
+        <button class="btn btn-success m-1" (click)="abrirNuevaOrden('SERVICIO')">Servicio</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Modal Detalles -->
 <div class="modal fade show" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);" *ngIf="showDetalleModal">
   <div class="modal-dialog modal-lg">
@@ -175,12 +191,26 @@
 </div>
 
   <!-- Modal Formulario-->
-  <app-form-orden-compra-component
-    *ngIf="showFormModal"
-    [ocToEdit]="selectedOc"
-    [isEdit]="isEditMode"
-    (onClose)="showFormModal = false"
-    (onSubmitted)="onFormSubmitted($event)">
-  </app-form-orden-compra-component>
+<app-form-orden-compra-component
+  *ngIf="showFormModal"
+  [isEdit]="isEditMode"
+  [ocToEdit]="selectedOc"
+  [tipoSeleccionado]="tipoSeleccionado"
+  (onClose)="showFormModal = false"
+  (onSubmitted)="onFormSubmitted($event)">
+</app-form-orden-compra-component>
+<!-- Paginación reutilizable -->
+
+<app-pagination
+  [currentPage]="currentPage"
+  [totalItems]="pageData?.totalElements ?? 0"
+  [totalPages]="totalPages"
+  [pageSize]="pageSize"
+  (pageChange)="irAPagina($event)"
+  (pageSizeChange)="cambiarPageSize($event)"
+  (refresh)="cargarOrdenes(currentPage)">
+</app-pagination>
+
+
 
 </div>

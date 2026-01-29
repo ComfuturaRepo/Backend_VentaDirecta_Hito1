@@ -18,7 +18,10 @@ import { DropdownItem, DropdownService } from '../../../service/dropdown.service
 })
 
 export class FormOrdenCompraComponent implements OnInit, OnChanges {
-
+@Input() tipoSeleccionado: 'MATERIAL' | 'SERVICIO' | null = null;
+get modalTitle(): string {
+  return this.tipoSeleccionado === 'SERVICIO' ? 'Nueva Orden de Servicio' : 'Nueva Orden de Material';
+}
   @Input() ocToEdit: OrdenCompraResponse | null = null;
   @Input() isEdit: boolean = false;
 
@@ -139,6 +142,7 @@ private aplicarValoresEdicion(): void {
       aplicarIgv: true
     };
   } else {
+
     this.form = this.getDefaultForm();
   }
 }
@@ -207,12 +211,25 @@ ngOnInit(): void {
 }
 
 cargarMateriales(): void {
-  // Simulación, reemplazar con tu service real
-  this.materiales = [
-    { id: 1, label: 'Material A' },
-    { id: 2, label: 'Material B' },
-    { id: 3, label: 'Material C' }
+  // simulación de servicio real
+  const todosMateriales = [
+    { id: 1, label: 'Material A', tipo: 'MATERIAL' },
+    { id: 2, label: 'Material B', tipo: 'MATERIAL' },
+    { id: 3, label: 'Servicio X', tipo: 'SERVICIO' },
+    { id: 4, label: 'Servicio Y', tipo: 'SERVICIO' }
   ];
+
+  // filtrar según lo que se seleccionó en el modal
+  if (this.tipoSeleccionado) {
+    this.materiales = todosMateriales.filter(m => m.tipo === this.tipoSeleccionado);
+  } else {
+    this.materiales = todosMateriales; // fallback
+  }
+
+  // si es nueva orden, agregar un detalle inicial
+  if (!this.isEdit) {
+    this.agregarDetalle();
+  }
 }
 
 // Agregar nuevo detalle
@@ -224,7 +241,7 @@ agregarDetalle(): void {
   subtotal: 0,
   igv: 0,
   total: 0,
-  tipo: 'MATERIAL' // valor por defecto
+  tipo: '' // valor por defecto
 });
 }
 // Agregar dentro de la clase FormOrdenCompraComponent

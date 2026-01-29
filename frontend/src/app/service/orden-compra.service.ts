@@ -42,15 +42,18 @@ export class OrdenCompraService {
   }
 
   // Listar con paginación
-  listar(page: number = 0, size: number = 10): Observable<PageOrdenCompra> {
+ listar(page: number = 0, size: number = 10, searchTerm?: string): Observable<PageOrdenCompra> {
     let params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString());
+      .set('page', page)
+      .set('size', size)
+      .set('sortBy', 'idOc')
+      .set('direction', 'ASC');
 
-    return this.http.get<PageOrdenCompra>(this.apiUrl, { params })
-      .pipe(
-        catchError(this.handleError)
-      );
+    if (searchTerm) {
+      params = params.set('search', searchTerm); // solo si tu backend soporta filtro
+    }
+
+    return this.http.get<PageOrdenCompra>(this.apiUrl, { params });
   }
 
  // ───────────────────────────────
