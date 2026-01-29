@@ -4,7 +4,6 @@ import { Routes } from '@angular/router';
 import { LoginComponent } from './pages/login-componente/login-componente';
 import { DashboardComponent } from './pages/dashboard-componente/dashboard-componente';
 import { OtsComponent } from './pages/ots-component/ots-component';
-import { LayoutComponent } from './component/layaout-component/layaout-component';
 import { SiteComponent } from './pages/site-component/site-component';
 import { OrdenCompraComponent } from './pages/orden-compra-component/orden-compra-component';
 import { GestionCargosSolicitantesComponent } from './pages/gestion-cargos-solicitantes-component/gestion-cargos-solicitantes-component';
@@ -13,6 +12,7 @@ import { authGuard } from './auth/auth.guard';
 import { UsuariosComponent } from './pages/usuarios-component/usuarios-component';
 import { UsuarioPerfilComponent } from './pages/usuario-perfil-component/usuario-perfil-component';
 import { TrabajadorComponent } from './pages/trabajador-component/trabajador-component';
+import { LayoutComponent } from './component/pagination.component/layaout-component/layaout-component';
 
 export const routes: Routes = [
   {
@@ -74,7 +74,7 @@ export const routes: Routes = [
         component: TrabajadorComponent,
         // data: { title: 'Órdenes de Compra' }
       }
-        
+
     ]
   },
 

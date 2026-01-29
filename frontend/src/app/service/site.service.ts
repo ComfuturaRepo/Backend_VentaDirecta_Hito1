@@ -2,13 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Site } from '../model/site.interface';
-import { PageResponse } from './usuario.service';
+import { PageResponse } from '../model/page.interface';
+import { environment } from '../../environment';
 
 @Injectable({
   providedIn: 'root'
 })
 export class SiteService {
-  private apiUrl = 'http://localhost:8080/api/site'; // Ajusta la URL según tu backend
+  private apiUrl = `${environment.baseUrl}/api/site`;
 
   constructor(private http: HttpClient) {}
 

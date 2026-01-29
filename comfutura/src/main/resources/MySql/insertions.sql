@@ -967,11 +967,6 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'CONTABILIDAD'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'ASISTENTE DE CONTABILIDAD')),
 
-                                                                                                                 ('RAFAEL', NULL, NULL, '928542113', NULL,
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'COMFUTURA'),
-                                                                                                                  (SELECT id_area FROM area WHERE nombre = 'LIMPIEZA'),
-                                                                                                                  (SELECT id_cargo FROM cargo WHERE nombre = 'ENCARGADO DE LIMPIEZA')),
-
                                                                                                                  ('JESUS OSWALDO', 'BARZOLA MALLMA', '41908627', '913591615', 'jbarzola@comfutura.com',
                                                                                                                   (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),
@@ -1246,11 +1241,6 @@ INSERT INTO usuario (username, password, id_trabajador, id_nivel) VALUES
 ('costos@comfutura.com', '123456',
  (SELECT id_trabajador FROM trabajador WHERE dni = '71244833'),
  (SELECT id_nivel FROM nivel WHERE codigo = 'L4')),
-
--- Rafael (sin apellido)
-('rafael', '123456',
- (SELECT id_trabajador FROM trabajador WHERE nombres = 'RAFAEL' AND apellidos IS NULL),
- (SELECT id_nivel FROM nivel WHERE codigo = 'L5')),
 
 -- Jesus Oswaldo Barzola Mallma
 ('jbarzola@comfutura.com', '123456',
