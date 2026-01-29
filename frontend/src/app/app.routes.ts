@@ -12,7 +12,8 @@ import { authGuard } from './auth/auth.guard';
 import { UsuariosComponent } from './pages/usuarios-component/usuarios-component';
 import { UsuarioPerfilComponent } from './pages/usuario-perfil-component/usuario-perfil-component';
 import { TrabajadorComponent } from './pages/trabajador-component/trabajador-component';
-import { LayoutComponent } from './component/pagination.component/layaout-component/layaout-component';
+import { LayoutComponent } from './component/layaout-component/layaout-component';
+import { ClienteComponent } from './pages/cliente-component/cliente-component';
 
 export const routes: Routes = [
   {
@@ -73,7 +74,13 @@ export const routes: Routes = [
         path: 'trabajador',
         component: TrabajadorComponent,
         // data: { title: 'Órdenes de Compra' }
+      },
+          {
+        path: 'cliente',
+        component: ClienteComponent,
+        // data: { title: 'Órdenes de Compra' }
       }
+
 
     ]
   },

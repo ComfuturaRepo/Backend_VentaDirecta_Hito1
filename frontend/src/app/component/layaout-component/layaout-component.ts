@@ -5,7 +5,7 @@ import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
 import { Router } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import Swal from 'sweetalert2';
-import { AuthService } from '../../../service/auth.service';
+import { AuthService } from '../../service/auth.service';
 
 @Component({
   selector: 'app-layout',

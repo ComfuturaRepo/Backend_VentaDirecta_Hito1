@@ -7,7 +7,8 @@ import { environment } from '../../environment';
 export interface DropdownItem {
   id: number;
   label: string;
-  adicional?: string; // 👈 AÑADIR ESTO
+  adicional?: string;
+  estado?: boolean;
 }
 
 @Injectable({

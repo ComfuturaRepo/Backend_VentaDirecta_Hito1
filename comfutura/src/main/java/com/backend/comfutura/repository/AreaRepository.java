@@ -16,6 +16,7 @@ public interface AreaRepository extends JpaRepository<Area, Integer> {
     List<Area> findByClienteIdAndActivoTrue(@Param("idCliente") Integer idCliente);
 
     List<Area> findByActivoTrueOrderByNombreAsc();
-
+    List<Area> findByIdAreaIn(List<Integer> ids);
+    List<Area> findByActivoTrue();
     List<Area> findAllByActivoTrue();
 }
