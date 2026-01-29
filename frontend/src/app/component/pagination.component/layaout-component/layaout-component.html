@@ -78,6 +78,14 @@
             <span class="menu-label" *ngIf="!isCollapsed">Sites</span>
           </a>
         </li>
+        <li>
+          <a routerLink="/trabajador" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-geo-alt-fill"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">trabajador</span>
+          </a>
+        </li>
 
          <li>
           <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMobile()">
@@ -107,6 +115,7 @@
             <span class="menu-label" *ngIf="!isCollapsed">Órdenes de Compra</span>
           </a>
         </li>
+
 
         <!-- Separador para administración -->
         <li class="menu-divider" *ngIf="!isCollapsed">
