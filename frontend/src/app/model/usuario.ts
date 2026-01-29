@@ -1,11 +1,14 @@
 // Interfaces
 export interface UsuarioSimple {
   idUsuario: number;
+  idTrabajador: number;
+  idNivel: number;
   username: string;
   nombreTrabajador: string;
   nivelNombre: string;
   activo: boolean;
   fechaCreacion: string;
+
 }
 
 export interface UsuarioDetail {

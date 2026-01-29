@@ -8,6 +8,8 @@ public class UsuarioSimpleDTO {
     private Integer idUsuario;
     private String username;
     private String nombreTrabajador;
+    private Integer idTrabajador;
+    private Integer idNivel;
     private String nivelNombre;
     private Boolean activo;
     private LocalDateTime fechaCreacion;

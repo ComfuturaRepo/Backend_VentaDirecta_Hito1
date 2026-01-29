@@ -25,7 +25,8 @@ public class UsuarioMapper {
         UsuarioSimpleDTO dto = new UsuarioSimpleDTO();
         dto.setIdUsuario(usuario.getIdUsuario());
         dto.setUsername(usuario.getUsername());
-
+        dto.setIdTrabajador(usuario.getTrabajador().getIdTrabajador());
+        dto.setIdNivel(usuario.getNivel().getId());
         // Trabajador
         if (usuario.getTrabajador() != null) {
             dto.setNombreTrabajador(usuario.getTrabajador().getNombres() + " " +

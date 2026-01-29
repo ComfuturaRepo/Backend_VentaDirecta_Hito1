@@ -71,12 +71,12 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     this.usuarioForm = this.createUsuarioForm();
   }
 
-  ngOnInit(): void {
-    this.initSearchDebounce();
-    this.loadUsuarios();
-    this.loadNiveles();
-    this.loadTrabajadores();
-  }
+ ngOnInit(): void {
+  this.initSearchDebounce();
+  this.loadUsuarios();
+  this.loadNiveles();
+  // QUITAR: this.loadTrabajadores(); // Ya no se carga aquí
+}
 
   ngOnDestroy(): void {
     this.searchSubscription?.unsubscribe();
@@ -113,7 +113,40 @@ export class UsuariosComponent implements OnInit, OnDestroy {
       }
     });
   }
+// Método para creación: solo trabajadores SIN usuario activo
+private loadTrabajadoresSinUsuario(): void {
+  this.dropdownService.getTrabajadoresSinUSuarioActivo().subscribe({
+    next: (trabajadores) => {
+      this.trabajadores = trabajadores;
+    },
+    error: (error) => {
+      console.error('Error al cargar trabajadores:', error);
+      this.trabajadores = [];
+    }
+  });
+}
 
+// Método para edición: todos los trabajadores + el asignado
+private loadTrabajadoresParaEdicion(idTrabajadorActual: number): void {
+  // Primero cargar todos los trabajadores
+  this.dropdownService.getTrabajadores().subscribe({
+    next: (todosTrabajadores) => {
+      // Si el trabajador actual no está en la lista, lo agregamos
+      const trabajadorActual = todosTrabajadores.find(t => t.id === idTrabajadorActual);
+
+      if (!trabajadorActual) {
+        // Opcional: podrías hacer otra llamada para obtener el trabajador específico
+        this.trabajadores = todosTrabajadores;
+      } else {
+        this.trabajadores = todosTrabajadores;
+      }
+    },
+    error: (error) => {
+      console.error('Error al cargar trabajadores:', error);
+      this.trabajadores = [];
+    }
+  });
+}
   onPageChange(page: number): void {
     this.currentPage = page;
     this.loadUsuarios();
@@ -156,40 +189,48 @@ export class UsuariosComponent implements OnInit, OnDestroy {
   // ========== CRUD ==========
 
   openCreateModal(): void {
-    this.modalMode = 'create';
-    this.modalTitle = 'Crear Nuevo Usuario';
-    this.usuarioSeleccionado = null;
-    this.usuarioForm.reset({
-      username: '',
-      password: '',
-      confirmPassword: '',
-      trabajadorId: null,
-      nivelId: null,
-      activo: true
-    });
-    this.showPassword = false;
-    this.showConfirmPassword = false;
-    this.showModal = true;
-  }
+  this.modalMode = 'create';
+  this.modalTitle = 'Crear Nuevo Usuario';
+  this.usuarioSeleccionado = null;
 
-  openEditModal(usuario: UsuarioSimple): void {
-    this.modalMode = 'edit';
-    this.modalTitle = 'Editar Usuario';
-    this.usuarioSeleccionado = usuario;
+  // Cargar trabajadores SIN usuario activo
+  this.loadTrabajadoresSinUsuario();
 
-    this.usuarioForm.patchValue({
-      username: usuario.username,
-      password: '',
-      confirmPassword: '',
-      trabajadorId: null,
-      nivelId: null,
-      activo: usuario.activo
-    });
+  this.usuarioForm.reset({
+    username: '',
+    password: '',
+    confirmPassword: '',
+    trabajadorId: null,
+    nivelId: null,
+    activo: true
+  });
 
-    this.showPassword = false;
-    this.showConfirmPassword = false;
-    this.showModal = true;
-  }
+  this.showPassword = false;
+  this.showConfirmPassword = false;
+  this.showModal = true;
+}
+
+openEditModal(usuario: UsuarioSimple): void {
+  this.modalMode = 'edit';
+  this.modalTitle = 'Editar Usuario';
+  this.usuarioSeleccionado = usuario;
+
+  // Cargar TODOS los trabajadores para edición
+  this.loadTrabajadoresParaEdicion(usuario.idTrabajador);
+
+  this.usuarioForm.patchValue({
+    username: usuario.username,
+    password: '',
+    confirmPassword: '',
+    trabajadorId: usuario.idTrabajador,
+    nivelId: usuario.idNivel,
+    activo: usuario.activo
+  });
+
+  this.showPassword = false;
+  this.showConfirmPassword = false;
+  this.showModal = true;
+}
 
   closeModal(): void {
     this.showModal = false;
@@ -280,17 +321,7 @@ export class UsuariosComponent implements OnInit, OnDestroy {
     });
   }
 
-  loadTrabajadores(): void {
-    this.dropdownService.getTrabajadoresSinUSuarioActivo().subscribe({
-      next: (trabajadores) => {
-        this.trabajadores = trabajadores;
-      },
-      error: (error) => {
-        console.error('Error al cargar trabajadores:', error);
-        this.trabajadores = [];
-      }
-    });
-  }
+
 
   // ========== HELPERS ==========
 
