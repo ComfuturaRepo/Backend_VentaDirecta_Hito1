@@ -24,6 +24,11 @@ export interface OcDetalleResponse {
   precioUnitario?: number;    // Precio por unidad
   total?: number;             // Total de la línea
   observacion?: string;       // Observación del detalle
+    // Maestro / Producto
+  idMaestro?: number;
+  codigo?: string;        // 🔹 el código del maestro
+  descripcion?: string;   // 🔹 la descripción del maestro
+  unidad?: string;        // 🔹 la unidad
 }
 
 // 🔹 DTO para crear o actualizar OC (request)

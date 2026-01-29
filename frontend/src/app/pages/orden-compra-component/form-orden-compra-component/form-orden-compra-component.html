@@ -82,12 +82,13 @@
                               <tr *ngFor="let d of form.detalles; let i = index">
                                 <td>
                                    <!-- Mostrar nombre del maestro, pero guardar idMaestro -->
-                                  <select class="form-select" [(ngModel)]="d.idMaestro" name="producto{{i}}" required>
-                                    <option value="0" disabled>Seleccione material...</option>
-                                    <option *ngFor="let mat of maestros" [value]="mat.id">
-                                      {{ mat.label }} <!-- Aquí ves el nombre -->
-                                    </option>
-                                  </select>
+                                  <select class="form-select" [(ngModel)]="d.idMaestro" name="producto{{i}}" required
+                                        (change)="onMaestroChange(d)">
+                                  <option value="0" disabled>Seleccione material...</option>
+                                  <option *ngFor="let mat of maestros" [value]="mat.id">
+                                    {{ mat.label }}
+                                  </option>
+                                </select>
                                 </td>
                                 <td>
                                   <input type="number" class="form-control text-end" [(ngModel)]="d.cantidad" name="cant{{i}}" min="1" required (input)="calcularTotalDetalle(d)">
