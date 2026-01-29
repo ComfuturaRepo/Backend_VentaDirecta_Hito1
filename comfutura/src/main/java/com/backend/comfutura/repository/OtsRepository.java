@@ -16,6 +16,13 @@ public interface OtsRepository extends JpaRepository<Ots, Integer>, JpaSpecifica
     Optional<Ots> findByOt(Integer ot);
 
     Page<Ots> findByActivo(Boolean activo, Pageable pageable);
+    @Query("""
+    SELECT MAX(o.ot)
+    FROM Ots o
+    WHERE o.ot BETWEEN :inicio AND :fin
+""")
+    Integer findUltimoOtEntre(@Param("inicio") Integer inicio,
+                              @Param("fin") Integer fin);
 
     @Query("""
     SELECT o FROM Ots o

@@ -1,10 +1,14 @@
-import { Component, OnInit, ViewChild, TemplateRef } from '@angular/core';
+import { DropdownItem, DropdownService } from './../../service/dropdown.service';
+// usuarios.component.ts
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import Swal from 'sweetalert2';
-import { PageResponse, Usuario, UsuarioService } from '../../service/usuario.service';
+import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 import { PaginationComponent } from '../../component/pagination.component/pagination.component';
+import {  UsuarioSimple, UsuarioRequest, UsuarioUpdate } from '../../model/usuario';
+import { UsuarioService } from '../../service/usuario.service';
+import { Trabajador } from '../../service/trabajador.service';
 
 @Component({
   selector: 'app-usuarios',
@@ -19,10 +23,10 @@ import { PaginationComponent } from '../../component/pagination.component/pagina
   templateUrl: './usuarios-component.html',
   styleUrls: ['./usuarios-component.css']
 })
-export class UsuariosComponent implements OnInit {
+export class UsuariosComponent implements OnInit, OnDestroy {
   // Datos
-  usuarios: Usuario[] = [];
-  pageResponse!: PageResponse<Usuario>;
+  usuarios: UsuarioSimple[] = [];
+  pageResponse: any = null;
 
   // Filtros
   searchTerm: string = '';
@@ -41,59 +45,45 @@ export class UsuariosComponent implements OnInit {
 
   // Estados
   isLoading: boolean = false;
-  showFilters: boolean = false;
+  showFilters: boolean = true;
   showModal: boolean = false;
+  showPassword: boolean = false;
+  showConfirmPassword: boolean = false;
 
   // Formulario
   usuarioForm: FormGroup;
   modalMode: 'create' | 'edit' = 'create';
   modalTitle: string = '';
-  usuarioSeleccionado: Usuario | null = null;
+  usuarioSeleccionado: UsuarioSimple | null = null;
 
-  // Listas para selects
-  niveles: any[] = [];
-  trabajadores: any[] = [];
+  // Datos para selects
+  niveles: DropdownItem[] = [];
+  trabajadores: DropdownItem[] = [];
+
+  // Suscripciones
+  private searchSubscription?: Subscription;
 
   constructor(
-    private usuarioService: UsuarioService,
+    public usuarioService: UsuarioService,
+    public dropdownService: DropdownService,
     private fb: FormBuilder
   ) {
     this.usuarioForm = this.createUsuarioForm();
   }
 
   ngOnInit(): void {
+    this.initSearchDebounce();
     this.loadUsuarios();
     this.loadNiveles();
     this.loadTrabajadores();
   }
 
-  // Crear formulario reactivo
-  private createUsuarioForm(): FormGroup {
-    return this.fb.group({
-      username: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]],
-      trabajadorId: [null, [Validators.required]],
-      nivelId: [null, [Validators.required]],
-      activo: [true]
-    }, { validators: this.passwordMatchValidator });
+  ngOnDestroy(): void {
+    this.searchSubscription?.unsubscribe();
   }
 
-  // Validador de coincidencia de contraseñas
-  private passwordMatchValidator(g: FormGroup) {
-    const password = g.get('password')?.value;
-    const confirmPassword = g.get('confirmPassword')?.value;
+  // ========== PAGINACIÓN Y FILTROS ==========
 
-    if (password !== confirmPassword) {
-      g.get('confirmPassword')?.setErrors({ mismatch: true });
-      return { mismatch: true };
-    }
-
-    g.get('confirmPassword')?.setErrors(null);
-    return null;
-  }
-
-  // Cargar datos
   loadUsuarios(): void {
     this.isLoading = true;
 
@@ -102,7 +92,7 @@ export class UsuariosComponent implements OnInit {
       size: this.pageSize,
       sortBy: this.sortBy,
       direction: this.sortDirection,
-      search: this.searchTerm,
+      search: this.searchTerm || undefined,
       activos: this.filtroActivo !== null ? this.filtroActivo : undefined,
       nivelId: this.filtroNivelId || undefined
     };
@@ -110,41 +100,20 @@ export class UsuariosComponent implements OnInit {
     this.usuarioService.getUsuarios(params).subscribe({
       next: (response) => {
         this.pageResponse = response;
-        this.usuarios = response.content;
-        this.totalPages = response.totalPages;
-        this.totalItems = response.totalItems;
+        this.usuarios = response.content || [];
+        this.currentPage = response.currentPage || 0;
+        this.totalPages = response.totalPages || 0;
+        this.totalItems = response.totalItems || 0;
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error al cargar usuarios:', error);
         this.isLoading = false;
+        this.usuarioService.showError('Error', 'No se pudieron cargar los usuarios');
       }
     });
   }
 
-  // Cargar niveles
-  loadNiveles(): void {
-    // Implementa este método según tu API
-    // Por ahora, datos de ejemplo
-    this.niveles = [
-      { idNivel: 1, nombre: 'Administrador', codigo: 'ADMIN' },
-      { idNivel: 2, nombre: 'Supervisor', codigo: 'SUPER' },
-      { idNivel: 3, nombre: 'Operador', codigo: 'OPER' }
-    ];
-  }
-
-  // Cargar trabajadores
-  loadTrabajadores(): void {
-    // Implementa este método según tu API
-    // Por ahora, datos de ejemplo
-    this.trabajadores = [
-      { idTrabajador: 1, nombres: 'Juan', apellidos: 'Pérez', nombreCompleto: 'Juan Pérez' },
-      { idTrabajador: 2, nombres: 'María', apellidos: 'García', nombreCompleto: 'María García' },
-      { idTrabajador: 3, nombres: 'Carlos', apellidos: 'López', nombreCompleto: 'Carlos López' }
-    ];
-  }
-
-  // Métodos de paginación
   onPageChange(page: number): void {
     this.currentPage = page;
     this.loadUsuarios();
@@ -157,10 +126,10 @@ export class UsuariosComponent implements OnInit {
   }
 
   onRefresh(): void {
+    this.currentPage = 0;
     this.loadUsuarios();
   }
 
-  // Ordenamiento
   sort(column: string): void {
     if (this.sortBy === column) {
       this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
@@ -171,7 +140,6 @@ export class UsuariosComponent implements OnInit {
     this.loadUsuarios();
   }
 
-  // Filtros
   aplicarFiltros(): void {
     this.currentPage = 0;
     this.loadUsuarios();
@@ -185,10 +153,11 @@ export class UsuariosComponent implements OnInit {
     this.loadUsuarios();
   }
 
-  // Modal
+  // ========== CRUD ==========
+
   openCreateModal(): void {
     this.modalMode = 'create';
-    this.modalTitle = 'Nuevo Usuario';
+    this.modalTitle = 'Crear Nuevo Usuario';
     this.usuarioSeleccionado = null;
     this.usuarioForm.reset({
       username: '',
@@ -198,10 +167,12 @@ export class UsuariosComponent implements OnInit {
       nivelId: null,
       activo: true
     });
+    this.showPassword = false;
+    this.showConfirmPassword = false;
     this.showModal = true;
   }
 
-  openEditModal(usuario: Usuario): void {
+  openEditModal(usuario: UsuarioSimple): void {
     this.modalMode = 'edit';
     this.modalTitle = 'Editar Usuario';
     this.usuarioSeleccionado = usuario;
@@ -210,27 +181,22 @@ export class UsuariosComponent implements OnInit {
       username: usuario.username,
       password: '',
       confirmPassword: '',
-      trabajadorId: usuario.trabajadorId,
-      nivelId: usuario.nivelId,
+      trabajadorId: null,
+      nivelId: null,
       activo: usuario.activo
     });
 
-    // Eliminar validación de contraseña en edición
-    this.usuarioForm.get('password')?.clearValidators();
-    this.usuarioForm.get('confirmPassword')?.clearValidators();
-    this.usuarioForm.get('password')?.updateValueAndValidity();
-    this.usuarioForm.get('confirmPassword')?.updateValueAndValidity();
-
+    this.showPassword = false;
+    this.showConfirmPassword = false;
     this.showModal = true;
   }
 
   closeModal(): void {
     this.showModal = false;
-    this.usuarioSeleccionado = null;
     this.usuarioForm.reset();
+    this.usuarioSeleccionado = null;
   }
 
-  // Guardar usuario
   saveUsuario(): void {
     if (this.usuarioForm.invalid) {
       this.marcarCamposInvalidos();
@@ -240,44 +206,122 @@ export class UsuariosComponent implements OnInit {
     const formValue = this.usuarioForm.value;
 
     if (this.modalMode === 'create') {
-      const usuarioRequest = {
+      const usuarioRequest: UsuarioRequest = {
         username: formValue.username,
         password: formValue.password,
         trabajadorId: formValue.trabajadorId,
-        nivelId: formValue.nivelId
+        nivelId: formValue.nivelId,
+        activo: formValue.activo
       };
 
       this.usuarioService.createUsuario(usuarioRequest).subscribe({
-        next: (response) => {
-          this.usuarioService.showSuccess('SUCCESS','Usuario creado exitosamente');
+        next: () => {
+          this.usuarioService.showSuccess('Éxito', 'Usuario creado exitosamente');
           this.closeModal();
           this.loadUsuarios();
         },
         error: (error) => {
-          console.error('Error al crear usuario:', error);
+          this.usuarioService.showError('Error', error.message || 'No se pudo crear el usuario');
         }
       });
-    } else if (this.usuarioSeleccionado) {
-      const usuarioUpdate = {
+    } else if (this.modalMode === 'edit' && this.usuarioSeleccionado) {
+      const usuarioUpdate: UsuarioUpdate = {
         username: formValue.username,
         trabajadorId: formValue.trabajadorId,
         nivelId: formValue.nivelId
       };
 
       this.usuarioService.updateUsuario(this.usuarioSeleccionado.idUsuario, usuarioUpdate).subscribe({
-        next: (response) => {
-          this.usuarioService.showSuccess('SUCCESS','Usuario actualizado exitosamente');
+        next: () => {
+          this.usuarioService.showSuccess('Éxito', 'Usuario actualizado exitosamente');
           this.closeModal();
           this.loadUsuarios();
         },
         error: (error) => {
-          console.error('Error al actualizar usuario:', error);
+          this.usuarioService.showError('Error', error.message || 'No se pudo actualizar el usuario');
         }
       });
     }
   }
 
-  // Marcar campos inválidos
+  toggleActivo(usuario: UsuarioSimple): void {
+    const actionText = usuario.activo ? 'Desactivar' : 'Activar';
+
+    this.usuarioService.showConfirm(
+      `¿${actionText} Usuario?`,
+      `¿Estás seguro de ${actionText.toLowerCase()} el usuario <strong>${usuario.username}</strong>?`
+    ).then((result) => {
+      if (result.isConfirmed) {
+        this.usuarioService.toggleActivo(usuario.idUsuario).subscribe({
+          next: () => {
+            const message = usuario.activo ? 'Usuario desactivado' : 'Usuario activado';
+            this.usuarioService.showSuccess('Éxito', message);
+            this.loadUsuarios();
+          },
+          error: (error) => {
+            this.usuarioService.showError('Error', 'No se pudo cambiar el estado del usuario');
+          }
+        });
+      }
+    });
+  }
+
+  // ========== DATOS PARA FORMULARIOS ==========
+
+  loadNiveles(): void {
+    this.dropdownService.getNivel().subscribe({
+      next: (niveles) => {
+        this.niveles = niveles;
+      },
+      error: (error) => {
+        console.error('Error al cargar niveles:', error);
+        this.niveles = [];
+      }
+    });
+  }
+
+  loadTrabajadores(): void {
+    this.dropdownService.getTrabajadoresSinUSuarioActivo().subscribe({
+      next: (trabajadores) => {
+        this.trabajadores = trabajadores;
+      },
+      error: (error) => {
+        console.error('Error al cargar trabajadores:', error);
+        this.trabajadores = [];
+      }
+    });
+  }
+
+  // ========== HELPERS ==========
+
+  private initSearchDebounce(): void {
+    // Si necesitas implementar búsqueda en tiempo real
+  }
+
+  private createUsuarioForm(): FormGroup {
+    return this.fb.group({
+      username: ['', [Validators.required, Validators.maxLength(100)]],
+      password: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(100)]],
+      confirmPassword: ['', [Validators.required]],
+      trabajadorId: [null, [Validators.required]],
+      nivelId: [null, [Validators.required]],
+      activo: [true]
+    }, { validators: this.passwordMatchValidator });
+  }
+
+  private passwordMatchValidator(g: FormGroup) {
+    const password = g.get('password')?.value;
+    const confirmPassword = g.get('confirmPassword')?.value;
+
+    if (password !== confirmPassword) {
+      g.get('confirmPassword')?.setErrors({ mismatch: true });
+      return { mismatch: true };
+    }
+
+    g.get('confirmPassword')?.setErrors(null);
+    return null;
+  }
+
   private marcarCamposInvalidos(): void {
     Object.keys(this.usuarioForm.controls).forEach(key => {
       const control = this.usuarioForm.get(key);
@@ -287,48 +331,6 @@ export class UsuariosComponent implements OnInit {
     });
   }
 
-  // Cambiar estado activo/inactivo
-  toggleActivo(usuario: Usuario): void {
-    const action = usuario.activo ? 'desactivar' : 'activar';
-
-    this.usuarioService.showConfirm('MENSAJE',`¿Estás seguro de ${action} este usuario?`)
-      .then((result) => {
-        if (result.isConfirmed) {
-          this.usuarioService.toggleActivo(usuario.idUsuario).subscribe({
-            next: (response) => {
-              const message = usuario.activo ? 'Usuario desactivado' : 'Usuario activado';
-              this.usuarioService.showSuccess('MENSAJE',message);
-              this.loadUsuarios();
-            },
-            error: (error) => {
-              console.error('Error al cambiar estado:', error);
-            }
-          });
-        }
-      });
-  }
-
-  // Eliminar usuario
-  deleteUsuario(usuario: Usuario): void {
-    this.usuarioService.showConfirm('MENSAJE','¿Estás seguro de eliminar este usuario? Esta acción no se puede deshacer.')
-      .then((result) => {
-        if (result.isConfirmed) {
-          this.usuarioService.deleteUsuario(usuario.idUsuario).subscribe({
-            next: (response) => {
-              this.usuarioService.showSuccess('MENSAJE','Usuario eliminado exitosamente');
-              this.loadUsuarios();
-            },
-            error: (error) => {
-              console.error('Error al eliminar usuario:', error);
-            }
-          });
-        }
-      });
-  }
-
-
-
-  // Helper methods
   getEstadoClass(activo: boolean): string {
     return activo ? 'badge bg-success' : 'badge bg-danger';
   }
@@ -337,44 +339,19 @@ export class UsuariosComponent implements OnInit {
     return activo ? 'Activo' : 'Inactivo';
   }
 
-  getTrabajadorNombre(usuario: Usuario): string {
-    return usuario.nombreTrabajador ||
-           (usuario.trabajadorNombre && usuario.trabajadorApellidos
-            ? `${usuario.trabajadorNombre} ${usuario.trabajadorApellidos}`
-            : 'N/A');
-  }
-
-  getNivelNombre(usuario: Usuario): string {
-    return usuario.nivelNombre || usuario.nivelCodigo || 'N/A';
-  }
-
-  // Verificar si un campo es inválido
   isFieldInvalid(fieldName: string): boolean {
     const field = this.usuarioForm.get(fieldName);
     return field ? field.invalid && field.touched : false;
   }
 
-  // Obtener mensaje de error
   getErrorMessage(fieldName: string): string {
     const field = this.usuarioForm.get(fieldName);
-
     if (!field || !field.errors) return '';
 
-    if (field.errors['required']) {
-      return 'Este campo es obligatorio';
-    }
-
-    if (field.errors['email']) {
-      return 'Ingrese un email válido';
-    }
-
-    if (field.errors['minlength']) {
-      return `Mínimo ${field.errors['minlength'].requiredLength} caracteres`;
-    }
-
-    if (field.errors['mismatch']) {
-      return 'Las contraseñas no coinciden';
-    }
+    if (field.errors['required']) return 'Este campo es obligatorio';
+    if (field.errors['minlength']) return `Mínimo ${field.errors['minlength'].requiredLength} caracteres`;
+    if (field.errors['maxlength']) return `Máximo ${field.errors['maxlength'].requiredLength} caracteres`;
+    if (field.errors['mismatch']) return 'Las contraseñas no coinciden';
 
     return '';
   }

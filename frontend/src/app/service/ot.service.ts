@@ -6,7 +6,7 @@ import { catchError } from 'rxjs/operators';
 
 import { OtCreateRequest, OtDetailResponse, OtListDto, Page } from '../model/ots';
 import { environment } from '../../environment';
-import { PageResponse } from './usuario.service';
+import { PageResponse } from '../model/page.interface';
 
 @Injectable({
   providedIn: 'root'

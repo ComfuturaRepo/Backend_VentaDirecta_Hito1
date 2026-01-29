@@ -4,10 +4,9 @@ import { FormsModule } from '@angular/forms';
 import { Subscription, debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import Swal from 'sweetalert2';
 import { PaginationComponent } from '../../component/pagination.component/pagination.component';
-import { DEFAULT_PAGINATION_CONFIG } from '../../model/page.interface';
+import { DEFAULT_PAGINATION_CONFIG, PageResponse } from '../../model/page.interface';
 import { Site } from '../../model/site.interface';
 import { SiteService } from '../../service/site.service';
-import { PageResponse } from '../../service/usuario.service';
 
 
 @Component({

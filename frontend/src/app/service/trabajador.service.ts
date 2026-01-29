@@ -18,10 +18,18 @@ export interface Trabajador {
   areaNombre: string;
   cargoId: number;
   cargoNombre: string;
+  cargoNivel?: string; // Faltaba este campo
   activo: boolean;
   fechaCreacion: string;
+  fechaModificacion?: string; // Faltaba este campo
 }
-
+export interface TrabajadorStats {
+  totalTrabajadores: number;
+  trabajadoresActivos: number;
+  porcentajeActivos: number;
+  porArea: { [key: string]: number };
+  porCargo: { [key: string]: number };
+}
 export interface TrabajadorRequest {
   nombres: string;
   apellidos: string;
@@ -124,6 +132,36 @@ export class TrabajadorService {
         catchError(this.handleError)
       );
   }
+// En TrabajadorService
+// Contar trabajadores activos por área
+countActivosByArea(areaId: number): Observable<number> {
+  return this.http.get<number>(`${this.apiUrl}/contar/area/${areaId}`)
+    .pipe(
+      catchError(this.handleError)
+    );
+}
+
+// Contar trabajadores por cargo
+countByCargo(cargoId: number): Observable<number> {
+  return this.http.get<number>(`${this.apiUrl}/contar/cargo/${cargoId}`)
+    .pipe(
+      catchError(this.handleError)
+    );
+}
+
+// Buscar por nombre (ya está parcialmente implementado en getTrabajadores)
+buscarPorNombre(nombre: string, page: number = 0, size: number = 10): Observable<PageResponse<Trabajador>> {
+  return this.http.get<PageResponse<Trabajador>>(`${this.apiUrl}/buscar/nombre`, {
+    params: {
+      nombre,
+      page: page.toString(),
+      size: size.toString()
+    }
+  }).pipe(
+    catchError(this.handleError)
+  );
+}
+
 
   // Obtener trabajador por ID
   getTrabajadorById(id: number): Observable<Trabajador> {
@@ -166,14 +204,13 @@ export class TrabajadorService {
     );
   }
 
-  // Obtener estadísticas
-  getEstadisticas(): Observable<any> {
-    return this.http.get(`${this.apiUrl}/estadisticas`)
-      .pipe(
-        catchError(this.handleError)
-      );
-  }
-
+ // Actualizar tipo de estadísticas
+getEstadisticas(): Observable<TrabajadorStats> {  // Cambiar 'any' por 'TrabajadorStats'
+  return this.http.get<TrabajadorStats>(`${this.apiUrl}/estadisticas`)
+    .pipe(
+      catchError(this.handleError)
+    );
+}
   // Manejo de errores
   private handleError(error: any) {
     console.error('Error en servicio Trabajador:', error);
@@ -238,4 +275,7 @@ export class TrabajadorService {
   getNombreCompleto(trabajador: Trabajador): string {
     return `${trabajador.nombres} ${trabajador.apellidos}`.trim();
   }
+
+
+  
 }

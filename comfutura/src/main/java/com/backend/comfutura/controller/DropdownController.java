@@ -65,6 +65,10 @@ public class DropdownController {
     public ResponseEntity<List<DropdownDTO>> getOtsActivas() {
         return ResponseEntity.ok(dropdownService.getOtsActivas());
     }
+    @GetMapping("/nivel")
+    public ResponseEntity<List<DropdownDTO>> getnivel() {
+        return ResponseEntity.ok(dropdownService.getNivelesAll());
+    }
 
     // ────────────────────────────────────────────────────────
     // Nuevos endpoints para los responsables
@@ -112,6 +116,16 @@ public class DropdownController {
     @GetMapping("/maestro-codigos")
     public ResponseEntity<List<DropdownDTO>> getMaestroCodigos() {
         return ResponseEntity.ok(dropdownService.getMaestroCodigos());
+    }
+
+    @GetMapping("/trabajador")
+    public ResponseEntity<List<DropdownDTO>> getTraabajadores() {
+        return ResponseEntity.ok(dropdownService.getTrabajadores());
+    }
+
+    @GetMapping("/trabajadorSinUsuarioActivo")
+    public ResponseEntity<List<DropdownDTO>> getSinUsuarioActivoTrabajador() {
+        return ResponseEntity.ok(dropdownService.getTrabajadoresSinUsuarioActivo());
     }
 
     @GetMapping("/proveedores")

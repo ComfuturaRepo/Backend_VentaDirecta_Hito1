@@ -2,7 +2,6 @@ package com.backend.comfutura.controller;
 
 import com.backend.comfutura.dto.Page.MessageResponseDTO;
 import com.backend.comfutura.dto.Page.PageResponseDTO;
-import com.backend.comfutura.dto.request.usuarioDTO.ChangePasswordDTO;
 import com.backend.comfutura.dto.request.usuarioDTO.UsuarioRequestDTO;
 import com.backend.comfutura.dto.request.usuarioDTO.UsuarioUpdateDTO;
 import com.backend.comfutura.dto.response.usuarioDTO.UsuarioDetailDTO;
@@ -89,7 +88,7 @@ public class UsuarioController {
         }
     }
 
-    // PUT: Actualizar todos los datos del usuario (nuevo endpoint)
+    // PUT: Actualizar todos los datos del usuario
     @PutMapping("/{id}/completo")
     public ResponseEntity<?> updateUsuarioCompleto(
             @PathVariable Integer id,
@@ -97,20 +96,6 @@ public class UsuarioController {
         try {
             UsuarioDetailDTO usuarioActualizado = usuarioService.updateUsuarioCompleto(id, usuarioDTO);
             return ResponseEntity.ok(usuarioActualizado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponseDTO(e.getMessage(), null));
-        }
-    }
-
-    // PATCH: Cambiar contraseña
-    @PatchMapping("/{id}/cambiar-password")
-    public ResponseEntity<?> changePassword(
-            @PathVariable Integer id,
-            @Valid @RequestBody ChangePasswordDTO passwordDTO) {
-        try {
-            MessageResponseDTO response = usuarioService.changePassword(id, passwordDTO);
-            return ResponseEntity.ok(response);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponseDTO(e.getMessage(), null));
@@ -126,29 +111,6 @@ public class UsuarioController {
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest()
                     .body(new MessageResponseDTO(e.getMessage(), null));
-        }
-    }
-
-    // DELETE: Eliminar usuario
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUsuario(@PathVariable Integer id) {
-        try {
-            MessageResponseDTO response = usuarioService.deleteUsuario(id);
-            return ResponseEntity.ok(response);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponseDTO(e.getMessage(), null));
-        }
-    }
-
-    // GET: Buscar usuario por username
-    @GetMapping("/buscar")
-    public ResponseEntity<UsuarioDetailDTO> getUsuarioByUsername(@RequestParam String username) {
-        try {
-            UsuarioDetailDTO usuario = usuarioService.findUsuarioByUsername(username);
-            return ResponseEntity.ok(usuario);
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
         }
     }
 }

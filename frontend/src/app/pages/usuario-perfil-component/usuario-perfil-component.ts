@@ -1,454 +1,279 @@
-// src/app/pages/usuario-perfil/usuario-perfil-component.ts
+// src/app/pages/usuario-perfil/usuario-perfil.component.ts
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
-import { PaginationComponent } from '../../component/pagination.component/pagination.component';
+import { ChangePasswordRequestDTO, PerfilResponseDTO, PerfilService, UpdatePerfilRequestDTO } from '../../service/perfil.service';
 
-import {
-  Usuario,
-  UsuarioService,
-  Trabajador,
-  Nivel,
-  EstadisticasUsuario,
-  Actividad,
-  ChangePasswordRequest,
-  UsuarioUpdate
-} from '../../service/usuario.service';
+
 @Component({
   selector: 'app-usuario-perfil',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
-  templateUrl: './usuario-perfil-component.html',
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule
+  ],
+ templateUrl: './usuario-perfil-component.html',
   styleUrls: ['./usuario-perfil-component.css']
 })
 export class UsuarioPerfilComponent implements OnInit, OnDestroy {
-  // Datos principales
-  usuario: Usuario | null = null;
-  trabajador: Trabajador | null = null;
-  niveles: Nivel[] = [];
-
-  // Estadísticas
-  estadisticas: EstadisticasUsuario = {
-    otsCompletadas: 0,
-    otsPendientes: 0,
-    proyectosActivos: 0,
-    diasTrabajados: 0,
-    horasTrabajadasMes: 0,
-    tareasCompletadas: 0
-  };
-
-  // Actividades
-  actividades: Actividad[] = [];
-
-  // Formularios
-  editProfileForm = {
-    email: '',
-    telefono: '',
-    direccion: '',
-    cargo: '',
-    area: ''
-  };
-
-  changePasswordForm: ChangePasswordRequest = {
-    currentPassword: '',
-    newPassword: '',
-    confirmPassword: ''
-  };
-
-  editUsuarioForm = {
-    username: '',
-    nivelId: 0
-  };
+  // Datos del perfil
+  perfil: PerfilResponseDTO | null = null;
 
   // Estados
-  isLoading = false;
-  isUpdating = false;
-  showEditProfile = false;
-  showChangePassword = false;
-  showEditUsuario = false;
+  isLoading: boolean = false;
+  isEditing: boolean = false;
+  isChangingPassword: boolean = false;
 
-  // Paginación (para actividades si hubiera muchas)
-  currentPage = 0;
-  pageSize = 5;
-  totalItems = 0;
-  totalPages = 0;
+  // Formularios
+  perfilForm: FormGroup;
+  passwordForm: FormGroup;
 
-  // Subscripciones
+  // Mostrar/ocultar contraseñas
+  showCurrentPassword: boolean = false;
+  showNewPassword: boolean = false;
+  showConfirmPassword: boolean = false;
+
+  // Suscripciones
   private subscriptions: Subscription[] = [];
 
-  // Configuración de paginación
-  paginationConfig = {
-    showInfo: true,
-    showSizeSelector: false,
-    showNavigation: true,
-    showJumpToPage: false,
-    showPageNumbers: false,
-    pageSizes: [5, 10, 20],
-    align: 'center' as const,
-    size: 'sm' as const
-  };
-
-  constructor(private usuarioService: UsuarioService) {}
+  constructor(
+    public perfilService: PerfilService,
+    private fb: FormBuilder
+  ) {
+    this.perfilForm = this.createPerfilForm();
+    this.passwordForm = this.createPasswordForm();
+  }
 
   ngOnInit(): void {
-    this.loadData();
+    this.loadPerfil();
   }
 
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  // ========== CARGA DE DATOS ==========
+  // ========== CARGAR DATOS ==========
 
-  loadData(): void {
+  loadPerfil(): void {
     this.isLoading = true;
 
-    // Cargar datos en paralelo
-    const sub1 = this.usuarioService.getPerfilUsuario().subscribe({
-      next: (usuario) => {
-        this.usuario = usuario;
-        this.loadTrabajador(usuario.trabajadorId);
-        this.loadEstadisticas(usuario.idUsuario);
-        this.loadActividades(usuario.idUsuario);
-        this.initializeEditUsuarioForm(usuario);
-      },
-      error: (error) => {
-        this.usuarioService.showError('Error', 'No se pudo cargar el perfil');
-        console.error('Error cargando usuario:', error);
-      }
-    });
-
-
-
-  }
-
-  loadTrabajador(trabajadorId: number): void {
-    this.usuarioService.getTrabajadorById(trabajadorId).subscribe({
-      next: (trabajador) => {
-        this.trabajador = trabajador;
-        this.initializeEditProfileForm(trabajador);
+    const sub = this.perfilService.getMiPerfil().subscribe({
+      next: (perfil) => {
+        this.perfil = perfil;
+        this.patchFormWithPerfilData();
         this.isLoading = false;
       },
       error: (error) => {
-        this.usuarioService.showError('Error', 'No se pudo cargar información del trabajador');
-        console.error('Error cargando trabajador:', error);
+        console.error('Error al cargar perfil:', error);
         this.isLoading = false;
+        this.perfilService.showError('Error', 'No se pudo cargar el perfil');
       }
+    });
+
+    this.subscriptions.push(sub);
+  }
+
+  // ========== FORMULARIOS ==========
+
+  private createPerfilForm(): FormGroup {
+    return this.fb.group({
+      nombres: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      apellidos: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
+      correoCorporativo: ['', [Validators.required, Validators.email]],
+      celular: ['', [Validators.required, Validators.pattern('^[0-9]{9}$')]]
     });
   }
 
-  loadEstadisticas(userId: number): void {
-    this.usuarioService.getEstadisticasUsuario(userId).subscribe({
-      next: (estadisticas) => {
-        this.estadisticas = estadisticas;
+  private createPasswordForm(): FormGroup {
+    return this.fb.group({
+      currentPassword: ['', [Validators.required]],
+      newPassword: ['', [Validators.required, Validators.minLength(6), Validators.maxLength(100)]],
+      confirmPassword: ['', [Validators.required]]
+    }, { validators: this.passwordMatchValidator });
+  }
+
+  private passwordMatchValidator(g: FormGroup) {
+    const newPassword = g.get('newPassword')?.value;
+    const confirmPassword = g.get('confirmPassword')?.value;
+
+    if (newPassword !== confirmPassword) {
+      g.get('confirmPassword')?.setErrors({ mismatch: true });
+      return { mismatch: true };
+    }
+
+    g.get('confirmPassword')?.setErrors(null);
+    return null;
+  }
+
+  private patchFormWithPerfilData(): void {
+    if (this.perfil) {
+      this.perfilForm.patchValue({
+        nombres: this.perfil.nombres,
+        apellidos: this.perfil.apellidos,
+        correoCorporativo: this.perfil.correoCorporativo,
+        celular: this.perfil.celular
+      });
+    }
+  }
+
+  // ========== ACCIONES ==========
+
+  toggleEditMode(): void {
+    this.isEditing = !this.isEditing;
+    if (!this.isEditing) {
+      this.patchFormWithPerfilData();
+    }
+  }
+
+  toggleChangePassword(): void {
+    this.isChangingPassword = !this.isChangingPassword;
+    if (!this.isChangingPassword) {
+      this.passwordForm.reset();
+    }
+  }
+
+  savePerfil(): void {
+    if (this.perfilForm.invalid) {
+      this.marcarCamposInvalidos(this.perfilForm);
+      return;
+    }
+
+    const formData: UpdatePerfilRequestDTO = this.perfilForm.value;
+
+    this.isLoading = true;
+
+    const sub = this.perfilService.updateMiPerfil(formData).subscribe({
+      next: (perfilActualizado) => {
+        this.perfil = perfilActualizado;
+        this.isEditing = false;
+        this.isLoading = false;
+        this.perfilService.showSuccess('Éxito', 'Perfil actualizado exitosamente');
       },
       error: (error) => {
-        console.error('Error cargando estadísticas:', error);
+        console.error('Error al actualizar perfil:', error);
+        this.isLoading = false;
+        this.perfilService.showError('Error', 'No se pudo actualizar el perfil');
       }
     });
+
+    this.subscriptions.push(sub);
   }
 
-  loadActividades(userId: number): void {
-    this.usuarioService.getActividadesUsuario(userId).subscribe({
-      next: (actividades) => {
-        this.actividades = actividades;
-        this.totalItems = actividades.length;
-        this.totalPages = Math.ceil(actividades.length / this.pageSize);
+  changePassword(): void {
+    if (this.passwordForm.invalid) {
+      this.marcarCamposInvalidos(this.passwordForm);
+      return;
+    }
+
+    const formData: ChangePasswordRequestDTO = this.passwordForm.value;
+
+    // Validar fortaleza de contraseña
+    const validation = this.perfilService.validatePasswordStrength(formData.newPassword);
+    if (!validation.valid) {
+      this.perfilService.showError('Error', validation.message);
+      return;
+    }
+
+    this.isLoading = true;
+
+    const sub = this.perfilService.cambiarPassword(formData).subscribe({
+      next: (response) => {
+        this.passwordForm.reset();
+        this.isChangingPassword = false;
+        this.isLoading = false;
+        this.perfilService.showSuccess('Éxito', response.message || 'Contraseña cambiada exitosamente');
       },
       error: (error) => {
-        console.error('Error cargando actividades:', error);
+        console.error('Error al cambiar contraseña:', error);
+        this.isLoading = false;
+        this.perfilService.showError('Error', 'No se pudo cambiar la contraseña');
+      }
+    });
+
+    this.subscriptions.push(sub);
+  }
+
+  // ========== HELPERS ==========
+
+  private marcarCamposInvalidos(formGroup: FormGroup): void {
+    Object.keys(formGroup.controls).forEach(key => {
+      const control = formGroup.get(key);
+      if (control?.invalid) {
+        control.markAsTouched();
       }
     });
   }
 
-  // ========== INICIALIZACIÓN DE FORMULARIOS ==========
-
-  initializeEditProfileForm(trabajador: Trabajador): void {
-    this.editProfileForm = {
-      email: trabajador.email || '',
-      telefono: trabajador.telefono || '',
-      direccion: trabajador.direccion || '',
-      cargo: trabajador.cargo || '',
-      area: trabajador.area || ''
-    };
+  isFieldInvalid(form: FormGroup, fieldName: string): boolean {
+    const field = form.get(fieldName);
+    return field ? field.invalid && field.touched : false;
   }
 
-  initializeEditUsuarioForm(usuario: Usuario): void {
-    this.editUsuarioForm = {
-      username: usuario.username || '',
-      nivelId: usuario.nivelId || 0
-    };
-  }
+  getErrorMessage(form: FormGroup, fieldName: string): string {
+    const field = form.get(fieldName);
+    if (!field || !field.errors) return '';
 
-  // ========== FORMULARIO DE PERFIL ==========
-
-  openEditProfile(): void {
-    this.showEditProfile = true;
-  }
-
-  saveProfile(): void {
-    if (!this.trabajador) {
-      this.usuarioService.showError('Error', 'No se encontró información del trabajador');
-      return;
+    if (field.errors['required']) {
+      return 'Este campo es obligatorio';
     }
 
-    // Validaciones
-    if (!this.editProfileForm.email) {
-      this.usuarioService.showError('Error', 'El email es obligatorio');
-      return;
+    if (field.errors['email']) {
+      return 'Debe ser un email válido';
     }
 
-    if (!this.validateEmail(this.editProfileForm.email)) {
-      this.usuarioService.showError('Error', 'El email no es válido');
-      return;
+    if (field.errors['minlength']) {
+      return `Mínimo ${field.errors['minlength'].requiredLength} caracteres`;
     }
 
-    this.isUpdating = true;
+    if (field.errors['maxlength']) {
+      return `Máximo ${field.errors['maxlength'].requiredLength} caracteres`;
+    }
 
-    const updatedData = {
-      email: this.editProfileForm.email,
-      telefono: this.editProfileForm.telefono,
-      direccion: this.editProfileForm.direccion,
-      cargo: this.editProfileForm.cargo,
-      area: this.editProfileForm.area
-    };
-
-    this.usuarioService.updateTrabajador(this.trabajador.idTrabajador, updatedData).subscribe({
-      next: (trabajadorActualizado) => {
-        this.trabajador = trabajadorActualizado;
-        this.usuarioService.showSuccess('Éxito', 'Perfil actualizado correctamente');
-        this.showEditProfile = false;
-        this.isUpdating = false;
-      },
-      error: (error) => {
-        this.usuarioService.showError('Error', 'No se pudo actualizar el perfil');
-        console.error('Error actualizando perfil:', error);
-        this.isUpdating = false;
+    if (field.errors['pattern']) {
+      if (fieldName === 'celular') {
+        return 'El celular debe tener 9 dígitos';
       }
-    });
-  }
-
-  cancelEditProfile(): void {
-    if (this.trabajador) {
-      this.initializeEditProfileForm(this.trabajador);
-    }
-    this.showEditProfile = false;
-  }
-
-  // ========== FORMULARIO DE USUARIO ==========
-
-  openEditUsuario(): void {
-    this.showEditUsuario = true;
-  }
-
-  saveUsuario(): void {
-    if (!this.usuario) {
-      this.usuarioService.showError('Error', 'No se encontró información del usuario');
-      return;
+      return 'Formato inválido';
     }
 
-    // Validaciones
-    if (!this.editUsuarioForm.username) {
-      this.usuarioService.showError('Error', 'El username es obligatorio');
-      return;
+    if (field.errors['mismatch']) {
+      return 'Las contraseñas no coinciden';
     }
 
-    if (!this.editUsuarioForm.nivelId) {
-      this.usuarioService.showError('Error', 'Debe seleccionar un nivel');
-      return;
-    }
-
-    this.isUpdating = true;
-
-    const usuarioUpdate: UsuarioUpdate = {
-      username: this.editUsuarioForm.username,
-      trabajadorId: this.usuario.trabajadorId,
-      nivelId: this.editUsuarioForm.nivelId
-    };
-
-    this.usuarioService.updatePerfil(usuarioUpdate).subscribe({
-      next: (usuarioActualizado) => {
-        this.usuario = usuarioActualizado;
-        this.usuarioService.showSuccess('Éxito', 'Configuración de usuario actualizada');
-        this.showEditUsuario = false;
-        this.isUpdating = false;
-      },
-      error: (error) => {
-        this.usuarioService.showError('Error', 'No se pudo actualizar la configuración');
-        console.error('Error actualizando usuario:', error);
-        this.isUpdating = false;
-      }
-    });
-  }
-
-  cancelEditUsuario(): void {
-    if (this.usuario) {
-      this.initializeEditUsuarioForm(this.usuario);
-    }
-    this.showEditUsuario = false;
-  }
-
-  // ========== CAMBIO DE CONTRASEÑA ==========
-
-  openChangePassword(): void {
-    this.showChangePassword = true;
-    this.changePasswordForm = {
-      currentPassword: '',
-      newPassword: '',
-      confirmPassword: ''
-    };
-  }
-
-  savePassword(): void {
-    // Validaciones
-    if (!this.changePasswordForm.currentPassword) {
-      this.usuarioService.showError('Error', 'La contraseña actual es obligatoria');
-      return;
-    }
-
-    if (!this.changePasswordForm.newPassword) {
-      this.usuarioService.showError('Error', 'La nueva contraseña es obligatoria');
-      return;
-    }
-
-    if (this.changePasswordForm.newPassword.length < 6) {
-      this.usuarioService.showError('Error', 'La nueva contraseña debe tener al menos 6 caracteres');
-      return;
-    }
-
-    if (this.changePasswordForm.newPassword !== this.changePasswordForm.confirmPassword) {
-      this.usuarioService.showError('Error', 'Las contraseñas no coinciden');
-      return;
-    }
-
-    this.isUpdating = true;
-
-    const passwordData: ChangePasswordRequest = {
-      currentPassword: this.changePasswordForm.currentPassword,
-      newPassword: this.changePasswordForm.newPassword
-    };
-
-    this.usuarioService.changePassword(passwordData).subscribe({
-      next: () => {
-        this.usuarioService.showSuccess('Éxito', 'Contraseña cambiada correctamente');
-        this.showChangePassword = false;
-        this.isUpdating = false;
-      },
-      error: (error) => {
-        const errorMessage = error.message || 'No se pudo cambiar la contraseña';
-        this.usuarioService.showError('Error', errorMessage);
-        console.error('Error cambiando contraseña:', error);
-        this.isUpdating = false;
-      }
-    });
-  }
-
-  cancelChangePassword(): void {
-    this.showChangePassword = false;
-  }
-
-  // ========== MÉTODOS AUXILIARES ==========
-
-  getNombreCompleto(): string {
-    if (!this.trabajador) return 'Usuario';
-    return `${this.trabajador.nombres} ${this.trabajador.apellidos}`;
+    return '';
   }
 
   getAvatarText(): string {
-    if (!this.trabajador) return 'U';
-    return this.usuarioService.getAvatarText(
-      this.trabajador.nombres,
-      this.trabajador.apellidos
-    );
+    if (!this.perfil) return 'U';
+    return (this.perfil.nombres?.charAt(0) || 'U') + (this.perfil.apellidos?.charAt(0) || '');
   }
 
-  getNivelNombre(): string {
-    if (this.usuario?.nivelNombre) {
-      return this.usuario.nivelNombre;
-    }
-    const nivel = this.niveles.find(n => n.idNivel === this.usuario?.nivelId);
-    return nivel?.descripcion || 'Sin nivel';
-  }
-
-  getNivelCodigo(): string {
-    if (this.usuario?.nivelCodigo) {
-      return this.usuario.nivelCodigo;
-    }
-    const nivel = this.niveles.find(n => n.idNivel === this.usuario?.nivelId);
-    return nivel?.codigo || 'N/A';
+  getNivelClass(): string {
+    if (!this.perfil) return 'badge bg-secondary';
+    return this.perfilService.getNivelBadgeClass(this.perfil.nivelCodigo);
   }
 
   formatFecha(fecha: string): string {
-    return this.usuarioService.formatFecha(fecha);
+    return this.perfilService.formatFecha(fecha);
   }
 
   formatFechaRelativa(fecha: string): string {
-    return this.usuarioService.formatFechaRelativa(fecha);
+    return this.perfilService.formatFechaRelativa(fecha);
   }
 
-  getEdadLaboral(): string {
-    if (!this.trabajador?.fechaIngreso) return 'N/A';
+  // ========== VALIDACIONES EN TIEMPO REAL ==========
 
-    const ingreso = new Date(this.trabajador.fechaIngreso);
-    const ahora = new Date();
-    const diffMs = ahora.getTime() - ingreso.getTime();
-    const diffYears = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 365));
-
-    if (diffYears === 0) {
-      const diffMonths = Math.floor(diffMs / (1000 * 60 * 60 * 24 * 30));
-      return `${diffMonths} mes${diffMonths !== 1 ? 'es' : ''}`;
+  onPasswordInput(): void {
+    const newPassword = this.passwordForm.get('newPassword')?.value;
+    if (newPassword) {
+      const validation = this.perfilService.validatePasswordStrength(newPassword);
+      if (!validation.valid) {
+        this.passwordForm.get('newPassword')?.setErrors({ strength: true });
+      }
     }
-
-    return `${diffYears} año${diffYears !== 1 ? 's' : ''}`;
-  }
-
-  validateEmail(email: string): boolean {
-    const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return re.test(email);
-  }
-
-  getColorByEstado(activo: boolean): string {
-    return activo ? 'success' : 'danger';
-  }
-
-  getTextoEstado(activo: boolean): string {
-    return activo ? 'Activo' : 'Inactivo';
-  }
-
-  // ========== PAGINACIÓN ==========
-
-  onPageChange(page: number): void {
-    this.currentPage = page;
-  }
-
-  onPageSizeChange(size: number): void {
-    this.pageSize = size;
-    this.currentPage = 0;
-    this.totalPages = Math.ceil(this.totalItems / size);
-  }
-
-  getPaginatedActividades(): Actividad[] {
-    const start = this.currentPage * this.pageSize;
-    const end = start + this.pageSize;
-    return this.actividades.slice(start, end);
-  }
-
-  // ========== SEGURIDAD ==========
-
-  confirmLogout(): void {
-    this.usuarioService.showConfirm('Cerrar sesión', '¿Está seguro de que desea cerrar sesión?')
-      .then((result) => {
-        if (result.isConfirmed) {
-          this.logout();
-        }
-      });
-  }
-
-  logout(): void {
-    // En producción, llamar al servicio de autenticación
-    localStorage.removeItem('token');
-    localStorage.removeItem('usuario');
-    window.location.href = '/login';
   }
 }

@@ -1,5 +1,6 @@
 package com.backend.comfutura.config.security;
 
+import com.backend.comfutura.model.Trabajador;
 import com.backend.comfutura.model.Usuario;
 import lombok.Getter;
 import org.springframework.security.core.GrantedAuthority;
@@ -50,6 +51,8 @@ public class CustomUserDetails implements UserDetails {
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return authorities;
     }
+
+
 
     @Override
     public String getPassword() {

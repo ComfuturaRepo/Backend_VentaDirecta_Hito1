@@ -224,23 +224,55 @@ public class OtServiceImpl implements OtService {
         otsRepository.save(ots);
         return toOtDetailResponse(ots);
     }
+    private boolean esUsuarioFinanzas(CustomUserDetails user, Trabajador trabajador) {
+        return trabajador.getArea() != null
+                && "FINANZAS".equalsIgnoreCase(trabajador.getArea().getNombre());
+    }
 
     private Ots createOt(OtCreateRequest req) {
 
         int anioActual = LocalDate.now().getYear();
 
-        Integer ultimoOt = getUltimoOtCorrelativo();
+        // Usuario autenticado
+        CustomUserDetails user = (CustomUserDetails)
+                SecurityContextHolder.getContext()
+                        .getAuthentication()
+                        .getPrincipal();
 
-        int nuevoOt = (ultimoOt == null)
-                ? anioActual * 10000 + 1   // 20260001
-                : ultimoOt + 1;
+        Trabajador creador = trabajadorRepository.findById(user.getIdTrabajador())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Trabajador autenticado no encontrado"));
 
-        Integer userId = getCurrentTrabajadorId();
-        Trabajador creador = trabajadorRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Trabajador autenticado no encontrado"));
+        boolean esFinanzas = esUsuarioFinanzas(user, creador);
 
-        EstadoOt estadoPendiente = estadoOtRepository.findByDescripcion("ASIGNACION")
-                .orElseThrow(() -> new ResourceNotFoundException("Estado 'ASIGNACION' no encontrado"));
+        int nuevoOt;
+
+        if (esFinanzas) {
+
+            int inicio = anioActual * 10000 + 9000; // 20269000
+            int fin    = anioActual * 10000 + 9999; // 20269999
+
+            Integer ultimoOt = otsRepository
+                    .findMaxOtInRange(inicio, fin)
+                    .orElse(null);
+
+            nuevoOt = (ultimoOt == null)
+                    ? inicio + 1      // 20269001
+                    : ultimoOt + 1;
+
+        } else {
+
+            Integer ultimoOt = getUltimoOtCorrelativo();
+
+            nuevoOt = (ultimoOt == null)
+                    ? anioActual * 10000 + 1   // 20260001
+                    : ultimoOt + 1;
+        }
+
+        EstadoOt estadoPendiente = estadoOtRepository
+                .findByDescripcion("ASIGNACION")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Estado 'ASIGNACION' no encontrado"));
 
         Ots ots = Ots.builder()
                 .ot(nuevoOt)
@@ -255,6 +287,7 @@ public class OtServiceImpl implements OtService {
         setRelations(ots, req);
         return ots;
     }
+
 
 
 
