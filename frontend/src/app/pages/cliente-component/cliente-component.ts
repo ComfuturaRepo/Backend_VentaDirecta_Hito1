@@ -7,6 +7,7 @@ import { NgbModal, NgbModalRef, NgbAlertModule } from '@ng-bootstrap/ng-bootstra
 import { PaginationComponent } from '../../component/pagination.component/pagination.component';
 import { Cliente, ClienteCreateUpdateDTO, ClienteService, PageResponseDTO } from '../../service/cliente.service';
 import { DropdownItem, DropdownService } from '../../service/dropdown.service';
+import { AreaService, AreaCreateUpdateDTO } from '../../service/area.service';
 
 interface Notification {
   type: 'success' | 'error' | 'warning' | 'info';
@@ -32,14 +33,24 @@ export class ClienteComponent implements OnInit, OnDestroy {
   // Estados
   isLoading = false;
   isSubmitting = false;
+  isCreatingArea = false;
 
   // Datos
   clientes: Cliente[] = [];
   areasDropdown: DropdownItem[] = [];
-  pageResponse!: PageResponseDTO<Cliente>;
-  // Agrega estas propiedades en la clase
-activeClientsCount = 0;
-inactiveClientsCount = 0;
+pageResponse: PageResponseDTO<Cliente> = {
+  content: [],
+  currentPage: 0,
+  totalItems: 0,
+  totalPages: 0,
+  first: true,
+  last: true,
+  pageSize: 10
+};
+  // Estadísticas
+  activeClientsCount = 0;
+  inactiveClientsCount = 0;
+
   // Paginación
   currentPage = 0;
   pageSize = 10;
@@ -47,30 +58,37 @@ inactiveClientsCount = 0;
 
   // Formularios
   clienteForm!: FormGroup;
+  areaForm!: FormGroup;
   editMode = false;
   selectedClienteId: number | null = null;
 
   // Modal
   @ViewChild('clienteModal') clienteModal!: TemplateRef<any>;
+  @ViewChild('areaModal') areaModal!: TemplateRef<any>;
   modalRef!: NgbModalRef;
 
   // Notificaciones
   notifications: Notification[] = [];
 
-  // Busqueda reactiva
+  // Búsqueda reactiva
   private searchSubject = new Subject<string>();
   private destroy$ = new Subject<void>();
 
   // Filtros
   filterActivo: boolean | null = null;
 
+  // Creación rápida de área
+  newAreaName = '';
+  showAreaInput = false;
+
   constructor(
     private clienteService: ClienteService,
+    private areaService: AreaService,
     private dropdownService: DropdownService,
     private modalService: NgbModal,
     private fb: FormBuilder
   ) {
-    this.initForm();
+    this.initForms();
   }
 
   ngOnInit(): void {
@@ -92,6 +110,30 @@ inactiveClientsCount = 0;
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  // =============================
+  // INICIALIZACIÓN
+  // =============================
+
+  private initForms(): void {
+    // Formulario de cliente
+    this.clienteForm = this.fb.group({
+      razonSocial: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
+      ruc: ['', [
+        Validators.required,
+        Validators.pattern(/^\d{11}$/),
+        Validators.maxLength(11)
+      ]],
+      areaIds: [[], Validators.required],
+      activo: [true]
+    });
+
+    // Formulario de área
+    this.areaForm = this.fb.group({
+      nombre: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      activo: [true]
+    });
   }
 
   // =============================
@@ -125,41 +167,73 @@ inactiveClientsCount = 0;
   }
 
   // =============================
-  // INICIALIZACIÓN
+  // CARGA DE DATOS
   // =============================
 
-  private initForm(): void {
-    this.clienteForm = this.fb.group({
-      razonSocial: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(150)]],
-      ruc: ['', [
-        Validators.required,
-        Validators.pattern(/^\d{11}$/),
-        Validators.maxLength(11)
-      ]],
-      areaIds: [[], Validators.required],
-      activo: [true]
-    });
-  }
-
   private loadDropdowns(): void {
+  this.isLoading = true;
+  this.dropdownService.getAreas().subscribe({
+    next: (areas) => {
+      console.log('Áreas recibidas:', areas); // Para debug
+
+      // Filtra áreas activas usando la propiedad 'estado'
+      this.areasDropdown = areas.filter(area => area.estado === true);
+
+      console.log('Áreas activas después de filtrar:', this.areasDropdown.length); // Para debug
+      this.isLoading = false;
+    },
+    error: (error) => {
+      console.error('Error al cargar áreas:', error);
+      this.showNotification('error', 'Error al cargar las áreas');
+      this.isLoading = false;
+    }
+  });
+}
+
+  loadClientes(): void {
     this.isLoading = true;
-    this.dropdownService.getAreas().subscribe({
-      next: (areas) => {
-        this.areasDropdown = areas.filter(area => area.estado !== false);
+
+    let request$;
+
+    if (this.searchTerm.trim()) {
+      request$ = this.clienteService.search(this.searchTerm, this.currentPage, this.pageSize);
+    } else if (this.filterActivo !== null) {
+      if (this.filterActivo) {
+        request$ = this.clienteService.getActivos(this.currentPage, this.pageSize);
+      } else {
+        // Para inactivos, usamos búsqueda o filtramos del total
+        request$ = this.clienteService.getAll(this.currentPage, this.pageSize).pipe(
+          switchMap(response => {
+            const filtered = {
+              ...response,
+              content: response.content.filter(c => !c.activo)
+            };
+            return of(filtered);
+          })
+        );
+      }
+    } else {
+      request$ = this.clienteService.getAll(this.currentPage, this.pageSize);
+    }
+
+    request$.subscribe({
+      next: (response) => {
+        this.pageResponse = response;
+        this.clientes = response.content;
+        this.calculateStatistics();
         this.isLoading = false;
       },
       error: (error) => {
-        this.showNotification('error', 'Error al cargar las áreas');
+        this.showNotification('error', 'Error al cargar los clientes');
         this.isLoading = false;
       }
     });
   }
 
-  // =============================
-  // CARGA DE DATOS
-  // =============================
-
-
+  private calculateStatistics(): void {
+    this.activeClientsCount = this.clientes.filter(c => c.activo).length;
+    this.inactiveClientsCount = this.clientes.filter(c => !c.activo).length;
+  }
 
   // =============================
   // BÚSQUEDA Y FILTROS
@@ -169,7 +243,32 @@ inactiveClientsCount = 0;
     this.searchSubject.next(term);
   }
 
+  onFilterChange(filter: string): void {
+    switch (filter) {
+      case 'activos':
+        this.filterActivo = true;
+        break;
+      case 'inactivos':
+        this.filterActivo = false;
+        break;
+      default:
+        this.filterActivo = null;
+        break;
+    }
+    this.currentPage = 0;
+    this.loadClientes();
+  }
 
+  clearFilters(): void {
+    this.filterActivo = null;
+    this.searchTerm = '';
+    this.currentPage = 0;
+    this.loadClientes();
+  }
+
+  onRefresh(): void {
+    this.loadClientes();
+  }
 
   // =============================
   // PAGINACIÓN
@@ -186,10 +285,8 @@ inactiveClientsCount = 0;
     this.loadClientes();
   }
 
-
-
   // =============================
-  // CRUD OPERATIONS
+  // CRUD DE CLIENTES
   // =============================
 
   openCreateModal(): void {
@@ -346,6 +443,125 @@ inactiveClientsCount = 0;
   }
 
   // =============================
+  // CREACIÓN RÁPIDA DE ÁREAS
+  // =============================
+
+  toggleAreaInput(): void {
+    this.showAreaInput = !this.showAreaInput;
+    if (this.showAreaInput) {
+      this.newAreaName = '';
+      setTimeout(() => {
+        const input = document.getElementById('newAreaInput');
+        if (input) input.focus();
+      }, 0);
+    }
+  }
+
+ // En el método que crea áreas rápidas, ajusta:
+createAreaQuick(): void {
+  if (!this.newAreaName || this.newAreaName.trim().length < 2) {
+    this.showNotification('error', 'El nombre del área debe tener al menos 2 caracteres');
+    return;
+  }
+
+  const areaData: AreaCreateUpdateDTO = {
+    nombre: this.newAreaName.trim()
+  };
+
+  this.isCreatingArea = true;
+
+  this.areaService.checkNombreExists(this.newAreaName).pipe(
+    switchMap(exists => {
+      if (exists) {
+        throw new Error('El área ya existe');
+      }
+      return this.areaService.create(areaData);
+    })
+  ).subscribe({
+    next: (newArea) => {
+      // Agregar al dropdown actual - IMPORTANTE: usar 'estado' en lugar de 'adicional'
+      const dropdownItem: DropdownItem = {
+        id: newArea.idArea,
+        label: newArea.nombre,
+        adicional: undefined,
+        estado: true  // ← Añade esta propiedad
+      };
+      this.areasDropdown.push(dropdownItem);
+
+      // Agregar al formulario
+      const currentIds = this.clienteForm.get('areaIds')?.value || [];
+      this.clienteForm.get('areaIds')?.setValue([...currentIds, newArea.idArea]);
+
+      this.showNotification('success', 'Área creada correctamente');
+      this.newAreaName = '';
+      this.showAreaInput = false;
+    },
+    error: (error) => {
+      this.showNotification('error', error.message || 'Error al crear el área');
+    },
+    complete: () => {
+      this.isCreatingArea = false;
+    }
+  });
+}
+
+// En saveArea también:
+
+
+  openAreaModal(): void {
+    this.areaForm.reset({
+      nombre: '',
+      activo: true
+    });
+
+    this.modalService.open(this.areaModal, {
+      size: 'md',
+      backdrop: 'static',
+      keyboard: false
+    });
+  }
+
+saveArea(): void {
+  if (this.areaForm.invalid) {
+    this.markFormGroupTouched(this.areaForm);
+    return;
+  }
+
+  const formData = this.areaForm.value;
+  const areaData: AreaCreateUpdateDTO = {
+    nombre: formData.nombre
+  };
+
+  this.isSubmitting = true;
+
+  this.areaService.create(areaData).subscribe({
+    next: (newArea) => {
+      // Agregar al dropdown usando el formato correcto
+      const dropdownItem: DropdownItem = {
+        id: newArea.idArea,
+        label: newArea.nombre,
+        adicional: undefined,
+        estado: true
+      };
+      this.areasDropdown.push(dropdownItem);
+
+      // Agregar al formulario
+      const currentIds = this.clienteForm.get('areaIds')?.value || [];
+      this.clienteForm.get('areaIds')?.setValue([...currentIds, newArea.idArea]);
+
+      this.showNotification('success', 'Área creada correctamente');
+      this.modalService.dismissAll();
+    },
+    error: (error) => {
+      this.showNotification('error', error.message || 'Error al crear el área');
+    },
+    complete: () => {
+      this.isSubmitting = false;
+    }
+  });
+}
+
+  // =============================
   // UTILIDADES
   // =============================
 
@@ -367,11 +583,11 @@ inactiveClientsCount = 0;
   }
 
   getStatusText(activo: boolean): string {
-    return this.clienteService.getStatusText(activo);
+    return activo ? 'Activo' : 'Inactivo';
   }
 
   getStatusClass(activo: boolean): string {
-    return this.clienteService.getStatusClass(activo);
+    return activo ? 'badge bg-success' : 'badge bg-danger';
   }
 
   getAreasNames(areas: any[]): string {
@@ -395,6 +611,7 @@ inactiveClientsCount = 0;
   get razonSocial() { return this.clienteForm.get('razonSocial'); }
   get ruc() { return this.clienteForm.get('ruc'); }
   get areaIds() { return this.clienteForm.get('areaIds'); }
+  get areaNombre() { return this.areaForm.get('nombre'); }
 
   // Método para clases de alertas
   getAlertClass(type: string): string {
@@ -416,84 +633,4 @@ inactiveClientsCount = 0;
       default: return 'bi-info-circle-fill';
     }
   }
-
-
-
-// Actualiza el método loadClientes para calcular los contadores
-loadClientes(): void {
-  this.isLoading = true;
-
-  let request$;
-
-  if (this.searchTerm.trim()) {
-    request$ = this.clienteService.search(this.searchTerm, this.currentPage, this.pageSize);
-  } else if (this.filterActivo !== null) {
-    if (this.filterActivo) {
-      request$ = this.clienteService.getActivos(this.currentPage, this.pageSize);
-    } else {
-      // Para inactivos, usamos búsqueda o filtramos del total
-      request$ = this.clienteService.getAll(this.currentPage, this.pageSize).pipe(
-        switchMap(response => {
-          const filtered = {
-            ...response,
-            content: response.content.filter(c => !c.activo)
-          };
-          return of(filtered);
-        })
-      );
-    }
-  } else {
-    request$ = this.clienteService.getAll(this.currentPage, this.pageSize);
-  }
-
-  request$.subscribe({
-    next: (response) => {
-      this.pageResponse = response;
-      this.clientes = response.content;
-
-      // Calcular estadísticas
-      this.calculateStatistics();
-
-      this.isLoading = false;
-    },
-    error: (error) => {
-      this.showNotification('error', 'Error al cargar los clientes');
-      this.isLoading = false;
-    }
-  });
-}
-
-// Método para calcular estadísticas
-private calculateStatistics(): void {
-  this.activeClientsCount = this.clientes.filter(c => c.activo).length;
-  this.inactiveClientsCount = this.clientes.filter(c => !c.activo).length;
-}
-
-// También actualiza estos métodos para recalcular estadísticas
-onFilterChange(filter: string): void {
-  switch (filter) {
-    case 'activos':
-      this.filterActivo = true;
-      break;
-    case 'inactivos':
-      this.filterActivo = false;
-      break;
-    default:
-      this.filterActivo = null;
-      break;
-  }
-  this.currentPage = 0;
-  this.loadClientes();
-}
-
-clearFilters(): void {
-  this.filterActivo = null;
-  this.searchTerm = '';
-  this.currentPage = 0;
-  this.loadClientes();
-}
-
-onRefresh(): void {
-  this.loadClientes();
-}
 }
