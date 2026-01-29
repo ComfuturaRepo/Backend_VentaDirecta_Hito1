@@ -16,6 +16,7 @@ import { DropdownItem, DropdownService } from '../../../service/dropdown.service
   templateUrl: './form-orden-compra-component.html',
   styleUrls: ['./form-orden-compra-component.css']
 })
+
 export class FormOrdenCompraComponent implements OnInit, OnChanges {
 
   @Input() ocToEdit: OrdenCompraResponse | null = null;
@@ -28,7 +29,8 @@ export class FormOrdenCompraComponent implements OnInit, OnChanges {
 
   // Dropdowns
   ots: DropdownItem[] = [];
-  maestros: DropdownItem[] = [];
+maestros: { id: number; label: string; codigo: string }[] = [];
+
   proveedores: DropdownItem[] = [];
 
   // Estados (estático por ahora – puedes crear endpoint si lo prefieres dinámico)
@@ -64,26 +66,35 @@ formasPago: { id: string; label: string }[] = [
 
 
 
-  private cargarDropdowns(): void {
-    this.isLoading = true;
+private cargarDropdowns(): void {
+  this.isLoading = true;
 
-    this.dropdownService.loadOrdenCompraDropdowns().subscribe({
-      next: (data) => {
-        this.ots = data.ots;
-        this.maestros = data.maestros;
-        this.proveedores = data.proveedores;
-        this.isLoading = false;
+  this.dropdownService.loadOrdenCompraDropdowns().subscribe({
+    next: (data) => {
+      this.ots = data.ots;
 
-        // Aplicar valores de edición después de cargar los datos
-        this.aplicarValoresEdicion();
-      },
-      error: (err) => {
-        console.error('Error cargando dropdowns', err);
-        Swal.fire('Error', 'No se pudieron cargar los catálogos necesarios', 'error');
-        this.isLoading = false;
-      }
-    });
-  }
+      // 🔹 Mapear maestros para incluir 'codigo'
+     this.maestros = data.maestros.map(m => ({
+          id: m.id,
+          label: m.label,
+          codigo: (m as any).codigo ?? 'C' // por defecto 'C' si no viene
+        }));
+
+
+      this.proveedores = data.proveedores;
+      this.isLoading = false;
+
+      this.aplicarValoresEdicion();
+    },
+    error: (err) => {
+      console.error('Error cargando dropdowns', err);
+      Swal.fire('Error', 'No se pudieron cargar los catálogos necesarios', 'error');
+      this.isLoading = false;
+    }
+  });
+}
+
+
 
   ngOnChanges(changes: SimpleChanges): void {
     // Re-aplicar valores cuando cambie el input de edición (después de cargar dropdowns)
@@ -113,6 +124,7 @@ private aplicarValoresEdicion(): void {
         const subtotal = cantidad * precio;
         const igv = subtotal * 0.18; // si siempre es 18%
         const total = subtotal + igv;
+        const tipo = d.codigo?.startsWith('S') ? 'SERVICIO' : 'MATERIAL'; // <-- aquí
 
         return {
           idMaestro: d.idProducto ?? 0,
@@ -211,9 +223,23 @@ agregarDetalle(): void {
   precioUnitario: 0,
   subtotal: 0,
   igv: 0,
-  total: 0
+  total: 0,
+  tipo: 'MATERIAL' // valor por defecto
 });
 }
+// Agregar dentro de la clase FormOrdenCompraComponent
+onMaestroChange(d: any) {
+  // Busca el maestro seleccionado
+  const maestro = this.maestros.find(m => m.id === d.idMaestro);
+  if (maestro) {
+    // Si el código empieza con 'S' → SERVICIO, sino → MATERIAL
+    d.tipo = maestro.codigo?.startsWith('S') ? 'SERVICIO' : 'MATERIAL';
+  } else {
+    // fallback
+    d.tipo = 'MATERIAL';
+  }
+}
+
 
 // Eliminar detalle
 eliminarDetalle(index: number): void {
@@ -235,4 +261,10 @@ calcularTotales(): void {
   this.form.total = subtotal + this.form.igvTotal;
 }
 
+}
+// 🔹 Nuevo tipo para maestros con código
+interface MaestroItem {
+  id: number;
+  label: string;
+  codigo: string; // 'C' para Material, 'S' para Servicio
 }

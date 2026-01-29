@@ -6,6 +6,7 @@ import Swal from 'sweetalert2';
 import { OrdenCompraService } from '../../service/orden-compra.service'; // ajusta ruta
 import { OcDetalleResponse, OrdenCompraRequest, OrdenCompraResponse, PageOrdenCompra } from '../../model/orden-compra.model';
 import { FormOrdenCompraComponent } from "./form-orden-compra-component/form-orden-compra-component"; // ajusta ruta
+import { OcDetalleService } from '../../service/oc-detalle.service';
 
 @Component({
   selector: 'app-orden-compra-component',
@@ -35,7 +36,10 @@ showDetallesModal: boolean = false;        // controla modal
   isEditMode: boolean = false;
   selectedOc: OrdenCompraResponse | null = null;
 
-  constructor(private ordenService: OrdenCompraService) {}
+  constructor(
+  private ordenCompraService: OrdenCompraService,
+  private ocDetalleService: OcDetalleService
+) {}
 
   ngOnInit(): void {
     this.cargarOrdenes();
@@ -45,7 +49,7 @@ showDetallesModal: boolean = false;        // controla modal
     this.isLoading = true;
     this.errorMessage = null;
 
-    this.ordenService.listar(page, this.pageSize).subscribe({
+    this.ordenCompraService.listar(page, this.pageSize).subscribe({
       next: (data) => {
         this.pageData = data;
         this.ordenes = data.content;
@@ -92,32 +96,29 @@ showDetallesModal: boolean = false;        // controla modal
   //            Acciones de la tabla
   // ──────────────────────────────────────────────
 
-detalles: OcDetalleResponse[] = [];
 
-//verDetalle(oc: OrdenCompraResponse): void {
-//  console.log('CLICK DETALLE', oc.idOc);
-//
- // this.ordenService.obtenerDetallesPorOc(oc.idOc).subscribe({
-  //  next: (resp) => {
-   //   console.log('DETALLES RECIBIDOS', resp);
-//
- //     this.detalles = resp.content; // 🔥 SOLO EL ARRAY
-  //    this.mostrarModalDetalle();
-   // },
-    //error: () => {
-     // Swal.fire('Error', 'No se pudieron cargar los detalles', 'error');
-   // }
-  //});
-//}
+verDetalle(oc: OrdenCompraResponse): void {
+  this.detalleOcSeleccionada = oc;
+  this.showDetalleModal = true;   // 👈 ABRE EL MODAL
 
-
-mostrarModalDetalle(): void {
-  const modal = document.getElementById('modalDetalleOc');
-  if (modal) {
-    const bsModal = new (window as any).bootstrap.Modal(modal);
-    bsModal.show();
-  }
+  this.ocDetalleService.listarPorOrden(oc.idOc)
+    .subscribe({
+      next: (resp: any) => {
+        console.log('Detalles OC:', resp);
+        this.detallesOc = resp.content; // 👈 lo que usa el HTML
+      },
+      error: (err) => {
+        console.error('Error al cargar detalles', err);
+        Swal.fire('Error', 'No se pudieron cargar los detalles', 'error');
+      }
+    });
 }
+
+
+
+
+
+
 
 // Para el modal de detalles
 showDetalleModal: boolean = false;
@@ -178,7 +179,7 @@ detallesOc: OcDetalleResponse[] = [];
             };
 
 
-        this.ordenService.actualizar(oc.idOc, request).subscribe({
+        this.ordenCompraService.actualizar(oc.idOc, request).subscribe({
           next: () => {
             this.mostrarExito(`Estado cambiado a ${nuevoEstadoNombre}`);
             this.cargarOrdenes(this.currentPage);
@@ -258,5 +259,11 @@ getTotalDetalle(oc: OrdenCompraResponse): number {
   if (!oc.detalles) return 0;
   return oc.detalles.reduce((sum, d) => sum + ((d.cantidad ?? 0) * (d.precioUnitario ?? 0)), 0);
 }
+// Devuelve el tipo según el código
+getTipoDetalle(detalle: OcDetalleResponse): 'MATERIAL' | 'SERVICIO' {
+  if (!detalle.codigo) return 'MATERIAL'; // fallback
+  return detalle.codigo.startsWith('S') ? 'SERVICIO' : 'MATERIAL';
+}
+
 
 }

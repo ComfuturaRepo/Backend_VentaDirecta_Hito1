@@ -2,8 +2,10 @@ package com.backend.comfutura.service.serviceImpl;
 
 import com.backend.comfutura.dto.request.OcDetalleRequestDTO;
 import com.backend.comfutura.dto.response.OcDetalleResponseDTO;
+import com.backend.comfutura.model.MaestroCodigo;
 import com.backend.comfutura.model.OcDetalle;
 import com.backend.comfutura.model.OrdenCompra;
+import com.backend.comfutura.repository.MaestroCodigoRepository;
 import com.backend.comfutura.repository.OcDetalleRepository;
 import com.backend.comfutura.repository.OrdenCompraRepository;
 import com.backend.comfutura.service.OcDetalleService;
@@ -23,6 +25,7 @@ import java.util.stream.Collectors;
 @RequiredArgsConstructor
 @Transactional
 public class OcDetalleServiceImpl implements OcDetalleService {
+    private final MaestroCodigoRepository maestroCodigoRepository;
 
     private final OcDetalleRepository ocDetalleRepository;
     private final OrdenCompraRepository ordenCompraRepository;
@@ -138,10 +141,27 @@ public class OcDetalleServiceImpl implements OcDetalleService {
        MAPPER
        ================================================== */
     private OcDetalleResponseDTO mapToResponse(OcDetalle d) {
+
+        // 🔥 BUSCAR EL MAESTRO POR ID
+        MaestroCodigo m = null;
+
+        if (d.getIdMaestro() != null) {
+            m = maestroCodigoRepository
+                    .findById(d.getIdMaestro())
+                    .orElse(null);
+        }
+
         return OcDetalleResponseDTO.builder()
                 .idOcDetalle(d.getIdOcDetalle())
                 .idOc(d.getOrdenCompra().getIdOc())
+
                 .idMaestro(d.getIdMaestro())
+
+                // 🔥 DATOS DEL MAESTRO
+                .codigo(m != null ? m.getCodigo() : null)
+                .descripcion(m != null ? m.getDescripcion() : null)
+
+
                 .cantidad(d.getCantidad())
                 .precioUnitario(d.getPrecioUnitario())
                 .subtotal(d.getSubtotal())
@@ -149,6 +169,7 @@ public class OcDetalleServiceImpl implements OcDetalleService {
                 .total(d.getTotal())
                 .build();
     }
+
 
     /* ==================================================
        MÉTODO AUXILIAR: actualizar totales de OC

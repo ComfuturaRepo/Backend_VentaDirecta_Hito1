@@ -105,6 +105,12 @@
           <button class="btn btn-outline-warning" (click)="toggleEstado(oc)" title="Cambiar estado">
             <i class="bi bi-arrow-left-right"></i>
           </button>
+       <button class="btn btn-outline-info"
+              (click)="verDetalle(oc)"
+              title="Ver detalle">
+        <i class="bi bi-eye"></i>
+      </button>
+
         </div>
       </td>
     </tr>
@@ -152,7 +158,7 @@
           </thead>
           <tbody>
             <tr *ngFor="let d of detallesOc">
-              <td>{{d.idDetalle}}</td>
+             <td>{{ d.codigo }} - {{ d.descripcion }}</td>
               <td class="text-end">{{d.cantidad}}</td>
               <td class="text-end">{{d.precioUnitario | currency:'PEN':'symbol':'1.2-2'}}</td>
               <td class="text-end">{{d.total | currency:'PEN':'symbol':'1.2-2'}}</td>
