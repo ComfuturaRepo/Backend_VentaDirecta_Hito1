@@ -156,6 +156,30 @@ export class AuthService {
       return true;
     }
   }
+// NIVEL
+isNivel(nivel: string): boolean {
+  return this.currentUser?.roles?.includes(nivel) ?? false;
+}
+
+isNivelMinimo(nivelRequerido: string): boolean {
+  const orden = ['L1', 'L2', 'L3', 'L4', 'L5'];
+  const userNivel = this.currentUser?.roles?.[0];
+  if (!userNivel) return false;
+
+  return orden.indexOf(userNivel) <= orden.indexOf(nivelRequerido);
+}
+
+// ÁREA
+isArea(area: string): boolean {
+  return this.currentUser?.area?.toUpperCase() === area.toUpperCase();
+}
+
+// CARGO
+isCargo(texto: string): boolean {
+  return this.currentUser?.cargo
+    ?.toUpperCase()
+    .includes(texto.toUpperCase()) ?? false;
+}
 
   // ── Métodos públicos útiles ────────────────────────────────────────
 

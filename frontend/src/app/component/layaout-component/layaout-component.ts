@@ -45,6 +45,52 @@ export class LayoutComponent implements OnInit, OnDestroy {
     document.body.classList.remove('no-scroll');
   }
 
+  // ========== MÉTODOS DE SEGURIDAD ==========
+
+  // Verificar nivel específico
+  isNivel(nivel: string): boolean {
+    return this.currentUser?.roles?.includes(nivel) ?? false;
+  }
+
+  // Verificar nivel mínimo
+  isNivelMinimo(nivelRequerido: string): boolean {
+    const orden = ['L1', 'L2', 'L3', 'L4', 'L5'];
+    const userNivel = this.currentUser?.roles?.find(r => orden.includes(r));
+    if (!userNivel) return false;
+
+    return orden.indexOf(userNivel) <= orden.indexOf(nivelRequerido);
+  }
+
+  // Verificar área
+  isArea(area: string): boolean {
+    return this.currentUser?.area?.toUpperCase() === area.toUpperCase();
+  }
+
+  // Verificar cargo (puede contener texto)
+  isCargo(texto: string): boolean {
+    return this.currentUser?.cargo
+      ?.toUpperCase()
+      .includes(texto.toUpperCase()) ?? false;
+  }
+
+  // Verificar múltiples áreas
+  isAnyArea(areas: string[]): boolean {
+    if (!this.currentUser?.area) return false;
+    return areas.some(area =>
+      this.currentUser?.area?.toUpperCase() === area.toUpperCase()
+    );
+  }
+
+  // Verificar múltiples niveles
+  isAnyNivel(niveles: string[]): boolean {
+    if (!this.currentUser?.roles) return false;
+    return niveles.some(nivel =>
+      this.currentUser?.roles?.includes(nivel)
+    );
+  }
+
+  // ========== MÉTODOS EXISTENTES ==========
+
   private loadLogo() {
     try {
       const cloudinaryUrl = 'https://res.cloudinary.com/dqznlmig0/image/upload/v1769301735/COMFUTURA_LOGOTIPO-04_kwulpt.png';
@@ -81,7 +127,6 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent) {
-    // Cerrar menús al hacer clic fuera
     const target = event.target as HTMLElement;
 
     if (this.showUserMenu && !target.closest('.user-profile') && !target.closest('.user-menu-dropdown')) {
@@ -101,12 +146,12 @@ export class LayoutComponent implements OnInit, OnDestroy {
     return this.authService.currentUser?.username ?? 'Usuario';
   }
 
-    get nombreCompleto(): string {
-    return this.authService.currentUser?.nombreCompleto ?? 'nombre';
+  get nombreCompleto(): string {
+    return this.authService.currentUser?.nombreCompleto ?? 'Usuario';
   }
 
   get userInitial(): string {
-    const name = this.authService.currentUser?.username;
+    const name = this.authService.currentUser?.nombreCompleto || this.authService.currentUser?.username;
     return name ? name.charAt(0).toUpperCase() : 'U';
   }
 
@@ -117,19 +162,28 @@ export class LayoutComponent implements OnInit, OnDestroy {
   get mainRole(): string {
     const roles = this.currentUser?.roles;
     if (!roles || roles.length === 0) return 'Usuario';
+
+    // Prioridad: ADMIN > L niveles > otros
     const adminRole = roles.find(r => r.includes('ADMIN'));
-    return adminRole || roles[0];
+    if (adminRole) return adminRole;
+
+    const nivelRole = roles.find(r => r.startsWith('L'));
+    if (nivelRole) return nivelRole;
+
+    return roles[0];
   }
 
   get userBadgeClass(): string {
     const role = this.mainRole.toLowerCase();
     if (role.includes('admin')) return 'admin-badge';
-    if (role.includes('gerente') || role.includes('jefe')) return 'manager-badge';
+    if (role.includes('gerente') || role.includes('jefe') || role.includes('l4') || role.includes('l5')) {
+      return 'manager-badge';
+    }
     return 'user-badge';
   }
 
   get hasNotifications(): boolean {
-    return true; // Cambiar con lógica real
+    return true;
   }
 
   toggleCollapse() {
@@ -193,24 +247,17 @@ export class LayoutComponent implements OnInit, OnDestroy {
       cancelButtonColor: '#6c757d',
       confirmButtonText: 'Sí, cerrar sesión',
       cancelButtonText: 'Cancelar',
-      reverseButtons: true,
-      customClass: {
-        container: 'swal-container'
-      }
+      reverseButtons: true
     }).then((result) => {
       if (result.isConfirmed) {
         this.authService.logout();
         this.router.navigate(['/login']);
-
         Swal.fire({
           icon: 'success',
           title: 'Sesión cerrada',
           text: 'Has salido del sistema correctamente',
           timer: 1500,
-          showConfirmButton: false,
-          customClass: {
-            container: 'swal-container'
-          }
+          showConfirmButton: false
         });
       }
     });
