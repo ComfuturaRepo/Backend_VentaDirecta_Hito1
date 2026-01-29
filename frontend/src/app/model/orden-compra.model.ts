@@ -10,7 +10,7 @@ export interface OcDetalleRequest {
   subtotal: number;
   igv: number;
   total: number;
-    tipo?: 'MATERIAL' | 'SERVICIO'; // <-- NUEVO CAMPO
+    tipo?: ''; // <-- NUEVO CAMPO
 
 }
 
@@ -109,4 +109,16 @@ export interface PageOrdenCompra {
   first: boolean;
   numberOfElements: number;
   empty: boolean;
+}
+
+export interface PageInfo {
+  size: number;
+  number: number;
+  totalElements: number;
+  totalPages: number;
+}
+
+export interface PageOrdenCompra {
+  content: OrdenCompraResponse[];
+  page: PageInfo;
 }

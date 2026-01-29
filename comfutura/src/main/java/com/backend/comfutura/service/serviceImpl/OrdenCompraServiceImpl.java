@@ -20,9 +20,11 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
+
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 
 @Service
 @RequiredArgsConstructor
@@ -129,43 +131,36 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
        LISTADO PAGINADO
        ===================================================== */
     @Override
-    public Page<OrdenCompraResponseDTO> listarPaginado(
-            int page,
-            int size,
-            String sortBy,
-            String direction
-    ) {
-
+    public Page<OrdenCompraResponseDTO> listarPaginado(int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("DESC")
                 ? Sort.by(sortBy).descending()
                 : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return ordenCompraRepository.findAll(pageable)
+        return ordenCompraRepository.findAllWithRelations(pageable)
                 .map(this::mapToResponse);
     }
+
 
     /* =====================================================
        MAPPER SIMPLE (API / CRUD)
        ===================================================== */
     private OrdenCompraResponseDTO mapToResponse(@NonNull OrdenCompra oc) {
-
         return OrdenCompraResponseDTO.builder()
                 .idOc(oc.getIdOc())
-                .idEstadoOc(oc.getEstadoOC().getIdEstadoOc())
-                .estadoNombre(oc.getEstadoOC().getNombre())
-                .idOts(oc.getIdOts())
-                .idProveedor(oc.getIdProveedor())
+                .fechaOc(oc.getFechaOc())
                 .formaPago(oc.getFormaPago())
+                .observacion(oc.getObservacion())
                 .subtotal(oc.getSubtotal())
                 .igvPorcentaje(oc.getIgvPorcentaje())
                 .igvTotal(oc.getIgvTotal())
                 .total(oc.getTotal())
-                .fechaOc(oc.getFechaOc())
-                .observacion(oc.getObservacion())
-                .build();
+                .estadoNombre(oc.getEstadoOC() != null ? oc.getEstadoOC().getNombre() : "")
+                .idEstadoOc(oc.getEstadoOC() != null ? oc.getEstadoOC().getIdEstadoOc() : null)
+                .build(); // ⚠️ No detalles, no proveedor, no OT
     }
+
 
     /* =====================================================
        GENERAR HTML (THYMELEAF)
