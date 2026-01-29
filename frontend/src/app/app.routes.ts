@@ -11,6 +11,7 @@ import { GestionCargosSolicitantesComponent } from './pages/gestion-cargos-solic
 
 import { authGuard } from './auth/auth.guard';
 import { UsuariosComponent } from './pages/usuarios-component/usuarios-component';
+import { UsuarioPerfilComponent } from './pages/usuario-perfil-component/usuario-perfil-component';
 import { TrabajadorComponent } from './pages/trabajador-component/trabajador-component';
 
 export const routes: Routes = [
@@ -63,7 +64,11 @@ export const routes: Routes = [
         component: UsuariosComponent,
         // data: { title: 'Órdenes de Compra' }
       },
-
+      {
+        path: 'perfil',
+        component: UsuarioPerfilComponent,
+        // data: { title: 'Órdenes de Compra' }
+      },
           {
         path: 'trabajador',
         component: TrabajadorComponent,
