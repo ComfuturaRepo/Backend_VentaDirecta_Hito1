@@ -8,7 +8,7 @@ import Swal from 'sweetalert2';
 import { CargoSolicitante } from '../../model/cargo-solicitante.interface';
 import { PaginationComponent } from '../../component/pagination.component/pagination.component';
 import { CargoSolicitanteService } from '../../service/cargo-solicitante.service';
-import { PageResponse } from '../../service/usuario.service';
+import { PageResponse } from '../../model/page.interface';
 
 
 type ModoVista = 'ANALISTA' | 'JEFATURA';

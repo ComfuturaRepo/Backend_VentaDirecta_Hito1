@@ -99,6 +99,17 @@ export class DropdownService {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/ots`);
   }
 
+    getTrabajadores(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/trabajador`);
+  }
+
+    getTrabajadoresSinUSuarioActivo(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/trabajadorSinUsuarioActivo`);
+  }
+
+  getNivel(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/nivel`);
+  }
 
   getProveedores(): Observable<DropdownItem[]> {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/proveedores`);

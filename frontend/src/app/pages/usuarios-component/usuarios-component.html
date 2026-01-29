@@ -1,204 +1,157 @@
-<div class="container-fluid py-4">
+<!-- usuarios.component.html -->
+<div class="container-fluid mt-4">
   <!-- Encabezado -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <div>
-      <h1 class="h3 mb-0 text-gray-800">
-        <i class="fas fa-users me-2"></i>Gestión de Usuarios
-      </h1>
-      <p class="text-muted mb-0">Administra los usuarios del sistema</p>
-    </div>
-    <button class="btn btn-primary" (click)="openCreateModal()">
-      <i class="fas fa-plus me-2"></i>Nuevo Usuario
-    </button>
-  </div>
-
-  <!-- Filtros -->
-  <div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-      <h6 class="m-0 font-weight-bold text-primary">
-        <i class="fas fa-filter me-2"></i>Filtros de Búsqueda
-      </h6>
-      <button class="btn btn-sm btn-link text-decoration-none"
-              (click)="showFilters = !showFilters"
-              [attr.aria-expanded]="showFilters">
-        <i class="fas" [class.fa-chevron-down]="!showFilters" [class.fa-chevron-up]="showFilters"></i>
-      </button>
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-white border-bottom">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h5 class="mb-0">
+            <i class="bi bi-people me-2"></i>Gestión de Usuarios
+          </h5>
+          <small class="text-muted">Administra los usuarios del sistema</small>
+        </div>
+        <div>
+          <button class="btn btn-primary" (click)="openCreateModal()">
+            <i class="bi bi-plus-lg me-1"></i>Nuevo Usuario
+          </button>
+        </div>
+      </div>
     </div>
 
-    <div class="card-body" *ngIf="showFilters">
+    <!-- Filtros -->
+    <div class="card-body">
       <div class="row g-3">
-        <!-- Búsqueda -->
         <div class="col-md-4">
-          <label class="form-label fw-medium">Buscar</label>
+          <label class="form-label">Buscar</label>
           <div class="input-group">
-            <span class="input-group-text bg-light border-end-0">
-              <i class="fas fa-search"></i>
+            <span class="input-group-text">
+              <i class="bi bi-search"></i>
             </span>
             <input type="text"
-                   class="form-control border-start-0"
+                   class="form-control"
+                   placeholder="Buscar por usuario o nombre..."
                    [(ngModel)]="searchTerm"
-                   (keyup.enter)="aplicarFiltros()"
-                   placeholder="Buscar por username o nombre...">
+                   (keyup.enter)="aplicarFiltros()">
+            <button class="btn btn-outline-secondary" (click)="aplicarFiltros()">
+              <i class="bi bi-funnel"></i>
+            </button>
           </div>
         </div>
 
-        <!-- Estado -->
         <div class="col-md-3">
-          <label class="form-label fw-medium">Estado</label>
-          <select class="form-select" [(ngModel)]="filtroActivo">
+          <label class="form-label">Estado</label>
+          <select class="form-select" [(ngModel)]="filtroActivo" (change)="aplicarFiltros()">
             <option [ngValue]="null">Todos</option>
             <option [ngValue]="true">Activos</option>
             <option [ngValue]="false">Inactivos</option>
           </select>
         </div>
 
-        <!-- Nivel -->
         <div class="col-md-3">
-          <label class="form-label fw-medium">Nivel</label>
-          <select class="form-select" [(ngModel)]="filtroNivelId">
+          <label class="form-label">Nivel</label>
+          <select class="form-select" [(ngModel)]="filtroNivelId" (change)="aplicarFiltros()">
             <option [ngValue]="null">Todos los niveles</option>
-            <option *ngFor="let nivel of niveles" [value]="nivel.idNivel">
-              {{ nivel.nombre }}
+            <option *ngFor="let nivel of niveles" [value]="nivel.id">
+              {{ nivel.label }} {{ nivel.adicional }}
             </option>
           </select>
         </div>
 
-        <!-- Botones -->
         <div class="col-md-2 d-flex align-items-end">
-          <div class="d-flex gap-2 w-100">
-            <button class="btn btn-primary flex-fill" (click)="aplicarFiltros()">
-              <i class="fas fa-search me-1"></i>Buscar
-            </button>
-            <button class="btn btn-outline-secondary" (click)="limpiarFiltros()" title="Limpiar filtros">
-              <i class="fas fa-eraser"></i>
-            </button>
-          </div>
+          <button class="btn btn-outline-secondary w-100" (click)="limpiarFiltros()">
+            <i class="bi bi-x-lg me-1"></i>Limpiar
+          </button>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- Tarjeta de resultados -->
-  <div class="card shadow">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-      <h6 class="m-0 font-weight-bold text-primary">Lista de Usuarios</h6>
-      <span class="badge bg-primary">{{ totalItems }} registros</span>
-    </div>
-
-    <!-- Loading -->
-    <div *ngIf="isLoading" class="card-body text-center py-5">
-      <div class="spinner-border text-primary" role="status">
-        <span class="visually-hidden">Cargando...</span>
-      </div>
-      <p class="mt-3 text-muted">Cargando usuarios...</p>
-    </div>
-
-    <!-- Contenido -->
-    <div class="card-body" *ngIf="!isLoading">
+  <!-- Tabla de usuarios -->
+  <div class="card shadow-sm">
+    <div class="card-body">
       <div class="table-responsive">
-        <table class="table table-hover align-middle">
-          <thead class="table-light">
+        <table class="table table-hover">
+          <thead>
             <tr>
-              <th (click)="sort('idUsuario')" style="cursor: pointer; width: 80px;" class="ps-3">
+              <th (click)="sort('idUsuario')" style="cursor: pointer; width: 70px;">
                 ID
                 <i *ngIf="sortBy === 'idUsuario'"
-                   class="fas ms-1"
-                   [class.fa-sort-up]="sortDirection === 'asc'"
-                   [class.fa-sort-down]="sortDirection === 'desc'"></i>
+                   class="bi ms-1"
+                   [class.bi-arrow-down]="sortDirection === 'desc'"
+                   [class.bi-arrow-up]="sortDirection === 'asc'"></i>
               </th>
               <th (click)="sort('username')" style="cursor: pointer;">
-                Username/Email
+                Usuario
                 <i *ngIf="sortBy === 'username'"
-                   class="fas ms-1"
-                   [class.fa-sort-up]="sortDirection === 'asc'"
-                   [class.fa-sort-down]="sortDirection === 'desc'"></i>
+                   class="bi ms-1"
+                   [class.bi-arrow-down]="sortDirection === 'desc'"
+                   [class.bi-arrow-up]="sortDirection === 'asc'"></i>
               </th>
               <th>Trabajador</th>
               <th>Nivel</th>
-              <th (click)="sort('activo')" style="cursor: pointer;">
-                Estado
-                <i *ngIf="sortBy === 'activo'"
-                   class="fas ms-1"
-                   [class.fa-sort-up]="sortDirection === 'asc'"
-                   [class.fa-sort-down]="sortDirection === 'desc'"></i>
+              <th (click)="sort('fechaCreacion')" style="cursor: pointer;">
+                Fecha Creación
+                <i *ngIf="sortBy === 'fechaCreacion'"
+                   class="bi ms-1"
+                   [class.bi-arrow-down]="sortDirection === 'desc'"
+                   [class.bi-arrow-up]="sortDirection === 'asc'"></i>
               </th>
-              <th>Fecha Creación</th>
-              <th class="text-center" style="width: 180px;">Acciones</th>
+              <th>Estado</th>
+              <th style="width: 120px;">Acciones</th>
             </tr>
           </thead>
-
           <tbody>
-            <tr *ngFor="let usuario of usuarios" class="hover-shadow">
-              <td class="fw-bold ps-3">#{{ usuario.idUsuario }}</td>
-              <td>
-                <div class="d-flex align-items-center">
-                  <div class="avatar-sm bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center me-3">
-                    <i class="fas fa-user text-primary fs-6"></i>
-                  </div>
-                  <div>
-                    <strong class="d-block">{{ usuario.username }}</strong>
-                    <small class="text-muted">Usuario del sistema</small>
-                  </div>
+            <tr *ngIf="isLoading">
+              <td colspan="7" class="text-center py-5">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
                 </div>
               </td>
+            </tr>
+
+            <tr *ngIf="!isLoading && usuarios.length === 0">
+              <td colspan="7" class="text-center py-5 text-muted">
+                <i class="bi bi-people display-6 d-block mb-2"></i>
+                No se encontraron usuarios
+              </td>
+            </tr>
+
+            <tr *ngFor="let usuario of usuarios">
+              <td class="fw-semibold">{{ usuario.idUsuario }}</td>
               <td>
                 <div class="d-flex align-items-center">
-                  <i class="fas fa-id-card text-muted me-2"></i>
-                  <span>{{ getTrabajadorNombre(usuario) }}</span>
+                  <div class="avatar-sm bg-primary text-white rounded-circle d-flex align-items-center justify-content-center me-2">
+                    {{ usuario.username.charAt(0).toUpperCase() }}
+                  </div>
+                  <span>{{ usuario.username }}</span>
                 </div>
               </td>
+              <td>{{ usuario.nombreTrabajador }}</td>
               <td>
-                <span class="badge bg-info bg-opacity-10 text-info border border-info border-opacity-25">
-                  <i class="fas fa-shield-alt me-1"></i>
-                  {{ getNivelNombre(usuario) }}
-                </span>
+              <!-- En el template, ya funciona porque cambiamos a public -->
+<span class="badge" [ngClass]="usuarioService.getNivelBadgeClass(usuario.nivelNombre)">
+  {{ usuario.nivelNombre }}
+</span>
               </td>
+              <td>{{ usuario.fechaCreacion | date:'dd/MM/yyyy' }}</td>
               <td>
-                <span [class]="getEstadoClass(usuario.activo) + ' py-2 px-3'">
-                  <i class="fas me-1" [class.fa-check-circle]="usuario.activo" [class.fa-times-circle]="!usuario.activo"></i>
+                <span class="badge" [ngClass]="getEstadoClass(usuario.activo)">
                   {{ getEstadoText(usuario.activo) }}
                 </span>
               </td>
               <td>
-                <small class="text-muted">
-                  <i class="far fa-calendar me-1"></i>
-                  {{ usuario.fechaCreacion | date:'dd/MM/yyyy HH:mm' }}
-                </small>
-              </td>
-              <td>
-                <div class="btn-group btn-group-sm" role="group">
-                  <button class="btn btn-outline-primary rounded-start"
+                <div class="btn-group btn-group-sm">
+                  <button class="btn btn-outline-primary"
+                          [title]="'Editar'"
+                          (click)="openEditModal(usuario)">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn"
+                          [ngClass]="usuario.activo ? 'btn-outline-warning' : 'btn-outline-success'"
                           [title]="usuario.activo ? 'Desactivar' : 'Activar'"
                           (click)="toggleActivo(usuario)">
-                    <i class="fas" [class.fa-toggle-on]="usuario.activo" [class.fa-toggle-off]="!usuario.activo"></i>
-                  </button>
-
-
-
-                  <button class="btn btn-outline-info"
-                          title="Editar"
-                          (click)="openEditModal(usuario)">
-                    <i class="fas fa-edit"></i>
-                  </button>
-
-                  <button class="btn btn-outline-danger rounded-end"
-                          title="Eliminar"
-                          (click)="deleteUsuario(usuario)">
-                    <i class="fas fa-trash"></i>
-                  </button>
-                </div>
-              </td>
-            </tr>
-
-            <!-- Sin resultados -->
-            <tr *ngIf="usuarios.length === 0 && !isLoading">
-              <td colspan="7" class="text-center py-5">
-                <div class="text-muted">
-                  <i class="fas fa-user-slash fa-3x mb-3 opacity-50"></i>
-                  <h5 class="mb-2">No se encontraron usuarios</h5>
-                  <p class="mb-0">Intenta con otros filtros o crea un nuevo usuario</p>
-                  <button class="btn btn-primary mt-3" (click)="openCreateModal()">
-                    <i class="fas fa-plus me-2"></i>Crear Primer Usuario
+                    <i *ngIf="usuario.activo" class="bi bi-toggle-off"></i>
+                    <i *ngIf="!usuario.activo" class="bi bi-toggle-on"></i>
                   </button>
                 </div>
               </td>
@@ -208,79 +161,56 @@
       </div>
 
       <!-- Paginación -->
-      <app-pagination
-        *ngIf="totalItems > 0"
-        [currentPage]="currentPage"
-        [totalItems]="totalItems"
-        [totalPages]="totalPages"
-        [pageSize]="pageSize"
-        [showInfo]="true"
-        [showSizeSelector]="true"
-        [showNavigation]="true"
-        [showJumpToPage]="true"
-        [pageSizes]="[5, 10, 20, 50, 100]"
-        [align]="'center'"
-        [size]="'md'"
-        [isLoading]="isLoading"
-        (pageChange)="onPageChange($event)"
-        (pageSizeChange)="onPageSizeChange($event)"
-        (refresh)="onRefresh()"
-        class="mt-4">
-      </app-pagination>
+      <div *ngIf="pageResponse && pageResponse.totalPages > 0" class="mt-4">
+        <app-pagination
+          [currentPage]="currentPage"
+          [totalItems]="totalItems"
+          [totalPages]="totalPages"
+          [pageSize]="pageSize"
+          [isLoading]="isLoading"
+          (pageChange)="onPageChange($event)"
+          (pageSizeChange)="onPageSizeChange($event)"
+          (refresh)="onRefresh()">
+        </app-pagination>
+      </div>
     </div>
   </div>
 </div>
 
-<!-- Modal Crear/Editar Usuario -->
-<div class="modal fade" [class.show]="showModal" [style.display]="showModal ? 'block' : 'none'"
-     tabindex="-1" role="dialog" aria-labelledby="usuarioModalLabel" aria-hidden="true">
-  <div class="modal-dialog modal-lg" role="document">
+<!-- Modal para crear/editar usuario -->
+<div class="modal fade show d-block" *ngIf="showModal" [class.show]="showModal" style="background-color: rgba(0,0,0,0.5);">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
     <div class="modal-content">
-      <!-- Encabezado -->
       <div class="modal-header bg-primary text-white">
-        <h5 class="modal-title" id="usuarioModalLabel">
-          <i class="fas me-2" [class.fa-user-plus]="modalMode === 'create'" [class.fa-user-edit]="modalMode === 'edit'"></i>
-          {{ modalTitle }}
-        </h5>
-        <button type="button" class="btn-close btn-close-white" (click)="closeModal()" aria-label="Cerrar"></button>
+        <h5 class="modal-title">{{ modalTitle }}</h5>
+        <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
       </div>
 
-      <!-- Formulario -->
       <form [formGroup]="usuarioForm" (ngSubmit)="saveUsuario()">
         <div class="modal-body">
           <div class="row g-3">
-            <!-- Username/Email -->
-            <div class="col-md-6">
-              <label class="form-label fw-medium">
-                <i class="fas fa-envelope text-primary me-1"></i>
-                Email/Username <span class="text-danger">*</span>
-              </label>
-              <input type="email"
+            <!-- Username -->
+            <div class="col-md-12">
+              <label class="form-label">Correo electronico</label>
+              <input type="text"
                      class="form-control"
-                     formControlName="username"
                      [class.is-invalid]="isFieldInvalid('username')"
-                     placeholder="ejemplo@dominio.com">
+                     formControlName="username"
+                     placeholder="Ingrese el nombre de usuario">
               <div *ngIf="isFieldInvalid('username')" class="invalid-feedback">
                 {{ getErrorMessage('username') }}
               </div>
-              <small class="form-text text-muted">
-                Será utilizado para iniciar sesión en el sistema
-              </small>
             </div>
 
             <!-- Trabajador -->
             <div class="col-md-6">
-              <label class="form-label fw-medium">
-                <i class="fas fa-user-tie text-primary me-1"></i>
-                Trabajador <span class="text-danger">*</span>
-              </label>
+              <label class="form-label">Trabajador</label>
               <select class="form-select"
-                      formControlName="trabajadorId"
-                      [class.is-invalid]="isFieldInvalid('trabajadorId')">
-                <option [ngValue]="null" disabled>Seleccione un trabajador</option>
-                <option *ngFor="let trabajador of trabajadores"
-                        [value]="trabajador.idTrabajador">
-                  {{ trabajador.nombreCompleto }}
+                      [class.is-invalid]="isFieldInvalid('trabajadorId')"
+                      formControlName="trabajadorId">
+                <option [ngValue]="null">Seleccionar trabajador</option>
+                <option *ngFor="let trabajador of trabajadores" [value]="trabajador.id">
+                  {{ trabajador.label }}
                 </option>
               </select>
               <div *ngIf="isFieldInvalid('trabajadorId')" class="invalid-feedback">
@@ -290,16 +220,13 @@
 
             <!-- Nivel -->
             <div class="col-md-6">
-              <label class="form-label fw-medium">
-                <i class="fas fa-shield-alt text-primary me-1"></i>
-                Nivel de Acceso <span class="text-danger">*</span>
-              </label>
+              <label class="form-label">Nivel de Acceso</label>
               <select class="form-select"
-                      formControlName="nivelId"
-                      [class.is-invalid]="isFieldInvalid('nivelId')">
-                <option [ngValue]="null" disabled>Seleccione un nivel</option>
-                <option *ngFor="let nivel of niveles" [value]="nivel.idNivel">
-                  {{ nivel.nombre }} ({{ nivel.codigo }})
+                      [class.is-invalid]="isFieldInvalid('nivelId')"
+                      formControlName="nivelId">
+                <option [ngValue]="null">Seleccionar nivel</option>
+                <option *ngFor="let nivel of niveles" [value]="nivel.id">
+                  {{ nivel.label }} {{ nivel.adicional }}
                 </option>
               </select>
               <div *ngIf="isFieldInvalid('nivelId')" class="invalid-feedback">
@@ -308,53 +235,73 @@
             </div>
 
             <!-- Contraseña (solo para crear) -->
-            <div class="col-md-6" *ngIf="modalMode === 'create'">
-              <label class="form-label fw-medium">
-                <i class="fas fa-lock text-primary me-1"></i>
-                Contraseña <span class="text-danger">*</span>
-              </label>
-              <input type="password"
-                     class="form-control"
-                     formControlName="password"
-                     [class.is-invalid]="isFieldInvalid('password')"
-                     placeholder="Mínimo 6 caracteres">
+            <div *ngIf="modalMode === 'create'" class="col-md-6">
+              <label class="form-label">Contraseña</label>
+              <div class="input-group">
+                <input [type]="showPassword ? 'text' : 'password'"
+                       class="form-control"
+                       [class.is-invalid]="isFieldInvalid('password')"
+                       formControlName="password"
+                       placeholder="Ingrese contraseña">
+                <button class="btn btn-outline-secondary"
+                        type="button"
+                        (click)="showPassword = !showPassword">
+                  <i class="bi" [class.bi-eye]="!showPassword" [class.bi-eye-slash]="showPassword"></i>
+                </button>
+              </div>
               <div *ngIf="isFieldInvalid('password')" class="invalid-feedback">
                 {{ getErrorMessage('password') }}
               </div>
             </div>
 
             <!-- Confirmar Contraseña (solo para crear) -->
-            <div class="col-md-6" *ngIf="modalMode === 'create'">
-              <label class="form-label fw-medium">
-                <i class="fas fa-lock text-primary me-1"></i>
-                Confirmar Contraseña <span class="text-danger">*</span>
-              </label>
-              <input type="password"
-                     class="form-control"
-                     formControlName="confirmPassword"
-                     [class.is-invalid]="isFieldInvalid('confirmPassword')"
-                     placeholder="Repita la contraseña">
+            <div *ngIf="modalMode === 'create'" class="col-md-6">
+              <label class="form-label">Confirmar Contraseña</label>
+              <div class="input-group">
+                <input [type]="showConfirmPassword ? 'text' : 'password'"
+                       class="form-control"
+                       [class.is-invalid]="isFieldInvalid('confirmPassword')"
+                       formControlName="confirmPassword"
+                       placeholder="Confirmar contraseña">
+                <button class="btn btn-outline-secondary"
+                        type="button"
+                        (click)="showConfirmPassword = !showConfirmPassword">
+                  <i class="bi" [class.bi-eye]="!showConfirmPassword" [class.bi-eye-slash]="showConfirmPassword"></i>
+                </button>
+              </div>
               <div *ngIf="isFieldInvalid('confirmPassword')" class="invalid-feedback">
                 {{ getErrorMessage('confirmPassword') }}
+              </div>
+            </div>
+
+            <!-- Estado -->
+            <div class="col-md-12">
+              <div class="form-check form-switch">
+                <input class="form-check-input"
+                       type="checkbox"
+                       role="switch"
+                       id="activoSwitch"
+                       formControlName="activo">
+                <label class="form-check-label" for="activoSwitch">
+                  Usuario activo
+                </label>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Pie del modal -->
         <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeModal()">
-            <i class="fas fa-times me-1"></i>Cancelar
-          </button>
-          <button type="submit" class="btn btn-primary" [disabled]="usuarioForm.invalid">
-            <i class="fas" [class.fa-save]="modalMode === 'edit'" [class.fa-plus]="modalMode === 'create'"></i>
-            {{ modalMode === 'create' ? 'Crear Usuario' : 'Guardar Cambios' }}
+          <button type="button" class="btn btn-secondary" (click)="closeModal()">Cancelar</button>
+          <button type="submit"
+                  class="btn btn-primary"
+                  [disabled]="usuarioForm.invalid || isLoading">
+            <span *ngIf="!isLoading">
+              {{ modalMode === 'create' ? 'Crear' : 'Actualizar' }}
+            </span>
+            <span *ngIf="isLoading" class="spinner-border spinner-border-sm"></span>
           </button>
         </div>
       </form>
     </div>
   </div>
 </div>
-
-<!-- Backdrop del modal -->
-<div class="modal-backdrop fade show" *ngIf="showModal" (click)="closeModal()"></div>

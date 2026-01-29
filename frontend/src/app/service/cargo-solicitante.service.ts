@@ -4,7 +4,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin, map } from 'rxjs';
 import { environment } from '../../environment';
 import { CargoSolicitante } from '../model/cargo-solicitante.interface';
-import { PageResponse } from './usuario.service';
+import { PageResponse } from '../model/page.interface';
 
 @Injectable({
   providedIn: 'root'

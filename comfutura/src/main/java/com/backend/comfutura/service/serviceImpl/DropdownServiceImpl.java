@@ -26,6 +26,7 @@ public class DropdownServiceImpl implements DropdownService {
     private final ProveedorRepository proveedorRepository;
     private final CargoRepository cargoRepository;
     private final EmpresaRepository empresaRepository;
+    private final NivelRepository nivelRepository;
     private final EstadoOtRepository estadoOtRepository;
 
     // Nuevos repositorios para los responsables (agrega estos en tu proyecto)
@@ -71,6 +72,38 @@ public class DropdownServiceImpl implements DropdownService {
                 ))
                 .collect(Collectors.toList());
     }
+
+    @Override
+    public List<DropdownDTO> getTrabajadores() {
+        return trabajadorRepository.findByActivoTrueOrderByNombresAsc()
+                .stream()
+                .map(e -> new DropdownDTO(
+                        e.getIdTrabajador(),
+                        e.getNombres() +" "+ e.getApellidos()
+                ))
+                .collect(Collectors.toList());    }
+
+    @Override
+    public List<DropdownDTO> getTrabajadoresSinUsuarioActivo() {
+        return trabajadorRepository.findTrabajadoresActivosSinUsuario()
+                .stream()
+                .map(e -> new DropdownDTO(
+                        e.getIdTrabajador(),
+                        e.getNombres() +" "+ e.getApellidos()
+                ))
+                .collect(Collectors.toList());    }
+
+    @Override
+    public List<DropdownDTO> getNivelesAll() {
+        return nivelRepository.findAll()
+                .stream()
+                .map(e -> new DropdownDTO(
+                        e.getId(),
+                        e.getCodigo(),
+                        e.getNombre()
+                ))
+                .collect(Collectors.toList());    }
+
     @Override
     public List<DropdownDTO> getEstadosOt() {
         return estadoOtRepository.findByActivoTrueOrderByDescripcionAsc()

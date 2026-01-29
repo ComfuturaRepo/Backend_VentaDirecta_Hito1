@@ -1,5 +1,6 @@
 package com.backend.comfutura.repository;
 
+import com.backend.comfutura.model.Empresa;
 import com.backend.comfutura.model.Trabajador;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -12,6 +13,16 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TrabajadorRepository extends JpaRepository<Trabajador, Integer> {
+    List<Trabajador> findByActivoTrueOrderByNombresAsc();
+    @Query("""
+    SELECT t
+    FROM Trabajador t
+    LEFT JOIN Usuario u ON u.trabajador = t
+    WHERE u.idUsuario IS NULL
+      AND t.activo = true
+    ORDER BY t.apellidos, t.nombres
+""")
+    List<Trabajador> findTrabajadoresActivosSinUsuario();
 
     // Métodos básicos
     Optional<Trabajador> findByDni(String dni);

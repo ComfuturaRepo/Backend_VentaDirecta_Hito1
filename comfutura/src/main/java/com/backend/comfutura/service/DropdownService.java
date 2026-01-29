@@ -18,6 +18,9 @@ public interface DropdownService {
     List<DropdownDTO> getOtsActivas();
     List<DropdownDTO> getCargos();
     List<DropdownDTO> getEmpresas();
+    List<DropdownDTO> getTrabajadores();
+    List<DropdownDTO> getNivelesAll();
+    List<DropdownDTO> getTrabajadoresSinUsuarioActivo();
     // Nuevos métodos para responsables
     List<DropdownDTO> getJefaturasClienteSolicitante();
     List<DropdownDTO> getAnalistasClienteSolicitante();
