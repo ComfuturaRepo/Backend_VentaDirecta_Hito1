@@ -109,20 +109,19 @@
     }
 
     // ──────────────── DETALLES ────────────────
-    verDetalle(oc: OrdenCompraResponse): void {
-      this.detalleOcSeleccionada = oc;
-      this.showDetalleModal = true;
+ verDetalle(oc: OrdenCompraResponse): void {
+  this.detalleOcSeleccionada = oc;
 
-      this.ocDetalleService.listarPorOrden(oc.idOc).subscribe({
-        next: (resp: any) => {
-          this.detallesOc = resp.content;
-        },
-        error: (err) => {
-          console.error('Error al cargar detalles', err);
-          Swal.fire('Error', 'No se pudieron cargar los detalles', 'error');
-        }
-      });
-    }
+  // 🔹 Aquí cargamos los detalles
+  if (oc.detalles && oc.detalles.length > 0) {
+      this.detallesOc = oc.detalles;
+  } else {
+      this.detallesOc = [];
+  }
+
+  this.showDetalleModal = true;
+}
+
 
     // ──────────────── EDITAR ORDEN ────────────────
     editarOrden(oc: OrdenCompraResponse): void {
