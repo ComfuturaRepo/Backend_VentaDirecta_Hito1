@@ -1,6 +1,8 @@
 package com.backend.comfutura.dto.response;
 
-import lombok.*;
+import lombok.Builder;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
@@ -8,27 +10,23 @@ import java.util.List;
 
 @Getter
 @Setter
-@NoArgsConstructor
-@AllArgsConstructor
 @Builder
 public class OrdenCompraResponseDTO {
 
     private Integer idOc;
 
-    // Estado OC
+    private LocalDateTime fechaOc;
+    private String formaPago;
+    private String observacion;
+
+    private BigDecimal subtotal;
+    private BigDecimal igvPorcentaje;
+    private BigDecimal igvTotal;
+    private BigDecimal total;
+
+    // Estado
     private Integer idEstadoOc;
     private String estadoNombre;
-
-    // OTS
-    private Integer idOts;
-    private String otsDescripcion;
-    private Integer ot;          // número de OT
-
-
-
-    // Cliente
-    private String clienteNombre;
-    private String clienteRuc;
 
     // Proveedor
     private Integer idProveedor;
@@ -38,18 +36,11 @@ public class OrdenCompraResponseDTO {
     private String proveedorContacto;
     private String proveedorBanco;
 
-    // Forma de pago y montos
-    private String formaPago;
-    private BigDecimal subtotal;
-    private BigDecimal igvPorcentaje;
-    private BigDecimal igvTotal;
-    private BigDecimal total;
-
-    private LocalDateTime fechaOc;
-    private String observacion;
+    // OT
+    private Integer idOts;
+    private String ot;
+    private String otsDescripcion;
 
     // Detalles
     private List<OcDetalleResponseDTO> detalles;
-
-
 }

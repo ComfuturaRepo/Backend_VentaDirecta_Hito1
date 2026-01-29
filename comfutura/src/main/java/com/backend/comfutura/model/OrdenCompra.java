@@ -27,21 +27,17 @@ public class OrdenCompra {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_estado_oc", nullable = false)
     private EstadoOc estadoOC;
-    @ManyToOne(fetch = FetchType.LAZY)
+
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_proveedor")
     private Proveedor proveedor;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "id_ots")
     private Ots ots;
 
+
     /* ================= CAMPOS ================= */
-
-    @Column(name = "id_ots", nullable = false)
-    private Integer idOts;
-
-    @Column(name = "id_proveedor")
-    private Integer idProveedor;
 
     @Column(name = "forma_pago", length = 50)
     private String formaPago;
@@ -53,6 +49,7 @@ public class OrdenCompra {
 
     @Column(name = "igv_total")
     private BigDecimal igvTotal;
+
     private BigDecimal total;
 
     @Column(name = "fecha_oc")
@@ -70,5 +67,4 @@ public class OrdenCompra {
             fetch = FetchType.LAZY
     )
     private List<OcDetalle> detalles = new ArrayList<>();
-
 }

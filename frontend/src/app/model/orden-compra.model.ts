@@ -62,7 +62,7 @@ export interface OrdenCompraResponse {
   // OTS
   idOts: number;
   otsDescripcion: string;
-  ot: number;
+  ot: string;          // <-- Cambiado a string
 
   // Cliente
   clienteNombre: string;
@@ -70,7 +70,7 @@ export interface OrdenCompraResponse {
 
   // Proveedor
   idProveedor: number;
-  proveedorNombre: string;
+  proveedorNombre: string;   // <-- nombre de la razon social
   proveedorRuc: string;
   proveedorDireccion: string;
   proveedorContacto: string;
@@ -88,6 +88,8 @@ export interface OrdenCompraResponse {
 
   detalles: OcDetalleResponse[];
 }
+
+
 
 // 🔹 Paginación de OC (Page de Spring Data)
 export interface PageOrdenCompra {

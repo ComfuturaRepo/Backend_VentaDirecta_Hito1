@@ -53,26 +53,31 @@
     }
 
     // ──────────────── CARGAR ORDENES CON PAGINACIÓN ────────────────
-    cargarOrdenes(page: number = 0): void {
-      this.isLoading = true;
-      this.errorMessage = null;
 
-      this.ordenCompraService.listar(page, this.pageSize, this.searchTerm).subscribe({
-        next: (data) => {
-          this.pageData = data;
-          this.ordenes = data.content;
-          this.filteredOrdenes = [...this.ordenes];
-          this.currentPage = data.page.number; // <-- cambia aquí
-            this.totalPages = data.page.totalPages; // <-- cambia aquí
-          this.isLoading = false;
-        },
-        error: (err) => {
-          this.errorMessage = 'No se pudieron cargar las órdenes';
-          this.mostrarError(this.errorMessage);
-          this.isLoading = false;
-        }
-      });
+   cargarOrdenes(page: number = 0): void {
+  this.isLoading = true;
+  this.errorMessage = null;
+
+  this.ordenCompraService.listar(page, this.pageSize, this.searchTerm).subscribe({
+    next: (data) => {
+      this.pageData = data;
+      // Ya vienen todos los campos correctamente
+      this.ordenes = data.content;
+      this.filteredOrdenes = [...this.ordenes];
+      this.currentPage = data.page.number;
+      this.totalPages = data.page.totalPages;
+      this.isLoading = false;
+    },
+    error: (err) => {
+      this.errorMessage = 'No se pudieron cargar las órdenes';
+      this.mostrarError(this.errorMessage);
+      this.isLoading = false;
     }
+  });
+}
+
+
+
 
     onSearchChange(): void {
       this.currentPage = 0;
