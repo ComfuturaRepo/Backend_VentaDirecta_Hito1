@@ -65,13 +65,11 @@
         <!-- ID OC -->
       <td class="fw-bold">{{oc.idOc}}</td>
          <!-- OT / Descripción -->
-          <td class="text-truncate" style="max-width: 240px;" [title]="oc.ot">
-            {{ oc.ot }}  <!-- muestra el código / descripción de la OT -->
-          </td>
+              <td>{{ oc.ot }}</td> <!-- OT ya viene con "OT-" -->
 
 
         <!-- Proveedor -->
-         <td>{{oc.idProveedor}}</td>
+      <td>{{ oc.proveedorNombre }}</td> <!-- Nombre del proveedor -->
            <!-- Estado -->
           <td>
             <span class="badge rounded-pill px-3 py-2" [ngClass]="getEstadoClass(oc.estadoNombre)">
@@ -137,21 +135,7 @@
 
 
   </div>
-<!-- Modal compacto tipo Bootstrap -->
-<div class="modal fade" tabindex="-1" [ngClass]="{'show d-block': showTipoModal}" aria-hidden="true">
-  <div class="modal-dialog modal-sm modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h5 class="modal-title">Seleccione el tipo de detalle</h5>
-        <button type="button" class="btn-close" aria-label="Close" (click)="showTipoModal=false"></button>
-      </div>
-      <div class="modal-body text-center">
-        <button class="btn btn-primary m-1" (click)="abrirNuevaOrden('MATERIAL')">Material</button>
-        <button class="btn btn-success m-1" (click)="abrirNuevaOrden('SERVICIO')">Servicio</button>
-      </div>
-    </div>
-  </div>
-</div>
+
 
 <!-- Modal Detalles -->
 <div class="modal fade show" tabindex="-1" style="display: block; background: rgba(0,0,0,0.5);" *ngIf="showDetalleModal">

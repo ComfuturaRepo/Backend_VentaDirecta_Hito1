@@ -1,12 +1,10 @@
 package com.backend.comfutura.service.serviceImpl;
-import java.util.ArrayList;
-import java.util.concurrent.atomic.AtomicReference;
 
+import com.backend.comfutura.dto.request.OrdenCompraRequestDTO;
+import com.backend.comfutura.dto.response.OcDetalleResponseDTO;
+import com.backend.comfutura.dto.response.OrdenCompraResponseDTO;
 import com.backend.comfutura.model.*;
 import com.backend.comfutura.repository.*;
-import com.backend.comfutura.dto.request.OrdenCompraRequestDTO;
-import com.backend.comfutura.dto.response.OrdenCompraResponseDTO;
-import com.backend.comfutura.dto.response.OcDetalleResponseDTO;
 import com.backend.comfutura.service.OrdenCompraService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -19,12 +17,10 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.List;
-
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
-
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Sort;
 
 @Service
 @RequiredArgsConstructor
@@ -35,49 +31,57 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     private final ProveedorRepository proveedorRepository;
     private final OtsRepository otsRepository;
     private final MaestroCodigoRepository maestroCodigoRepository;
-    private final SpringTemplateEngine templateEngine;
     private final EmpresaRepository empresaRepository;
-
+    private final SpringTemplateEngine templateEngine;
 
     /* =====================================================
-       CRUD - CREAR / EDITAR ORDEN DE COMPRA
+       CREAR / EDITAR ORDEN DE COMPRA
        ===================================================== */
     @Override
     @Transactional
     public OrdenCompraResponseDTO guardar(Integer idOc, OrdenCompraRequestDTO dto) {
+
         OrdenCompra oc;
 
-        // 1️⃣ Obtener OC existente o crear nueva
+        // 1️⃣ OC existente o nueva
         if (idOc != null) {
             oc = ordenCompraRepository.findById(idOc)
                     .orElseThrow(() -> new RuntimeException("Orden de compra no existe"));
-            // Limpiar detalles existentes (se reemplazan)
-            if (oc.getDetalles() != null) {
-                oc.getDetalles().clear();
-            }
+            if (oc.getDetalles() != null) oc.getDetalles().clear();
         } else {
             oc = new OrdenCompra();
         }
 
-        // 2️⃣ Setear datos básicos
+        // 2️⃣ Relaciones
         if (dto.getIdEstadoOc() != null) {
             EstadoOc estadoOC = estadoOCRepository.findById(dto.getIdEstadoOc())
                     .orElseThrow(() -> new RuntimeException("Estado OC no existe"));
             oc.setEstadoOC(estadoOC);
         }
 
-        if (dto.getIdOts() != null) oc.setIdOts(dto.getIdOts());
-        if (dto.getIdProveedor() != null) oc.setIdProveedor(dto.getIdProveedor());
-        if (dto.getFormaPago() != null) oc.setFormaPago(dto.getFormaPago());
-        if (dto.getFechaOc() != null) oc.setFechaOc(dto.getFechaOc());
-        if (dto.getObservacion() != null) oc.setObservacion(dto.getObservacion());
+        if (dto.getIdProveedor() != null) {
+            Proveedor proveedor = proveedorRepository.findById(dto.getIdProveedor())
+                    .orElseThrow(() -> new RuntimeException("Proveedor no existe"));
+            oc.setProveedor(proveedor);
+        }
 
-        // 3️⃣ Guardar OC primero (necesario para cascade con detalles)
+        if (dto.getIdOts() != null) {
+            Ots ots = otsRepository.findById(dto.getIdOts())
+                    .orElseThrow(() -> new RuntimeException("OT no existe"));
+            oc.setOts(ots);
+        }
+
+        // 3️⃣ Campos simples
+        oc.setFormaPago(dto.getFormaPago());
+        oc.setFechaOc(dto.getFechaOc());
+        oc.setObservacion(dto.getObservacion());
+
+        // Guardar primero para cascade
         oc = ordenCompraRepository.save(oc);
-        final OrdenCompra ocFinal = oc; // variable final para usar en lambda
+        final OrdenCompra ocFinal = oc;
 
-        // 4️⃣ Manejar detalles si vienen
-        AtomicReference<BigDecimal> subtotalRef = new AtomicReference<>(BigDecimal.ZERO); // subtotal total
+        // 4️⃣ Detalles
+        AtomicReference<BigDecimal> subtotalRef = new AtomicReference<>(BigDecimal.ZERO);
 
         if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {
             List<OcDetalle> detalles = dto.getDetalles().stream().map(d -> {
@@ -86,33 +90,23 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
                 detalle.setCantidad(d.getCantidad());
                 detalle.setPrecioUnitario(d.getPrecioUnitario());
 
-                // subtotal por detalle
                 BigDecimal sub = d.getPrecioUnitario().multiply(d.getCantidad());
                 detalle.setSubtotal(sub);
 
-                // actualizar subtotal total
                 subtotalRef.updateAndGet(current -> current.add(sub));
 
-                detalle.setOrdenCompra(ocFinal); // relacionar con OC
+                detalle.setOrdenCompra(ocFinal);
                 return detalle;
             }).collect(Collectors.toList());
 
-            // inicializar lista de detalles si es null
-            if (oc.getDetalles() == null) {
-                oc.setDetalles(new ArrayList<>());
-            }
-
             oc.getDetalles().addAll(detalles);
-
-            // Guardar todos los detalles
-            ordenCompraRepository.save(oc); // gracias a CascadeType.ALL
+            ordenCompraRepository.save(oc); // CascadeType.ALL guarda detalles
         }
 
-        // 5️⃣ Calcular totales de OC
+        // 5️⃣ Totales
         BigDecimal subtotalOc = subtotalRef.get();
-
         BigDecimal igvPorcentaje = dto.getIgvPorcentaje() != null ? dto.getIgvPorcentaje() : BigDecimal.ZERO;
-        BigDecimal igvTotal = dto.getAplicarIgv() != null && dto.getAplicarIgv()
+        BigDecimal igvTotal = (dto.getAplicarIgv() != null && dto.getAplicarIgv())
                 ? subtotalOc.multiply(igvPorcentaje).divide(BigDecimal.valueOf(100))
                 : BigDecimal.ZERO;
 
@@ -121,9 +115,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
         oc.setIgvTotal(igvTotal);
         oc.setTotal(subtotalOc.add(igvTotal));
 
-        // Guardar OC final con totales
         OrdenCompra guardado = ordenCompraRepository.save(oc);
-
         return mapToResponseCompleto(guardado);
     }
 
@@ -138,29 +130,9 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
 
         Pageable pageable = PageRequest.of(page, size, sort);
 
-        return ordenCompraRepository.findAllWithRelations(pageable)
-                .map(this::mapToResponse);
+        return ordenCompraRepository.findAll(pageable) // <- EntityGraph carga relaciones
+                .map(this::mapToResponseCompleto);       // usa el mapper completo
     }
-
-
-    /* =====================================================
-       MAPPER SIMPLE (API / CRUD)
-       ===================================================== */
-    private OrdenCompraResponseDTO mapToResponse(@NonNull OrdenCompra oc) {
-        return OrdenCompraResponseDTO.builder()
-                .idOc(oc.getIdOc())
-                .fechaOc(oc.getFechaOc())
-                .formaPago(oc.getFormaPago())
-                .observacion(oc.getObservacion())
-                .subtotal(oc.getSubtotal())
-                .igvPorcentaje(oc.getIgvPorcentaje())
-                .igvTotal(oc.getIgvTotal())
-                .total(oc.getTotal())
-                .estadoNombre(oc.getEstadoOC() != null ? oc.getEstadoOC().getNombre() : "")
-                .idEstadoOc(oc.getEstadoOC() != null ? oc.getEstadoOC().getIdEstadoOc() : null)
-                .build(); // ⚠️ No detalles, no proveedor, no OT
-    }
-
 
     /* =====================================================
        GENERAR HTML (THYMELEAF)
@@ -175,60 +147,56 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
         Empresa empresa = empresaRepository.findById(idEmpresa)
                 .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
 
-        // Crear contexto Thymeleaf
         Context context = new Context();
         context.setVariable("oc", oc);
         context.setVariable("empresa", empresa);
         context.setVariable("fechaImpresion", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
-
-        // Páginas (ejemplo 1 de 1)
         context.setVariable("paginaActual", 1);
         context.setVariable("totalPaginas", 1);
 
-        // Procesar template
         return templateEngine.process("orden-compra", context);
     }
 
-
-
-
-
-
-
-
-
     /* =====================================================
-       MAPPER COMPLETO (HTML / PDF)
+       MAPPERS
        ===================================================== */
+    private OrdenCompraResponseDTO mapToResponse(@NonNull OrdenCompra oc) {
+        return OrdenCompraResponseDTO.builder()
+                .idOc(oc.getIdOc())
+                .fechaOc(oc.getFechaOc())
+                .formaPago(oc.getFormaPago())
+                .observacion(oc.getObservacion())
+                .subtotal(oc.getSubtotal())
+                .igvPorcentaje(oc.getIgvPorcentaje())
+                .igvTotal(oc.getIgvTotal())
+                .total(oc.getTotal())
+                .estadoNombre(oc.getEstadoOC() != null ? oc.getEstadoOC().getNombre() : "")
+                .idEstadoOc(oc.getEstadoOC() != null ? oc.getEstadoOC().getIdEstadoOc() : null)
+                .build();
+    }
+
     private OrdenCompraResponseDTO mapToResponseCompleto(OrdenCompra oc) {
 
-        /* ========= PROVEEDOR ========= */
-        Proveedor proveedor = proveedorRepository.findById(oc.getIdProveedor()).orElse(null);
+        // Proveedor
+        Proveedor proveedor = oc.getProveedor(); // directamente desde la relación
+        // OT
+        Ots ots = oc.getOts(); // directamente desde la relación
 
-        /* ========= OT / CLIENTE ========= */
-        Ots ots = otsRepository.findById(oc.getIdOts()).orElse(null);
-
-        /* ========= DETALLES ========= */
+        // Detalles
         List<OcDetalleResponseDTO> detalles =
                 oc.getDetalles() == null ? List.of() :
                         oc.getDetalles().stream()
                                 .map(d -> {
-
-                                    MaestroCodigo maestro = maestroCodigoRepository
-                                            .findById(d.getIdMaestro())
-                                            .orElse(null);
+                                    MaestroCodigo maestro = maestroCodigoRepository.findById(d.getIdMaestro()).orElse(null);
 
                                     return OcDetalleResponseDTO.builder()
                                             .idOcDetalle(d.getIdOcDetalle())
                                             .codigo(maestro != null ? maestro.getCodigo() : "")
                                             .descripcion(maestro != null ? maestro.getDescripcion() : "")
-                                            .unidad(
-                                                    maestro != null && maestro.getUnidadMedida() != null
-                                                            ? maestro.getUnidadMedida().getCodigo()
-                                                            : ""
-                                            )
+
+                                            .unidad(maestro != null && maestro.getUnidadMedida() != null ? maestro.getUnidadMedida().getCodigo() : "")
                                             .cantidad(d.getCantidad())
-                                            .precioUnitario(d.getPrecioUnitario()) // SIN IGV
+                                            .precioUnitario(d.getPrecioUnitario())
                                             .subtotal(d.getSubtotal())
                                             .igv(d.getIgv())
                                             .total(d.getTotal())
@@ -236,51 +204,34 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
                                 })
                                 .toList();
 
-        /* ========= DTO FINAL ========= */
+        // DTO final
         return OrdenCompraResponseDTO.builder()
                 .idOc(oc.getIdOc())
                 .fechaOc(oc.getFechaOc())
                 .formaPago(oc.getFormaPago())
                 .observacion(oc.getObservacion())
-
-                // Totales
                 .subtotal(oc.getSubtotal())
                 .igvPorcentaje(oc.getIgvPorcentaje())
                 .igvTotal(oc.getIgvTotal())
                 .total(oc.getTotal())
-
+                // Estado OC
+                .idEstadoOc(oc.getEstadoOC() != null ? oc.getEstadoOC().getIdEstadoOc() : null)
+                .estadoNombre(oc.getEstadoOC() != null ? oc.getEstadoOC().getNombre() : "-")
                 // Proveedor
-                .proveedorNombre(proveedor != null ? proveedor.getRazonSocial() : "")
-                .proveedorRuc(proveedor != null ? proveedor.getRuc() : "")
-                .proveedorDireccion(proveedor != null ? proveedor.getDireccion() : "")
-                .proveedorContacto(proveedor != null ? proveedor.getContacto() : "")
-                .proveedorBanco(
-                        proveedor != null && proveedor.getBanco() != null
-                                ? proveedor.getBanco().getNombre()
-                                : ""
-                )
-
-                // Cliente / OT
-                .ot(
-                        ots != null ? ots.getOt() : null
-                )
-                .clienteNombre(
-                        ots != null && ots.getCliente() != null
-                                ? ots.getCliente().getRazonSocial()
-                                : ""
-                )
-                .clienteRuc(
-                        ots != null && ots.getCliente() != null
-                                ? ots.getCliente().getRuc()
-                                : ""
-                )
-                .otsDescripcion(
-                        ots != null ? ots.getDescripcion() : ""
-                )
-
-
-
+                .idProveedor(proveedor != null ? proveedor.getId() : null)
+                .proveedorNombre(proveedor != null && proveedor.getRazonSocial() != null ? proveedor.getRazonSocial() : "SIN PROVEEDOR")
+                .proveedorRuc(proveedor != null ? proveedor.getRuc() : "-")
+                .proveedorDireccion(proveedor != null ? proveedor.getDireccion() : "-")
+                .proveedorContacto(proveedor != null ? proveedor.getContacto() : "-")
+                .proveedorBanco(proveedor != null && proveedor.getBanco() != null ? proveedor.getBanco().getNombre() : "-")
+                // OT
+                .idOts(ots != null ? ots.getIdOts() : null)
+                .otsDescripcion(ots != null ? ots.getDescripcion() : "-")
+                .ot(ots != null ? "OT-" + ots.getOt() : "-")
+                // Detalles
                 .detalles(detalles)
                 .build();
     }
+
+
 }
