@@ -1,4 +1,4 @@
-// SecurityConfig.java - VERSIÓN CORREGIDA
+// SecurityConfig.java
 package com.backend.comfutura.config;
 
 import lombok.RequiredArgsConstructor;
@@ -17,7 +17,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity // 👈 habilita @PreAuthorize
 @RequiredArgsConstructor
 public class SecurityConfig {
 
@@ -27,48 +27,37 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                // 1. Deshabilitar CSRF
+                // 1️⃣ Sin CSRF (JWT)
                 .csrf(csrf -> csrf.disable())
 
-                // 2. NO configures CORS aquí, déjalo que use la configuración global
-                .cors(cors -> {}) // Esto vacío usa la configuración global
+                // 2️⃣ CORS global
+                .cors(cors -> {})
 
-                // 3. Autorizaciones
+                // 3️⃣ Autorización
                 .authorizeHttpRequests(auth -> auth
-                        // Esto debe ir PRIMERO
+                        // Preflight
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                        // Rutas públicas
+                        // 🔓 ÚNICAMENTE LOGIN / REFRESH
+                        .requestMatchers("/api/auth/**").permitAll()
+
+                        // (Opcional Swagger)
                         .requestMatchers(
-                                "/api/auth/**",
-                                "/api/dropdowns/**",
-                                "/api/ordenes-compra/**",
-                                "/api/oc-detalles/**",
-                                "/api/ots/**",
-                                "/api/excel/**",
-                                "/api/usuarios/**",
-                                "/api/trabajadores/**",
-                                "/api/perfil/**",
-                                "/api/analista-cliente-solicitante/**",
-                                "/api/jefatura-cliente-solicitante/**",
-                                "/api/empresas/**",
-                                "/api/trabajadores/**",
-                                "/api/proyectos/**",
-                                "/api/site/**",
                                 "/v3/api-docs/**",
                                 "/swagger-ui/**",
-                                "/swagger-ui.html",
-                                "/webjars/**"
+                                "/swagger-ui.html"
                         ).permitAll()
 
-                        // Todo lo demás requiere autenticación
+                        // 🔐 TODO lo demás requiere JWT
                         .anyRequest().authenticated()
                 )
 
-                // 4. Session stateless + JWT filter
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+                // 4️⃣ Stateless
+                .sessionManagement(session ->
+                        session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
                 )
+
+                // 5️⃣ Provider + JWT filter
                 .authenticationProvider(authenticationProvider)
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
 
@@ -76,7 +65,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config)
+            throws Exception {
         return config.getAuthenticationManager();
     }
 }
