@@ -1,11 +1,10 @@
 package com.backend.comfutura.service;
 
 import com.backend.comfutura.dto.Page.PageResponseDTO;
-import com.backend.comfutura.dto.request.OtCreateRequest;
-import com.backend.comfutura.dto.response.OtDetailResponse;
-import com.backend.comfutura.dto.response.OtFullResponse;
-import com.backend.comfutura.dto.response.OtListDto;
-import org.springframework.data.domain.Page;
+import com.backend.comfutura.dto.request.otDTO.OtCreateRequest;
+import com.backend.comfutura.dto.response.otDTO.OtDetailResponse;
+import com.backend.comfutura.dto.response.otDTO.OtFullResponse;
+import com.backend.comfutura.dto.response.otDTO.OtListDto;
 import org.springframework.data.domain.Pageable;
 
 import java.util.List;

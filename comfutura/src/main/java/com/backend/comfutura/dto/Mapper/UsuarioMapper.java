@@ -1,9 +1,9 @@
 package com.backend.comfutura.dto.Mapper;
 import com.backend.comfutura.dto.Page.MessageResponseDTO;
-import com.backend.comfutura.dto.request.UsuarioRequestDTO;
-import com.backend.comfutura.dto.request.UsuarioUpdateDTO;
-import com.backend.comfutura.dto.response.UsuarioDetailDTO;
-import com.backend.comfutura.dto.response.UsuarioSimpleDTO;
+import com.backend.comfutura.dto.request.usuarioDTO.UsuarioRequestDTO;
+import com.backend.comfutura.dto.request.usuarioDTO.UsuarioUpdateDTO;
+import com.backend.comfutura.dto.response.usuarioDTO.UsuarioDetailDTO;
+import com.backend.comfutura.dto.response.usuarioDTO.UsuarioSimpleDTO;
 import com.backend.comfutura.model.Usuario;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

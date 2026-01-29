@@ -1,5 +1,5 @@
 // OtDetailResponse.java  →  detalle completo (para vista de detalle)
-package com.backend.comfutura.dto.response;
+package com.backend.comfutura.dto.response.otDTO;
 
 import lombok.Builder;
 import lombok.Data;

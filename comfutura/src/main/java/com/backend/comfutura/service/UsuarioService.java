@@ -2,11 +2,11 @@ package com.backend.comfutura.service;
 
 import com.backend.comfutura.dto.Page.MessageResponseDTO;
 import com.backend.comfutura.dto.Page.PageResponseDTO;
-import com.backend.comfutura.dto.request.ChangePasswordDTO;
-import com.backend.comfutura.dto.request.UsuarioRequestDTO;
-import com.backend.comfutura.dto.request.UsuarioUpdateDTO;
-import com.backend.comfutura.dto.response.UsuarioDetailDTO;
-import com.backend.comfutura.dto.response.UsuarioSimpleDTO;
+import com.backend.comfutura.dto.request.usuarioDTO.ChangePasswordDTO;
+import com.backend.comfutura.dto.request.usuarioDTO.UsuarioRequestDTO;
+import com.backend.comfutura.dto.request.usuarioDTO.UsuarioUpdateDTO;
+import com.backend.comfutura.dto.response.usuarioDTO.UsuarioDetailDTO;
+import com.backend.comfutura.dto.response.usuarioDTO.UsuarioSimpleDTO;
 import org.springframework.data.domain.Pageable;
 
 public interface UsuarioService {

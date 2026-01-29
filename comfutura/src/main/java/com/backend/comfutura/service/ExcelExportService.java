@@ -2,12 +2,11 @@ package com.backend.comfutura.service;
 
 import com.backend.comfutura.dto.Page.PageResponseDTO;
 import com.backend.comfutura.dto.response.ExcelOtExportDTO;
-import com.backend.comfutura.dto.response.OtDetailResponse;
-import com.backend.comfutura.dto.response.OtListDto;
+import com.backend.comfutura.dto.response.otDTO.OtDetailResponse;
+import com.backend.comfutura.dto.response.otDTO.OtListDto;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -17,7 +16,6 @@ import java.io.IOException;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor

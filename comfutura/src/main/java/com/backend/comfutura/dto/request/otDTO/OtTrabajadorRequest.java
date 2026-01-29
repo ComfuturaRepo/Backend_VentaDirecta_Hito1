@@ -1,6 +1,5 @@
-package com.backend.comfutura.dto.request;
+package com.backend.comfutura.dto.request.otDTO;
 
-import jakarta.validation.constraints.*;
 import lombok.Builder;
 import lombok.Data;
 

@@ -1,5 +1,5 @@
 // src/main/java/com/backend/comfutura/dto/response/OtListDto.java
-package com.backend.comfutura.dto.response;
+package com.backend.comfutura.dto.response.otDTO;
 
 import lombok.Builder;
 import lombok.Data;
