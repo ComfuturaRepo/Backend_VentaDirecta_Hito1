@@ -4,7 +4,7 @@
   <!-- Sidebar Rojo-Azul -->
   <aside class="sidebar" [class.collapsed]="isCollapsed" [class.mobile-open]="isMobileOpen">
 
-    <!-- Header con Logo -->
+    <!-- Header con Logo Ajustado -->
     <div class="sidebar-header">
       <div class="logo-container">
         <div class="logo-wrapper">
@@ -34,12 +34,10 @@
         </div>
       </div>
 
-      <button class="collapse-btn" (click)="toggleCollapse()" [title]="isCollapsed ? 'Expandir menú' : 'Contraer menú'">
-        <i class="bi" [ngClass]="isCollapsed ? 'bi-chevron-double-right' : 'bi-chevron-double-left'"></i>
-      </button>
+
     </div>
 
-    <!-- Menú Navegación -->
+    <!-- Menú Navegación Organizado -->
     <nav class="sidebar-menu">
       <ul>
         <!-- Dashboard -->
@@ -50,17 +48,16 @@
               <i class="bi bi-speedometer2"></i>
             </div>
             <span class="menu-label" *ngIf="!isCollapsed">Dashboard</span>
-            <span class="menu-badge" *ngIf="!isCollapsed && hasNotifications">3</span>
           </a>
         </li>
 
-        <!-- Separador para gestión -->
+        <!-- ===== GESTIÓN OPERATIVA ===== -->
         <li class="menu-divider" *ngIf="!isCollapsed">
-          <span class="divider-label">Gestión Principal</span>
+          <span class="divider-label">Gestión Operativa</span>
         </li>
 
         <!-- Órdenes de Trabajo -->
-        <li>
+        <li >
           <a routerLink="/ot" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-clipboard-check"></i>
@@ -70,7 +67,7 @@
         </li>
 
         <!-- Sites -->
-        <li>
+        <li >
           <a routerLink="/site" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-geo-alt-fill"></i>
@@ -79,28 +76,47 @@
           </a>
         </li>
 
-        <li>
-          <a routerLink="/cliente" routerLinkActive="active" (click)="closeMobile()">
+
+
+        <!-- Órdenes de Compra -->
+        <li >
+          <a routerLink="/orden-compra" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
-              <i class="bi bi-geo-alt-fill"></i>
+              <i class="bi bi-cart-check-fill"></i>
             </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Cliente</span>
+            <span class="menu-label" *ngIf="!isCollapsed">Órdenes de Compra</span>
           </a>
         </li>
 
-        <li>
+        <!-- ===== RECURSOS HUMANOS ===== -->
+        <li class="menu-divider" *ngIf="!isCollapsed && (isArea('RRHH') || isArea('SISTEMAS') || isNivel('L1'))">
+          <span class="divider-label">Recursos Humanos</span>
+        </li>
+
+        <!-- Trabajadores -->
+        <li *ngIf="isArea('RRHH') || isArea('SISTEMAS') || isNivel('L1')">
           <a routerLink="/trabajador" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
-              <i class="bi bi-geo-alt-fill"></i>
+              <i class="bi bi-person-badge-fill"></i>
             </div>
-            <span class="menu-label" *ngIf="!isCollapsed">trabajador</span>
+            <span class="menu-label" *ngIf="!isCollapsed">Trabajadores</span>
           </a>
         </li>
 
-         <li>
+
+
+
+
+        <!-- ===== ADMINISTRACIÓN Y SISTEMAS ===== -->
+        <li class="menu-divider" >
+          <span class="divider-label">Administración</span>
+        </li>
+
+        <!-- Usuarios (Solo RRHH, SISTEMAS y L1) -->
+        <li *ngIf="isArea('RRHH') || isArea('SISTEMAS') || isNivel('L1')">
           <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
-              <i class="bi bi-geo-alt-fill"></i>
+              <i class="bi bi-person-gear"></i>
             </div>
             <span class="menu-label" *ngIf="!isCollapsed">Usuarios</span>
           </a>
@@ -112,58 +128,22 @@
             <div class="menu-icon-wrapper">
               <i class="bi bi-person-gear"></i>
             </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Gestión Jefatura/Analista</span>
+            <span class="menu-label" *ngIf="!isCollapsed">Gestión Jefatura</span>
           </a>
         </li>
-
-        <!-- Órdenes de Compra -->
-        <li>
-          <a routerLink="/orden-compra" routerLinkActive="active" (click)="closeMobile()">
-            <div class="menu-icon-wrapper">
-              <i class="bi bi-cart-check-fill"></i>
-            </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Órdenes de Compra</span>
-          </a>
-        </li>
-
-
-        <!-- Separador para administración -->
-        <li class="menu-divider" *ngIf="!isCollapsed">
-          <span class="divider-label">Administración</span>
-        </li>
-
-        <!-- Usuarios -->
-        <li *ngIf="currentUser?.roles?.includes('ADMIN')">
-          <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMobile()">
+<!-- Clientes -->
+        <li >
+          <a routerLink="/cliente" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-people-fill"></i>
             </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Usuarios</span>
+            <span class="menu-label" *ngIf="!isCollapsed">Clientes</span>
           </a>
         </li>
 
-        <!-- Trabajadores -->
-        <li *ngIf="currentUser?.roles?.includes('ADMIN')">
-          <a routerLink="/trabajador" routerLinkActive="active" (click)="closeMobile()">
-            <div class="menu-icon-wrapper">
-              <i class="bi bi-person-badge-fill"></i>
-            </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Trabajadores</span>
-          </a>
-        </li>
-
-        <!-- Configuración -->
-        <li *ngIf="currentUser?.roles?.includes('ADMIN')">
-          <a routerLink="/configuracion" routerLinkActive="active" (click)="closeMobile()">
-            <div class="menu-icon-wrapper">
-              <i class="bi bi-gear-fill"></i>
-            </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Configuración</span>
-          </a>
-        </li>
 
         <!-- Reportes -->
-        <li *ngIf="currentUser?.roles?.includes('ADMIN')">
+        <li *ngIf="isArea('ADMINISTRACION') || isNivelMinimo('L3')">
           <a routerLink="/reportes" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-graph-up"></i>
@@ -172,7 +152,7 @@
           </a>
         </li>
 
-        <!-- Separador para usuario -->
+        <!-- ===== MI CUENTA ===== -->
         <li class="menu-divider" *ngIf="!isCollapsed">
           <span class="divider-label">Mi Cuenta</span>
         </li>
@@ -208,7 +188,7 @@
         </div>
         <div class="user-info">
           <div class="user-name">{{ nombreCompleto }}</div>
-          <div class="user-role">{{ mainRole || 'Usuario' }}</div>
+          <div class="user-role">{{ mainRole || 'Usuario' }} | {{ currentUser?.area || 'Sin área' }}</div>
         </div>
         <i class="bi bi-chevron-down user-dropdown-icon" [class.rotated]="showUserMenu"></i>
       </div>

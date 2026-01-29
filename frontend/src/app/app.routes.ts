@@ -2,7 +2,6 @@
 import { Routes } from '@angular/router';
 
 import { LoginComponent } from './pages/login-componente/login-componente';
-import { DashboardComponent } from './pages/dashboard-componente/dashboard-componente';
 import { OtsComponent } from './pages/ots-component/ots-component';
 import { SiteComponent } from './pages/site-component/site-component';
 import { OrdenCompraComponent } from './pages/orden-compra-component/orden-compra-component';
@@ -14,6 +13,7 @@ import { UsuarioPerfilComponent } from './pages/usuario-perfil-component/usuario
 import { TrabajadorComponent } from './pages/trabajador-component/trabajador-component';
 import { LayoutComponent } from './component/layaout-component/layaout-component';
 import { ClienteComponent } from './pages/cliente-component/cliente-component';
+import { DashboardComponente } from './pages/dashboard-componente/dashboard-componente';
 
 export const routes: Routes = [
   {
@@ -37,7 +37,7 @@ export const routes: Routes = [
       },
       {
         path: 'dashboard',
-        component: DashboardComponent,
+        component: DashboardComponente,
         // data: { title: 'Dashboard', breadcrumb: 'Inicio' }
       },
       {
