@@ -102,12 +102,10 @@
       this.showTipoModal = true;
     }
 
-    abrirNuevaOrden(tipo: 'MATERIAL' | 'SERVICIO'): void {
-      this.tipoSeleccionado = tipo;
-      this.showTipoModal = false;
-      this.selectedOc = null;
-      this.isEditMode = false;
-      this.showFormModal = true;
+    abrirNuevaOrden(): void {
+        this.showFormModal = true;
+        this.isEditMode = false;
+        this.selectedOc = null;
     }
 
     // ──────────────── DETALLES ────────────────

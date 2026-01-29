@@ -1285,3 +1285,8 @@ INSERT INTO estado_ot (descripcion) VALUES
                                         ('EN_FACTURACION'),
                                         ('FINALIZADO'),
                                         ('CANCELADA');
+
+
+
+
+
