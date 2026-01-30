@@ -12,7 +12,7 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   token: string;
-  usuario: UserJwtDto;
+  usuario: UserJwtDto;  // ✅ Ahora sí viene el usuario
 }
 
 export interface UserJwtDto {
@@ -24,7 +24,7 @@ export interface UserJwtDto {
   area: string;
   nombreCompleto: string;
   activo: boolean;
-  roles: string[];
+  nivel: string[];  // ✅ Cambiado de 'roles' a 'nivel'
 }
 
 export interface AuthState {
@@ -56,180 +56,165 @@ export class AuthService {
     this.loadInitialState();
   }
 
-private loadInitialState(): void {
-  console.log('🔄 loadInitialState: Cargando estado inicial');
+  /**
+   * Carga el estado inicial desde localStorage
+   */
+  private loadInitialState(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
 
-  if (!isPlatformBrowser(this.platformId)) return;
+    const token = localStorage.getItem(this.TOKEN_KEY);
+    const userStr = localStorage.getItem(this.USER_KEY);
 
-  const token = localStorage.getItem(this.TOKEN_KEY);
-  const userStr = localStorage.getItem(this.USER_KEY);
+    // Si no hay token, limpiar
+    if (!token) {
+      this.clearAuthState();
+      return;
+    }
 
-  console.log('📦 loadInitialState: Datos en localStorage', {
-    hasToken: !!token,
-    hasUser: !!userStr,
-    userStr: userStr
-  });
+    // Verificar si el token está expirado
+    if (this.isTokenExpired(token)) {
+      this.logout();
+      return;
+    }
 
-  // Si no hay token, limpiar todo
-  if (!token) {
-    console.log('🔄 loadInitialState: No hay token, limpiando estado');
-    this.clearAuthState();
-    return;
-  }
-
-  // Verificar si el token está expirado
-  if (this.isTokenExpired(token)) {
-    console.log('🔄 loadInitialState: Token expirado, limpiando estado');
-    this.logout();
-    return;
-  }
-
-  // Si hay token pero no usuario en localStorage, decodificar del token
-  let user: UserJwtDto | null = null;
-
-  if (userStr) {
-    try {
-      // Verificar que no sea el string "undefined"
-      if (userStr === 'undefined' || userStr === 'null') {
-        console.warn('⚠️ loadInitialState: Datos corruptos en localStorage');
-        localStorage.removeItem(this.USER_KEY);
-      } else {
+    // Cargar usuario desde localStorage
+    let user: UserJwtDto | null = null;
+    if (userStr) {
+      try {
         user = JSON.parse(userStr);
-        console.log('✅ loadInitialState: Usuario cargado de localStorage', user?.username);
+      } catch (error) {
+        console.error('Error parseando usuario:', error);
+        localStorage.removeItem(this.USER_KEY);
       }
-    } catch (error) {
-      console.error('❌ loadInitialState: Error parseando usuario:', error);
-      localStorage.removeItem(this.USER_KEY);
+    }
+
+    // Si no pudimos cargar el usuario, decodificar del token
+    if (!user) {
+      user = this.decodeToken(token);
+    }
+
+    if (user) {
+      this.authState.next({
+        token,
+        user,
+        isAuthenticated: true
+      });
+    } else {
+      this.logout();
     }
   }
 
-  // Si no pudimos cargar el usuario de localStorage, decodificar del token
-  if (!user) {
-    console.log('🔄 loadInitialState: Decodificando usuario del token');
-    user = this.decodeToken(token);
-  }
-
-  if (user) {
-    this.setAuthState(token, user);
-    console.log('✅ loadInitialState: Estado cargado exitosamente');
-  } else {
-    console.error('❌ loadInitialState: No se pudo cargar usuario');
-    this.logout();
-  }
-}
-
   /**
-   * Inicia sesión y guarda el token
+   * Inicia sesión
    */
-login(credentials: LoginRequest): Observable<AuthResponse> {
-  return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials).pipe(
-    tap(response => {
-      if (!response.token) {
-        throw new Error('No se recibió token del servidor');
-      }
+  login(credentials: LoginRequest): Observable<AuthResponse> {
+    console.log('🔐 login: Solicitando login para', credentials.username);
 
-      if (!response.usuario) {
-        console.warn('⚠️ login: El backend no envió usuario, decodificando del token...');
-        const usuario = this.decodeToken(response.token);
-        if (usuario) {
-          this.setToken(response.token, usuario);
-        } else {
-          throw new Error('No se pudo obtener información del usuario');
+    return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials).pipe(
+      tap(response => {
+        console.log('✅ login: Respuesta exitosa', {
+          hasToken: !!response.token,
+          hasUsuario: !!response.usuario,
+          usuario: response.usuario.username
+        });
+
+        if (!response.token) {
+          throw new Error('No se recibió token del servidor');
         }
-      } else {
-        this.setToken(response.token, response.usuario);
-      }
-    }),
-    catchError(this.handleError)
-  );
-}
+
+        if (!response.usuario) {
+          console.warn('⚠️ login: El backend no envió usuario, decodificando del token...');
+          const usuario = this.decodeToken(response.token);
+          if (usuario) {
+            this.setToken(response.token, usuario);
+          } else {
+            throw new Error('No se pudo obtener información del usuario');
+          }
+        } else {
+          this.setToken(response.token, response.usuario);
+        }
+      }),
+      catchError(this.handleError)
+    );
+  }
 
   /**
-   * Cierra sesión y limpia todo
+   * Guarda el token y usuario
    */
-  logout(): void {
-    this.clearAuthState();
-  }
+  private setToken(token: string, usuario: UserJwtDto): void {
+    if (!isPlatformBrowser(this.platformId)) return;
 
-private setToken(token: string, usuario: UserJwtDto): void {
-  console.log('🔐 setToken: Iniciando', { token: token?.substring(0, 20), usuario });
-
-  if (!isPlatformBrowser(this.platformId)) return;
-
-  // Validar que el usuario no sea undefined/null
-  if (!usuario) {
-    console.error('❌ setToken: usuario es undefined/null');
-    return;
-  }
-
-  // Validar que el token no sea undefined/null
-  if (!token) {
-    console.error('❌ setToken: token es undefined/null');
-    return;
-  }
-
-  try {
-    // Convertir el usuario a JSON de manera segura
-    const usuarioJSON = JSON.stringify(usuario);
-
-    // Guardar en localStorage
-    localStorage.setItem(this.TOKEN_KEY, token);
-    localStorage.setItem(this.USER_KEY, usuarioJSON);
-
-    console.log('✅ setToken: Datos guardados en localStorage', {
-      tokenLength: token.length,
-      usuario: usuario.username,
-      localStorageUser: localStorage.getItem(this.USER_KEY)
-    });
-
-    // Actualizar el estado
-    this.setAuthState(token, usuario);
-
-  } catch (error) {
-    console.error('❌ setToken: Error al guardar datos:', error);
-  }
-}
-
-private setAuthState(token: string, user: UserJwtDto): void {
-  console.log('🔄 setAuthState: Actualizando estado', {
-    token: token?.substring(0, 20),
-    user: user?.username
-  });
-
-  this.authState.next({
-    token,
-    user,
-    isAuthenticated: true
-  });
-
-  console.log('✅ setAuthState: Estado actualizado', this.authState.value);
-}
-
-
-
-  private clearAuthState(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem(this.TOKEN_KEY);
-      localStorage.removeItem(this.USER_KEY);
+    // Validaciones
+    if (!token) {
+      console.error('❌ setToken: token es null/undefined');
+      return;
     }
-    this.authState.next({
-      token: null,
-      user: null,
-      isAuthenticated: false
-    });
+
+    if (!usuario) {
+      console.error('❌ setToken: usuario es null/undefined');
+      return;
+    }
+
+    try {
+      // Guardar en localStorage
+      localStorage.setItem(this.TOKEN_KEY, token);
+      localStorage.setItem(this.USER_KEY, JSON.stringify(usuario));
+
+      // Actualizar estado
+      this.authState.next({
+        token,
+        user: usuario,
+        isAuthenticated: true
+      });
+
+      console.log('✅ setToken: Datos guardados correctamente', {
+        usuario: usuario.username,
+        nivel: usuario.nivel
+      });
+
+    } catch (error) {
+      console.error('❌ setToken: Error al guardar datos:', error);
+    }
   }
 
   /**
-   * Decodifica el payload del JWT (sin verificar firma, solo lectura)
+   * Decodifica el usuario del token JWT
    */
   private decodeToken(token: string): UserJwtDto | null {
     try {
       const payload = token.split('.')[1];
       const decoded = JSON.parse(atob(payload));
-      // Ajusta según la estructura real de tu JWT
-      return decoded.data as UserJwtDto ?? decoded as UserJwtDto ?? null;
-    } catch (e) {
-      console.error('Error al decodificar JWT:', e);
+
+      // El JWT tiene: { data: {...}, nivel: [...], ... }
+      const userData = decoded.data;
+
+      if (!userData) {
+        console.error('❌ decodeToken: No se encontró "data" en el token');
+        return null;
+      }
+
+      // Mapear a UserJwtDto
+      const user: UserJwtDto = {
+        idUsuario: userData.idUsuario,
+        idTrabajador: userData.idTrabajador,
+        username: userData.username,
+        empresa: userData.empresa,
+        cargo: userData.cargo,
+        area: userData.area,
+        nombreCompleto: userData.nombreCompleto,
+        activo: userData.activo,
+        nivel: decoded.nivel || userData.nivel || []  // Tomar nivel de decoded o userData
+      };
+
+      console.log('✅ decodeToken: Usuario extraído del token', {
+        username: user.username,
+        nivel: user.nivel
+      });
+
+      return user;
+
+    } catch (error) {
+      console.error('❌ decodeToken: Error al decodificar token:', error);
       return null;
     }
   }
@@ -248,35 +233,29 @@ private setAuthState(token: string, user: UserJwtDto): void {
     }
   }
 
-  // NIVEL
-  isNivel(nivel: string): boolean {
-    return this.currentUser?.roles?.includes(nivel) ?? false;
+  /**
+   * Cierra sesión
+   */
+  logout(): void {
+    this.clearAuthState();
   }
 
-  isNivelMinimo(nivelRequerido: string): boolean {
-    const orden = ['L1', 'L2', 'L3', 'L4', 'L5'];
-    const userNivel = this.currentUser?.roles?.[0];
-    if (!userNivel) return false;
-
-    return orden.indexOf(userNivel) <= orden.indexOf(nivelRequerido);
+  private clearAuthState(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.USER_KEY);
+    }
+    this.authState.next({
+      token: null,
+      user: null,
+      isAuthenticated: false
+    });
   }
 
-  // ÁREA
-  isArea(area: string): boolean {
-    return this.currentUser?.area?.toUpperCase() === area.toUpperCase();
-  }
-
-  // CARGO
-  isCargo(texto: string): boolean {
-    return this.currentUser?.cargo
-      ?.toUpperCase()
-      .includes(texto.toUpperCase()) ?? false;
-  }
-
-  // ── Métodos públicos útiles ────────────────────────────────────────
+  // ── Métodos de utilidad ────────────────────────────────────────
 
   /**
-   * Chequeo SINCRÓNICO (ideal para guards y evitar race conditions en refresh)
+   * Chequeo síncrono de autenticación
    */
   get isAuthenticatedSync(): boolean {
     if (!isPlatformBrowser(this.platformId)) return false;
@@ -292,39 +271,16 @@ private setAuthState(token: string, user: UserJwtDto): void {
     return true;
   }
 
-get currentUser(): UserJwtDto | null {
-  const state = this.authState.value;
-
-  // Sin logs para evitar loops
-  if (!state.token || this.isTokenExpired(state.token)) {
-    this.logout();
-    return null;
+  /**
+   * Obtiene el usuario actual (sin logs excesivos)
+   */
+  get currentUser(): UserJwtDto | null {
+    return this.authState.value.user;
   }
 
-  // Si ya tenemos usuario en el estado, retornarlo
-  if (state.user) {
-    return state.user;
-  }
-
-  // Si no hay usuario en el estado pero hay token
-  if (state.token && !state.user) {
-    const userFromToken = this.decodeToken(state.token);
-    if (userFromToken) {
-      // Actualizar el estado con el usuario decodificado
-      this.authState.next({
-        ...state,
-        user: userFromToken
-      });
-      return userFromToken;
-    }
-  }
-
-  return null;
-}
-  get currentTrabajadorId(): number | null {
-    return this.currentUser?.idTrabajador ?? null;
-  }
-
+  /**
+   * Obtiene el token actual
+   */
   get token(): string | null {
     const t = this.authState.value.token;
     if (t && this.isTokenExpired(t)) {
@@ -335,14 +291,59 @@ get currentUser(): UserJwtDto | null {
   }
 
   /**
-   * Fuerza recarga del estado (útil después de refresh token o cambios)
+   * Obtiene el ID del trabajador
+   */
+  get currentTrabajadorId(): number | null {
+    return this.currentUser?.idTrabajador ?? null;
+  }
+
+  // ── Métodos para verificar permisos basados en nivel ───────────
+
+  /**
+   * Verifica si el usuario tiene un nivel específico
+   */
+  isNivel(nivel: string): boolean {
+    return this.currentUser?.nivel?.includes(nivel) ?? false;
+  }
+
+  /**
+   * Verifica si el usuario tiene un nivel mínimo requerido
+   * Orden: L1 > L2 > L3 > L4 > L5
+   */
+  isNivelMinimo(nivelRequerido: string): boolean {
+    const orden = ['L1', 'L2', 'L3', 'L4', 'L5'];
+    const userNivel = this.currentUser?.nivel?.[0];
+    if (!userNivel) return false;
+
+    return orden.indexOf(userNivel) <= orden.indexOf(nivelRequerido);
+  }
+
+  /**
+   * Verifica si el usuario pertenece a un área específica
+   */
+  isArea(area: string): boolean {
+    return this.currentUser?.area?.toUpperCase() === area.toUpperCase();
+  }
+
+  /**
+   * Verifica si el usuario tiene un cargo específico
+   */
+  isCargo(texto: string): boolean {
+    return this.currentUser?.cargo
+      ?.toUpperCase()
+      .includes(texto.toUpperCase()) ?? false;
+  }
+
+  /**
+   * Fuerza recarga del estado
    */
   public refreshAuthState(): void {
     this.loadInitialState();
   }
 
-  // ── Manejo de errores ──────────────────────────────────────────────
-
+  /**
+   * Manejo de errores HTTP
+   */
   private handleError(error: HttpErrorResponse): Observable<never> {
     let message = 'Ocurrió un error inesperado';
 
@@ -356,6 +357,23 @@ get currentUser(): UserJwtDto | null {
       message = error.error.error;
     }
 
+    console.error('❌ AuthService error:', error);
     return throwError(() => new Error(message));
+  }
+
+  /**
+   * Método para debug (solo usar cuando sea necesario)
+   */
+  public debugAuthState(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    console.log('🔍 DEBUG Auth State:', {
+      localStorage: {
+        token: localStorage.getItem(this.TOKEN_KEY)?.substring(0, 20) + '...',
+        user: localStorage.getItem(this.USER_KEY)
+      },
+      currentState: this.authState.value,
+      isAuthenticatedSync: this.isAuthenticatedSync
+    });
   }
 }

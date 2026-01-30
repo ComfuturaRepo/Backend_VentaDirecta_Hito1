@@ -51,8 +51,8 @@ INSERT INTO cliente (razon_social, ruc) VALUES
                                             ('SOLUCIONES TECNOLOGICAS LATINOAMERICA S.A.C.', '20600726219'),
                                             ('SUDCOM GROUP S.A.C.', '20603078986'),
                                             ('COMFUTURA', '20516285517'),
-                                            ('CLARO', '20467534026'),
-                                            ('ENTEL', '20492917011');
+                                            ('AMERICA MOVIL PERU S.A.C.', '20467534026'),
+                                            ('ENTEL PERU S.A', '20492917011');
 
 -- 3. Niveles
 INSERT INTO nivel (codigo, nombre, descripcion) VALUES
@@ -103,73 +103,9 @@ INSERT INTO cliente_area (id_cliente, id_area) VALUES
  (SELECT id_area FROM area WHERE nombre = 'GERENCIA GENERAL')),
 
 ((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'LOGÍSTICA')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'RRHH')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'SSOMA')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'SUDCOM GROUP S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'ENERGIA')),
-
--- CLARO (AMERICA MOVIL PERU S.A.C.)
-((SELECT id_cliente FROM cliente WHERE razon_social = 'AMERICA MOVIL PERU S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'CW')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'AMERICA MOVIL PERU S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'ENERGIA')),
+ (SELECT id_area FROM area WHERE nombre = 'LOGÍSTICA'));
 
 
-((SELECT id_cliente FROM cliente WHERE razon_social = 'AMERICA MOVIL PERU S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'PEXT')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'AMERICA MOVIL PERU S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'SAQ')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'AMERICA MOVIL PERU S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'TI')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL'),
- (SELECT id_area FROM area WHERE nombre = 'CW')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL'),
- (SELECT id_area FROM area WHERE nombre = 'ENERGIA')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL'),
- (SELECT id_area FROM area WHERE nombre = 'ENTEL')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL'),
- (SELECT id_area FROM area WHERE nombre = 'PEXT')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'ENTEL'),
- (SELECT id_area FROM area WHERE nombre = 'TI')),
-
--- GYGA (GYGA CONSULTING S.A.C.)
-((SELECT id_cliente FROM cliente WHERE razon_social = 'GYGA CONSULTING S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'PEXT')),
-
--- SDP (SITES DEL PERU S.A.C.)
-((SELECT id_cliente FROM cliente WHERE razon_social = 'SITES DEL PERU S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'ENERGIA')),
-
--- STL (SOLUCIONES TECNOLOGICAS LATINOAMERICA S.A.C.)
-((SELECT id_cliente FROM cliente WHERE razon_social = 'SOLUCIONES TECNOLOGICAS LATINOAMERICA S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'CW')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'SOLUCIONES TECNOLOGICAS LATINOAMERICA S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'ENERGIA')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'SOLUCIONES TECNOLOGICAS LATINOAMERICA S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'PEXT')),
-
-((SELECT id_cliente FROM cliente WHERE razon_social = 'SOLUCIONES TECNOLOGICAS LATINOAMERICA S.A.C.'),
- (SELECT id_area FROM area WHERE nombre = 'TI')),
-
--- INGETEC (INGETEC CONSULTORES & EJECUTORES S.R.L.)
-((SELECT id_cliente FROM cliente WHERE razon_social = 'INGETEC CONSULTORES & EJECUTORES S.R.L. – INGETEC C & E S.R.L.'),
- (SELECT id_area FROM area WHERE nombre = 'PEXT'));
 
 
 INSERT INTO cargo (nombre, id_nivel) VALUES
@@ -710,37 +646,37 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'ANALISTA FINANCIERO')),
 
                                                                                                                  ('JOSE MICHAEL', 'BENAVIDES ROMERO', '74306365', '916374051', 'mbenavides@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'ANALISTA DE ENERGIA')),
 
                                                                                                                  ('LEEANN ALEJANDRA', 'BENITES PALOMINO', '75001730', '924919500', 'l.benites@sudcomgroup.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'CW'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISORA DE OBRAS CIVILES')),
 
                                                                                                                  ('CROSBY', 'BRICEÑO MARAVI', '41589951', '993903920', 'cbriceno@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL PERU S.A'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'COMERCIAL'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'GERENTE DE CUENTA COMERCIAL')),
 
                                                                                                                  ('ERICK JESUS', 'CABEZAS VILLAR', '70616017', '938989805', NULL,
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'PEXT'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'ANALISTA PEXT')),
 
                                                                                                                  ('VICTOR HUMBERTO', 'CHAVEZ JUAREZ', '16804166', NULL, NULL,
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ADMINISTRATIVA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'AUXILIAR DE OFICINA - DISCAPACIDAD')),
 
                                                                                                                  ('JESSICA IVETTE', 'CHIPANA DE LA CRUZ', '46468388', '927020297', 'proyectos3@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL PERU S.A'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'CW'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'COORDINADOR DE INGENIERIA')),
 
                                                                                                                  ('KELLY TATIANA', 'CLEMENTE MARTINEZ', '48010945', '965239660', 'kclementem@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'SAQ'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'JEFE LEGAL SAQ')),
 
@@ -750,12 +686,12 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'JEFE PEXT PINT')),
 
                                                                                                                  ('ERICK GABRIEL', 'CONTRERAS VALLE', '71539602', '969803234', 'econtreras@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL PERU S.A'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENTEL'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'GESTOR DE ACCESOS')),
 
                                                                                                                  ('NELSON GIOVANNY', 'COSSIO TRUJILLO', '77801770', '967816480', 'c.trujillo@sudcomgroup.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'COORDINADOR DE ENERGIA')),
 
@@ -765,7 +701,7 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISORA DE SSOMA')),
 
                                                                                                                  ('GUILLERMO CARLOS', 'DIEGUEZ ALZAMORA', '3897788', '986031053', 'gdieguez@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'TI'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'COORDINADOR TI')),
 
@@ -775,12 +711,12 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'GERENTE COMERCIAL')),
 
                                                                                                                  ('MAGALLY DEL MILAGRO', 'GALINDO LEZAMA', '72315244', '978753064', 'mgalindo@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'CIERRE'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'JEFE DE CIERRE Y LIQUIDACIONES')),
 
                                                                                                                  ('JOSE CARLOS', 'GONZALEZ MUEDAS', '44373982', '991076898', 'jgonzales@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'TI'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'JEFE TI')),
 
@@ -795,37 +731,37 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISOR')),
 
                                                                                                                  ('ERICK MAXIMO', 'GUERRERO ESPINOZA', '9627529', '931031735', 'eguerrero@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'CW'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'COORDINADOR DE CW')),
 
                                                                                                                  ('SILVIA ROSARIO', 'GUTIERREZ BURGOS', '25728504', '982521285', 's.gutierrez@sudcomgroup.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'COMERCIAL'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'ASISTENTE DE CONTRATACIONES PUBLICAS')),
 
                                                                                                                  ('HEIDY LISETH', 'HUAMAN CAVIEDES', '44388036', '901837213', 'hhuaman@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'SAQ'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'COORDINADOR LEGAL SAQ')),
 
                                                                                                                  ('LUIS ENRIQUE', 'LOAYZA LLOCCLLA', '73490407', '9500750970', 'l.loayza@sudcomgroup.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL PERU S.A'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISOR DE ENERGIA')),
 
                                                                                                                  ('RONALD PABLO', 'LOZANO SIERRA', '47580288', '934591631', 'proyectos1@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL PERU S.A'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENTEL'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'CADISTA')),
 
                                                                                                                  ('LUIS ANGEL', 'MARTINEZ ESTRADA', '72372882', '949963582', 'pext@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'PEXT'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'COORDINADOR PEXT')),
 
                                                                                                                  ('JESUS ALONSO', 'MARTINEZ YANQUI', '74919020', '972116383', 'jmartinez@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'TI'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISOR TI')),
 
@@ -840,7 +776,7 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'GERENTE')),
 
                                                                                                                  ('ISAAC ROMULO', 'MELENDREZ FERNANDEZ', '6912965', '989181267', 'imelendez@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'PEXT'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'JEFE PEXT')),
 
@@ -855,7 +791,7 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'CONTADORA')),
 
                                                                                                                  ('FRANKLIN', 'MERINO MONDRAGÓN', '45609714', '993546497', 'fmerino@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL PERU S.A'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENTEL'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'COORDINADOR DE IMPLEMENTACION')),
 
@@ -880,12 +816,12 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'CONDUCTOR')),
 
                                                                                                                  ('LUIS FERNANDO', 'ÑIQUEN GOMEZ', '77684556', '921618806', 'lniquen@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'CW-ENERGIA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'JEFE CW - JEFE DE ENERGIA')),
 
                                                                                                                  ('JORGE MIGUEL', 'OSORIO GALVEZ', '75419660', '994899418', 'josorio@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'TI'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISOR TI')),
 
@@ -895,12 +831,12 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'JEFE DE LOGÍSTICA')),
 
                                                                                                                  ('SEBASTIAN FELIX', 'OYOLA LOZA', '77812815', '923619930', 'soyola@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'ENTEL PERU S.A'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENTEL'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'ASISTENTE LOGISTICO ENTEL')),
 
                                                                                                                  ('JOEL DANIEL', 'PAJUELO LUCIANDO', '78016138', '993440667', NULL,
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'PRACTICANTE DE ENERGIA')),
 
@@ -910,37 +846,37 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'AUXILIAR DE ALMACEN')),
 
                                                                                                                  ('AIDA LILIANA', 'REYNA CANDELA', '46196532', '997505944', 'areyna@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'CIERRE'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'JEFE DE CIERRE')),
 
                                                                                                                  ('HENRY JUNIOR', 'RODRIGUEZ YSLACHIN', '75404628', '916629404', 'henry.roys0500@gmail.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'CW'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISOR CW')),
 
                                                                                                                  ('TOÑO', 'ROMAN QUISPE', '41710568', '910871558', 't.roman@sudcomgroup.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'COORDINADOR DE ENERGIA')),
 
                                                                                                                  ('MIGUEL ANGEL', 'SALAS CAMPOS', '32978147', '983276485', 'msalas@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'CW'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISOR CW')),
 
                                                                                                                  ('BRYAN ANTHONY', 'SALAZAR QUIJAITE', '45820159', '949875742', 'b.salazar@sudcomgroup.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISOR DE ENERGIA')),
 
                                                                                                                  ('JHON DENNIS', 'SANCHEZ ALTAMIRANO', '17635270', '961715063', 'jsanchez@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'TI'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'PROJECT MANAGER')),
 
                                                                                                                  ('MARY CARMEN', 'SILVA GONZALES', '46580733', '915153318', 'legal3@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'SAQ'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'ASISTENTE DE RRHH')),
 
@@ -955,12 +891,12 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISOR PEXT')),
 
                                                                                                                  ('ROBER JULIAN', 'VILLARREAL MARCELO', '72901624', '965387686', 'plantainterna@sudcomgroup.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'PEXT'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'COORDINADOR PLANTA INTERNA')),
 
                                                                                                                  ('ANGELA LISBET', 'ZAMORA FLORES', '76256460', '993635707', 'a.zamora@sudcomgroup.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'CW'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'SUPERVISORA DE OBRAS CIVILES')),
 
@@ -970,7 +906,7 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'ASISTENTE DE CONTABILIDAD')),
 
                                                                                                                  ('JESUS OSWALDO', 'BARZOLA MALLMA', '41908627', '913591615', 'jbarzola@comfutura.com',
-                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'CLARO'),
+                                                                                                                  (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'CONSULTOR EXTERNO'));-- 15. Usuarios (ejemplos)
 INSERT INTO usuario (username, password, id_trabajador, id_nivel) VALUES

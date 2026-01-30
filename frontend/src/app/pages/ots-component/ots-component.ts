@@ -9,7 +9,7 @@ import { FileSizePipe } from '../../pipe/file-size.pipe';
 import { ExcelService } from '../../service/excel.service';
 import { OtService } from '../../service/ot.service';
 import { OtListDto } from '../../model/ots';
-import { Observable } from 'rxjs';
+import { Observable, finalize } from 'rxjs';
 import { PaginationComponent } from '../../component/pagination.component/pagination.component';
 import { PageResponse } from '../../model/page.interface';
 
@@ -55,17 +55,17 @@ export class OtsComponent implements OnInit {
     hasta: ''
   };
 
-  // Opciones de estado según tus requerimientos
+  // Opciones de estado con iconos
   estados = [
-    { value: '', label: 'Todos los estados' },
-    { value: 'ASIGNACION', label: 'Asignación' },
-    { value: 'PRESUPUESTO_ENVIADO', label: 'Presupuesto Enviado' },
-    { value: 'CREACION_DE_OC', label: 'Creación de OC' },
-    { value: 'EN_EJECUCION', label: 'En Ejecución' },
-    { value: 'EN_LIQUIDACION', label: 'En Liquidación' },
-    { value: 'EN_FACTURACION', label: 'En Facturación' },
-    { value: 'FINALIZADO', label: 'Finalizado' },
-    { value: 'CANCELADA', label: 'Cancelada' }
+    { value: '', label: 'Todos los estados', icon: 'bi-grid' },
+    { value: 'ASIGNACION', label: 'Asignación', icon: 'bi-person-badge' },
+    { value: 'PRESUPUESTO_ENVIADO', label: 'Presupuesto Enviado', icon: 'bi-send-check' },
+    { value: 'CREACION_DE_OC', label: 'Creación de OC', icon: 'bi-file-earmark-text' },
+    { value: 'EN_EJECUCION', label: 'En Ejecución', icon: 'bi-gear' },
+    { value: 'EN_LIQUIDACION', label: 'En Liquidación', icon: 'bi-cash-stack' },
+    { value: 'EN_FACTURACION', label: 'En Facturación', icon: 'bi-receipt' },
+    { value: 'FINALIZADO', label: 'Finalizado', icon: 'bi-check-circle' },
+    { value: 'CANCELADA', label: 'Cancelada', icon: 'bi-x-circle' }
   ];
 
   // Selección múltiple
@@ -103,6 +103,10 @@ export class OtsComponent implements OnInit {
       page,
       this.pageSize,
       'ot,desc'
+    ).pipe(
+      finalize(() => {
+        this.loading = false;
+      })
     ).subscribe({
       next: (pageData) => {
         this.page = pageData;
@@ -111,18 +115,11 @@ export class OtsComponent implements OnInit {
         this.currentPage = pageData.currentPage ?? 0;
         this.pageSize = pageData.pageSize ?? this.pageSize;
         this.totalPages = pageData.totalPages ?? 1;
-        this.loading = false;
         this.updateSelectionState();
       },
       error: (err) => {
         this.errorMessage = err?.message || 'Error al cargar las OTs';
-        this.loading = false;
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudieron cargar las OTs',
-          confirmButtonColor: '#dc3545'
-        });
+        this.showErrorAlert('Error', 'No se pudieron cargar las OTs');
       }
     });
   }
@@ -202,29 +199,38 @@ export class OtsComponent implements OnInit {
     this.updateSelectionCount();
   }
 
-  // ==================== EXPORTACIÓN ====================
+  // ==================== EXPORTACIÓN MEJORADA ====================
   exportSelectedOts(): void {
     if (this.selectedCount === 0) {
-      Swal.fire({
-        icon: 'warning',
-        title: 'Sin selección',
-        text: 'Por favor selecciona al menos una OT para exportar',
-        confirmButtonColor: '#0d6efd'
-      });
+      this.showWarningAlert('Sin selección', 'Por favor selecciona al menos una OT para exportar');
       return;
     }
 
     const otIds = Array.from(this.selectedOts);
 
     Swal.fire({
-      title: 'Exportar seleccionadas',
-      html: `¿Exportar <strong>${this.selectedCount} OTs</strong> a Excel?`,
+      title: '<strong>Exportar seleccionadas</strong>',
+      html: `
+        <div class="text-start">
+          <p>¿Exportar <span class="fw-bold">${this.selectedCount} OTs</span> a Excel?</p>
+          <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle me-2"></i>
+            Se generará un archivo con todas las OTs seleccionadas
+          </div>
+        </div>
+      `,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#198754',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Exportar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonColor: '#10b981',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: '<i class="bi bi-download me-2"></i>Exportar',
+      cancelButtonText: '<i class="bi bi-x me-2"></i>Cancelar',
+      customClass: {
+        popup: 'sweet-alert-popup',
+        confirmButton: 'btn btn-success',
+        cancelButton: 'btn btn-secondary'
+      },
+      buttonsStyling: false
     }).then((result) => {
       if (result.isConfirmed) {
         this.exportToExcel(() => this.excelService.exportOts(otIds), 'seleccionadas');
@@ -234,14 +240,28 @@ export class OtsComponent implements OnInit {
 
   exportAllOts(): void {
     Swal.fire({
-      title: 'Exportar todas las OTs',
-      text: `¿Exportar las ${this.totalElements} órdenes de trabajo a Excel?`,
+      title: '<strong>Exportar todas las OTs</strong>',
+      html: `
+        <div class="text-start">
+          <p>¿Exportar las <span class="fw-bold">${this.totalElements} órdenes de trabajo</span> a Excel?</p>
+          <div class="alert alert-warning mt-3">
+            <i class="bi bi-exclamation-triangle me-2"></i>
+            Esta operación puede tomar varios segundos dependiendo de la cantidad de datos
+          </div>
+        </div>
+      `,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#0d6efd',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Exportar todo',
-      cancelButtonText: 'Cancelar'
+      confirmButtonColor: '#4f46e5',
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: '<i class="bi bi-database me-2"></i>Exportar todo',
+      cancelButtonText: '<i class="bi bi-x me-2"></i>Cancelar',
+      customClass: {
+        popup: 'sweet-alert-popup',
+        confirmButton: 'btn btn-primary',
+        cancelButton: 'btn btn-secondary'
+      },
+      buttonsStyling: false
     }).then((result) => {
       if (result.isConfirmed) {
         this.exportToExcel(() => this.excelService.exportAllOts(), 'todas');
@@ -251,12 +271,16 @@ export class OtsComponent implements OnInit {
 
   private exportToExcel(exportFn: () => Observable<Blob>, type: string): void {
     Swal.fire({
-      title: 'Generando Excel...',
-      text: 'Por favor espera',
+      title: '<div class="text-primary"><i class="bi bi-file-earmark-excel fs-1"></i></div>',
+      html: '<h5 class="mt-3">Generando archivo Excel...</h5><p class="text-muted">Por favor espera</p>',
       allowOutsideClick: false,
       showConfirmButton: false,
-      willOpen: () => {
+      showCloseButton: false,
+      didOpen: () => {
         Swal.showLoading();
+      },
+      customClass: {
+        popup: 'sweet-alert-popup'
       }
     });
 
@@ -267,22 +291,15 @@ export class OtsComponent implements OnInit {
         const filename = `ots_${type}_${timestamp}.xlsx`;
         this.excelService.downloadExcel(blob, filename);
 
-        Swal.fire({
-          icon: 'success',
-          title: '¡Exportación exitosa!',
-          text: 'El archivo Excel se ha descargado',
-          timer: 2000,
-          showConfirmButton: false
-        });
+        this.showSuccessAlert(
+          '¡Exportación exitosa!',
+          'El archivo Excel se ha descargado correctamente',
+          'success'
+        );
       },
       error: (err) => {
         Swal.close();
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo exportar el archivo',
-          confirmButtonColor: '#dc3545'
-        });
+        this.showErrorAlert('Error', 'No se pudo exportar el archivo Excel');
       }
     });
   }
@@ -312,7 +329,7 @@ export class OtsComponent implements OnInit {
     this.closeAllModals();
   }
 
-  // ==================== IMPORTACIÓN ====================
+  // ==================== IMPORTACIÓN MEJORADA ====================
   openImportModal(): void {
     this.importStep = 1;
     this.importFile = null;
@@ -336,42 +353,66 @@ export class OtsComponent implements OnInit {
 
   onDragOver(event: DragEvent): void {
     event.preventDefault();
+    const dropZone = event.currentTarget as HTMLElement;
+    dropZone.classList.add('drag-over');
+  }
+
+  onDragLeave(event: DragEvent): void {
+    const dropZone = event.currentTarget as HTMLElement;
+    dropZone.classList.remove('drag-over');
   }
 
   onFileDrop(event: DragEvent): void {
     event.preventDefault();
+    event.stopPropagation();
+
+    const dropZone = event.currentTarget as HTMLElement;
+    dropZone.classList.remove('drag-over');
+
     const files = event.dataTransfer?.files;
     if (files?.[0]) this.processFile(files[0]);
   }
 
   private processFile(file: File): void {
     if (!file.name.toLowerCase().endsWith('.xlsx')) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'Solo se permiten archivos Excel (.xlsx)',
-        confirmButtonColor: '#dc3545'
-      });
+      this.showErrorAlert('Formato inválido', 'Solo se permiten archivos Excel (.xlsx)');
       return;
     }
 
     if (file.size > 10 * 1024 * 1024) {
-      Swal.fire({
-        icon: 'error',
-        title: 'Error',
-        text: 'El archivo no debe superar los 10MB',
-        confirmButtonColor: '#dc3545'
-      });
+      this.showErrorAlert('Archivo muy grande', 'El archivo no debe superar los 10MB');
       return;
     }
 
     this.importFile = file;
+
+    // Mostrar mensaje de éxito
+    this.showSuccessAlert(
+      'Archivo cargado',
+      `${file.name} listo para importar`,
+      'success'
+    );
   }
 
   startImport(): void {
     if (!this.importFile) return;
 
     this.importing = true;
+
+    Swal.fire({
+      title: '<div class="text-primary"><i class="bi bi-upload fs-1"></i></div>',
+      html: '<h5 class="mt-3">Importando datos...</h5><p class="text-muted">Por favor no cierres esta ventana</p>',
+      allowOutsideClick: false,
+      showConfirmButton: false,
+      showCloseButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      },
+      customClass: {
+        popup: 'sweet-alert-popup'
+      }
+    });
+
     const importService = this.excelService.importMasivo(this.importFile);
 
     importService.subscribe({
@@ -379,20 +420,66 @@ export class OtsComponent implements OnInit {
         this.importResult = result;
         this.importStep = 3;
         this.importing = false;
+        Swal.close();
 
         if (result.exito) {
           setTimeout(() => this.loadOts(), 1000);
         }
+
+        this.showImportResult(result);
       },
       error: (err) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: err.error?.mensaje || 'Error en la importación',
-          confirmButtonColor: '#dc3545'
-        });
         this.importing = false;
+        Swal.close();
+        this.showErrorAlert('Error en importación', err.error?.mensaje || 'Error al importar el archivo');
       }
+    });
+  }
+
+  private showImportResult(result: any): void {
+    Swal.fire({
+      title: '<strong>Resultado de importación</strong>',
+      html: `
+        <div class="text-start">
+          <div class="row g-3 mb-4">
+            <div class="col-6">
+              <div class="card border-success border-2">
+                <div class="card-body text-center py-3">
+                  <h2 class="text-success mb-1">${result.exitosos || 0}</h2>
+                  <p class="text-success fw-bold mb-0">Registros exitosos</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-6">
+              <div class="card border-danger border-2">
+                <div class="card-body text-center py-3">
+                  <h2 class="text-danger mb-1">${result.fallidos || 0}</h2>
+                  <p class="text-danger fw-bold mb-0">Registros fallidos</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          ${result.fallidos > 0 ? `
+            <div class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              <strong>Errores encontrados:</strong>
+              <div class="mt-2 small">
+                ${result.registrosConError?.slice(0, 3).map((error: any) =>
+                  `<div class="mb-1">• ${error.mensajeError}</div>`
+                ).join('')}
+                ${result.fallidos > 3 ? `<div class="mt-2 text-muted">... y ${result.fallidos - 3} errores más</div>` : ''}
+              </div>
+            </div>
+          ` : ''}
+        </div>
+      `,
+      icon: result.fallidos > 0 ? 'warning' : 'success',
+      confirmButtonText: '<i class="bi bi-check me-2"></i>Entendido',
+      customClass: {
+        popup: 'sweet-alert-popup',
+        confirmButton: 'btn btn-primary'
+      },
+      buttonsStyling: false
     });
   }
 
@@ -401,14 +488,14 @@ export class OtsComponent implements OnInit {
     this.excelService.downloadTemplate().subscribe({
       next: (blob) => {
         this.excelService.downloadExcel(blob, 'plantilla_importacion_ots.xlsx');
+        this.showSuccessAlert(
+          'Plantilla descargada',
+          'La plantilla se ha descargado correctamente',
+          'success'
+        );
       },
       error: (err) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo descargar la plantilla',
-          confirmButtonColor: '#dc3545'
-        });
+        this.showErrorAlert('Error', 'No se pudo descargar la plantilla');
       }
     });
   }
@@ -431,15 +518,12 @@ export class OtsComponent implements OnInit {
     modalRef.result.then(
       (result) => {
         if (result === 'saved') {
-          // Recargar tabla automáticamente después de crear
           this.refreshTable();
-          Swal.fire({
-            icon: 'success',
-            title: '¡Éxito!',
-            text: 'OT creada correctamente',
-            timer: 2000,
-            showConfirmButton: false
-          });
+          this.showSuccessAlert(
+            '¡OT creada!',
+            'La orden de trabajo se ha creado correctamente',
+            'success'
+          );
         }
       },
       () => {}
@@ -469,15 +553,12 @@ export class OtsComponent implements OnInit {
         modalRef.result.then(
           (result) => {
             if (result === 'saved') {
-              // Recargar tabla automáticamente después de editar
               this.refreshTable();
-              Swal.fire({
-                icon: 'success',
-                title: '¡Éxito!',
-                text: 'OT actualizada correctamente',
-                timer: 2000,
-                showConfirmButton: false
-              });
+              this.showSuccessAlert(
+                '¡OT actualizada!',
+                'La orden de trabajo se ha actualizado correctamente',
+                'success'
+              );
             }
           },
           () => {}
@@ -486,12 +567,7 @@ export class OtsComponent implements OnInit {
         this.modalRefs.push(modalRef);
       },
       error: (err) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo cargar la OT para editar',
-          confirmButtonColor: '#dc3545'
-        });
+        this.showErrorAlert('Error', 'No se pudo cargar la OT para editar');
       }
     });
   }
@@ -515,12 +591,7 @@ export class OtsComponent implements OnInit {
         this.modalRefs.push(modalRef);
       },
       error: (err) => {
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo cargar el detalle de la OT',
-          confirmButtonColor: '#dc3545'
-        });
+        this.showErrorAlert('Error', 'No se pudo cargar el detalle de la OT');
       }
     });
   }
@@ -575,35 +646,47 @@ export class OtsComponent implements OnInit {
   }
 
   toggleEstado(ot: OtListDto): void {
+    const action = ot.activo ? 'desactivar' : 'activar';
+    const actionText = ot.activo ? 'Desactivar' : 'Activar';
+    const icon = ot.activo ? 'bi-toggle-off' : 'bi-toggle-on';
+    const color = ot.activo ? '#f59e0b' : '#10b981';
+
     Swal.fire({
-      title: ot.activo ? '¿Desactivar OT?' : '¿Activar OT?',
-      text: `La OT #${ot.ot} pasará a estado ${ot.activo ? 'inactiva' : 'activa'}`,
-      icon: 'question',
+      title: `<strong>${actionText} OT</strong>`,
+      html: `
+        <div class="text-start">
+          <p>¿Estás seguro de ${action} la OT <span class="fw-bold">#${ot.ot}</span>?</p>
+          <div class="alert alert-${ot.activo ? 'warning' : 'info'} mt-3">
+            <i class="bi ${icon} me-2"></i>
+            La OT pasará a estado <strong>${ot.activo ? 'inactiva' : 'activa'}</strong>
+          </div>
+        </div>
+      `,
+      icon: ot.activo ? 'warning' : 'question',
       showCancelButton: true,
-      confirmButtonColor: '#dc3545',
-      cancelButtonColor: '#6c757d',
-      confirmButtonText: 'Sí, cambiar',
-      cancelButtonText: 'Cancelar'
+      confirmButtonColor: color,
+      cancelButtonColor: '#6b7280',
+      confirmButtonText: `<i class="bi ${icon} me-2"></i>${actionText}`,
+      cancelButtonText: '<i class="bi bi-x me-2"></i>Cancelar',
+      customClass: {
+        popup: 'sweet-alert-popup',
+        confirmButton: 'btn',
+        cancelButton: 'btn btn-secondary'
+      },
+      buttonsStyling: false
     }).then((result) => {
       if (result.isConfirmed) {
         this.otService.toggleActivo(ot.idOts!).subscribe({
           next: () => {
             this.loadOts();
-            Swal.fire({
-              icon: 'success',
-              title: '¡Éxito!',
-              text: `OT ${ot.activo ? 'desactivada' : 'activada'} correctamente`,
-              timer: 2000,
-              showConfirmButton: false
-            });
+            this.showSuccessAlert(
+              `¡OT ${action}ada!`,
+              `La OT #${ot.ot} ha sido ${action}ada correctamente`,
+              'success'
+            );
           },
           error: (err) => {
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: 'No se pudo cambiar el estado',
-              confirmButtonColor: '#dc3545'
-            });
+            this.showErrorAlert('Error', 'No se pudo cambiar el estado de la OT');
           }
         });
       }
@@ -612,25 +695,88 @@ export class OtsComponent implements OnInit {
 
   showImportHelp(): void {
     Swal.fire({
-      title: 'Ayuda de importación',
-      html: `<div class="text-start">
-              <h6>Encabezados requeridos:</h6>
-              <ul class="list-group">
-                <li class="list-group-item"><code>descripcion</code> - Descripción de la OT</li>
-                <li class="list-group-item"><code>fechaapertura</code> - Fecha (dd/mm/aaaa)</li>
-                <li class="list-group-item"><code>cliente</code> - Nombre del cliente</li>
-                <li class="list-group-item"><code>area</code> - Área del cliente</li>
-                <li class="list-group-item"><code>proyecto</code> - Nombre del proyecto</li>
-                <li class="list-group-item"><code>fase</code> - Fase del proyecto</li>
-                <li class="list-group-item"><code>site</code> - Código del sitio</li>
-                <li class="list-group-item"><code>region</code> - Región</li>
-                <li class="list-group-item"><code>diasasignados</code> - Número de días</li>
-                <li class="list-group-item"><code>estado</code> - Estado de la OT</li>
-              </ul>
-              <p class="mt-3 text-muted small">Importante: Los encabezados deben ser exactos, en minúsculas y sin espacios</p>
-            </div>`,
-      width: 600,
-      confirmButtonText: 'Entendido'
+      title: '<strong>Ayuda de importación</strong>',
+      html: `
+        <div class="text-start">
+          <h6 class="mb-3 text-primary">Encabezados requeridos:</h6>
+          <div class="table-responsive">
+            <table class="table table-sm">
+              <thead>
+                <tr>
+                  <th>Encabezado</th>
+                  <th>Descripción</th>
+                  <th>Ejemplo</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr><td><code>descripcion</code></td><td>Descripción de la OT</td><td>Mantenimiento sitio A</td></tr>
+                <tr><td><code>fechaapertura</code></td><td>Fecha (dd/mm/aaaa)</td><td>15/12/2023</td></tr>
+                <tr><td><code>cliente</code></td><td>Nombre del cliente</td><td>Empresa ABC</td></tr>
+                <tr><td><code>area</code></td><td>Área del cliente</td><td>Tecnología</td></tr>
+                <tr><td><code>proyecto</code></td><td>Nombre del proyecto</td><td>Proyecto X</td></tr>
+                <tr><td><code>fase</code></td><td>Fase del proyecto</td><td>Fase 1</td></tr>
+                <tr><td><code>site</code></td><td>Código del sitio</td><td>SIT001</td></tr>
+                <tr><td><code>region</code></td><td>Región</td><td>Norte</td></tr>
+                <tr><td><code>diasasignados</code></td><td>Número de días</td><td>30</td></tr>
+                <tr><td><code>estado</code></td><td>Estado de la OT</td><td>EN_EJECUCION</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="alert alert-info mt-3">
+            <i class="bi bi-info-circle me-2"></i>
+            <strong>Importante:</strong> Los encabezados deben ser exactos, en minúsculas y sin espacios
+          </div>
+        </div>
+      `,
+      width: 700,
+      confirmButtonText: '<i class="bi bi-check me-2"></i>Entendido',
+      customClass: {
+        popup: 'sweet-alert-popup',
+        confirmButton: 'btn btn-primary'
+      },
+      buttonsStyling: false
+    });
+  }
+
+  // ==================== HELPERS DE ALERTAS ====================
+  private showSuccessAlert(title: string, text: string, icon: any = 'success'): void {
+    Swal.fire({
+      title: `<strong>${title}</strong>`,
+      text: text,
+      icon: icon,
+      timer: 3000,
+      showConfirmButton: false,
+      customClass: {
+        popup: 'sweet-alert-popup'
+      }
+    });
+  }
+
+  private showErrorAlert(title: string, text: string): void {
+    Swal.fire({
+      title: `<strong>${title}</strong>`,
+      text: text,
+      icon: 'error',
+      confirmButtonText: '<i class="bi bi-check me-2"></i>Entendido',
+      customClass: {
+        popup: 'sweet-alert-popup',
+        confirmButton: 'btn btn-danger'
+      },
+      buttonsStyling: false
+    });
+  }
+
+  private showWarningAlert(title: string, text: string): void {
+    Swal.fire({
+      title: `<strong>${title}</strong>`,
+      text: text,
+      icon: 'warning',
+      confirmButtonText: '<i class="bi bi-check me-2"></i>Entendido',
+      customClass: {
+        popup: 'sweet-alert-popup',
+        confirmButton: 'btn btn-warning'
+      },
+      buttonsStyling: false
     });
   }
 

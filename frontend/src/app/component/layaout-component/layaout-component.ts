@@ -166,17 +166,16 @@ export class LayoutComponent implements OnInit, OnDestroy {
   }
 
   isAnyNivel(niveles: string[]): boolean {
-    if (!this.authService.currentUser?.roles) return false;
+    if (!this.authService.currentUser?.nivel) return false;
     return niveles.some(nivel =>
-      this.authService.currentUser?.roles?.includes(nivel)
+      this.authService.currentUser?.nivel?.includes(nivel)
     );
   }
 
-  getNivel(): string {
-    const roles = this.authService.currentUser?.roles || [];
-    const nivel = roles.find(r => r.startsWith('L'));
-    return nivel || 'Sin nivel';
-  }
+getNivel(): string {
+  const userNivel = this.authService.currentUser?.nivel || [];
+  return userNivel.length > 0 ? userNivel[0] : 'Sin nivel';
+}
 
   getArea(): string {
     return this.authService.currentUser?.area || 'Sin área';
@@ -261,20 +260,21 @@ export class LayoutComponent implements OnInit, OnDestroy {
     return this.authService.currentUser;
   }
 
-  get mainRole(): string {
-    const roles = this.currentUser?.roles;
-    if (!roles || roles.length === 0) return 'Usuario';
+ get mainRole(): string {
+    // Usar 'nivel' en lugar de 'roles'
+    const niveles = this.currentUser?.nivel || [];  // Cambiado de roles a nivel
+
+    if (!niveles || niveles.length === 0) return 'Usuario';
 
     // Prioridad: ADMIN > L niveles > otros
-    const adminRole = roles.find(r => r.includes('ADMIN'));
+    const adminRole = niveles.find((r: string) => r.includes('ADMIN'));
     if (adminRole) return adminRole;
 
-    const nivelRole = roles.find(r => r.startsWith('L'));
+    const nivelRole = niveles.find((r: string) => r.startsWith('L'));
     if (nivelRole) return nivelRole;
 
-    return roles[0];
-  }
-
+    return niveles[0];
+}
   get userBadgeClass(): string {
     const role = this.mainRole.toLowerCase();
     if (role.includes('admin')) return 'admin-badge';

@@ -95,18 +95,49 @@
             <div class="row g-4">
               <!-- Cliente -->
               <div class="col-md-6">
-                <div class="form-group">
+                <div class="form-group" [class.has-error]="submitted && f['idCliente'].invalid">
                   <label class="form-label fw-medium">
                     Cliente <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select form-select-lg" formControlName="idCliente"
-                          [class.is-invalid]="submitted && f['idCliente'].invalid">
-                    <option [ngValue]="null">Seleccione un cliente...</option>
-                    <option *ngFor="let c of clientes" [ngValue]="c.id">
-                      {{ c.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idCliente'].invalid" class="invalid-feedback">
+                  <ng-select
+                    [items]="clientes"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione cliente'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idCliente"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="onClienteChange($event)"
+                    [loading]="loading"
+                    [class.is-invalid]="submitted && f['idCliente'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                    <ng-template ng-notfound-tmp>
+                      <div class="text-center p-2">
+                        <i class="bi bi-search text-muted"></i>
+                        <p class="mb-0">No se encontraron clientes</p>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="submitted && f['idCliente'].invalid" class="invalid-feedback d-block">
                     Debe seleccionar un cliente
                   </div>
                 </div>
@@ -114,21 +145,46 @@
 
               <!-- Área -->
               <div class="col-md-6">
-                <div class="form-group">
+                <div class="form-group" [class.has-error]="submitted && f['idArea'].invalid">
                   <label class="form-label fw-medium">
                     Área <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select form-select-lg" formControlName="idArea"
-                          [class.is-invalid]="submitted && f['idArea'].invalid"
-                          [disabled]="!f['idCliente'].value">
-                    <option [ngValue]="null">
-                      {{ f['idCliente'].value ? 'Seleccione área...' : 'Seleccione cliente primero' }}
-                    </option>
-                    <option *ngFor="let a of areas" [ngValue]="a.id">
-                      {{ a.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idArea'].invalid" class="invalid-feedback">
+                  <ng-select
+                    [items]="areas"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione área'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idArea"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idArea')?.setValue($event?.id)"
+                    [disabled]="!form.get('idCliente')?.value || loading"
+                    [class.is-invalid]="submitted && f['idArea'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="!form.get('idCliente')?.value" class="text-muted small mt-1">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Seleccione un cliente primero
+                  </div>
+                  <div *ngIf="submitted && f['idArea'].invalid" class="invalid-feedback d-block">
                     Debe seleccionar un área
                   </div>
                 </div>
@@ -150,18 +206,41 @@
 
               <!-- Proyecto -->
               <div class="col-md-6">
-                <div class="form-group">
+                <div class="form-group" [class.has-error]="submitted && f['idProyecto'].invalid">
                   <label class="form-label fw-medium">
                     Proyecto <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select form-select-lg" formControlName="idProyecto"
-                          [class.is-invalid]="submitted && f['idProyecto'].invalid">
-                    <option [ngValue]="null">Seleccione proyecto...</option>
-                    <option *ngFor="let p of proyectos" [ngValue]="p.id">
-                      {{ p.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idProyecto'].invalid" class="invalid-feedback">
+                  <ng-select
+                    [items]="proyectos"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione proyecto'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idProyecto"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idProyecto')?.setValue($event?.id)"
+                    [class.is-invalid]="submitted && f['idProyecto'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="submitted && f['idProyecto'].invalid" class="invalid-feedback d-block">
                     Debe seleccionar un proyecto
                   </div>
                 </div>
@@ -169,64 +248,125 @@
 
               <!-- Fase -->
               <div class="col-md-6">
-                <div class="form-group">
+                <div class="form-group" [class.has-error]="submitted && f['idFase'].invalid">
                   <label class="form-label fw-medium">
                     Fase <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select form-select-lg" formControlName="idFase"
-                          [class.is-invalid]="submitted && f['idFase'].invalid">
-                    <option [ngValue]="null">Seleccione fase...</option>
-                    <option *ngFor="let f of fases" [ngValue]="f.id">
-                      {{ f.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idFase'].invalid" class="invalid-feedback">
+                  <ng-select
+                    [items]="fases"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione fase'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idFase"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idFase')?.setValue($event?.id)"
+                    [class.is-invalid]="submitted && f['idFase'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="submitted && f['idFase'].invalid" class="invalid-feedback d-block">
                     Debe seleccionar una fase
                   </div>
                 </div>
               </div>
 
-           <!-- Site -->
-<div class="col-md-6">
-  <div class="form-group">
-    <label class="form-label fw-medium">
-      Site <span class="text-danger">*</span>
-    </label>
+              <!-- Site -->
+              <div class="col-md-6">
+                <div class="form-group" [class.has-error]="submitted && f['idSite'].invalid">
+                  <label class="form-label fw-medium">
+                    Site <span class="text-danger">*</span>
+                  </label>
+                  <ng-select
+                    [items]="sites"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione site'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idSite"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idSite')?.setValue($event?.id)"
+                    [class.is-invalid]="submitted && f['idSite'].invalid">
 
-    <select
-      class="form-select form-select-lg"
-      formControlName="idSite"
-      [class.is-invalid]="submitted && f['idSite']?.invalid">
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
 
-      <option [ngValue]="null">Seleccione site...</option>
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
 
-      <option *ngFor="let s of sites" [ngValue]="s.id">
-        {{ s.label  }}   {{ s.adicional || 'SIN DESCRIPCIÓN' }}
-      </option>
-
-    </select>
-
-    <div *ngIf="submitted && f['idSite']?.invalid" class="invalid-feedback">
-      Debe seleccionar un site
-    </div>
-  </div>
-</div>
-
+                  </ng-select>
+                  <div *ngIf="submitted && f['idSite'].invalid" class="invalid-feedback d-block">
+                    Debe seleccionar un site
+                  </div>
+                </div>
+              </div>
 
               <!-- Región -->
               <div class="col-md-6">
-                <div class="form-group">
+                <div class="form-group" [class.has-error]="submitted && f['idRegion'].invalid">
                   <label class="form-label fw-medium">
                     Región <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select form-select-lg" formControlName="idRegion"
-                          [class.is-invalid]="submitted && f['idRegion'].invalid">
-                    <option [ngValue]="null">Seleccione región...</option>
-                    <option *ngFor="let r of regiones" [ngValue]="r.id">
-                      {{ r.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idRegion'].invalid" class="invalid-feedback">
+                  <ng-select
+                    [items]="regiones"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione región'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idRegion"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idRegion')?.setValue($event?.id)"
+                    [class.is-invalid]="submitted && f['idRegion'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="submitted && f['idRegion'].invalid" class="invalid-feedback d-block">
                     Debe seleccionar una región
                   </div>
                 </div>
@@ -239,8 +379,10 @@
                     OT Anterior
                     <span class="badge bg-secondary-subtle text-secondary ms-1 fs-7">Opcional</span>
                   </label>
-                  <input type="number" class="form-control form-control-lg" formControlName="idOtsAnterior"
-                         min="1" placeholder="Número de OT anterior">
+                  <input type="number" class="form-control form-control-lg"
+                         formControlName="idOtsAnterior"
+                         min="1"
+                         placeholder="Número de OT anterior">
                   <small class="form-text text-muted">
                     Número de OT previa si aplica (único campo opcional)
                   </small>
@@ -255,8 +397,8 @@
                     <span *ngIf="!isEditMode" class="badge bg-info-subtle text-info ms-1 fs-7">Auto-generada</span>
                   </label>
                   <textarea class="form-control" formControlName="descripcion" rows="3"
-                            [readonly]="!isEditMode"
-                            [class.bg-light]="!isEditMode"
+                            [readonly]="!isEditMode || isViewMode"
+                            [class.bg-light]="!isEditMode || isViewMode"
                             placeholder="Descripción automática según selección..."></textarea>
                   <div *ngIf="submitted && f['descripcion'].invalid" class="invalid-feedback d-block">
                     La descripción es requerida
@@ -273,11 +415,11 @@
             <div class="step-actions mt-5 pt-4 border-top">
               <div class="d-flex justify-content-between">
                 <button type="button" class="btn btn-outline-danger btn-lg px-4"
-                        (click)="resetForm()" [disabled]="loading">
+                        (click)="resetForm()" [disabled]="loading || isViewMode">
                   <i class="bi bi-x-circle me-2"></i>
                   {{ isEditMode ? 'Cancelar' : 'Limpiar' }}
                 </button>
-                <button type="button" class="btn btn-primary btn-lg px-5"
+                <button *ngIf="!isViewMode" type="button" class="btn btn-primary btn-lg px-5"
                         (click)="cambiarPaso(2)"
                         [disabled]="form.invalid || loading">
                   Continuar
@@ -309,52 +451,124 @@
                 </h6>
 
                 <!-- Jefatura Cliente -->
-                <div class="form-group mb-4">
+                <div class="form-group mb-4" [class.has-error]="submitted && f['idJefaturaClienteSolicitante'].invalid">
                   <label class="form-label fw-medium">
                     Jefatura Cliente <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select" formControlName="idJefaturaClienteSolicitante"
-                          [class.is-invalid]="submitted && f['idJefaturaClienteSolicitante'].invalid">
-                    <option [ngValue]="null">-- Seleccione jefatura --</option>
-                    <option *ngFor="let j of jefaturasCliente" [ngValue]="j.id">
-                      {{ j.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idJefaturaClienteSolicitante'].invalid" class="invalid-feedback">
+                  <ng-select
+                    [items]="jefaturasCliente"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione jefatura cliente'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idJefaturaClienteSolicitante"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idJefaturaClienteSolicitante')?.setValue($event?.id)"
+                    (search)="onSearchJefaturaCliente($event)"
+                    [class.is-invalid]="submitted && f['idJefaturaClienteSolicitante'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="submitted && f['idJefaturaClienteSolicitante'].invalid" class="invalid-feedback d-block">
                     Debe seleccionar una jefatura cliente
                   </div>
                 </div>
 
                 <!-- Analista Cliente -->
-                <div class="form-group mb-4">
+                <div class="form-group mb-4" [class.has-error]="submitted && f['idAnalistaClienteSolicitante'].invalid">
                   <label class="form-label fw-medium">
                     Analista Cliente <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select" formControlName="idAnalistaClienteSolicitante"
-                          [class.is-invalid]="submitted && f['idAnalistaClienteSolicitante'].invalid">
-                    <option [ngValue]="null">-- Seleccione analista --</option>
-                    <option *ngFor="let a of analistasCliente" [ngValue]="a.id">
-                      {{ a.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idAnalistaClienteSolicitante'].invalid" class="invalid-feedback">
+                  <ng-select
+                    [items]="analistasCliente"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione analista cliente'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idAnalistaClienteSolicitante"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idAnalistaClienteSolicitante')?.setValue($event?.id)"
+                    (search)="onSearchAnalistaCliente($event)"
+                    [class.is-invalid]="submitted && f['idAnalistaClienteSolicitante'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="submitted && f['idAnalistaClienteSolicitante'].invalid" class="invalid-feedback d-block">
                     Debe seleccionar un analista cliente
                   </div>
                 </div>
 
                 <!-- Coordinador TI/CW -->
-                <div class="form-group mb-4">
+                <div class="form-group mb-4" [class.has-error]="submitted && f['idCoordinadorTiCw'].invalid">
                   <label class="form-label fw-medium">
                     Coordinador TI/CW <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select" formControlName="idCoordinadorTiCw"
-                          [class.is-invalid]="submitted && f['idCoordinadorTiCw'].invalid">
-                    <option [ngValue]="null">-- Seleccione coordinador --</option>
-                    <option *ngFor="let c of coordinadoresTiCw" [ngValue]="c.id">
-                      {{ c.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idCoordinadorTiCw'].invalid" class="invalid-feedback">
+                  <ng-select
+                    [items]="coordinadoresTiCw"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione coordinador TI/CW'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idCoordinadorTiCw"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idCoordinadorTiCw')?.setValue($event?.id)"
+                    (search)="onSearchCoordinadorTiCw($event)"
+                    [class.is-invalid]="submitted && f['idCoordinadorTiCw'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="submitted && f['idCoordinadorTiCw'].invalid" class="invalid-feedback d-block">
                     Debe seleccionar un coordinador TI/CW
                   </div>
                 </div>
@@ -368,90 +582,209 @@
                 </h6>
 
                 <!-- Jefatura Responsable -->
-                <div class="form-group mb-4">
+                <div class="form-group mb-4" [class.has-error]="submitted && f['idJefaturaResponsable'].invalid">
                   <label class="form-label fw-medium">
                     Jefatura Responsable <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select" formControlName="idJefaturaResponsable"
-                          [class.is-invalid]="submitted && f['idJefaturaResponsable'].invalid">
-                    <option [ngValue]="null">-- Seleccione jefatura --</option>
-                    <option *ngFor="let j of jefaturasResponsable" [ngValue]="j.id">
-                      {{ j.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idJefaturaResponsable'].invalid" class="invalid-feedback">
+                  <ng-select
+                    [items]="jefaturasResponsable"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione jefatura responsable'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idJefaturaResponsable"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idJefaturaResponsable')?.setValue($event?.id)"
+                    (search)="onSearchJefaturaResponsable($event)"
+                    [class.is-invalid]="submitted && f['idJefaturaResponsable'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="submitted && f['idJefaturaResponsable'].invalid" class="invalid-feedback d-block">
                     Debe seleccionar una jefatura responsable
                   </div>
                 </div>
 
                 <!-- Liquidador -->
-                <div class="form-group mb-4">
+                <div class="form-group mb-4" [class.has-error]="submitted && f['idLiquidador'].invalid">
                   <label class="form-label fw-medium">
                     Liquidador <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select" formControlName="idLiquidador"
-                          [class.is-invalid]="submitted && f['idLiquidador'].invalid">
-                    <option [ngValue]="null">-- Seleccione liquidador --</option>
-                    <option *ngFor="let l of liquidadores" [ngValue]="l.id">
-                      {{ l.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idLiquidador'].invalid" class="invalid-feedback">
+                  <ng-select
+                    [items]="liquidadores"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione liquidador'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idLiquidador"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idLiquidador')?.setValue($event?.id)"
+                    (search)="onSearchLiquidador($event)"
+                    [class.is-invalid]="submitted && f['idLiquidador'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="submitted && f['idLiquidador'].invalid" class="invalid-feedback d-block">
                     Debe seleccionar un liquidador
                   </div>
                 </div>
 
                 <!-- Ejecutante -->
-                <div class="form-group mb-4">
+                <div class="form-group mb-4" [class.has-error]="submitted && f['idEjecutante'].invalid">
                   <label class="form-label fw-medium">
                     Ejecutante <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select" formControlName="idEjecutante"
-                          [class.is-invalid]="submitted && f['idEjecutante'].invalid">
-                    <option [ngValue]="null">-- Seleccione ejecutante --</option>
-                    <option *ngFor="let e of ejecutantes" [ngValue]="e.id">
-                      {{ e.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idEjecutante'].invalid" class="invalid-feedback">
+                  <ng-select
+                    [items]="ejecutantes"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione ejecutante'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idEjecutante"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idEjecutante')?.setValue($event?.id)"
+                    (search)="onSearchEjecutante($event)"
+                    [class.is-invalid]="submitted && f['idEjecutante'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="submitted && f['idEjecutante'].invalid" class="invalid-feedback d-block">
                     Debe seleccionar un ejecutante
                   </div>
                 </div>
 
                 <!-- Analista Contable -->
-                <div class="form-group mb-4">
+                <div class="form-group mb-4" [class.has-error]="submitted && f['idAnalistaContable'].invalid">
                   <label class="form-label fw-medium">
                     Analista Contable <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select" formControlName="idAnalistaContable"
-                          [class.is-invalid]="submitted && f['idAnalistaContable'].invalid">
-                    <option [ngValue]="null">-- Seleccione analista --</option>
-                    <option *ngFor="let a of analistasContable" [ngValue]="a.id">
-                      {{ a.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idAnalistaContable'].invalid" class="invalid-feedback">
+                  <ng-select
+                    [items]="analistasContable"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione analista contable'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idAnalistaContable"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idAnalistaContable')?.setValue($event?.id)"
+                    (search)="onSearchAnalistaContable($event)"
+                    [class.is-invalid]="submitted && f['idAnalistaContable'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="submitted && f['idAnalistaContable'].invalid" class="invalid-feedback d-block">
                     Debe seleccionar un analista contable
                   </div>
                 </div>
 
                 <!-- ESTADO OT -->
-                <div class="form-group mb-4" *ngIf="isEditMode">
+                <div class="form-group mb-4" *ngIf="isEditMode" [class.has-error]="submitted && f['idEstadoOt'].invalid">
                   <label class="form-label fw-medium">
                     Estado OT <span class="text-danger">*</span>
                   </label>
-                  <select class="form-select" formControlName="idEstadoOt"
-                          [class.is-invalid]="submitted && f['idEstadoOt'].invalid">
-                    <option [ngValue]="null">-- Seleccione estado --</option>
-                    <option *ngFor="let a of estadoOT" [ngValue]="a.id">
-                      {{ a.label }}
-                    </option>
-                  </select>
-                  <div *ngIf="submitted && f['idEstadoOt'].invalid" class="invalid-feedback">
-                    Debe seleccionar un estado ot
+                  <ng-select
+                    [items]="estadoOT"
+                    bindLabel="label"
+                    bindValue="id"
+                    [placeholder]="'Seleccione estado OT'"
+                    [clearable]="true"
+                    [searchable]="true"
+                    [(ngModel)]="form.value.idEstadoOt"
+                    [ngModelOptions]="{standalone: true}"
+                    (change)="form.get('idEstadoOt')?.setValue($event?.id)"
+                    (search)="onSearchEstadoOT($event)"
+                    [class.is-invalid]="submitted && f['idEstadoOt'].invalid">
+
+                    <ng-template ng-label-tmp let-item="item">
+                      <span *ngIf="item">
+                        {{ getItemDisplay(item) }}
+                      </span>
+                    </ng-template>
+
+                    <ng-template ng-option-tmp let-item="item">
+                      <div class="dropdown-option">
+                        <div class="fw-medium">
+                          {{ getItemDisplay(item) }}
+                        </div>
+                        <small *ngIf="item.adicional" class="text-muted">
+                          {{ item.adicional }}
+                        </small>
+                      </div>
+                    </ng-template>
+
+                  </ng-select>
+                  <div *ngIf="submitted && f['idEstadoOt'].invalid" class="invalid-feedback d-block">
+                    Debe seleccionar un estado OT
                   </div>
                 </div>
-
               </div>
             </div>
 
@@ -463,7 +796,7 @@
                   <i class="bi bi-arrow-left me-2"></i>
                   Regresar
                 </button>
-                <button type="button" class="btn btn-primary btn-lg px-5"
+                <button *ngIf="!isViewMode" type="button" class="btn btn-primary btn-lg px-5"
                         (click)="cambiarPaso(3)">
                   Continuar
                   <i class="bi bi-arrow-right ms-2"></i>
@@ -621,7 +954,7 @@
                           (click)="onCancel()">
                     Cancelar
                   </button>
-                  <button type="submit" class="btn btn-success btn-lg px-5 shadow-sm"
+                  <button *ngIf="!isViewMode" type="submit" class="btn btn-success btn-lg px-5 shadow-sm"
                           [disabled]="loading || form.invalid">
                     <ng-container *ngIf="!loading">
                       <i class="bi me-2" [ngClass]="isEditMode ? 'bi-save' : 'bi-plus-circle'"></i>

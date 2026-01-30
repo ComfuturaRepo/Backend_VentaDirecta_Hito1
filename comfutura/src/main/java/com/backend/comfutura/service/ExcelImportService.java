@@ -973,8 +973,14 @@ public class ExcelImportService {
         request.setIdEstadoOt(idEstado);
 
         if (importDTO.getOtAnterior() != null) {
-            Integer idOtsAnterior = otService.buscarIdPorOt(importDTO.getOtAnterior());
-            request.setIdOtsAnterior(idOtsAnterior);
+            try {
+                // ✅ GUARDAR DIRECTAMENTE EL NÚMERO, NO BUSCAR ID
+                request.setIdOtsAnterior(importDTO.getOtAnterior());
+                log.info("📝 OT anterior asignada: {}", importDTO.getOtAnterior());
+            } catch (Exception e) {
+                log.error("❌ Error al asignar OT anterior: {}", e.getMessage());
+                // No fallar, continuar sin OT anterior
+            }
         }
 
         // Campos opcionales

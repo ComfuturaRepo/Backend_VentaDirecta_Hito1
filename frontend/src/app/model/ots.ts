@@ -77,7 +77,7 @@ export interface OtDetailResponse {
 // Request para crear / editar OT (sin cambios, está bien)
 export interface OtCreateRequest {
   idOts?: number;
-  idOtsAnterior?: number | null;
+  idOtsAnterior?: number | null;  // ✅ Debe estar aquí
 
   idCliente: number;
   idArea: number;
@@ -85,7 +85,7 @@ export interface OtCreateRequest {
   idFase: number;
   idSite: number;
   idRegion: number;
-  idEstadoOt: number;
+idEstadoOt: number | null;
 
   descripcion?: string;
   fechaApertura?: string;
