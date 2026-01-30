@@ -20,34 +20,49 @@ export const permisoGuard: CanActivateFn = (route, state): Observable<boolean | 
     }));
   }
 
-  // Obtener usuario (esperar si es necesario)
+  // Obtener el estado de autenticación
   return authService.authState$.pipe(
     take(1), // Solo el primer valor
     map(authState => {
-      const user = authService.currentUser; // Usar el getter actualizado
-
-      if (!user) {
-        console.log('🔑 permisoGuard: Usuario no disponible');
+      if (!authState.isAuthenticated || !authState.user) {
+        console.log('🔑 permisoGuard: No autenticado o sin usuario');
         return router.createUrlTree(['/login'], {
           queryParams: { returnUrl: state.url }
         });
       }
 
-      console.log('🔑 permisoGuard: Usuario encontrado:', user.username);
+      return authState.user;
+    }),
+    switchMap(user => {
+      if (user instanceof UrlTree) {
+        return of(user);
+      }
 
       const permisosRequeridos = route.data?.['permisos'] as string[] || [];
 
-      // Si no se requieren permisos específicos
+      // Si no se requieren permisos específicos, permitir acceso
       if (permisosRequeridos.length === 0) {
-        return true;
+        console.log('🔑 permisoGuard: No requiere permisos específicos - PERMITIDO');
+        return of(true);
       }
 
-      // Verificar permisos
-      return permisoService.verificarPermisoRemoto(permisosRequeridos[0], user.idUsuario).pipe(
-        map(tienePermiso => {
-          if (tienePermiso) {
+      console.log('🔑 permisoGuard: Usuario:', user.username, 'Nivel:', user.nivel);
+
+      // Verificar permisos remotos
+      const verificaciones = permisosRequeridos.map(codigo =>
+        permisoService.verificarPermisoRemoto(codigo, user.idUsuario)
+      );
+
+      return forkJoin(verificaciones).pipe(
+        map(resultados => {
+          const tieneAlgunPermiso = resultados.some(tiene => tiene);
+          console.log('🔑 permisoGuard: Resultados:', resultados, 'Permitido:', tieneAlgunPermiso);
+
+          if (tieneAlgunPermiso) {
             return true;
           }
+
+          console.log('🔑 permisoGuard: Sin permisos suficientes');
           return router.createUrlTree(['/no-autorizado'], {
             queryParams: {
               permisosRequeridos: permisosRequeridos.join(','),
@@ -57,7 +72,6 @@ export const permisoGuard: CanActivateFn = (route, state): Observable<boolean | 
         })
       );
     }),
-    switchMap(result => result instanceof Observable ? result : of(result)),
     catchError((error) => {
       console.error('🔑 permisoGuard: Error:', error);
       return of(router.createUrlTree(['/no-autorizado'], {
