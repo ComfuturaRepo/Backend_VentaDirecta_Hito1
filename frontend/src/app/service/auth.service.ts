@@ -1,4 +1,3 @@
-// src/app/core/services/auth.service.ts
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
@@ -13,6 +12,7 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   token: string;
+  usuario: UserJwtDto;
 }
 
 export interface UserJwtDto {
@@ -25,7 +25,6 @@ export interface UserJwtDto {
   nombreCompleto: string;
   activo: boolean;
   roles: string[];
-  // Agrega aquí otros campos que vengan en tu JWT (ej: exp, iat, nombre, etc.)
 }
 
 export interface AuthState {
@@ -41,9 +40,9 @@ export class AuthService {
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
 
-    private API_URL = `${environment.baseUrl}/api/auth`;
-
+  private API_URL = `${environment.baseUrl}/api/auth`;
   private readonly TOKEN_KEY = 'auth_token';
+  private readonly USER_KEY = 'auth_user';
 
   private authState = new BehaviorSubject<AuthState>({
     token: null,
@@ -80,7 +79,7 @@ export class AuthService {
    */
   login(credentials: LoginRequest): Observable<AuthResponse> {
     return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials).pipe(
-      tap(response => this.setToken(response.token)),
+      tap(response => this.setToken(response.token, response.usuario)),
       catchError(this.handleError)
     );
   }
@@ -95,17 +94,13 @@ export class AuthService {
   /**
    * Guarda el token y actualiza el estado
    */
-  private setToken(token: string): void {
+  private setToken(token: string, usuario: UserJwtDto): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
     localStorage.setItem(this.TOKEN_KEY, token);
-    const userData = this.decodeToken(token);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(usuario));
 
-    if (userData && !this.isTokenExpired(token)) {
-      this.setAuthState(token, userData);
-    } else {
-      this.clearAuthState();
-    }
+    this.setAuthState(token, usuario);
   }
 
   private setAuthState(token: string, user: UserJwtDto): void {
@@ -119,6 +114,7 @@ export class AuthService {
   private clearAuthState(): void {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.USER_KEY);
     }
     this.authState.next({
       token: null,
@@ -135,7 +131,6 @@ export class AuthService {
       const payload = token.split('.')[1];
       const decoded = JSON.parse(atob(payload));
       // Ajusta según la estructura real de tu JWT
-      // Ejemplos comunes: decoded.sub, decoded.usuario, decoded.data, etc.
       return decoded.data as UserJwtDto ?? decoded as UserJwtDto ?? null;
     } catch (e) {
       console.error('Error al decodificar JWT:', e);
@@ -156,30 +151,31 @@ export class AuthService {
       return true;
     }
   }
-// NIVEL
-isNivel(nivel: string): boolean {
-  return this.currentUser?.roles?.includes(nivel) ?? false;
-}
 
-isNivelMinimo(nivelRequerido: string): boolean {
-  const orden = ['L1', 'L2', 'L3', 'L4', 'L5'];
-  const userNivel = this.currentUser?.roles?.[0];
-  if (!userNivel) return false;
+  // NIVEL
+  isNivel(nivel: string): boolean {
+    return this.currentUser?.roles?.includes(nivel) ?? false;
+  }
 
-  return orden.indexOf(userNivel) <= orden.indexOf(nivelRequerido);
-}
+  isNivelMinimo(nivelRequerido: string): boolean {
+    const orden = ['L1', 'L2', 'L3', 'L4', 'L5'];
+    const userNivel = this.currentUser?.roles?.[0];
+    if (!userNivel) return false;
 
-// ÁREA
-isArea(area: string): boolean {
-  return this.currentUser?.area?.toUpperCase() === area.toUpperCase();
-}
+    return orden.indexOf(userNivel) <= orden.indexOf(nivelRequerido);
+  }
 
-// CARGO
-isCargo(texto: string): boolean {
-  return this.currentUser?.cargo
-    ?.toUpperCase()
-    .includes(texto.toUpperCase()) ?? false;
-}
+  // ÁREA
+  isArea(area: string): boolean {
+    return this.currentUser?.area?.toUpperCase() === area.toUpperCase();
+  }
+
+  // CARGO
+  isCargo(texto: string): boolean {
+    return this.currentUser?.cargo
+      ?.toUpperCase()
+      .includes(texto.toUpperCase()) ?? false;
+  }
 
   // ── Métodos públicos útiles ────────────────────────────────────────
 
@@ -206,6 +202,24 @@ isCargo(texto: string): boolean {
       this.logout();
       return null;
     }
+
+    // También cargar desde localStorage por si acaso
+    if (!state.user && isPlatformBrowser(this.platformId)) {
+      const userStr = localStorage.getItem(this.USER_KEY);
+      if (userStr) {
+        try {
+          const user = JSON.parse(userStr);
+          this.authState.next({
+            ...state,
+            user
+          });
+          return user;
+        } catch {
+          return null;
+        }
+      }
+    }
+
     return state.user;
   }
 

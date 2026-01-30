@@ -107,10 +107,10 @@ public class CargoServiceImpl implements CargoService {
 
     private CargoResponseDTO mapToDTO(Cargo cargo) {
         return CargoResponseDTO.builder()
-                .id(cargo.getId())
+                .id(cargo.getIdCargo())
                 .nombre(cargo.getNombre())
                 .activo(cargo.getActivo())
-                .idNivel(cargo.getNivel().getId())
+                .idNivel(cargo.getNivel().getIdNivel())
                 .nombreNivel(cargo.getNivel().getNombre())
                 .build();
     }

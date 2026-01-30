@@ -131,7 +131,7 @@ public class PerfilServiceImpl implements PerfilService {
 
         // Datos del nivel/rol
         if (usuario.getNivel() != null) {
-            response.setIdNivel(usuario.getNivel().getId());
+            response.setIdNivel(usuario.getNivel().getIdNivel());
             response.setNivelNombre(usuario.getNivel().getNombre());
             response.setNivelCodigo(usuario.getNivel().getCodigo());
         }

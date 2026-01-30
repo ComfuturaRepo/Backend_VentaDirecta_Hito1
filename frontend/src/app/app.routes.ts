@@ -14,22 +14,20 @@ import { TrabajadorComponent } from './pages/trabajador-component/trabajador-com
 import { LayoutComponent } from './component/layaout-component/layaout-component';
 import { ClienteComponent } from './pages/cliente-component/cliente-component';
 import { DashboardComponente } from './pages/dashboard-componente/dashboard-componente';
+import { permisoGuard } from './auth/permiso.guard';
+import { GestionPermisosComponent } from './pages/gestion-permisos.component.ts/gestion-permisos.component.ts';
+
 
 export const routes: Routes = [
   {
     path: 'login',
     component: LoginComponent,
-    // Opcional: puedes agregar un título o data si lo necesitas
-    // data: { title: 'Iniciar Sesión' }
   },
-
-  // Ruta protegida principal (con layout)
   {
     path: '',
     component: LayoutComponent,
-    canActivateChild: [authGuard],
+    canActivateChild: [authGuard], // Primero verifica autenticación
     children: [
-      // Redirección por defecto cuando entramos a la raíz protegida
       {
         path: '',
         redirectTo: 'dashboard',
@@ -38,54 +36,71 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         component: DashboardComponente,
-        // data: { title: 'Dashboard', breadcrumb: 'Inicio' }
+        canActivate: [permisoGuard], // Luego verifica permisos
+        data: { permisos: ['DASHBOARD_VIEW'] }
       },
       {
         path: 'ot',
         component: OtsComponent,
-        // data: { title: 'Órdenes de Trabajo' }
+        canActivate: [permisoGuard],
+        data: { permisos: ['OT_VIEW'] }
       },
       {
         path: 'site',
         component: SiteComponent,
-        // data: { title: 'Sitios' }
+        canActivate: [permisoGuard],
+        data: { permisos: ['SITE_VIEW'] }
       },
       {
         path: 'gestion-jefatura-analista',
         component: GestionCargosSolicitantesComponent,
-        // data: { title: 'Gestión Jefatura / Analista' }
+        canActivate: [permisoGuard],
+        data: { permisos: ['CONFIGURACION_VIEW'] }
       },
       {
         path: 'orden-compra',
         component: OrdenCompraComponent,
-        // data: { title: 'Órdenes de Compra' }
+        canActivate: [permisoGuard],
+        data: { permisos: ['OC_VIEW'] }
       },
       {
         path: 'usuarios',
         component: UsuariosComponent,
-        // data: { title: 'Órdenes de Compra' }
+        canActivate: [permisoGuard],
+        data: { permisos: ['USUARIO_ADMIN'] }
       },
       {
         path: 'perfil',
         component: UsuarioPerfilComponent,
-        // data: { title: 'Órdenes de Compra' }
+        canActivate: [permisoGuard],
+        data: { permisos: ['PERFIL_VIEW'] }
       },
-          {
+      {
         path: 'trabajador',
         component: TrabajadorComponent,
-        // data: { title: 'Órdenes de Compra' }
+        canActivate: [permisoGuard],
+        data: { permisos: ['TRABAJADOR_VIEW'] }
       },
-          {
+      {
         path: 'cliente',
         component: ClienteComponent,
-        // data: { title: 'Órdenes de Compra' }
+        canActivate: [permisoGuard],
+        data: { permisos: ['CLIENTE_VIEW'] }
+      },
+      // Ruta para manejar falta de permisos
+      {
+        path: 'no-autorizado',
+        loadComponent: () => import('./pages/no-autorizado/no-autorizado/no-autorizado')
+          .then(m => m.NoAutorizadoComponent)
       }
-
-
+     , {
+  path: 'gestion-permisos',
+  component: GestionPermisosComponent,
+  canActivate: [authGuard, permisoGuard],
+  data: { permisos: ['PERMISO_ADMIN'] }
+}
     ]
   },
-
-  // Cualquier otra ruta no reconocida → login
   {
     path: '**',
     redirectTo: 'login',

@@ -640,3 +640,34 @@ CREATE TABLE compra_directa (
 CREATE INDEX idx_planilla_ots ON planilla_trabajo_ot(id_ots);
 CREATE INDEX idx_planilla_trab ON planilla_trabajo_ot(id_trabajador);
 CREATE INDEX idx_planilla_cargo ON planilla_trabajo_ot(id_cargo);
+
+
+
+CREATE TABLE permiso (
+                         id_permiso INT AUTO_INCREMENT PRIMARY KEY,
+                         codigo VARCHAR(50) UNIQUE NOT NULL,  -- DASHBOARD_VIEW, USUARIO_ADMIN, REPORTES_VIEW
+                         nombre VARCHAR(100),
+                         activo TINYINT(1) DEFAULT 1,
+                         descripcion VARCHAR(200)
+);
+CREATE TABLE permiso_nivel (
+                               id_permiso INT,
+                               id_nivel INT,
+                               PRIMARY KEY (id_permiso, id_nivel),
+                               FOREIGN KEY (id_permiso) REFERENCES permiso(id_permiso),
+                               FOREIGN KEY (id_nivel) REFERENCES nivel(id_nivel)
+);
+CREATE TABLE permiso_area (
+                              id_permiso INT,
+                              id_area INT,
+                              PRIMARY KEY (id_permiso, id_area),
+                              FOREIGN KEY (id_permiso) REFERENCES permiso(id_permiso),
+                              FOREIGN KEY (id_area) REFERENCES area(id_area)
+);
+CREATE TABLE permiso_cargo (
+                               id_permiso INT,
+                               id_cargo INT,
+                               PRIMARY KEY (id_permiso, id_cargo),
+                               FOREIGN KEY (id_permiso) REFERENCES permiso(id_permiso),
+                               FOREIGN KEY (id_cargo) REFERENCES cargo(id_cargo)
+);

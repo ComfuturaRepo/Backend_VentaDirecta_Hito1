@@ -91,18 +91,15 @@
 .logo-text-container {
   display: flex;
   flex-direction: column;
-  opacity: 1;
-  max-width: 220px;
   overflow: hidden;
-  transition: opacity 0.3s ease, max-width 0.3s ease;
+  transition: opacity 0.3s ease, width 0.3s ease;
 }
 
 .sidebar.collapsed .logo-text-container {
   opacity: 0;
-  max-width: 0;
-  pointer-events: none;
+  width: 0;
+  overflow: hidden;
 }
-
 
 .logo-text {
   font-size: 1.6rem;
@@ -898,6 +895,7 @@
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
+
 .sidebar {
   width: 280px;
   background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
@@ -907,19 +905,15 @@
   z-index: 1100;
   display: flex;
   flex-direction: column;
-  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1),
-              width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
   overflow: hidden;
   border-right: 1px solid rgba(71, 85, 105, 0.3);
-  transform: translateX(0); /* visible */
 }
-
 
 .sidebar.collapsed {
-  transform: translateX(-100%);
+  width: 80px;
 }
-
 
 .sidebar.mobile-open {
   transform: translateX(0) !important;
@@ -1183,105 +1177,103 @@
     margin-top: 0;
   }
 }
-/* Ajustes específicos para el logo */
-.logo-container {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  overflow: visible; /* Cambiado de hidden a visible */
+/* Estilos para permisos */
+.user-permiso-count {
+  font-size: 0.75rem;
+  opacity: 0.8;
+}
+
+.permisos-btn {
   position: relative;
-  width: calc(100% - 50px); /* Deja espacio para el botón */
 }
 
-.logo-wrapper {
-  width: 52px;
-  height: 52px;
-  border-radius: 16px;
-  background: linear-gradient(to right, #dc2626, #2563eb);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 8px 25px rgba(220, 38, 38, 0.25);
-  position: relative;
-  overflow: hidden;
-  flex-shrink: 0;
-  z-index: 2;
-}
-
-.logo-image-container {
-  width: 100%;
-  height: 100%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 4px; /* Espacio interno para que no se corte */
-}
-
-.logo-image {
-  max-width: 90%;
-  max-height: 90%;
-  object-fit: contain;
-  border-radius: 8px;
-}
-
-.logo-text-container {
-  display: flex;
-  flex-direction: column;
-  overflow: visible; /* Cambiado para que no corte el texto */
-  transition: opacity 0.3s ease, width 0.3s ease;
-  min-width: 0; /* Permite que se ajuste */
-}
-
-.logo-text {
-  font-size: 1.6rem;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  background: linear-gradient(135deg, #ffc1c1, #98b9ff);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  margin-bottom: 2px;
-  white-space: nowrap;
-  overflow: visible; /* Asegura que el texto sea visible */
-  text-overflow: clip; /* No corta el texto */
-}
-
-/* Ajuste del botón de colapsar */
-.collapse-btn {
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  border: 1px solid rgba(71, 85, 105, 0.3);
-  background: rgba(255, 255, 255, 0.05);
-  color: #94a3b8;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
+.permisos-badge {
   position: absolute;
-  right: 1.5rem;
-  z-index: 3;
-}
-
-/* En versión colapsada */
-.sidebar.collapsed .logo-container {
-  width: auto;
+  top: -5px;
+  right: -5px;
+  background-color: #0d6efd;
+  color: white;
+  border-radius: 50%;
+  width: 18px;
+  height: 18px;
+  font-size: 0.7rem;
+  display: flex;
+  align-items: center;
   justify-content: center;
 }
 
-.sidebar.collapsed .logo-wrapper {
-  margin: 0 auto;
+.permiso-badge {
+  background: linear-gradient(135deg, #9d4edd 0%, #560bad 100%);
+  color: white;
 }
 
-/* Asegurar que en móvil también se vea bien */
-@media (max-width: 1200px) {
-  .logo-text {
-    font-size: 1.4rem; /* Un poco más pequeño en móvil */
-  }
+/* Modal de permisos */
+.modal .badge {
+  font-size: 0.8rem;
+}
 
-  .logo-container {
-    width: calc(100% - 45px);
+.modal code {
+  font-size: 0.85rem;
+}
+
+/* Breadcrumb con permisos */
+.breadcrumb-permiso {
+  display: inline-flex;
+  align-items: center;
+  margin-left: 10px;
+  padding: 2px 8px;
+  background-color: #e9ecef;
+  border-radius: 4px;
+  font-size: 0.85rem;
+}
+
+.breadcrumb-permiso i {
+  margin-right: 5px;
+  color: #0d6efd;
+}
+
+/* Responsive para modal */
+@media (max-width: 768px) {
+  .modal-dialog {
+    margin: 10px;
+    max-width: calc(100% - 20px);
   }
+}
+
+/* Clases para estados de permisos */
+.permiso-activo {
+  border-left: 3px solid #28a745;
+}
+
+.permiso-inactivo {
+  border-left: 3px solid #dc3545;
+  opacity: 0.7;
+}
+
+.permiso-pendiente {
+  border-left: 3px solid #ffc107;
+}
+
+/* Indicador visual de permisos en sidebar */
+.sidebar-menu li a[routerLinkActive="active"] {
+  position: relative;
+}
+
+.sidebar-menu li a[routerLinkActive="active"]::after {
+  content: '';
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background-color: #28a745;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; }
+  50% { opacity: 0.5; }
+  100% { opacity: 1; }
 }

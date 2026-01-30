@@ -56,7 +56,7 @@ public class DropdownServiceImpl implements DropdownService {
         return cargoRepository.findByActivoTrueOrderByNombreAsc()
                 .stream()
                 .map(c -> new DropdownDTO(
-                        c.getId(),
+                        c.getIdCargo(),
                         c.getNombre()
                 ))
                 .collect(Collectors.toList());
@@ -98,7 +98,7 @@ public class DropdownServiceImpl implements DropdownService {
         return nivelRepository.findAll()
                 .stream()
                 .map(e -> new DropdownDTO(
-                        e.getId(),
+                        e.getIdNivel(),
                         e.getCodigo(),
                         e.getNombre(),
                         null
