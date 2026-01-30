@@ -124,6 +124,7 @@
   color: #495057;
   font-weight: 500;
   margin-bottom: 0.5rem;
+  display: block;
 }
 
 .form-control,
@@ -152,6 +153,24 @@
 .form-control[readonly] {
   background-color: #f8f9fa;
   cursor: not-allowed;
+}
+
+/* Estilos para el dropdown-filter personalizado */
+app-dropdown-filter {
+  display: block;
+  width: 100%;
+}
+
+app-dropdown-filter .dropdown-container {
+  width: 100%;
+}
+
+app-dropdown-filter.is-invalid .dropdown-trigger {
+  border-color: #dc3545 !important;
+}
+
+app-dropdown-filter.is-invalid .dropdown-trigger:focus-within {
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.15);
 }
 
 /* Botones */
@@ -246,50 +265,20 @@
   background: #a8a8a8;
 }
 
-/* Responsive */
-@media (max-width: 768px) {
-  .form-header {
-    padding: 1.5rem !important;
-  }
-
-  .step-btn {
-    padding: 0.5rem 1rem !important;
-    font-size: 0.9rem;
-  }
-
-  .step-divider {
-    display: none !important;
-  }
-
-  .btn-lg {
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-
-  .step-actions .d-flex {
-    flex-direction: column;
-    gap: 1rem;
-  }
-
-  .step-actions .btn {
-    width: 100%;
-  }
+/* Validaciones */
+.invalid-feedback {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.875em;
+  color: #dc3545;
 }
 
-@media (max-width: 576px) {
-  .form-header h3 {
-    font-size: 1.5rem;
-  }
-
-  .header-icon {
-    width: 50px;
-    height: 50px;
-    padding: 0.75rem !important;
-  }
-
-  .header-icon i {
-    font-size: 1.5rem !important;
-  }
+/* Campos deshabilitados */
+.form-control:disabled,
+.form-select:disabled {
+  background-color: #e9ecef;
+  opacity: 0.8;
+  cursor: not-allowed;
 }
 
 /* Animaciones */
@@ -324,4 +313,217 @@ select.form-select {
 
 .is-invalid:focus {
   box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.15) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-header {
+    padding: 1.5rem !important;
+  }
+
+  .step-btn {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.9rem;
+  }
+
+  .step-divider {
+    display: none !important;
+  }
+
+  .btn-lg {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+
+  .step-actions .d-flex {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .step-actions .btn {
+    width: 100%;
+  }
+
+  .col-md-6 {
+    margin-bottom: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .form-header h3 {
+    font-size: 1.5rem;
+  }
+
+  .header-icon {
+    width: 50px;
+    height: 50px;
+    padding: 0.75rem !important;
+  }
+
+  .header-icon i {
+    font-size: 1.5rem !important;
+  }
+
+  .form-control-lg,
+  .form-select-lg {
+    font-size: 1rem;
+    padding: 0.75rem;
+  }
+}
+
+/* Mejoras visuales para textos */
+.text-muted {
+  color: #6c757d !important;
+}
+
+.text-primary {
+  color: #0d6efd !important;
+}
+
+/* Estilos para alertas */
+.alert {
+  border-radius: 8px;
+}
+
+/* Estilos para textarea */
+textarea.form-control {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Estilos para input number */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button {
+  opacity: 1;
+  height: auto;
+}
+
+/* Estilos para los mensajes de ayuda */
+.form-text {
+  font-size: 0.875rem;
+  margin-top: 0.25rem;
+}/* Estilos generales */
+.form-ots-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Contenedor con scroll */
+.form-content-scrollable {
+  flex: 1;
+  overflow-y: auto;
+  max-height: calc(100vh - 200px);
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 9999;
+}
+
+/* Header */
+.form-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+/* Steps Navigation */
+.steps-navigation {
+  position: sticky;
+  top: 120px;
+  z-index: 99;
+}
+
+.step-btn {
+  background: #f8f9fa;
+  color: #6c757d;
+  transition: all 0.3s ease;
+}
+
+.step-btn.active {
+  background: #0d6efd;
+  color: white;
+  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.2);
+}
+
+.step-btn.completed {
+  background: #198754;
+  color: white;
+}
+
+/* Step content */
+.step-content {
+  min-height: 400px;
+}
+
+/* Dropdown improvements */
+.dropdown-container {
+  position: relative;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .form-header {
+    padding: 1.5rem !important;
+  }
+
+  .form-content-scrollable {
+    padding: 1rem !important;
+  }
+
+  .step-btn {
+    padding: 0.5rem 1rem !important;
+    font-size: 0.9rem;
+  }
+}
+
+/* Animaciones */
+.animate__fadeIn {
+  animation-duration: 0.5s;
+}
+
+/* Scroll personalizado */
+.form-content-scrollable::-webkit-scrollbar {
+  width: 8px;
+}
+
+.form-content-scrollable::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.form-content-scrollable::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.form-content-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+/* form-ots-component.css */
+.form-group.has-error .dropdown-trigger {
+  border-color: #dc3545 !important;
+  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+}
+
+.invalid-feedback.d-block {
+  display: block !important;
+  margin-top: 0.25rem;
+  font-size: 0.875em;
+  color: #dc3545;
+}
+
+/* Para el estado de disabled del área */
+.dropdown-container.disabled .dropdown-trigger {
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+  opacity: 0.7;
+  cursor: not-allowed;
 }
