@@ -26,7 +26,7 @@ public class UsuarioMapper {
         dto.setIdUsuario(usuario.getIdUsuario());
         dto.setUsername(usuario.getUsername());
         dto.setIdTrabajador(usuario.getTrabajador().getIdTrabajador());
-        dto.setIdNivel(usuario.getNivel().getId());
+        dto.setIdNivel(usuario.getNivel().getIdNivel());
         // Trabajador
         if (usuario.getTrabajador() != null) {
             dto.setNombreTrabajador(usuario.getTrabajador().getNombres() + " " +
@@ -62,7 +62,7 @@ public class UsuarioMapper {
 
         // Nivel
         if (usuario.getNivel() != null) {
-            dto.setNivelId(usuario.getNivel().getId());
+            dto.setNivelId(usuario.getNivel().getIdNivel());
             dto.setNivelNombre(usuario.getNivel().getNombre());
             dto.setNivelCodigo(usuario.getNivel().getCodigo());
         }

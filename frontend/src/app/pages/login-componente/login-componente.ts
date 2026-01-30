@@ -61,27 +61,29 @@ export class LoginComponent {
     const credentials = this.loginForm.value;
 
     this.authService.login(credentials).subscribe({
-      next: () => {
-        const username = this.authService.currentUser?.username || 'Usuario';
+      // En LoginComponent.onSubmit()
+next: () => {
+  const username = this.authService.currentUser?.username || 'Usuario';
 
-        Swal.fire({
-          title: '¡Acceso Concedido!',
-          text: `Bienvenido ${username} al sistema Comfutura`,
-          icon: 'success',
-          timer: 1800,
-          showConfirmButton: false,
-          toast: true,
-          position: 'top-end',
-          background: 'linear-gradient(135deg, #dc2626 0%, #2563eb 100%)',
-          color: '#ffffff',
-          iconColor: '#ffffff',
-          customClass: {
-            popup: 'swal2-popup-login'
-          }
-        });
+  Swal.fire({
+    title: '¡Acceso Concedido!',
+    text: `Bienvenido ${username} al sistema Comfutura`,
+    icon: 'success',
+    timer: 1800,
+    showConfirmButton: false
+  });
 
-        this.redirectToReturnUrlOrDashboard();
-      },
+  // ✅ Espera que el estado se estabilice
+  setTimeout(() => {
+    console.log('✅ LoginComponent: Redirigiendo después de login');
+    console.log('✅ Estado actual:', {
+      isAuthenticatedSync: this.authService.isAuthenticatedSync,
+      currentUser: this.authService.currentUser,
+      token: this.authService.token
+    });
+    this.redirectToReturnUrlOrDashboard();
+  }, 300); // Aumenta a 300ms si es necesario
+},
       error: err => {
         this.isLoading = false;
 

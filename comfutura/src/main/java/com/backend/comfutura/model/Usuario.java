@@ -40,5 +40,27 @@ public class Usuario {
     @Column(updatable = false)
     private LocalDateTime fechaCreacion;
 
+    // Método para obtener el área del trabajador (si existe)
+    public Area getArea() {
+        return (trabajador != null && trabajador.getArea() != null)
+                ? trabajador.getArea()
+                : null;
+    }
 
+    // Método para obtener el cargo del trabajador (si existe)
+    public Cargo getCargo() {
+        return (trabajador != null && trabajador.getCargo() != null)
+                ? trabajador.getCargo()
+                : null;
+    }
+
+    // Método para obtener idArea
+    public Integer getIdArea() {
+        return (getArea() != null) ? getArea().getIdArea() : null;
+    }
+
+    // Método para obtener idCargo
+    public Integer getIdCargo() {
+        return (getCargo() != null) ? getCargo().getIdCargo() : null;
+    }
 }

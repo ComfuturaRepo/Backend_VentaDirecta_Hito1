@@ -1,11 +1,13 @@
-// layout.component.ts
 import { Component, inject, OnInit, HostListener, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { Router } from '@angular/router';
+import { RouterOutlet, RouterLink, RouterLinkActive, Router } from '@angular/router';
 import { DomSanitizer, SafeUrl } from '@angular/platform-browser';
 import Swal from 'sweetalert2';
+
+// Servicios
 import { AuthService } from '../../service/auth.service';
+import { PermisoDirective } from '../../directive/permiso.directive';
+import { PermisoService } from '../../service/permiso.service';
 
 @Component({
   selector: 'app-layout',
@@ -14,30 +16,53 @@ import { AuthService } from '../../service/auth.service';
     CommonModule,
     RouterOutlet,
     RouterLink,
-    RouterLinkActive
+    RouterLinkActive,
+    PermisoDirective
   ],
-   templateUrl: './layaout-component.html',
+  templateUrl: './layaout-component.html',
   styleUrl: './layaout-component.css',
 })
 export class LayoutComponent implements OnInit, OnDestroy {
-  private authService = inject(AuthService);
-  private router = inject(Router);
-  private sanitizer = inject(DomSanitizer);
+  constructor(
+    private authService: AuthService,
+    private permisoService: PermisoService,
+    private router: Router,
+    private sanitizer: DomSanitizer
+  ) {}
 
+  // Estado del layout
   isCollapsed = false;
   isMobileOpen = false;
   showUserMenu = false;
   showTopUserMenu = false;
   showNotifications = false;
+  mostrarModalPermisos = false;
+
+  // Datos
   logoUrl: SafeUrl | null = null;
   isMobile = false;
+
+  // Permisos
+  permisosUsuario: string[] = [];
+  permisosCount = 0;
+  cargandoPermisos = false;
+
   private resizeObserver?: ResizeObserver;
 
   ngOnInit() {
     this.loadLogo();
     this.checkScreenSize();
     this.setupResizeObserver();
-    this.onResize();
+
+    // Suscribirse a cambios en el estado de autenticación
+    this.authService.authState$.subscribe(state => {
+      if (state.isAuthenticated && state.user) {
+        this.cargarPermisosUsuario(state.user.idUsuario);
+      } else {
+        this.permisosUsuario = [];
+        this.permisosCount = 0;
+      }
+    });
   }
 
   ngOnDestroy() {
@@ -45,48 +70,120 @@ export class LayoutComponent implements OnInit, OnDestroy {
     document.body.classList.remove('no-scroll');
   }
 
-  // ========== MÉTODOS DE SEGURIDAD ==========
+  // ========== MÉTODOS DE PERMISOS ==========
 
-  // Verificar nivel específico
+  cargarPermisosUsuario(idUsuario: number): void {
+    this.cargandoPermisos = true;
+    this.permisoService.obtenerPermisosUsuario(idUsuario).subscribe({
+      next: (permisos) => {
+        this.permisosUsuario = permisos;
+        this.permisosCount = permisos.length;
+        this.cargandoPermisos = false;
+      },
+      error: (error) => {
+        console.error('Error cargando permisos:', error);
+        this.permisosUsuario = [];
+        this.permisosCount = 0;
+        this.cargandoPermisos = false;
+      }
+    });
+  }
+
+  tienePermiso(codigoPermiso: string): boolean {
+    return this.permisoService.tienePermiso(codigoPermiso);
+  }
+
+  tieneAlgunPermiso(codigosPermisos: string[]): boolean {
+    return this.permisoService.tieneAlgunPermiso(codigosPermisos);
+  }
+
+  mostrarPermisosModal(): void {
+    this.mostrarModalPermisos = true;
+  }
+
+  cerrarModalPermisos(): void {
+    this.mostrarModalPermisos = false;
+  }
+
+  irAPerfil(): void {
+    this.router.navigate(['/perfil']);
+  }
+
+  getDescripcionPermiso(codigo: string): string {
+    const descripciones: { [key: string]: string } = {
+      'DASHBOARD_VIEW': 'Ver el dashboard principal',
+      'OT_VIEW': 'Ver órdenes de trabajo',
+      'OT_CREATE': 'Crear nuevas OTs',
+      'OT_EDIT': 'Editar OTs existentes',
+      'SITE_VIEW': 'Ver sitios/locations',
+      'SITE_MANAGE': 'Gestionar sitios',
+      'OC_VIEW': 'Ver órdenes de compra',
+      'OC_CREATE': 'Crear órdenes de compra',
+      'OC_EDIT': 'Editar órdenes de compra',
+      'USUARIO_VIEW': 'Ver usuarios del sistema',
+      'USUARIO_CREATE': 'Crear nuevos usuarios',
+      'USUARIO_EDIT': 'Editar usuarios',
+      'USUARIO_DELETE': 'Eliminar usuarios',
+      'PERMISO_ADMIN': 'Administrar permisos del sistema',
+      'TRABAJADOR_VIEW': 'Ver trabajadores',
+      'TRABAJADOR_MANAGE': 'Gestionar trabajadores',
+      'CLIENTE_VIEW': 'Ver clientes',
+      'CLIENTE_MANAGE': 'Gestionar clientes',
+      'CONFIGURACION_VIEW': 'Ver configuración',
+      'CONFIGURACION_MANAGE': 'Gestionar configuración',
+      'REPORTES_VIEW': 'Ver reportes',
+      'REPORTES_GENERAR': 'Generar reportes',
+      'PERFIL_VIEW': 'Ver perfil de usuario',
+      'PERFIL_EDIT': 'Editar perfil de usuario'
+    };
+
+    return descripciones[codigo] || 'Permiso del sistema';
+  }
+
+  // ========== MÉTODOS DE SEGURIDAD (compatibilidad) ==========
+
   isNivel(nivel: string): boolean {
-    return this.currentUser?.roles?.includes(nivel) ?? false;
+    return this.authService.isNivel(nivel);
   }
 
-  // Verificar nivel mínimo
   isNivelMinimo(nivelRequerido: string): boolean {
-    const orden = ['L1', 'L2', 'L3', 'L4', 'L5'];
-    const userNivel = this.currentUser?.roles?.find(r => orden.includes(r));
-    if (!userNivel) return false;
-
-    return orden.indexOf(userNivel) <= orden.indexOf(nivelRequerido);
+    return this.authService.isNivelMinimo(nivelRequerido);
   }
 
-  // Verificar área
   isArea(area: string): boolean {
-    return this.currentUser?.area?.toUpperCase() === area.toUpperCase();
+    return this.authService.isArea(area);
   }
 
-  // Verificar cargo (puede contener texto)
   isCargo(texto: string): boolean {
-    return this.currentUser?.cargo
-      ?.toUpperCase()
-      .includes(texto.toUpperCase()) ?? false;
+    return this.authService.isCargo(texto);
   }
 
-  // Verificar múltiples áreas
   isAnyArea(areas: string[]): boolean {
-    if (!this.currentUser?.area) return false;
+    if (!this.authService.currentUser?.area) return false;
     return areas.some(area =>
-      this.currentUser?.area?.toUpperCase() === area.toUpperCase()
+      this.authService.currentUser?.area?.toUpperCase() === area.toUpperCase()
     );
   }
 
-  // Verificar múltiples niveles
   isAnyNivel(niveles: string[]): boolean {
-    if (!this.currentUser?.roles) return false;
+    if (!this.authService.currentUser?.roles) return false;
     return niveles.some(nivel =>
-      this.currentUser?.roles?.includes(nivel)
+      this.authService.currentUser?.roles?.includes(nivel)
     );
+  }
+
+  getNivel(): string {
+    const roles = this.authService.currentUser?.roles || [];
+    const nivel = roles.find(r => r.startsWith('L'));
+    return nivel || 'Sin nivel';
+  }
+
+  getArea(): string {
+    return this.authService.currentUser?.area || 'Sin área';
+  }
+
+  getCargo(): string {
+    return this.authService.currentUser?.cargo || 'Sin cargo';
   }
 
   // ========== MÉTODOS EXISTENTES ==========
@@ -129,6 +226,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
   onDocumentClick(event: MouseEvent) {
     const target = event.target as HTMLElement;
 
+    // Cerrar menús al hacer click fuera
     if (this.showUserMenu && !target.closest('.user-profile') && !target.closest('.user-menu-dropdown')) {
       this.closeUserMenu();
     }
@@ -139,6 +237,10 @@ export class LayoutComponent implements OnInit, OnDestroy {
 
     if (this.showNotifications && !target.closest('.notification-btn') && !target.closest('.notifications-panel')) {
       this.closeNotifications();
+    }
+
+    if (this.mostrarModalPermisos && !target.closest('#permisosModal') && !target.closest('.permisos-btn')) {
+      this.cerrarModalPermisos();
     }
   }
 
@@ -178,6 +280,9 @@ export class LayoutComponent implements OnInit, OnDestroy {
     if (role.includes('admin')) return 'admin-badge';
     if (role.includes('gerente') || role.includes('jefe') || role.includes('l4') || role.includes('l5')) {
       return 'manager-badge';
+    }
+    if (role.includes('permiso') || this.tienePermiso('PERMISO_ADMIN')) {
+      return 'permiso-badge';
     }
     return 'user-badge';
   }
@@ -251,6 +356,7 @@ export class LayoutComponent implements OnInit, OnDestroy {
     }).then((result) => {
       if (result.isConfirmed) {
         this.authService.logout();
+        this.permisoService.limpiarPermisos();
         this.router.navigate(['/login']);
         Swal.fire({
           icon: 'success',

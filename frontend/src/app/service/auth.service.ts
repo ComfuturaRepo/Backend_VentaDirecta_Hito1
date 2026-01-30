@@ -1,4 +1,3 @@
-// src/app/core/services/auth.service.ts
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
@@ -13,6 +12,7 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   token: string;
+  usuario: UserJwtDto;
 }
 
 export interface UserJwtDto {
@@ -25,7 +25,6 @@ export interface UserJwtDto {
   nombreCompleto: string;
   activo: boolean;
   roles: string[];
-  // Agrega aquí otros campos que vengan en tu JWT (ej: exp, iat, nombre, etc.)
 }
 
 export interface AuthState {
@@ -41,9 +40,9 @@ export class AuthService {
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
 
-    private API_URL = `${environment.baseUrl}/api/auth`;
-
+  private API_URL = `${environment.baseUrl}/api/auth`;
   private readonly TOKEN_KEY = 'auth_token';
+  private readonly USER_KEY = 'auth_user';
 
   private authState = new BehaviorSubject<AuthState>({
     token: null,
@@ -57,33 +56,93 @@ export class AuthService {
     this.loadInitialState();
   }
 
-  /**
-   * Carga el estado inicial desde localStorage (solo en browser)
-   */
-  private loadInitialState(): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+private loadInitialState(): void {
+  console.log('🔄 loadInitialState: Cargando estado inicial');
 
-    const token = localStorage.getItem(this.TOKEN_KEY);
-    if (!token) return;
+  if (!isPlatformBrowser(this.platformId)) return;
 
-    const userData = this.decodeToken(token);
-    if (!userData || this.isTokenExpired(token)) {
-      this.logout();
-      return;
-    }
+  const token = localStorage.getItem(this.TOKEN_KEY);
+  const userStr = localStorage.getItem(this.USER_KEY);
 
-    this.setAuthState(token, userData);
+  console.log('📦 loadInitialState: Datos en localStorage', {
+    hasToken: !!token,
+    hasUser: !!userStr,
+    userStr: userStr
+  });
+
+  // Si no hay token, limpiar todo
+  if (!token) {
+    console.log('🔄 loadInitialState: No hay token, limpiando estado');
+    this.clearAuthState();
+    return;
   }
+
+  // Verificar si el token está expirado
+  if (this.isTokenExpired(token)) {
+    console.log('🔄 loadInitialState: Token expirado, limpiando estado');
+    this.logout();
+    return;
+  }
+
+  // Si hay token pero no usuario en localStorage, decodificar del token
+  let user: UserJwtDto | null = null;
+
+  if (userStr) {
+    try {
+      // Verificar que no sea el string "undefined"
+      if (userStr === 'undefined' || userStr === 'null') {
+        console.warn('⚠️ loadInitialState: Datos corruptos en localStorage');
+        localStorage.removeItem(this.USER_KEY);
+      } else {
+        user = JSON.parse(userStr);
+        console.log('✅ loadInitialState: Usuario cargado de localStorage', user?.username);
+      }
+    } catch (error) {
+      console.error('❌ loadInitialState: Error parseando usuario:', error);
+      localStorage.removeItem(this.USER_KEY);
+    }
+  }
+
+  // Si no pudimos cargar el usuario de localStorage, decodificar del token
+  if (!user) {
+    console.log('🔄 loadInitialState: Decodificando usuario del token');
+    user = this.decodeToken(token);
+  }
+
+  if (user) {
+    this.setAuthState(token, user);
+    console.log('✅ loadInitialState: Estado cargado exitosamente');
+  } else {
+    console.error('❌ loadInitialState: No se pudo cargar usuario');
+    this.logout();
+  }
+}
 
   /**
    * Inicia sesión y guarda el token
    */
-  login(credentials: LoginRequest): Observable<AuthResponse> {
-    return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials).pipe(
-      tap(response => this.setToken(response.token)),
-      catchError(this.handleError)
-    );
-  }
+login(credentials: LoginRequest): Observable<AuthResponse> {
+  return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials).pipe(
+    tap(response => {
+      if (!response.token) {
+        throw new Error('No se recibió token del servidor');
+      }
+
+      if (!response.usuario) {
+        console.warn('⚠️ login: El backend no envió usuario, decodificando del token...');
+        const usuario = this.decodeToken(response.token);
+        if (usuario) {
+          this.setToken(response.token, usuario);
+        } else {
+          throw new Error('No se pudo obtener información del usuario');
+        }
+      } else {
+        this.setToken(response.token, response.usuario);
+      }
+    }),
+    catchError(this.handleError)
+  );
+}
 
   /**
    * Cierra sesión y limpia todo
@@ -92,33 +151,66 @@ export class AuthService {
     this.clearAuthState();
   }
 
-  /**
-   * Guarda el token y actualiza el estado
-   */
-  private setToken(token: string): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+private setToken(token: string, usuario: UserJwtDto): void {
+  console.log('🔐 setToken: Iniciando', { token: token?.substring(0, 20), usuario });
 
+  if (!isPlatformBrowser(this.platformId)) return;
+
+  // Validar que el usuario no sea undefined/null
+  if (!usuario) {
+    console.error('❌ setToken: usuario es undefined/null');
+    return;
+  }
+
+  // Validar que el token no sea undefined/null
+  if (!token) {
+    console.error('❌ setToken: token es undefined/null');
+    return;
+  }
+
+  try {
+    // Convertir el usuario a JSON de manera segura
+    const usuarioJSON = JSON.stringify(usuario);
+
+    // Guardar en localStorage
     localStorage.setItem(this.TOKEN_KEY, token);
-    const userData = this.decodeToken(token);
+    localStorage.setItem(this.USER_KEY, usuarioJSON);
 
-    if (userData && !this.isTokenExpired(token)) {
-      this.setAuthState(token, userData);
-    } else {
-      this.clearAuthState();
-    }
-  }
-
-  private setAuthState(token: string, user: UserJwtDto): void {
-    this.authState.next({
-      token,
-      user,
-      isAuthenticated: true
+    console.log('✅ setToken: Datos guardados en localStorage', {
+      tokenLength: token.length,
+      usuario: usuario.username,
+      localStorageUser: localStorage.getItem(this.USER_KEY)
     });
+
+    // Actualizar el estado
+    this.setAuthState(token, usuario);
+
+  } catch (error) {
+    console.error('❌ setToken: Error al guardar datos:', error);
   }
+}
+
+private setAuthState(token: string, user: UserJwtDto): void {
+  console.log('🔄 setAuthState: Actualizando estado', {
+    token: token?.substring(0, 20),
+    user: user?.username
+  });
+
+  this.authState.next({
+    token,
+    user,
+    isAuthenticated: true
+  });
+
+  console.log('✅ setAuthState: Estado actualizado', this.authState.value);
+}
+
+
 
   private clearAuthState(): void {
     if (isPlatformBrowser(this.platformId)) {
       localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.USER_KEY);
     }
     this.authState.next({
       token: null,
@@ -135,7 +227,6 @@ export class AuthService {
       const payload = token.split('.')[1];
       const decoded = JSON.parse(atob(payload));
       // Ajusta según la estructura real de tu JWT
-      // Ejemplos comunes: decoded.sub, decoded.usuario, decoded.data, etc.
       return decoded.data as UserJwtDto ?? decoded as UserJwtDto ?? null;
     } catch (e) {
       console.error('Error al decodificar JWT:', e);
@@ -156,30 +247,31 @@ export class AuthService {
       return true;
     }
   }
-// NIVEL
-isNivel(nivel: string): boolean {
-  return this.currentUser?.roles?.includes(nivel) ?? false;
-}
 
-isNivelMinimo(nivelRequerido: string): boolean {
-  const orden = ['L1', 'L2', 'L3', 'L4', 'L5'];
-  const userNivel = this.currentUser?.roles?.[0];
-  if (!userNivel) return false;
+  // NIVEL
+  isNivel(nivel: string): boolean {
+    return this.currentUser?.roles?.includes(nivel) ?? false;
+  }
 
-  return orden.indexOf(userNivel) <= orden.indexOf(nivelRequerido);
-}
+  isNivelMinimo(nivelRequerido: string): boolean {
+    const orden = ['L1', 'L2', 'L3', 'L4', 'L5'];
+    const userNivel = this.currentUser?.roles?.[0];
+    if (!userNivel) return false;
 
-// ÁREA
-isArea(area: string): boolean {
-  return this.currentUser?.area?.toUpperCase() === area.toUpperCase();
-}
+    return orden.indexOf(userNivel) <= orden.indexOf(nivelRequerido);
+  }
 
-// CARGO
-isCargo(texto: string): boolean {
-  return this.currentUser?.cargo
-    ?.toUpperCase()
-    .includes(texto.toUpperCase()) ?? false;
-}
+  // ÁREA
+  isArea(area: string): boolean {
+    return this.currentUser?.area?.toUpperCase() === area.toUpperCase();
+  }
+
+  // CARGO
+  isCargo(texto: string): boolean {
+    return this.currentUser?.cargo
+      ?.toUpperCase()
+      .includes(texto.toUpperCase()) ?? false;
+  }
 
   // ── Métodos públicos útiles ────────────────────────────────────────
 
@@ -200,15 +292,35 @@ isCargo(texto: string): boolean {
     return true;
   }
 
-  get currentUser(): UserJwtDto | null {
-    const state = this.authState.value;
-    if (!state.token || this.isTokenExpired(state.token)) {
-      this.logout();
-      return null;
-    }
+get currentUser(): UserJwtDto | null {
+  const state = this.authState.value;
+
+  // Sin logs para evitar loops
+  if (!state.token || this.isTokenExpired(state.token)) {
+    this.logout();
+    return null;
+  }
+
+  // Si ya tenemos usuario en el estado, retornarlo
+  if (state.user) {
     return state.user;
   }
 
+  // Si no hay usuario en el estado pero hay token
+  if (state.token && !state.user) {
+    const userFromToken = this.decodeToken(state.token);
+    if (userFromToken) {
+      // Actualizar el estado con el usuario decodificado
+      this.authState.next({
+        ...state,
+        user: userFromToken
+      });
+      return userFromToken;
+    }
+  }
+
+  return null;
+}
   get currentTrabajadorId(): number | null {
     return this.currentUser?.idTrabajador ?? null;
   }

@@ -77,7 +77,7 @@ public class TrabajadorMapper {
 
         // Cargo
         if (trabajador.getCargo() != null) {
-            dto.setCargoId(trabajador.getCargo().getId());
+            dto.setCargoId(trabajador.getCargo().getIdCargo());
             dto.setCargoNombre(trabajador.getCargo().getNombre());
             dto.setCargoNivel(trabajador.getCargo().getNivel().getCodigo());
         }

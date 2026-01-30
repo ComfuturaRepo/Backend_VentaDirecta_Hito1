@@ -1,10 +1,9 @@
-<!-- layout-component.html -->
 <div class="layout-wrapper" [class.sidebar-collapsed]="isCollapsed" [class.mobile-open]="isMobileOpen">
 
   <!-- Sidebar Rojo-Azul -->
   <aside class="sidebar" [class.collapsed]="isCollapsed" [class.mobile-open]="isMobileOpen">
 
-    <!-- Header con Logo Ajustado -->
+    <!-- Header con Logo -->
     <div class="sidebar-header">
       <div class="logo-container">
         <div class="logo-wrapper">
@@ -34,30 +33,33 @@
         </div>
       </div>
 
-
+      <button class="collapse-btn" (click)="toggleCollapse()" [title]="isCollapsed ? 'Expandir menú' : 'Contraer menú'">
+        <i class="bi" [ngClass]="isCollapsed ? 'bi-chevron-double-right' : 'bi-chevron-double-left'"></i>
+      </button>
     </div>
 
-    <!-- Menú Navegación Organizado -->
+    <!-- Menú Navegación -->
     <nav class="sidebar-menu">
       <ul>
         <!-- Dashboard -->
-        <li>
+        <li *appPermiso="'DASHBOARD_VIEW'">
           <a routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }"
              (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-speedometer2"></i>
             </div>
             <span class="menu-label" *ngIf="!isCollapsed">Dashboard</span>
+            <span class="menu-badge" *ngIf="!isCollapsed && hasNotifications">3</span>
           </a>
         </li>
 
-        <!-- ===== GESTIÓN OPERATIVA ===== -->
+        <!-- Separador para gestión -->
         <li class="menu-divider" *ngIf="!isCollapsed">
-          <span class="divider-label">Gestión Operativa</span>
+          <span class="divider-label">Gestión Principal</span>
         </li>
 
         <!-- Órdenes de Trabajo -->
-        <li >
+        <li *appPermiso="'OT_VIEW'">
           <a routerLink="/ot" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-clipboard-check"></i>
@@ -67,7 +69,7 @@
         </li>
 
         <!-- Sites -->
-        <li >
+        <li *appPermiso="'SITE_VIEW'">
           <a routerLink="/site" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-geo-alt-fill"></i>
@@ -76,10 +78,18 @@
           </a>
         </li>
 
-
+        <!-- Gestión Jefatura/Analista -->
+        <li *appPermiso="['CONFIGURACION_VIEW', 'CONFIGURACION_MANAGE']" appPermisoCondicion="OR">
+          <a routerLink="/gestion-jefatura-analista" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-person-gear"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Gestión Jefatura/Analista</span>
+          </a>
+        </li>
 
         <!-- Órdenes de Compra -->
-        <li >
+        <li *appPermiso="'OC_VIEW'">
           <a routerLink="/orden-compra" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-cart-check-fill"></i>
@@ -88,13 +98,33 @@
           </a>
         </li>
 
-        <!-- ===== RECURSOS HUMANOS ===== -->
-        <li class="menu-divider" *ngIf="!isCollapsed && (isArea('RRHH') || isArea('SISTEMAS') || isNivel('L1'))">
-          <span class="divider-label">Recursos Humanos</span>
+        <!-- Separador para administración -->
+        <li class="menu-divider" *ngIf="!isCollapsed">
+          <span class="divider-label">Administración</span>
+        </li>
+
+        <!-- Usuarios -->
+        <li *appPermiso="'USUARIO_VIEW'">
+          <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-people-fill"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Usuarios</span>
+          </a>
+        </li>
+
+        <!-- Permisos -->
+        <li *appPermiso="'PERMISO_ADMIN'">
+          <a routerLink="/gestion-permisos" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Permisos</span>
+          </a>
         </li>
 
         <!-- Trabajadores -->
-        <li *ngIf="isArea('RRHH') || isArea('SISTEMAS') || isNivel('L1')">
+        <li *appPermiso="'TRABAJADOR_VIEW'">
           <a routerLink="/trabajador" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-person-badge-fill"></i>
@@ -103,47 +133,18 @@
           </a>
         </li>
 
-
-
-
-
-        <!-- ===== ADMINISTRACIÓN Y SISTEMAS ===== -->
-        <li class="menu-divider" >
-          <span class="divider-label">Administración</span>
-        </li>
-
-        <!-- Usuarios (Solo RRHH, SISTEMAS y L1) -->
-        <li *ngIf="isArea('RRHH') || isArea('SISTEMAS') || isNivel('L1')">
-          <a routerLink="/usuarios" routerLinkActive="active" (click)="closeMobile()">
-            <div class="menu-icon-wrapper">
-              <i class="bi bi-person-gear"></i>
-            </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Usuarios</span>
-          </a>
-        </li>
-
-        <!-- Gestión Jefatura/Analista -->
-        <li>
-          <a routerLink="/gestion-jefatura-analista" routerLinkActive="active" (click)="closeMobile()">
-            <div class="menu-icon-wrapper">
-              <i class="bi bi-person-gear"></i>
-            </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Gestión Jefatura</span>
-          </a>
-        </li>
-<!-- Clientes -->
-        <li >
+        <!-- Clientes -->
+        <li *appPermiso="'CLIENTE_VIEW'">
           <a routerLink="/cliente" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
-              <i class="bi bi-people-fill"></i>
+              <i class="bi bi-building"></i>
             </div>
             <span class="menu-label" *ngIf="!isCollapsed">Clientes</span>
           </a>
         </li>
 
-
         <!-- Reportes -->
-        <li *ngIf="isArea('ADMINISTRACION') || isNivelMinimo('L3')">
+        <li *appPermiso="'REPORTES_VIEW'">
           <a routerLink="/reportes" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-graph-up"></i>
@@ -152,13 +153,15 @@
           </a>
         </li>
 
-        <!-- ===== MI CUENTA ===== -->
+
+
+        <!-- Separador para usuario -->
         <li class="menu-divider" *ngIf="!isCollapsed">
           <span class="divider-label">Mi Cuenta</span>
         </li>
 
         <!-- Perfil -->
-        <li>
+        <li *appPermiso="'PERFIL_VIEW'">
           <a routerLink="/perfil" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-person-circle"></i>
@@ -168,7 +171,7 @@
         </li>
 
         <!-- Configuración Personal -->
-        <li>
+        <li *appPermiso="'PERFIL_EDIT'">
           <a routerLink="/configuracion-personal" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-sliders"></i>
@@ -188,7 +191,10 @@
         </div>
         <div class="user-info">
           <div class="user-name">{{ nombreCompleto }}</div>
-          <div class="user-role">{{ mainRole || 'Usuario' }} | {{ currentUser?.area || 'Sin área' }}</div>
+          <div class="user-role">{{ getCargo() || 'Usuario' }}</div>
+          <div class="user-permiso-count" *ngIf="permisosCount > 0">
+            <small class="text-muted">{{ permisosCount }} permiso{{ permisosCount !== 1 ? 's' : '' }}</small>
+          </div>
         </div>
         <i class="bi bi-chevron-down user-dropdown-icon" [class.rotated]="showUserMenu"></i>
       </div>
@@ -202,6 +208,11 @@
         <a routerLink="/configuracion-personal" (click)="closeUserMenu()">
           <i class="bi bi-sliders"></i>
           <span>Configuración</span>
+        </a>
+        <div class="user-menu-divider"></div>
+        <a href="javascript:void(0)" (click)="mostrarPermisosModal(); closeUserMenu()">
+          <i class="bi bi-shield-check"></i>
+          <span>Mis Permisos</span>
         </a>
         <div class="user-menu-divider"></div>
         <a href="javascript:void(0)" (click)="logout(); closeUserMenu()" class="logout-menu-item">
@@ -246,6 +257,13 @@
       </div>
 
       <div class="top-bar-right">
+        <!-- Botón de permisos rápido -->
+        <button class="topbar-btn permisos-btn" *ngIf="permisosCount > 0" (click)="mostrarPermisosModal()"
+                title="Ver mis permisos">
+          <i class="bi bi-shield-check"></i>
+          <span class="permisos-badge">{{ permisosCount }}</span>
+        </button>
+
         <!-- Notificaciones -->
         <button class="topbar-btn notification-btn" [class.has-notifications]="hasNotifications" (click)="toggleNotifications()">
           <i class="bi bi-bell"></i>
@@ -271,6 +289,10 @@
             <a routerLink="/configuracion-personal" (click)="closeTopUserMenu()">
               <i class="bi bi-sliders"></i>
               <span>Configuración</span>
+            </a>
+            <a href="javascript:void(0)" (click)="mostrarPermisosModal(); closeTopUserMenu()">
+              <i class="bi bi-shield-check"></i>
+              <span>Mis Permisos</span>
             </a>
             <div class="user-menu-divider"></div>
             <a href="javascript:void(0)" (click)="logout(); closeTopUserMenu()" class="logout-menu-item">
@@ -341,4 +363,106 @@
       </div>
     </div>
   </main>
+
+  <!-- Modal de permisos -->
+  <div class="modal-backdrop fade show" *ngIf="mostrarModalPermisos"></div>
+  <div class="modal fade" [class.show]="mostrarModalPermisos" id="permisosModal" tabindex="-1"
+       [style.display]="mostrarModalPermisos ? 'block' : 'none'">
+    <div class="modal-dialog modal-lg">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">
+            <i class="bi bi-shield-check me-2"></i>
+            Mis Permisos del Sistema
+          </h5>
+          <button type="button" class="btn-close btn-close-white" (click)="cerrarModalPermisos()"></button>
+        </div>
+        <div class="modal-body">
+          <div *ngIf="cargandoPermisos" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando permisos...</span>
+            </div>
+            <p class="mt-3">Cargando permisos...</p>
+          </div>
+
+          <div *ngIf="!cargandoPermisos">
+            <div class="row mb-4">
+              <div class="col-md-6">
+                <div class="card border-0 bg-light">
+                  <div class="card-body">
+                    <h6 class="card-title">Resumen de Accesos</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Total de permisos:</span>
+                      <strong>{{ permisosUsuario.length }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Nivel actual:</span>
+                      <strong>{{ getNivel() }}</strong>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                      <span>Área:</span>
+                      <strong>{{ getArea() }}</strong>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-6">
+                <div class="card border-0 bg-light">
+                  <div class="card-body">
+                    <h6 class="card-title">Accesos por Categoría</h6>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>Dashboard:</span>
+                      <span *ngIf="tienePermiso('DASHBOARD_VIEW')" class="badge bg-success">Permitido</span>
+                      <span *ngIf="!tienePermiso('DASHBOARD_VIEW')" class="badge bg-secondary">No permitido</span>
+                    </div>
+                    <div class="d-flex justify-content-between mb-2">
+                      <span>OTs:</span>
+                      <span *ngIf="tienePermiso('OT_VIEW')" class="badge bg-success">Permitido</span>
+                      <span *ngIf="!tienePermiso('OT_VIEW')" class="badge bg-secondary">No permitido</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                      <span>Administración:</span>
+                      <span *ngIf="tieneAlgunPermiso(['USUARIO_VIEW', 'PERMISO_ADMIN', 'TRABAJADOR_VIEW'])"
+                            class="badge bg-success">Permitido</span>
+                      <span *ngIf="!tieneAlgunPermiso(['USUARIO_VIEW', 'PERMISO_ADMIN', 'TRABAJADOR_VIEW'])"
+                            class="badge bg-secondary">No permitido</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <h6 class="mb-3">Lista de Permisos Asignados</h6>
+            <div class="row">
+              <div class="col-md-6 mb-3" *ngFor="let permiso of permisosUsuario">
+                <div class="card h-100 border">
+                  <div class="card-body">
+                    <h6 class="card-title d-flex justify-content-between">
+                      <span class="badge bg-success">Activo</span>
+                    </h6>
+                    <div class="d-flex justify-content-between align-items-center">
+                      <small class="text-muted">Asignado automáticamente</small>
+                      <i class="bi bi-check-circle text-success"></i>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div *ngIf="permisosUsuario.length === 0" class="alert alert-warning">
+              <i class="bi bi-exclamation-triangle me-2"></i>
+              No tienes permisos asignados en el sistema. Contacta al administrador.
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" (click)="cerrarModalPermisos()">Cerrar</button>
+          <button type="button" class="btn btn-primary" *appPermiso="'PERFIL_EDIT'"
+                  (click)="irAPerfil(); cerrarModalPermisos()">
+            <i class="bi bi-gear me-1"></i> Gestionar Accesos
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

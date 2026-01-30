@@ -1287,6 +1287,348 @@ INSERT INTO estado_ot (descripcion) VALUES
                                         ('CANCELADA');
 
 
+-- =====================================================
+-- INSERCIONES DE PERMISOS DEL SISTEMA
+-- =====================================================
 
+INSERT INTO permiso (codigo, nombre, descripcion) VALUES
+-- Permisos de Dashboard
+('DASHBOARD_VIEW', 'Ver Dashboard', 'Permite ver el dashboard principal'),
 
+-- Permisos de OT
+('OT_VIEW', 'Ver OTs', 'Permite ver las Ordenes de Trabajo'),
+('OT_CREATE', 'Crear OTs', 'Permite crear nuevas Ordenes de Trabajo'),
+('OT_EDIT', 'Editar OTs', 'Permite editar Ordenes de Trabajo existentes'),
+
+-- Permisos de Site
+('SITE_VIEW', 'Ver Sites', 'Permite ver los Sites/Sitios'),
+('SITE_MANAGE', 'Gestionar Sites', 'Permite crear y editar Sites'),
+
+-- Permisos de Orden de Compra
+('OC_VIEW', 'Ver OCs', 'Permite ver las Ordenes de Compra'),
+('OC_CREATE', 'Crear OCs', 'Permite crear nuevas Ordenes de Compra'),
+('OC_EDIT', 'Editar OCs', 'Permite editar Ordenes de Compra existentes'),
+
+-- Permisos de Usuarios
+('USUARIO_VIEW', 'Ver Usuarios', 'Permite ver la lista de usuarios'),
+('USUARIO_CREATE', 'Crear Usuarios', 'Permite crear nuevos usuarios'),
+('USUARIO_EDIT', 'Editar Usuarios', 'Permite editar usuarios existentes'),
+('USUARIO_DELETE', 'Eliminar Usuarios', 'Permite eliminar usuarios'),
+('USUARIO_ADMIN', 'Administrar Usuarios', 'Permiso completo de administración de usuarios'),
+
+-- Permisos de Gestión de Permisos
+('PERMISO_ADMIN', 'Administrar Permisos', 'Permite gestionar permisos del sistema'),
+
+-- Permisos de Trabajadores
+('TRABAJADOR_VIEW', 'Ver Trabajadores', 'Permite ver la lista de trabajadores'),
+('TRABAJADOR_MANAGE', 'Gestionar Trabajadores', 'Permite crear y editar trabajadores'),
+
+-- Permisos de Clientes
+('CLIENTE_VIEW', 'Ver Clientes', 'Permite ver la lista de clientes'),
+('CLIENTE_MANAGE', 'Gestionar Clientes', 'Permite crear y editar clientes'),
+
+-- Permisos de Configuración
+('CONFIGURACION_VIEW', 'Ver Configuración', 'Permite ver configuraciones del sistema'),
+('CONFIGURACION_MANAGE', 'Gestionar Configuración', 'Permite modificar configuraciones'),
+
+-- Permisos de Reportes
+('REPORTES_VIEW', 'Ver Reportes', 'Permite ver reportes del sistema'),
+('REPORTES_GENERAR', 'Generar Reportes', 'Permite generar nuevos reportes'),
+
+-- Permisos de Perfil
+('PERFIL_VIEW', 'Ver Perfil', 'Permite ver el perfil de usuario'),
+('PERFIL_EDIT', 'Editar Perfil', 'Permite editar el perfil de usuario');
+
+-- =====================================================
+-- ASIGNACIÓN POR NIVELES (L1 a L5)
+-- =====================================================
+
+-- L1 - Gerencia General (TODOS los permisos de administración)
+INSERT INTO permiso_nivel (id_permiso, id_nivel)
+SELECT p.id_permiso, n.id_nivel
+FROM permiso p, nivel n
+WHERE n.codigo = 'L1'  -- Gerencia General
+  AND p.codigo IN (
+                   'DASHBOARD_VIEW',
+                   'OT_VIEW', 'OT_CREATE', 'OT_EDIT',
+                   'SITE_VIEW', 'SITE_MANAGE',
+                   'OC_VIEW', 'OC_CREATE', 'OC_EDIT',
+                   'USUARIO_VIEW', 'USUARIO_CREATE', 'USUARIO_EDIT', 'USUARIO_DELETE',
+                   'PERMISO_ADMIN',
+                   'TRABAJADOR_VIEW', 'TRABAJADOR_MANAGE',
+                   'CLIENTE_VIEW', 'CLIENTE_MANAGE',
+                   'CONFIGURACION_VIEW', 'CONFIGURACION_MANAGE',
+                   'REPORTES_VIEW', 'REPORTES_GENERAR',
+                   'PERFIL_VIEW', 'PERFIL_EDIT'
+    );
+
+-- L2 - Gerencia/Subgerencia (casi todos, excepto eliminación de usuarios)
+INSERT INTO permiso_nivel (id_permiso, id_nivel)
+SELECT p.id_permiso, n.id_nivel
+FROM permiso p, nivel n
+WHERE n.codigo = 'L2'  -- Gerencia/Subgerencia
+  AND p.codigo IN (
+                   'DASHBOARD_VIEW',
+                   'OT_VIEW', 'OT_CREATE', 'OT_EDIT',
+                   'SITE_VIEW', 'SITE_MANAGE',
+                   'OC_VIEW', 'OC_CREATE', 'OC_EDIT',
+                   'USUARIO_VIEW', 'USUARIO_CREATE', 'USUARIO_EDIT',
+                   'TRABAJADOR_VIEW', 'TRABAJADOR_MANAGE',
+                   'CLIENTE_VIEW', 'CLIENTE_MANAGE',
+                   'CONFIGURACION_VIEW',
+                   'REPORTES_VIEW', 'REPORTES_GENERAR',
+                   'PERFIL_VIEW', 'PERFIL_EDIT'
+    );
+
+-- L3 - Jefatura (permisos operativos y de supervisión)
+INSERT INTO permiso_nivel (id_permiso, id_nivel)
+SELECT p.id_permiso, n.id_nivel
+FROM permiso p, nivel n
+WHERE n.codigo = 'L3'  -- Jefatura
+  AND p.codigo IN (
+                   'DASHBOARD_VIEW',
+                   'OT_VIEW', 'OT_CREATE', 'OT_EDIT',
+                   'SITE_VIEW', 'SITE_MANAGE',
+                   'OC_VIEW', 'OC_CREATE',
+                   'TRABAJADOR_VIEW',
+                   'CLIENTE_VIEW',
+                   'REPORTES_VIEW',
+                   'PERFIL_VIEW', 'PERFIL_EDIT'
+    );
+
+-- L4 - Coordinación (permisos operativos básicos)
+INSERT INTO permiso_nivel (id_permiso, id_nivel)
+SELECT p.id_permiso, n.id_nivel
+FROM permiso p, nivel n
+WHERE n.codigo = 'L4'  -- Coordinación
+  AND p.codigo IN (
+                   'DASHBOARD_VIEW',
+                   'OT_VIEW', 'OT_CREATE',
+                   'SITE_VIEW',
+                   'OC_VIEW',
+                   'PERFIL_VIEW', 'PERFIL_EDIT'
+    );
+
+-- L5 - Operativo (mínimos permisos)
+INSERT INTO permiso_nivel (id_permiso, id_nivel)
+SELECT p.id_permiso, n.id_nivel
+FROM permiso p, nivel n
+WHERE n.codigo = 'L5'  -- Operativo
+  AND p.codigo IN (
+                   'DASHBOARD_VIEW',
+                   'OT_VIEW',
+                   'PERFIL_VIEW'
+    );-- =====================================================
+-- ASIGNACIÓN POR ÁREAS (específicas por departamento)
+-- =====================================================
+
+-- ADMIN / SISTEMAS / TI - Permisos de configuración
+INSERT INTO permiso_area (id_permiso, id_area)
+SELECT p.id_permiso, a.id_area
+FROM permiso p, area a
+WHERE a.nombre IN ('ADMIN', 'SISTEMAS', 'TI')
+  AND p.codigo IN (
+                   'CONFIGURACION_VIEW', 'CONFIGURACION_MANAGE',
+                   'PERMISO_ADMIN',
+                   'USUARIO_VIEW', 'USUARIO_CREATE', 'USUARIO_EDIT'
+    );
+
+-- RRHH - Permisos de trabajadores
+INSERT INTO permiso_area (id_permiso, id_area)
+SELECT p.id_permiso, a.id_area
+FROM permiso p, area a
+WHERE a.nombre = 'RRHH'
+  AND p.codigo IN (
+                   'TRABAJADOR_VIEW', 'TRABAJADOR_MANAGE',
+                   'USUARIO_VIEW', 'USUARIO_CREATE', 'USUARIO_EDIT'
+    );
+
+-- COSTOS / FINANZAS / CONTABILIDAD - Permisos financieros
+INSERT INTO permiso_area (id_permiso, id_area)
+SELECT p.id_permiso, a.id_area
+FROM permiso p, area a
+WHERE a.nombre IN ('COSTOS', 'FINANZAS', 'CONTABILIDAD')
+  AND p.codigo IN (
+                   'OC_VIEW', 'OC_CREATE', 'OC_EDIT',
+                   'REPORTES_VIEW', 'REPORTES_GENERAR'
+    );
+
+-- COMERCIAL - Permisos de clientes
+INSERT INTO permiso_area (id_permiso, id_area)
+SELECT p.id_permiso, a.id_area
+FROM permiso p, area a
+WHERE a.nombre = 'COMERCIAL'
+  AND p.codigo IN (
+                   'CLIENTE_VIEW', 'CLIENTE_MANAGE',
+                   'OT_VIEW', 'OT_CREATE'
+    );
+
+-- CW / ENERGIA / PEXT - Permisos técnicos
+INSERT INTO permiso_area (id_permiso, id_area)
+SELECT p.id_permiso, a.id_area
+FROM permiso p, area a
+WHERE a.nombre IN ('CW', 'ENERGIA', 'PEXT', 'CW-ENERGIA')
+  AND p.codigo IN (
+                   'OT_VIEW', 'OT_CREATE', 'OT_EDIT',
+                   'SITE_VIEW', 'SITE_MANAGE'
+    );
+
+-- LOGÍSTICA - Permisos de logística
+INSERT INTO permiso_area (id_permiso, id_area)
+SELECT p.id_permiso, a.id_area
+FROM permiso p, area a
+WHERE a.nombre = 'LOGÍSTICA'
+  AND p.codigo IN (
+                   'SITE_VIEW',
+                   'OC_VIEW', 'OC_CREATE'
+    );
+
+-- SSOMA - Permisos de seguridad
+INSERT INTO permiso_area (id_permiso, id_area)
+SELECT p.id_permiso, a.id_area
+FROM permiso p, area a
+WHERE a.nombre = 'SSOMA'
+  AND p.codigo IN (
+                   'SITE_VIEW', 'SITE_MANAGE',
+                   'REPORTES_VIEW'
+    );
+
+-- SAQ / ENTEL - Permisos específicos de proyectos
+INSERT INTO permiso_area (id_permiso, id_area)
+SELECT p.id_permiso, a.id_area
+FROM permiso p, area a
+WHERE a.nombre IN ('SAQ', 'ENTEL')
+  AND p.codigo IN (
+                   'OT_VIEW', 'OT_CREATE',
+                   'SITE_VIEW'
+    );-- =====================================================
+-- ASIGNACIÓN POR CARGOS ESPECÍFICOS
+-- =====================================================
+
+-- GERENTE - Todos los permisos de su área
+INSERT INTO permiso_cargo (id_permiso, id_cargo)
+SELECT p.id_permiso, c.id_cargo
+FROM permiso p, cargo c
+WHERE c.nombre = 'GERENTE'
+  AND p.codigo IN (
+                   'DASHBOARD_VIEW',
+                   'OT_VIEW', 'OT_CREATE', 'OT_EDIT',
+                   'SITE_VIEW', 'SITE_MANAGE',
+                   'OC_VIEW', 'OC_CREATE', 'OC_EDIT',
+                   'REPORTES_VIEW', 'REPORTES_GENERAR',
+                   'PERFIL_VIEW', 'PERFIL_EDIT'
+    );
+
+-- JEFE TI - Permisos de sistemas
+INSERT INTO permiso_cargo (id_permiso, id_cargo)
+SELECT p.id_permiso, c.id_cargo
+FROM permiso p, cargo c
+WHERE c.nombre = 'JEFE TI'
+  AND p.codigo IN (
+                   'CONFIGURACION_VIEW', 'CONFIGURACION_MANAGE',
+                   'PERMISO_ADMIN',
+                   'USUARIO_VIEW', 'USUARIO_CREATE', 'USUARIO_EDIT'
+    );
+
+-- JEFA DE FINANZAS - Permisos financieros
+INSERT INTO permiso_cargo (id_permiso, id_cargo)
+SELECT p.id_permiso, c.id_cargo
+FROM permiso p, cargo c
+WHERE c.nombre = 'JEFA DE FINANZAS'
+  AND p.codigo IN (
+                   'OC_VIEW', 'OC_CREATE', 'OC_EDIT',
+                   'REPORTES_VIEW', 'REPORTES_GENERAR'
+    );
+
+-- COORDINADOR TI - Permisos de configuración limitados
+INSERT INTO permiso_cargo (id_permiso, id_cargo)
+SELECT p.id_permiso, c.id_cargo
+FROM permiso p, cargo c
+WHERE c.nombre = 'COORDINADOR TI'
+  AND p.codigo IN (
+                   'CONFIGURACION_VIEW',
+                   'USUARIO_VIEW', 'USUARIO_EDIT'
+    );
+
+-- JEFE DE LOGÍSTICA - Permisos logísticos
+INSERT INTO permiso_cargo (id_permiso, id_cargo)
+SELECT p.id_permiso, c.id_cargo
+FROM permiso p, cargo c
+WHERE c.nombre = 'JEFE DE LOGÍSTICA'
+  AND p.codigo IN (
+                   'SITE_VIEW', 'SITE_MANAGE',
+                   'OC_VIEW', 'OC_CREATE'
+    );
+
+-- SUPERVISOR CW - Permisos de supervisión técnica
+INSERT INTO permiso_cargo (id_permiso, id_cargo)
+SELECT p.id_permiso, c.id_cargo
+FROM permiso p, cargo c
+WHERE c.nombre = 'SUPERVISOR CW'
+  AND p.codigo IN (
+                   'OT_VIEW', 'OT_CREATE', 'OT_EDIT',
+                   'SITE_VIEW'
+    );
+
+-- ANALISTA FINANCIERO - Permisos de análisis
+INSERT INTO permiso_cargo (id_permiso, id_cargo)
+SELECT p.id_permiso, c.id_cargo
+FROM permiso p, cargo c
+WHERE c.nombre = 'ANALISTA FINANCIERO'
+  AND p.codigo IN (
+                   'OC_VIEW',
+                   'REPORTES_VIEW'
+    );
+
+-- ASISTENTE DE RRHH - Permisos básicos de personal
+INSERT INTO permiso_cargo (id_permiso, id_cargo)
+SELECT p.id_permiso, c.id_cargo
+FROM permiso p, cargo c
+WHERE c.nombre = 'ASISTENTE DE RRHH'
+  AND p.codigo IN (
+                   'TRABAJADOR_VIEW',
+                   'PERFIL_VIEW'
+    );
+
+-- JEFATURA RESPONSABLE - Permisos de aprobación
+INSERT INTO permiso_cargo (id_permiso, id_cargo)
+SELECT p.id_permiso, c.id_cargo
+FROM permiso p, cargo c
+WHERE c.nombre = 'JEFATURA RESPONSABLE'
+  AND p.codigo IN (
+                   'OT_VIEW', 'OT_EDIT',
+                   'OC_VIEW', 'OC_EDIT'
+    );
+
+-- LIQUIDADOR - Permisos de liquidación
+INSERT INTO permiso_cargo (id_permiso, id_cargo)
+SELECT p.id_permiso, c.id_cargo
+FROM permiso p, cargo c
+WHERE c.nombre = 'LIQUIDADOR'
+  AND p.codigo IN (
+                   'OT_VIEW',
+                   'OC_VIEW', 'OC_CREATE'
+    );
+
+-- EJECUTANTE - Permisos de ejecución
+INSERT INTO permiso_cargo (id_permiso, id_cargo)
+SELECT p.id_permiso, c.id_cargo
+FROM permiso p, cargo c
+WHERE c.nombre = 'EJECUTANTE'
+  AND p.codigo IN (
+                   'OT_VIEW',
+                   'SITE_VIEW'
+    );
+
+-- ANALISTA CONTABLE - Permisos contables
+INSERT INTO permiso_cargo (id_permiso, id_cargo)
+SELECT p.id_permiso, c.id_cargo
+FROM permiso p, cargo c
+WHERE c.nombre = 'ANALISTA CONTABLE'
+  AND p.codigo IN (
+                   'OC_VIEW',
+                   'REPORTES_VIEW'
+    );-- =====================================================
+-- INSERCIONES DE TRABAJADORES DE PRUEBA
+-- =====================================================
 
