@@ -93,37 +93,40 @@ export class FormOtsComponent implements OnInit {
     }
   }
 
-  private crearFormularioBase(): void {
-    const hoy = new Date().toISOString().split('T')[0];
+private crearFormularioBase(): void {
+  const hoy = new Date().toISOString().split('T')[0];
 
-    this.form = this.fb.group({
-      idOts: [null],
-      idCliente: [null, Validators.required],
-      idArea: [{ value: null, disabled: true }, Validators.required],
-      idProyecto: [null, Validators.required],
-      idFase: [null, Validators.required],
-      idSite: [null, Validators.required],
-      idRegion: [null, Validators.required],
-      descripcion: ['', Validators.required],
-      fechaApertura: [hoy, Validators.required],
+  this.form = this.fb.group({
+    idOts: [null],
+    idCliente: [null, Validators.required],
+    idArea: [{ value: null, disabled: true }, Validators.required],
+    idProyecto: [null, Validators.required],
+    idFase: [null, Validators.required],
+    idSite: [null, Validators.required],
+    idRegion: [null, Validators.required],
+    descripcion: ['', Validators.required],
+    fechaApertura: [hoy, Validators.required],
 
-      // TODOS LOS CAMPOS AHORA SON OBLIGATORIOS
-      idJefaturaClienteSolicitante: [null, Validators.required],
-      idAnalistaClienteSolicitante: [null, Validators.required],
-      idCoordinadorTiCw: [null, Validators.required],
-      idJefaturaResponsable: [null, Validators.required],
-      idLiquidador: [null, Validators.required],
-      idEjecutante: [null, Validators.required],
-      idAnalistaContable: [null, Validators.required],
+    // ✅ AGREGAR ESTE CAMPO (OPCIONAL)
+    idOtsAnterior: [null],  // Sin Validators.required porque es opcional
 
-      // ÚNICO CAMPO OPCIONAL
-  idEstadoOt: [null],
-    });
+    // TODOS LOS CAMPOS AHORA SON OBLIGATORIOS
+    idJefaturaClienteSolicitante: [null, Validators.required],
+    idAnalistaClienteSolicitante: [null, Validators.required],
+    idCoordinadorTiCw: [null, Validators.required],
+    idJefaturaResponsable: [null, Validators.required],
+    idLiquidador: [null, Validators.required],
+    idEjecutante: [null, Validators.required],
+    idAnalistaContable: [null, Validators.required],
 
-    if (!this.isEditMode) {
-      this.form.get('descripcion')?.disable({ emitEvent: false });
-    }
+    // ÚNICO CAMPO OPCIONAL
+    idEstadoOt: [null],
+  });
+
+  if (!this.isEditMode) {
+    this.form.get('descripcion')?.disable({ emitEvent: false });
   }
+}
 
   // Getters para resumen visual
   get clienteNombre(): string {
@@ -371,29 +374,30 @@ export class FormOtsComponent implements OnInit {
       this.loading = true;
 
       const values = this.form.getRawValue();
-
-      // AHORA TODOS LOS CAMPOS SON OBLIGATORIOS, ASÍ QUE NUNCA SERÁN null
-      const payload: OtCreateRequest = {
-        idOts: this.isEditMode ? Number(values.idOts) : undefined,
-        idCliente: Number(values.idCliente),
-        idArea: Number(values.idArea),
-        idProyecto: Number(values.idProyecto),
-        idFase: Number(values.idFase),
-        idSite: Number(values.idSite),
-        idRegion: Number(values.idRegion),
-        descripcion: values.descripcion.trim(),
-        fechaApertura: values.fechaApertura,
-        idOtsAnterior: values.idOtsAnterior ? Number(values.idOtsAnterior) : null,
-        // TODOS OBLIGATORIOS AHORA
-        idJefaturaClienteSolicitante: Number(values.idJefaturaClienteSolicitante),
-        idAnalistaClienteSolicitante: Number(values.idAnalistaClienteSolicitante),
-        idCoordinadorTiCw: Number(values.idCoordinadorTiCw),
-        idJefaturaResponsable: Number(values.idJefaturaResponsable),
-        idLiquidador: Number(values.idLiquidador),
-        idEjecutante: Number(values.idEjecutante),
-        idAnalistaContable: Number(values.idAnalistaContable),
-idEstadoOt: Number(values.idEstadoOt)
-      };
+  console.log('📋 Valores del formulario:', values);
+  console.log('📋 idOtsAnterior en formulario:', values.idOtsAnterior);
+  console.log('📋 Tipo de idOtsAnterior:', typeof values.idOtsAnterior);
+     const payload: OtCreateRequest = {
+  idOts: this.isEditMode ? Number(values.idOts) : undefined,
+  idCliente: Number(values.idCliente),
+  idArea: Number(values.idArea),
+  idProyecto: Number(values.idProyecto),
+  idFase: Number(values.idFase),
+  idSite: Number(values.idSite),
+  idRegion: Number(values.idRegion),
+  descripcion: values.descripcion.trim(),
+  fechaApertura: values.fechaApertura,
+    idOtsAnterior: values.idOtsAnterior ? Number(values.idOtsAnterior) : null,
+  // TODOS OBLIGATORIOS AHORA
+  idJefaturaClienteSolicitante: Number(values.idJefaturaClienteSolicitante),
+  idAnalistaClienteSolicitante: Number(values.idAnalistaClienteSolicitante),
+  idCoordinadorTiCw: Number(values.idCoordinadorTiCw),
+  idJefaturaResponsable: Number(values.idJefaturaResponsable),
+  idLiquidador: Number(values.idLiquidador),
+  idEjecutante: Number(values.idEjecutante),
+  idAnalistaContable: Number(values.idAnalistaContable),
+  idEstadoOt: Number(values.idEstadoOt)
+};
 
       this.otService.saveOt(payload).subscribe({
         next: (res: OtDetailResponse) => {

@@ -232,20 +232,23 @@
                 </div>
               </div>
 
-              <!-- OT Anterior -->
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label class="form-label fw-medium">
-                    OT Anterior
-                    <span class="badge bg-secondary-subtle text-secondary ms-1 fs-7">Opcional</span>
-                  </label>
-                  <input type="number" class="form-control form-control-lg" formControlName="idOtsAnterior"
-                         min="1" placeholder="Número de OT anterior">
-                  <small class="form-text text-muted">
-                    Número de OT previa si aplica (único campo opcional)
-                  </small>
-                </div>
-              </div>
+             <!-- En form-ots-component.html - PASO 1 -->
+<div class="col-md-6">
+  <div class="form-group">
+    <label class="form-label fw-medium">
+      OT Anterior
+      <span class="badge bg-secondary-subtle text-secondary ms-1 fs-7">Opcional</span>
+    </label>
+    <!-- Asegúrate que el formControlName sea exactamente "idOtsAnterior" -->
+    <input type="number" class="form-control form-control-lg"
+           formControlName="idOtsAnterior"
+           min="1"
+           placeholder="Número de OT anterior">
+    <small class="form-text text-muted">
+      Número de OT previa si aplica (único campo opcional)
+    </small>
+  </div>
+</div>
 
               <!-- Descripción -->
               <div class="col-12">
