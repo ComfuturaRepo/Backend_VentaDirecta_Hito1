@@ -6,7 +6,7 @@ import { finalize } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 
 // Interfaces
-import { PermisoResponseDTO } from '../../model/permiso.interface';
+import { PermisoResponseDTO, PermisoTablaDTO } from '../../model/permiso.interface';
 import { DropdownItem } from '../../service/dropdown.service';
 import { PermisoService } from '../../service/permiso.service';
 import { DropdownService } from '../../service/dropdown.service';
@@ -104,38 +104,38 @@ export class GestionPermisosComponent implements OnInit, OnDestroy {
     });
   }
 
-  private cargarDatos(): void {
-    this.cargandoPermisos = true;
+ // gestion-permisos.component.ts
+private cargarDatos(): void {
+  this.cargandoPermisos = true;
 
-    this.subscriptions.add(
-      this.permisoService.listarPermisosPaginados(
-        this.currentPage,
-        this.pageSize,
-        'codigo',
-        'asc'
-      ).subscribe({
-        next: (response: PageResponseDTO<PermisoResponseDTO>) => {
-          this.permisos = response.content;
-          this.permisosFiltrados = [...this.permisos];
-          this.totalItems = response.totalItems;
-          this.totalPages = response.totalPages;
-          this.currentPage = response.currentPage;
-
-          this.cargandoPermisos = false;
-        },
-        error: (error) => {
-          console.error('Error cargando permisos:', error);
-          this.cargandoPermisos = false;
-          Swal.fire({
-            icon: 'error',
-            title: 'Error',
-            text: 'Error al cargar los permisos. Por favor, intente nuevamente.',
-            confirmButtonColor: '#0d6efd'
-          });
-        }
-      })
-    );
-  }
+  this.subscriptions.add(
+    this.permisoService.listarPermisosPaginados(
+      this.currentPage,
+      this.pageSize,
+      'codigo',
+      'asc'
+    ).subscribe({
+      next: (response: PageResponseDTO<PermisoResponseDTO>) => {
+        this.permisos = response.content;
+        this.permisosFiltrados = [...this.permisos];
+        this.totalItems = response.totalItems;
+        this.totalPages = response.totalPages;
+        this.currentPage = response.currentPage;
+        this.cargandoPermisos = false;
+      },
+      error: (error) => {
+        console.error('Error cargando permisos:', error);
+        this.cargandoPermisos = false;
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: 'Error al cargar los permisos. Por favor, intente nuevamente.',
+          confirmButtonColor: '#0d6efd'
+        });
+      }
+    })
+  );
+}
 
   private cargarDropdowns(): void {
     this.subscriptions.add(

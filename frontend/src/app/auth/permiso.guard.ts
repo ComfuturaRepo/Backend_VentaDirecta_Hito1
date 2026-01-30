@@ -1,7 +1,7 @@
 import { inject } from '@angular/core';
 import { CanActivateFn, Router, UrlTree } from '@angular/router';
 import { Observable, of, forkJoin } from 'rxjs';
-import { map, catchError } from 'rxjs/operators';
+import { map, catchError, switchMap, take } from 'rxjs/operators';
 import { AuthService } from '../service/auth.service';
 import { PermisoService } from '../service/permiso.service';
 
@@ -10,71 +10,56 @@ export const permisoGuard: CanActivateFn = (route, state): Observable<boolean | 
   const permisoService = inject(PermisoService);
   const router = inject(Router);
 
-  // Verificar autenticación primero
+  console.log('🔑 permisoGuard: Verificando permisos para:', route.data?.['permisos']);
+
+  // Primero verificar autenticación síncrona
   if (!authService.isAuthenticatedSync) {
+    console.log('🔑 permisoGuard: No autenticado (sync)');
     return of(router.createUrlTree(['/login'], {
       queryParams: { returnUrl: state.url }
     }));
   }
 
-  // Obtener permisos requeridos de la ruta
-  const permisosRequeridos = route.data?.['permisos'] as string[] || [];
+  // Obtener usuario (esperar si es necesario)
+  return authService.authState$.pipe(
+    take(1), // Solo el primer valor
+    map(authState => {
+      const user = authService.currentUser; // Usar el getter actualizado
 
-  // Si no se requieren permisos específicos, permitir acceso
-  if (permisosRequeridos.length === 0) {
-    return of(true);
-  }
-
-  // Verificar si tenemos los permisos en cache (frontend)
-  const tienePermisosCache = permisoService.tieneAlgunPermiso(permisosRequeridos);
-  if (tienePermisosCache) {
-    return of(true);
-  }
-
-  // Si no está en cache, verificar en backend (más seguro)
-  const usuario = authService.currentUser;
-  if (!usuario) {
-    return of(router.createUrlTree(['/login'], {
-      queryParams: { returnUrl: state.url }
-    }));
-  }
-
-  // Verificar cada permiso remotamente - PASANDO EL ID_USUARIO
-  const verificaciones = permisosRequeridos.map(codigo =>
-    permisoService.verificarPermisoRemoto(codigo, usuario.idUsuario)
-  );
-
-  // Si solo hay un permiso requerido
-  if (verificaciones.length === 1) {
-    return verificaciones[0].pipe(
-      map(tienePermiso => {
-        if (tienePermiso) {
-          return true;
-        }
-        return router.createUrlTree(['/no-autorizado'], {
-          queryParams: { faltaPermiso: permisosRequeridos[0], returnUrl: state.url }
-        });
-      }),
-      catchError(() => {
-        return of(router.createUrlTree(['/no-autorizado'], {
+      if (!user) {
+        console.log('🔑 permisoGuard: Usuario no disponible');
+        return router.createUrlTree(['/login'], {
           queryParams: { returnUrl: state.url }
-        }));
-      })
-    );
-  }
+        });
+      }
 
-  // Si hay múltiples permisos requeridos (condición OR - al menos uno)
-  return forkJoin(verificaciones).pipe(
-    map(resultados => resultados.some(tiene => tiene)),
-    map(tieneAlgunPermiso => {
-      if (tieneAlgunPermiso) {
+      console.log('🔑 permisoGuard: Usuario encontrado:', user.username);
+
+      const permisosRequeridos = route.data?.['permisos'] as string[] || [];
+
+      // Si no se requieren permisos específicos
+      if (permisosRequeridos.length === 0) {
         return true;
       }
-      return router.createUrlTree(['/no-autorizado'], {
-        queryParams: { permisosRequeridos: permisosRequeridos.join(','), returnUrl: state.url }
-      });
+
+      // Verificar permisos
+      return permisoService.verificarPermisoRemoto(permisosRequeridos[0], user.idUsuario).pipe(
+        map(tienePermiso => {
+          if (tienePermiso) {
+            return true;
+          }
+          return router.createUrlTree(['/no-autorizado'], {
+            queryParams: {
+              permisosRequeridos: permisosRequeridos.join(','),
+              returnUrl: state.url
+            }
+          });
+        })
+      );
     }),
-    catchError(() => {
+    switchMap(result => result instanceof Observable ? result : of(result)),
+    catchError((error) => {
+      console.error('🔑 permisoGuard: Error:', error);
       return of(router.createUrlTree(['/no-autorizado'], {
         queryParams: { returnUrl: state.url }
       }));

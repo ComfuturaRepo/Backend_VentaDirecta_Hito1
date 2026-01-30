@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, BehaviorSubject, of } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../environment';
-import { PermisoResponseDTO, VerificarPermisoDTO } from '../model/permiso.interface';
+import { PermisoResponseDTO, PermisoTablaDTO, VerificarPermisoDTO } from '../model/permiso.interface';
 import { PageResponseDTO } from './cliente.service';
 
 @Injectable({
@@ -40,22 +40,25 @@ export class PermisoService {
   obtenerPermisoPorId(id: number): Observable<PermisoResponseDTO> {
     return this.http.get<PermisoResponseDTO>(`${this.API_URL}/${id}`);
   }
-// ✅ Nuevo método para obtener permisos paginados
-  listarPermisosPaginados(
-    page: number = 0,
-    size: number = 10,
-    sortBy: string = 'codigo',
-    sortDirection: string = 'asc'
-  ): Observable<PageResponseDTO<any>> {
+// permiso.service.ts - Cambia el tipo de retorno
+listarPermisosPaginados(
+  page: number = 0,
+  size: number = 10,
+  sortBy: string = 'codigo',
+  sortDirection: string = 'asc'
+): Observable<PageResponseDTO<PermisoResponseDTO>> { // <-- PermisoResponseDTO
 
-    let params = new HttpParams()
-      .set('page', page.toString())
-      .set('size', size.toString())
-      .set('sortBy', sortBy)
-      .set('sortDirection', sortDirection);
+  let params = new HttpParams()
+    .set('page', page.toString())
+    .set('size', size.toString())
+    .set('sortBy', sortBy)
+    .set('sortDirection', sortDirection);
 
-    return this.http.get<PageResponseDTO<any>>(`${this.API_URL}/paginados`, { params });
-  }
+  return this.http.get<PageResponseDTO<PermisoResponseDTO>>(
+    `${this.API_URL}/paginados`,
+    { params }
+  );
+}
   obtenerPermisoPorCodigo(codigo: string): Observable<PermisoResponseDTO> {
     return this.http.get<PermisoResponseDTO>(`${this.API_URL}/codigo/${codigo}`);
   }

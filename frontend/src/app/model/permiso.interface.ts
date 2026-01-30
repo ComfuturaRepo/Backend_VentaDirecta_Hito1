@@ -25,12 +25,11 @@ export interface PermisoResponseDTO {
   codigo: string;
   nombre: string;
   descripcion: string;
-    activo: boolean;
+  activo: boolean;
   niveles: NivelDTO[];
   areas: AreaDTO[];
   cargos: CargoDTO[];
 }
-
 export interface VerificarPermisoDTO {
   codigoPermiso: string;
   idUsuario: number;
@@ -52,8 +51,9 @@ export interface NivelDTO {
   idNivel: number;
   codigo: string;
   nombre: string;
-  descripcion: string;
-}export interface Area {
+  descripcion?: string; // <-- Hacerla opcional con '?'
+}
+export interface Area {
   idArea: number;
   nombre: string;
   activo: boolean;
@@ -63,7 +63,9 @@ export interface AreaDTO {
   idArea: number;
   nombre: string;
   activo: boolean;
-}export interface Cargo {
+}
+
+export interface Cargo {
   idCargo: number;
   nombre: string;
   nivel: Nivel;
@@ -76,7 +78,9 @@ export interface CargoDTO {
   idNivel: number;
   activo: boolean;
   nombreNivel?: string;
-}export interface Cargo {
+}
+
+export interface Cargo {
   idCargo: number;
   nombre: string;
   nivel: Nivel;
@@ -117,4 +121,31 @@ export interface Trabajador {
   niveles: number[];
   areas: number[];
   cargos: number[];
+}
+export interface PermisoNivelTablaDTO {
+  idNivel: number;
+  codigo: string;
+  nombre: string;
+  // Sin 'descripcion' si no la necesitas en la tabla
+}
+export interface PermisoAreaTablaDTO {
+  idArea: number;
+  nombre: string;
+  activo: boolean;
+}
+
+export interface PermisoCargoTablaDTO {
+  idCargo: number;
+  nombre: string;
+  activo: boolean;
+}
+export interface PermisoTablaDTO {
+  idPermiso: number;
+  codigo: string;
+  nombre: string;
+  descripcion: string;
+  activo: boolean;
+  niveles: PermisoNivelTablaDTO[];
+  areas: PermisoAreaTablaDTO[];
+  cargos: PermisoCargoTablaDTO[];
 }

@@ -4,28 +4,32 @@ import { Observable, of } from 'rxjs';
 import { map, catchError, first } from 'rxjs/operators';
 import { AuthService } from '../service/auth.service';
 
-export const authGuard: CanActivateFn = (route, state): Observable<boolean | UrlTree> => {
+export const authGuard: CanActivateFn = (route, state): Observable<boolean | UrlTree> | boolean | UrlTree => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
-  return authService.authState$.pipe(
-    // Nos quedamos solo con el primer valor emitido
-    first(),
+  // Verificación síncrona inmediata
+  if (authService.isAuthenticatedSync) {
+    console.log('🔒 authGuard: Usuario autenticado (síncrono)');
+    return true;
+  }
 
+  // Si no está autenticado síncronamente, esperar al observable
+  console.log('🔒 authGuard: Esperando autenticación asíncrona...');
+  return authService.authState$.pipe(
+    first(),
     map(auth => {
-      // Si ya está autenticado → puede pasar
+      console.log('🔒 authGuard: Estado recibido:', auth.isAuthenticated);
       if (auth.isAuthenticated) {
         return true;
       }
-
-      // Si no → redirigimos a login guardando la url que quería visitar
+      console.log('🔒 authGuard: Redirigiendo a login');
       return router.createUrlTree(['/login'], {
         queryParams: { returnUrl: state.url }
       });
     }),
-
-    // En caso de cualquier error → también vamos a login
-    catchError(() => {
+    catchError((error) => {
+      console.error('🔒 authGuard: Error:', error);
       return of(
         router.createUrlTree(['/login'], {
           queryParams: { returnUrl: state.url }

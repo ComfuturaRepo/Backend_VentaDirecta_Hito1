@@ -2,6 +2,7 @@ package com.backend.comfutura.controller;
 import com.backend.comfutura.dto.Page.PageResponseDTO;
 import com.backend.comfutura.dto.response.permisos.PermisoDTO;
 import com.backend.comfutura.dto.response.permisos.PermisoResponseDTO;
+import com.backend.comfutura.dto.response.permisos.PermisoTablaDTO;
 import com.backend.comfutura.dto.response.permisos.VerificarPermisoDTO;
 import com.backend.comfutura.service.PermisoService;
 import jakarta.validation.Valid;
@@ -44,15 +45,15 @@ public class PermisoController {
         PermisoResponseDTO permiso = permisoService.obtenerPermisoPorId(id);
         return ResponseEntity.ok(permiso);
     }
-    // ✅ NUEVO ENDPOINT PAGINADO
+    // Cambiar el tipo de retorno en el endpoint
     @GetMapping("/paginados")
-    public ResponseEntity<PageResponseDTO<PermisoResponseDTO>> listarPermisosPaginados(
+    public ResponseEntity<PageResponseDTO<PermisoTablaDTO>> listarPermisosPaginados(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "codigo") String sortBy,
             @RequestParam(defaultValue = "asc") String sortDirection) {
 
-        PageResponseDTO<PermisoResponseDTO> permisosPaginados =
+        PageResponseDTO<PermisoTablaDTO> permisosPaginados =
                 permisoService.listarTodosPermisosPaginados(page, size, sortBy, sortDirection);
 
         return ResponseEntity.ok(permisosPaginados);

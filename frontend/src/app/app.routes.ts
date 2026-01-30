@@ -26,7 +26,8 @@ export const routes: Routes = [
   {
     path: '',
     component: LayoutComponent,
-    canActivateChild: [authGuard], // Primero verifica autenticación
+    canActivate: [authGuard], // ✅ Protege la ACTIVACIÓN del LayoutComponent
+    canActivateChild: [authGuard], // ✅ Protege las rutas hijas también
     children: [
       {
         path: '',
@@ -36,7 +37,7 @@ export const routes: Routes = [
       {
         path: 'dashboard',
         component: DashboardComponente,
-        canActivate: [permisoGuard], // Luego verifica permisos
+        canActivate: [permisoGuard], // Permisos específicos
         data: { permisos: ['DASHBOARD_VIEW'] }
       },
       {

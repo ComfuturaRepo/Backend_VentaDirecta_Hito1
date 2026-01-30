@@ -3,6 +3,7 @@ package com.backend.comfutura.service;
 import com.backend.comfutura.dto.Page.PageResponseDTO;
 import com.backend.comfutura.dto.response.permisos.PermisoDTO;
 import com.backend.comfutura.dto.response.permisos.PermisoResponseDTO;
+import com.backend.comfutura.dto.response.permisos.PermisoTablaDTO;
 import com.backend.comfutura.dto.response.permisos.VerificarPermisoDTO;
 
 import java.util.List;
@@ -16,8 +17,8 @@ public interface PermisoService {
     PermisoResponseDTO obtenerPermisoPorCodigo(String codigo);
     List<PermisoResponseDTO> listarTodosPermisos();
 
-    // ✅ NUEVO MÉTODO CON PAGINACIÓN
-    PageResponseDTO<PermisoResponseDTO> listarTodosPermisosPaginados(
+    // Actualizar el método para usar el nuevo DTO
+    PageResponseDTO<PermisoTablaDTO> listarTodosPermisosPaginados(
             int page,
             int size,
             String sortBy,

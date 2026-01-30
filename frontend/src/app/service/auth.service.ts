@@ -91,25 +91,41 @@ export class AuthService {
     this.clearAuthState();
   }
 
-  /**
-   * Guarda el token y actualiza el estado
-   */
-  private setToken(token: string, usuario: UserJwtDto): void {
-    if (!isPlatformBrowser(this.platformId)) return;
+private setToken(token: string, usuario: UserJwtDto): void {
+  if (!isPlatformBrowser(this.platformId)) return;
 
+  // Guardar en localStorage
+  localStorage.setItem(this.TOKEN_KEY, token);
+  localStorage.setItem(this.USER_KEY, JSON.stringify(usuario));
+
+  // Actualizar el estado inmediatamente
+  this.authState.next({
+    token,
+    user: usuario,
+    isAuthenticated: true
+  });
+
+  console.log('🔐 setToken: Token y usuario guardados', {
+    tokenExists: !!token,
+    user: usuario.username,
+    localStorageUser: localStorage.getItem(this.USER_KEY)
+  });
+}
+
+  // En auth.service.ts
+private setAuthState(token: string, user: UserJwtDto): void {
+  this.authState.next({
+    token,
+    user,
+    isAuthenticated: true
+  });
+
+  // ✅ Asegúrate de que el localStorage se actualice también
+  if (isPlatformBrowser(this.platformId)) {
     localStorage.setItem(this.TOKEN_KEY, token);
-    localStorage.setItem(this.USER_KEY, JSON.stringify(usuario));
-
-    this.setAuthState(token, usuario);
+    localStorage.setItem(this.USER_KEY, JSON.stringify(user));
   }
-
-  private setAuthState(token: string, user: UserJwtDto): void {
-    this.authState.next({
-      token,
-      user,
-      isAuthenticated: true
-    });
-  }
+}
 
   private clearAuthState(): void {
     if (isPlatformBrowser(this.platformId)) {
@@ -196,32 +212,39 @@ export class AuthService {
     return true;
   }
 
-  get currentUser(): UserJwtDto | null {
-    const state = this.authState.value;
-    if (!state.token || this.isTokenExpired(state.token)) {
-      this.logout();
-      return null;
-    }
+get currentUser(): UserJwtDto | null {
+  const state = this.authState.value;
 
-    // También cargar desde localStorage por si acaso
-    if (!state.user && isPlatformBrowser(this.platformId)) {
-      const userStr = localStorage.getItem(this.USER_KEY);
-      if (userStr) {
-        try {
-          const user = JSON.parse(userStr);
-          this.authState.next({
-            ...state,
-            user
-          });
-          return user;
-        } catch {
-          return null;
-        }
-      }
-    }
+  console.log('👤 currentUser - Estado actual:', {
+    hasToken: !!state.token,
+    hasUser: !!state.user,
+    isAuthenticated: state.isAuthenticated
+  });
 
+  // Si hay usuario en el estado, retornarlo
+  if (state.user) {
+    console.log('👤 currentUser: Retornando usuario del estado:', state.user.username);
     return state.user;
   }
+
+  // Si no hay usuario en el estado pero hay token
+  if (state.token && !state.user) {
+    console.log('👤 currentUser: No hay user en estado, decodificando del token...');
+    const userFromToken = this.decodeToken(state.token);
+    if (userFromToken) {
+      console.log('👤 currentUser: Usuario decodificado del token:', userFromToken.username);
+      // Actualizar el estado con el usuario decodificado
+      this.authState.next({
+        ...state,
+        user: userFromToken
+      });
+      return userFromToken;
+    }
+  }
+
+  console.log('👤 currentUser: No se pudo obtener usuario');
+  return null;
+}
 
   get currentTrabajadorId(): number | null {
     return this.currentUser?.idTrabajador ?? null;

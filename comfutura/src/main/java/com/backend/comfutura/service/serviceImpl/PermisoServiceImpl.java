@@ -13,9 +13,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.HashSet;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -150,17 +148,19 @@ public class PermisoServiceImpl implements PermisoService {
                 .collect(Collectors.toList());
     }
 
+    // En el método listarTodosPermisosPaginados del servicio
+    // En PermisoServiceImpl.java
     @Override
     @Transactional(readOnly = true)
-    public PageResponseDTO<PermisoResponseDTO> listarTodosPermisosPaginados(
+    public PageResponseDTO<PermisoTablaDTO> listarTodosPermisosPaginados(
             int page,
             int size,
             String sortBy,
             String sortDirection) {
 
-        // Validar y configurar parámetros de paginación
-        page = Math.max(page, 0); // Página no puede ser negativa
-        size = Math.max(1, size); // Tamaño mínimo 1
+        // Validar parámetros
+        page = Math.max(page, 0);
+        size = Math.max(1, size);
 
         // Configurar dirección de ordenamiento
         Sort.Direction direction = Sort.Direction.ASC;
@@ -168,34 +168,81 @@ public class PermisoServiceImpl implements PermisoService {
             direction = Sort.Direction.DESC;
         }
 
-        // Configurar campo de ordenamiento (por defecto por id)
-        String sortField = sortBy != null ? sortBy : "idPermiso";
+        // Configurar campo de ordenamiento (con valores por defecto seguros)
+        String sortField = "idPermiso"; // Campo por defecto
+        if (sortBy != null && !sortBy.trim().isEmpty()) {
+            // Mapear nombres de campos de frontend a nombres de entidad
+            Map<String, String> fieldMapping = new HashMap<>();
+            fieldMapping.put("codigo", "codigo");
+            fieldMapping.put("nombre", "nombre");
+            fieldMapping.put("idPermiso", "idPermiso");
+
+            sortField = fieldMapping.getOrDefault(sortBy, "idPermiso");
+        }
+
+        // Crear objeto Sort
+        Sort sort = Sort.by(direction, sortField);
 
         // Crear objeto Pageable
-        Sort sort = Sort.by(direction, sortField);
         Pageable pageable = PageRequest.of(page, size, sort);
 
         // Obtener página desde el repositorio
         Page<Permiso> permisoPage = permisoRepository.findAll(pageable);
 
-        // Convertir contenido a DTOs
-        List<PermisoResponseDTO> content = permisoPage.getContent().stream()
-                .map(this::convertirAResponseDTO)
+        // Convertir a DTOs optimizados para tabla
+        List<PermisoTablaDTO> content = permisoPage.getContent().stream()
+                .map(this::convertirATablaDTO)
                 .collect(Collectors.toList());
 
-        // Crear y retornar respuesta paginada
         return new PageResponseDTO<>(
                 content,
-                permisoPage.getNumber(),        // currentPage
-                permisoPage.getTotalElements(), // totalItems
-                permisoPage.getTotalPages(),    // totalPages
-                permisoPage.isFirst(),          // first
-                permisoPage.isLast(),           // last
-                permisoPage.getSize()           // pageSize
+                permisoPage.getNumber(),
+                permisoPage.getTotalElements(),
+                permisoPage.getTotalPages(),
+                permisoPage.isFirst(),
+                permisoPage.isLast(),
+                permisoPage.getSize()
         );
     }
 
+    // ✅ Nuevo método para convertir a DTO optimizado
+    private PermisoTablaDTO convertirATablaDTO(Permiso permiso) {
+        PermisoTablaDTO dto = new PermisoTablaDTO();
+        dto.setIdPermiso(permiso.getIdPermiso());
+        dto.setCodigo(permiso.getCodigo());
+        dto.setNombre(permiso.getNombre());
+        dto.setDescripcion(permiso.getDescripcion());
+        dto.setActivo(permiso.getActivo());
 
+        // Convertir solo campos necesarios para niveles
+        dto.setNiveles(permiso.getNiveles().stream()
+                .map(nivel -> new PermisoNivelTablaDTO(
+                        nivel.getIdNivel(),
+                        nivel.getCodigo(),
+                        nivel.getNombre()
+                ))
+                .collect(Collectors.toList()));
+
+        // Convertir solo campos necesarios para áreas
+        dto.setAreas(permiso.getAreas().stream()
+                .map(area -> new PermisoAreaTablaDTO(
+                        area.getIdArea(),
+                        area.getNombre(),
+                        area.getActivo()
+                ))
+                .collect(Collectors.toList()));
+
+        // Convertir solo campos necesarios para cargos
+        dto.setCargos(permiso.getCargos().stream()
+                .map(cargo -> new PermisoCargoTablaDTO(
+                        cargo.getIdCargo(),
+                        cargo.getNombre(),
+                        cargo.getActivo()
+                ))
+                .collect(Collectors.toList()));
+
+        return dto;
+    }
     @Override
     public boolean verificarPermisoUsuario(VerificarPermisoDTO verificarPermisoDTO) {
         // Obtener usuario
