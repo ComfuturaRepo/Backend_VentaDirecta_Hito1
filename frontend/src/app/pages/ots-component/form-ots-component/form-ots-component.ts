@@ -1,6 +1,6 @@
-import { Component, Input, OnInit, Output, EventEmitter, inject, ViewChild, ElementRef, OnDestroy } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter, inject, ViewChild, ElementRef, OnDestroy, ChangeDetectorRef } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, AbstractControl, FormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { forkJoin, tap, Subscription, catchError, of } from 'rxjs';
 import Swal from 'sweetalert2';
@@ -9,13 +9,12 @@ import { DropdownItem, DropdownService } from '../../../service/dropdown.service
 import { AuthService } from '../../../service/auth.service';
 import { OtService } from '../../../service/ot.service';
 import { OtCreateRequest, OtDetailResponse } from '../../../model/ots';
-import { DropdownConfig } from '../../../model/dropdown-filter.model';
 import { NgselectDropdownComponent } from '../../../component/ngselect-dropdown-component/ngselect-dropdown-component';
 
 @Component({
   selector: 'app-form-ots',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule,NgselectDropdownComponent],
+  imports: [CommonModule, ReactiveFormsModule, FormsModule, NgselectDropdownComponent],
   templateUrl: './form-ots-component.html',
   styleUrls: ['./form-ots-component.css']
 })
@@ -28,7 +27,7 @@ export class FormOtsComponent implements OnInit, OnDestroy {
   private authService = inject(AuthService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
-
+private cdr = inject(ChangeDetectorRef);
   @Input() otId: number | null = null;
   @Input() isViewMode: boolean = false;
   @Input() mode: 'create' | 'edit' = 'create';
@@ -38,6 +37,22 @@ export class FormOtsComponent implements OnInit, OnDestroy {
   @Output() saved = new EventEmitter<void>();
   @Output() canceled = new EventEmitter<void>();
 
+  // Loading states para cada dropdown
+  loadingClientes: boolean = false;
+  loadingAreas: boolean = false;
+  loadingProyectos: boolean = false;
+  loadingFases: boolean = false;
+  loadingSites: boolean = false;
+  loadingRegiones: boolean = false;
+  loadingJefaturasCliente: boolean = false;
+  loadingAnalistasCliente: boolean = false;
+  loadingCoordinadoresTiCw: boolean = false;
+  loadingJefaturasResponsable: boolean = false;
+  loadingLiquidadores: boolean = false;
+  loadingEjecutantes: boolean = false;
+  loadingAnalistasContable: boolean = false;
+  loadingEstadoOT: boolean = false;
+
   currentStep: number = 1;
   form!: FormGroup;
   submitted = false;
@@ -46,6 +61,22 @@ export class FormOtsComponent implements OnInit, OnDestroy {
 
   usernameLogueado: string = '—';
   trabajadorIdLogueado: number | null = null;
+
+  // IDs seleccionados
+  selectedClienteId: number | null = null;
+  selectedAreaId: number | null = null;
+  selectedProyectoId: number | null = null;
+  selectedFaseId: number | null = null;
+  selectedSiteId: number | null = null;
+  selectedRegionId: number | null = null;
+  selectedJefaturaClienteId: number | null = null;
+  selectedAnalistaClienteId: number | null = null;
+  selectedCoordinadorTiCwId: number | null = null;
+  selectedJefaturaResponsableId: number | null = null;
+  selectedLiquidadorId: number | null = null;
+  selectedEjecutanteId: number | null = null;
+  selectedAnalistaContableId: number | null = null;
+  selectedEstadoOTId: number | null = null;
 
   // Dropdowns
   clientes: DropdownItem[] = [];
@@ -68,113 +99,223 @@ export class FormOtsComponent implements OnInit, OnDestroy {
   // Subscripciones para limpiar memoria
   private subscriptions: Subscription[] = [];
 
-  // Configuración de dropdowns con filtro
- configDropdown: DropdownConfig = {
-  placeholder: 'Seleccione una opción',
-  searchPlaceholder: 'Buscar...',
-  noResultsText: 'No se encontraron resultados',
-  loadingText: 'Cargando...',
-  showClearButton: true,
-  showSearch: true,
-  multiple: false,
-  maxHeight: '250px',
-  width: '100%'
-};
-
   constructor() {
     this.crearFormularioBase();
   }
 
-  ngOnInit(): void {
-    this.isEditMode = this.mode === 'edit';
+ngOnInit(): void {
+  this.isEditMode = this.mode === 'edit';
 
-    const user = this.authService.currentUser;
-    this.usernameLogueado = user?.username || '—';
-    this.trabajadorIdLogueado = user?.idTrabajador ?? null;
+  const user = this.authService.currentUser;
+  this.usernameLogueado = user?.username || '—';
+  this.trabajadorIdLogueado = user?.idTrabajador ?? null;
 
-    this.suscribirCambiosFormulario();
+  this.suscribirCambiosFormulario();
 
-    if (this.isEditMode && this.otId) {
-      this.cargarDatosParaEdicion(this.otId);
-    } else if (this.mode === 'edit' && this.otData) {
-      this.loading = false;
-      this.form.patchValue(this.otData);
-      const clienteId = this.form.get('idCliente')?.value;
-      if (clienteId) {
-        this.cargarAreasPorCliente(clienteId);
-      }
-    } else {
-      this.cargarDropdownsParaCreacion();
+  if (this.isEditMode && this.otId) {
+    this.cargarDatosParaEdicion(this.otId);
+  } else if (this.mode === 'edit' && this.otData) {
+    this.loading = false;
+    this.patchFormValues(this.otData);
+    const clienteId = this.form.get('idCliente')?.value;
+    if (clienteId) {
+      this.cargarAreasPorCliente(clienteId);
     }
-
-    if (this.isViewMode) {
-      this.form.disable();
-    }
+  } else {
+    this.cargarDropdownsParaCreacion();
   }
 
+  // Solo deshabilita el formulario completo si es modo vista
+  if (this.isViewMode) {
+    this.form.disable();
+  }
+}
+
   ngOnDestroy(): void {
-    // Limpiar todas las subscripciones
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
 
-  private crearFormularioBase(): void {
-    const hoy = new Date().toISOString().split('T')[0];
+private crearFormularioBase(): void {
+  const hoy = new Date().toISOString().split('T')[0];
 
-    this.form = this.fb.group({
-      // Paso 1: Información Principal
-      idOts: [null],
-      idCliente: [null, Validators.required],
-      idArea: [{ value: null, disabled: true }, Validators.required],
-      idProyecto: [null, Validators.required],
-      idFase: [null, Validators.required],
-      idSite: [null, Validators.required],
-      idRegion: [null, Validators.required],
-      descripcion: [{ value: '', disabled: !this.isEditMode }, Validators.required],
-      fechaApertura: [hoy, Validators.required],
-      idOtsAnterior: [null], // Opcional
+  // NO uses { value: null, disabled: true } - usa disabled por separado
+  this.form = this.fb.group({
+    // Paso 1: Información Principal
+    idOts: [null],
+    idCliente: [null, Validators.required],
+    idArea: [null, Validators.required], // Quita disabled: true
+    idProyecto: [null, Validators.required],
+    idFase: [null, Validators.required],
+    idSite: [null, Validators.required],
+    idRegion: [null, Validators.required],
+    descripcion: ['', [Validators.required, Validators.minLength(10)]], // Quita disabled: !this.isEditMode
+    fechaApertura: [hoy, Validators.required],
+    idOtsAnterior: [null],
 
-      // Paso 2: Responsables
-      idJefaturaClienteSolicitante: [null, Validators.required],
-      idAnalistaClienteSolicitante: [null, Validators.required],
-      idCoordinadorTiCw: [null, Validators.required],
-      idJefaturaResponsable: [null, Validators.required],
-      idLiquidador: [null, Validators.required],
-      idEjecutante: [null, Validators.required],
-      idAnalistaContable: [null, Validators.required],
-      idEstadoOt: [null] // Solo obligatorio en edición
-    });
+    // Paso 2: Responsables
+    idJefaturaClienteSolicitante: [null, Validators.required],
+    idAnalistaClienteSolicitante: [null, Validators.required],
+    idCoordinadorTiCw: [null, Validators.required],
+    idJefaturaResponsable: [null, Validators.required],
+    idLiquidador: [null, Validators.required],
+    idEjecutante: [null, Validators.required],
+    idAnalistaContable: [null, Validators.required],
+    idEstadoOt: [null]
+  });
 
-    // Si es modo edición, el estado es obligatorio
-    if (this.isEditMode) {
-      this.form.get('idEstadoOt')?.setValidators(Validators.required);
-      this.form.get('idEstadoOt')?.updateValueAndValidity();
+  // Después de crear el form, habilita/deshabilita
+  this.form.get('idArea')?.disable(); // Deshabilita aquí
+  if (!this.isEditMode) {
+    this.form.get('descripcion')?.disable(); // Deshabilita aquí
+  }
+
+  if (this.isEditMode) {
+    this.form.get('idEstadoOt')?.setValidators(Validators.required);
+    this.form.get('idEstadoOt')?.updateValueAndValidity();
+  }
+}
+
+  // Métodos para actualizar los valores seleccionados
+  onClienteChange(event: any): void {
+    if (event) {
+      this.selectedClienteId = event.id;
+      this.form.get('idCliente')?.setValue(event.id);
+      this.form.get('idCliente')?.markAsTouched();
+      this.cargarAreasPorCliente(event.id);
+    } else {
+      this.selectedClienteId = null;
+      this.form.get('idCliente')?.setValue(null);
+      this.areas = [];
+      this.selectedAreaId = null;
+      this.form.get('idArea')?.setValue(null);
+      this.form.get('idArea')?.disable();
     }
+    this.actualizarDescripcion();
+  }
+
+  onAreaChange(event: any): void {
+    this.selectedAreaId = event?.id || null;
+    this.form.get('idArea')?.setValue(event?.id || null);
+    if (event) this.form.get('idArea')?.markAsTouched();
+    this.actualizarDescripcion();
+  }
+
+  onProyectoChange(event: any): void {
+    this.selectedProyectoId = event?.id || null;
+    this.form.get('idProyecto')?.setValue(event?.id || null);
+    if (event) this.form.get('idProyecto')?.markAsTouched();
+    this.actualizarDescripcion();
+  }
+
+  onFaseChange(event: any): void {
+    this.selectedFaseId = event?.id || null;
+    this.form.get('idFase')?.setValue(event?.id || null);
+    if (event) this.form.get('idFase')?.markAsTouched();
+  }
+
+  onSiteChange(event: any): void {
+    this.selectedSiteId = event?.id || null;
+    this.form.get('idSite')?.setValue(event?.id || null);
+    if (event) this.form.get('idSite')?.markAsTouched();
+    this.actualizarDescripcion();
+  }
+
+  onRegionChange(event: any): void {
+    this.selectedRegionId = event?.id || null;
+    this.form.get('idRegion')?.setValue(event?.id || null);
+    if (event) this.form.get('idRegion')?.markAsTouched();
+  }
+
+  onJefaturaClienteChange(event: any): void {
+    this.selectedJefaturaClienteId = event?.id || null;
+    this.form.get('idJefaturaClienteSolicitante')?.setValue(event?.id || null);
+    if (event) this.form.get('idJefaturaClienteSolicitante')?.markAsTouched();
+  }
+
+  onAnalistaClienteChange(event: any): void {
+    this.selectedAnalistaClienteId = event?.id || null;
+    this.form.get('idAnalistaClienteSolicitante')?.setValue(event?.id || null);
+    if (event) this.form.get('idAnalistaClienteSolicitante')?.markAsTouched();
+  }
+
+  onCoordinadorTiCwChange(event: any): void {
+    this.selectedCoordinadorTiCwId = event?.id || null;
+    this.form.get('idCoordinadorTiCw')?.setValue(event?.id || null);
+    if (event) this.form.get('idCoordinadorTiCw')?.markAsTouched();
+  }
+
+  onJefaturaResponsableChange(event: any): void {
+    this.selectedJefaturaResponsableId = event?.id || null;
+    this.form.get('idJefaturaResponsable')?.setValue(event?.id || null);
+    if (event) this.form.get('idJefaturaResponsable')?.markAsTouched();
+  }
+
+  onLiquidadorChange(event: any): void {
+    this.selectedLiquidadorId = event?.id || null;
+    this.form.get('idLiquidador')?.setValue(event?.id || null);
+    if (event) this.form.get('idLiquidador')?.markAsTouched();
+  }
+
+  onEjecutanteChange(event: any): void {
+    this.selectedEjecutanteId = event?.id || null;
+    this.form.get('idEjecutante')?.setValue(event?.id || null);
+    if (event) this.form.get('idEjecutante')?.markAsTouched();
+  }
+
+  onAnalistaContableChange(event: any): void {
+    this.selectedAnalistaContableId = event?.id || null;
+    this.form.get('idAnalistaContable')?.setValue(event?.id || null);
+    if (event) this.form.get('idAnalistaContable')?.markAsTouched();
+  }
+
+  onEstadoOTChange(event: any): void {
+    this.selectedEstadoOTId = event?.id || null;
+    this.form.get('idEstadoOt')?.setValue(event?.id || null);
+    if (event) this.form.get('idEstadoOt')?.markAsTouched();
+  }
+
+  // Helper para obtener nombres de items
+  getItemNombre(id: number | null, items: DropdownItem[]): string {
+    if (!id || !items || items.length === 0) return '';
+    const item = items.find(i => i.id === id);
+    if (!item) return '';
+    
+    if (item.label && item.label.trim() !== '') return item.label;
+    if (item.adicional && item.adicional.trim() !== '') return item.adicional;
+    return '—';
   }
 
   // Getters para resumen visual
   get clienteNombre(): string {
-    return this.clientes.find(c => c.id === this.form.value.idCliente)?.label || '—';
+    return this.getItemNombre(this.selectedClienteId, this.clientes);
   }
 
   get areaNombre(): string {
-    return this.areas.find(a => a.id === this.form.value.idArea)?.label || '—';
+    return this.getItemNombre(this.selectedAreaId, this.areas);
   }
 
   get proyectoNombre(): string {
-    return this.proyectos.find(p => p.id === this.form.value.idProyecto)?.label || '—';
+    return this.getItemNombre(this.selectedProyectoId, this.proyectos);
   }
 
   get faseNombre(): string {
-    return this.fases.find(f => f.id === this.form.value.idFase)?.label || '—';
+    return this.getItemNombre(this.selectedFaseId, this.fases);
   }
 
   get siteNombre(): string {
-    const site = this.sites.find(s => s.id === this.form.value.idSite);
-    return site ? `${site.label} ${site.adicional || ''}`.trim() : '—';
+    const item = this.sites.find(s => s.id === this.selectedSiteId);
+    if (!item) return '';
+    
+    if (item.label && item.label.trim() !== '') {
+      const adicional = item.adicional?.trim();
+      return adicional ? `${item.label} ${adicional}` : item.label;
+    }
+    if (item.adicional && item.adicional.trim() !== '') return item.adicional;
+    return '—';
   }
 
   get regionNombre(): string {
-    return this.regiones.find(r => r.id === this.form.value.idRegion)?.label || '—';
+    return this.getItemNombre(this.selectedRegionId, this.regiones);
   }
 
   get fechaAperturaFormatted(): string {
@@ -182,88 +323,131 @@ export class FormOtsComponent implements OnInit, OnDestroy {
     return fecha ? new Date(fecha).toLocaleDateString('es-PE', { day: '2-digit', month: '2-digit', year: 'numeric' }) : '—';
   }
 
-  getResponsableNombre(tipo: string): string {
-    let dropdown: DropdownItem[] = [];
-    let value: number | null = null;
-
-    switch (tipo) {
-      case 'jefaturaCliente':
-        dropdown = this.jefaturasCliente;
-        value = this.form.value.idJefaturaClienteSolicitante;
-        break;
-      case 'analistaCliente':
-        dropdown = this.analistasCliente;
-        value = this.form.value.idAnalistaClienteSolicitante;
-        break;
-      case 'coordinadorTiCw':
-        dropdown = this.coordinadoresTiCw;
-        value = this.form.value.idCoordinadorTiCw;
-        break;
-      case 'jefaturaResponsable':
-        dropdown = this.jefaturasResponsable;
-        value = this.form.value.idJefaturaResponsable;
-        break;
-      case 'liquidador':
-        dropdown = this.liquidadores;
-        value = this.form.value.idLiquidador;
-        break;
-      case 'ejecutante':
-        dropdown = this.ejecutantes;
-        value = this.form.value.idEjecutante;
-        break;
-      case 'analistaContable':
-        dropdown = this.analistasContable;
-        value = this.form.value.idAnalistaContable;
-        break;
-    }
-
-    return dropdown.find(item => item.id === value)?.label || '—';
-  }
-
   // Helper para acceder a los controles del formulario
   get f() {
     return this.form.controls as { [K in keyof typeof this.form.value]: AbstractControl };
   }
 
- private suscribirCambiosFormulario(): void {
-  // Cuando cambia el cliente, habilitar/deshabilitar el área
-  const clienteSub = this.form.get('idCliente')?.valueChanges.subscribe(clienteId => {
-    if (clienteId) {
-      this.cargarAreasPorCliente(Number(clienteId));
-      this.form.get('idArea')?.enable(); // ✅ CORRECTO: habilitar programáticamente
-    } else {
-      this.areas = [];
-      this.form.get('idArea')?.disable(); // ✅ CORRECTO: deshabilitar programáticamente
-      this.form.get('idArea')?.setValue(null);
-    }
-  });
+  private suscribirCambiosFormulario(): void {
+    // Suscribirse a cambios en los campos relevantes para actualizar descripción
+    const camposParaDescripcion = ['idProyecto', 'idArea', 'idSite'];
+    
+    camposParaDescripcion.forEach(campo => {
+      const control = this.form.get(campo);
+      if (control) {
+        const sub = control.valueChanges.subscribe(() => {
+          this.actualizarDescripcion();
+        });
+        this.subscriptions.push(sub);
+      }
+    });
+  }
 
-  if (clienteSub) this.subscriptions.push(clienteSub);
-}
-  private cargarDropdownsParaCreacion(): void {
-    this.loading = true;
-    const catalogSub = this.cargarTodosLosCatalogos().subscribe({
-      next: () => {
+  private patchFormValues(data: any): void {
+    this.form.patchValue(data);
+    
+    // Actualizar los IDs seleccionados
+    this.selectedClienteId = data.idCliente || null;
+    this.selectedAreaId = data.idArea || null;
+    this.selectedProyectoId = data.idProyecto || null;
+    this.selectedFaseId = data.idFase || null;
+    this.selectedSiteId = data.idSite || null;
+    this.selectedRegionId = data.idRegion || null;
+    this.selectedJefaturaClienteId = data.idJefaturaClienteSolicitante || null;
+    this.selectedAnalistaClienteId = data.idAnalistaClienteSolicitante || null;
+    this.selectedCoordinadorTiCwId = data.idCoordinadorTiCw || null;
+    this.selectedJefaturaResponsableId = data.idJefaturaResponsable || null;
+    this.selectedLiquidadorId = data.idLiquidador || null;
+    this.selectedEjecutanteId = data.idEjecutante || null;
+    this.selectedAnalistaContableId = data.idAnalistaContable || null;
+    this.selectedEstadoOTId = data.idEstadoOt || null;
+  }
+
+ private cargarDropdownsParaCreacion(): void {
+  this.loading = true;
+  
+  // Usa timeout para evitar problemas de hidratación
+  setTimeout(() => {
+    const catalogSub = forkJoin({
+      clientes: this.dropdownService.getClientes(),
+      proyectos: this.dropdownService.getProyectos(),
+      fases: this.dropdownService.getFases(),
+      sites: this.dropdownService.getSites(),
+      regiones: this.dropdownService.getRegiones()
+    }).subscribe({
+      next: (data) => {
+        this.clientes = data.clientes || [];
+        this.proyectos = data.proyectos || [];
+        this.fases = data.fases || [];
+        this.sites = data.sites || [];
+        this.regiones = data.regiones || [];
+        
         this.loading = false;
-        // Forzar detección de cambios después de cargar
+        
+        // Forzar detección de cambios
+        this.cdr.detectChanges();
+        
         setTimeout(() => {
           this.actualizarDescripcion();
         }, 100);
+        
+        // Cargar el resto en segundo plano
+        this.cargarDropdownsResponsables();
       },
       error: (error) => {
-        console.error('Error al cargar catálogos:', error);
+        console.error('Error al cargar catálogos iniciales:', error);
+        this.loading = false;
+        this.cdr.detectChanges();
         Swal.fire({
           icon: 'error',
           title: 'Error',
           text: 'No se pudieron cargar los catálogos necesarios',
           confirmButtonColor: '#dc3545'
         });
-        this.loading = false;
       }
     });
 
     this.subscriptions.push(catalogSub);
-  }
+  }, 100);
+}
+
+private cargarDropdownsResponsables(): void {
+  // Cargar en segundo plano con delay
+  setTimeout(() => {
+    const responsablesSub = forkJoin({
+      jefaturasCliente: this.dropdownService.getJefaturasClienteSolicitante(),
+      analistasCliente: this.dropdownService.getAnalistasClienteSolicitante(),
+      coordinadoresTiCw: this.dropdownService.getCoordinadoresTiCw(),
+      jefaturasResp: this.dropdownService.getJefaturasResponsable(),
+      liquidadores: this.dropdownService.getLiquidador(),
+      ejecutantes: this.dropdownService.getEjecutantes(),
+      analistasCont: this.dropdownService.getAnalistasContable(),
+      estadoOt: this.dropdownService.getEstadoOt()
+    }).pipe(
+      catchError(error => {
+        console.warn('Error al cargar dropdowns de responsables:', error);
+        return of({
+          jefaturasCliente: [], analistasCliente: [], coordinadoresTiCw: [],
+          jefaturasResp: [], liquidadores: [], ejecutantes: [],
+          analistasCont: [], estadoOt: []
+        });
+      })
+    ).subscribe(data => {
+      this.jefaturasCliente = data.jefaturasCliente || [];
+      this.analistasCliente = data.analistasCliente || [];
+      this.coordinadoresTiCw = data.coordinadoresTiCw || [];
+      this.jefaturasResponsable = data.jefaturasResp || [];
+      this.liquidadores = data.liquidadores || [];
+      this.ejecutantes = data.ejecutantes || [];
+      this.analistasContable = data.analistasCont || [];
+      this.estadoOT = data.estadoOt || [];
+      
+      this.cdr.detectChanges();
+    });
+
+    this.subscriptions.push(responsablesSub);
+  }, 500);
+}
 
   private cargarDatosParaEdicion(id: number): void {
     this.loading = true;
@@ -272,7 +456,7 @@ export class FormOtsComponent implements OnInit, OnDestroy {
       catalogs: this.cargarTodosLosCatalogos()
     }).subscribe({
       next: ({ ot }) => {
-        this.form.patchValue(ot);
+        this.patchFormValues(ot);
         const clienteId = this.form.get('idCliente')?.value;
         if (clienteId) {
           this.cargarAreasPorCliente(clienteId);
@@ -297,87 +481,86 @@ export class FormOtsComponent implements OnInit, OnDestroy {
 
     this.subscriptions.push(editSub);
   }
-private cargarTodosLosCatalogos() {
-  return forkJoin({
-    clientes: this.dropdownService.getClientes(),
-    proyectos: this.dropdownService.getProyectos(),
-    fases: this.dropdownService.getFases(),
-    sites: this.dropdownService.getSites(),
-    regiones: this.dropdownService.getRegiones(),
-    jefaturasCliente: this.dropdownService.getJefaturasClienteSolicitante(),
-    analistasCliente: this.dropdownService.getAnalistasClienteSolicitante(),
-    coordinadoresTiCw: this.dropdownService.getCoordinadoresTiCw(),
-    jefaturasResp: this.dropdownService.getJefaturasResponsable(),
-    liquidadores: this.dropdownService.getLiquidador(),
-    ejecutantes: this.dropdownService.getEjecutantes(),
-    analistasCont: this.dropdownService.getAnalistasContable(),
-    estadoOt: this.dropdownService.getEstadoOt()
-  }).pipe(
-    tap(data => {
-      console.log('✅ Datos recibidos del backend:', data);
 
-      // Asignar directamente SIN adaptar si ya vienen en formato correcto
-      this.clientes = data.clientes || [];
-      this.proyectos = data.proyectos || [];
-      this.fases = data.fases || [];
-      this.sites = data.sites || [];
-      this.regiones = data.regiones || [];
-      this.jefaturasCliente = data.jefaturasCliente || [];
-      this.analistasCliente = data.analistasCliente || [];
-      this.coordinadoresTiCw = data.coordinadoresTiCw || [];
-      this.jefaturasResponsable = data.jefaturasResp || [];
-      this.liquidadores = data.liquidadores || [];
-      this.ejecutantes = data.ejecutantes || [];
-      this.analistasContable = data.analistasCont || [];
-      this.estadoOT = data.estadoOt || [];
-
-      console.log('📊 Total de clientes:', this.clientes.length);
-      console.log('📊 Primer cliente:', this.clientes[0]);
-    }),
-    catchError(error => {
-      console.error('❌ Error al cargar catálogos:', error);
-      return of({
-        clientes: [], proyectos: [], fases: [], sites: [], regiones: [],
-        jefaturasCliente: [], analistasCliente: [], coordinadoresTiCw: [],
-        jefaturasResp: [], liquidadores: [], ejecutantes: [],
-        analistasCont: [], estadoOt: []
-      });
-    })
-  );
-}
-  private cargarAreasPorCliente(idCliente: number): void {
-    const areasSub = this.dropdownService.getAreasByCliente(idCliente).subscribe({
-      next: areas => {
-        this.areas = areas || [];
-        const areaActual = this.form.get('idArea')?.value;
-        if (areaActual && !this.areas.some(a => a.id === areaActual)) {
-          this.form.get('idArea')?.setValue(null);
-        }
-      },
-      error: () => {
-        this.areas = [];
-        Swal.fire({
-          icon: 'warning',
-          title: 'Atención',
-          text: 'No se pudieron cargar las áreas del cliente',
-          confirmButtonColor: '#ffc107'
+  private cargarTodosLosCatalogos() {
+    return forkJoin({
+      clientes: this.dropdownService.getClientes(),
+      proyectos: this.dropdownService.getProyectos(),
+      fases: this.dropdownService.getFases(),
+      sites: this.dropdownService.getSites(),
+      regiones: this.dropdownService.getRegiones(),
+      jefaturasCliente: this.dropdownService.getJefaturasClienteSolicitante(),
+      analistasCliente: this.dropdownService.getAnalistasClienteSolicitante(),
+      coordinadoresTiCw: this.dropdownService.getCoordinadoresTiCw(),
+      jefaturasResp: this.dropdownService.getJefaturasResponsable(),
+      liquidadores: this.dropdownService.getLiquidador(),
+      ejecutantes: this.dropdownService.getEjecutantes(),
+      analistasCont: this.dropdownService.getAnalistasContable(),
+      estadoOt: this.dropdownService.getEstadoOt()
+    }).pipe(
+      tap(data => {
+        this.clientes = data.clientes || [];
+        this.proyectos = data.proyectos || [];
+        this.fases = data.fases || [];
+        this.sites = data.sites || [];
+        this.regiones = data.regiones || [];
+        this.jefaturasCliente = data.jefaturasCliente || [];
+        this.analistasCliente = data.analistasCliente || [];
+        this.coordinadoresTiCw = data.coordinadoresTiCw || [];
+        this.jefaturasResponsable = data.jefaturasResp || [];
+        this.liquidadores = data.liquidadores || [];
+        this.ejecutantes = data.ejecutantes || [];
+        this.analistasContable = data.analistasCont || [];
+        this.estadoOT = data.estadoOt || [];
+      }),
+      catchError(error => {
+        console.error('Error al cargar catálogos:', error);
+        return of({
+          clientes: [], proyectos: [], fases: [], sites: [], regiones: [],
+          jefaturasCliente: [], analistasCliente: [], coordinadoresTiCw: [],
+          jefaturasResp: [], liquidadores: [], ejecutantes: [],
+          analistasCont: [], estadoOt: []
         });
-      }
-    });
-
-    this.subscriptions.push(areasSub);
+      })
+    );
   }
 
+ private cargarAreasPorCliente(idCliente: number): void {
+  this.loadingAreas = true;
+  const areasSub = this.dropdownService.getAreasByCliente(idCliente).subscribe({
+    next: areas => {
+      this.areas = areas || [];
+      this.form.get('idArea')?.enable(); // Usa enable() en lugar de habilitar en el HTML
+      
+      // Si hay un área seleccionada previamente...
+      if (this.selectedAreaId && this.areas.some(a => a.id === this.selectedAreaId)) {
+        this.form.get('idArea')?.setValue(this.selectedAreaId);
+      }
+      this.loadingAreas = false;
+      this.cdr.detectChanges();
+    },
+    error: () => {
+      this.areas = [];
+      this.loadingAreas = false;
+      this.cdr.detectChanges();
+      Swal.fire({
+        icon: 'warning',
+        title: 'Atención',
+        text: 'No se pudieron cargar las áreas del cliente',
+        confirmButtonColor: '#ffc107'
+      });
+    }
+  });
+
+  this.subscriptions.push(areasSub);
+}
+
   private actualizarDescripcion(): void {
-    if (this.isEditMode) return;
+    if (this.isEditMode || this.isViewMode) return;
 
-    const v = this.form.getRawValue();
-
-    const proyecto = this.proyectos.find(p => p.id === Number(v.idProyecto))?.label || '';
-    const area = this.areas.find(a => a.id === Number(v.idArea))?.label || '';
-    const site = this.sites.find(s => s.id === Number(v.idSite));
-    const siteNombre = site?.label || '';
-    const siteDescripcion = site?.adicional || '';
+    const proyecto = this.proyectoNombre;
+    const area = this.areaNombre;
+    const site = this.siteNombre;
 
     const normalize = (str: string) =>
       str
@@ -388,18 +571,19 @@ private cargarTodosLosCatalogos() {
     const partes = [
       normalize(proyecto),
       normalize(area),
-      normalize(siteNombre),
-      normalize(siteDescripcion)
-    ].filter(Boolean);
+      normalize(site)
+    ].filter(part => part && part.length > 0);
 
-    const desc = partes.join('_') || 'OT SIN DESCRIPCION AUTOMATICA';
+    const desc = partes.join('_').toUpperCase() || 'OT SIN DESCRIPCION AUTOMATICA';
 
     this.form.get('descripcion')?.setValue(desc);
   }
 
-  // Validar paso 1 antes de continuar
+  // Validar paso 1 - CORREGIDO: Solo valida campos del paso 1
   validarPaso1(): boolean {
     this.submitted = true;
+    
+    // Solo los controles del paso 1
     const controlesPaso1 = [
       'idCliente',
       'idArea',
@@ -407,26 +591,28 @@ private cargarTodosLosCatalogos() {
       'idFase',
       'idSite',
       'idRegion',
-      'fechaApertura'
+      'fechaApertura',
+      'descripcion'
     ];
 
-    // Marcar todos los controles como tocados
+    // Marcar solo estos controles como tocados
     controlesPaso1.forEach(control => {
-      this.f[control]?.markAsTouched();
+      if (this.f[control]) {
+        this.f[control].markAsTouched();
+      }
     });
 
-    // Verificar si hay controles inválidos
-    const invalidos = controlesPaso1.filter(control => this.f[control]?.invalid);
+    // Verificar solo estos controles
+    const invalidos = controlesPaso1.filter(control => 
+      this.f[control] && this.f[control].invalid
+    );
 
     if (invalidos.length > 0) {
-      // Encontrar el primer elemento inválido y hacer scroll
       const primerInvalido = invalidos[0];
       const elemento = document.querySelector(`[formControlName="${primerInvalido}"]`);
 
       if (elemento) {
         elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        // Agregar clase de error temporalmente
         elemento.classList.add('is-invalid');
         setTimeout(() => elemento.classList.remove('is-invalid'), 3000);
       }
@@ -440,13 +626,12 @@ private cargarTodosLosCatalogos() {
       return false;
     }
 
-    // Validar también la descripción (que se genera automáticamente)
     const descripcion = this.form.get('descripcion')?.value;
-    if (!descripcion || descripcion.trim() === '') {
+    if (!descripcion || descripcion.trim() === '' || descripcion.trim().length < 10) {
       Swal.fire({
         icon: 'warning',
         title: 'Descripción incompleta',
-        text: 'La descripción automática no se pudo generar. Verifique los campos seleccionados.',
+        text: 'La descripción debe tener al menos 10 caracteres. Verifique los campos seleccionados.',
         confirmButtonColor: '#ffc107'
       });
       return false;
@@ -455,9 +640,11 @@ private cargarTodosLosCatalogos() {
     return true;
   }
 
-  // Validar paso 2 antes de continuar
+  // Validar paso 2 - CORREGIDO: Solo valida campos del paso 2
   validarPaso2(): boolean {
     this.submitted = true;
+    
+    // Solo los controles del paso 2
     const controlesPaso2 = [
       'idJefaturaClienteSolicitante',
       'idAnalistaClienteSolicitante',
@@ -468,17 +655,21 @@ private cargarTodosLosCatalogos() {
       'idAnalistaContable'
     ];
 
-    // Si es modo edición, también validar el estado
     if (this.isEditMode) {
       controlesPaso2.push('idEstadoOt');
     }
 
-    // Marcar todos los controles como tocados
+    // Marcar solo estos controles como tocados
     controlesPaso2.forEach(control => {
-      this.f[control]?.markAsTouched();
+      if (this.f[control]) {
+        this.f[control].markAsTouched();
+      }
     });
 
-    const invalidos = controlesPaso2.filter(control => this.f[control]?.invalid);
+    // Verificar solo estos controles
+    const invalidos = controlesPaso2.filter(control => 
+      this.f[control] && this.f[control].invalid
+    );
 
     if (invalidos.length > 0) {
       const primerInvalido = invalidos[0];
@@ -486,8 +677,6 @@ private cargarTodosLosCatalogos() {
 
       if (elemento) {
         elemento.scrollIntoView({ behavior: 'smooth', block: 'center' });
-
-        // Agregar clase de error temporalmente
         elemento.classList.add('is-invalid');
         setTimeout(() => elemento.classList.remove('is-invalid'), 3000);
       }
@@ -504,30 +693,22 @@ private cargarTodosLosCatalogos() {
     return true;
   }
 
-  // Cambiar entre pasos con validación
+  // Cambiar entre pasos con validación - CORREGIDO
   cambiarPaso(paso: number): void {
-    // Validación al avanzar del paso 1 al 2
     if (paso === 2 && this.currentStep === 1) {
       if (!this.validarPaso1()) {
         return;
       }
     }
 
-    // Validación al avanzar del paso 2 al 3
     if (paso === 3 && this.currentStep === 2) {
       if (!this.validarPaso2()) {
         return;
       }
     }
 
-    // Si es retroceder, siempre permitir
-    if (paso < this.currentStep) {
-      this.currentStep = paso;
-    } else {
-      this.currentStep = paso;
-    }
+    this.currentStep = paso;
 
-    // Scroll al inicio del paso
     setTimeout(() => {
       if (this.scrollContainer) {
         this.scrollContainer.nativeElement.scrollTop = 0;
@@ -535,12 +716,11 @@ private cargarTodosLosCatalogos() {
     }, 100);
   }
 
-  // Método para enviar el formulario
+  // Método para enviar el formulario - CORREGIDO
   onSubmit(): void {
     this.submitted = true;
-    this.form.markAllAsTouched();
-
-    // Validar todos los pasos antes de enviar
+    
+    // Validar ambos pasos antes de enviar
     if (!this.validarPaso1() || !this.validarPaso2()) {
       Swal.fire({
         icon: 'warning',
@@ -564,15 +744,15 @@ private cargarTodosLosCatalogos() {
       confirmButtonColor: '#198754',
       cancelButtonColor: '#6c757d',
       confirmButtonText: this.isEditMode ? 'Guardar' : 'Crear',
-      cancelButtonText: 'Cancelar'
+      cancelButtonText: 'Cancelar',
+      reverseButtons: true
     }).then(result => {
       if (!result.isConfirmed) return;
 
       this.loading = true;
 
       const values = this.form.getRawValue();
-      console.log('📋 Valores del formulario:', values);
-
+      
       const payload: OtCreateRequest = {
         idOts: this.isEditMode ? Number(values.idOts) : undefined,
         idCliente: Number(values.idCliente),
@@ -584,7 +764,6 @@ private cargarTodosLosCatalogos() {
         descripcion: values.descripcion.trim(),
         fechaApertura: values.fechaApertura,
         idOtsAnterior: values.idOtsAnterior ? Number(values.idOtsAnterior) : null,
-        // Responsables (todos obligatorios)
         idJefaturaClienteSolicitante: Number(values.idJefaturaClienteSolicitante),
         idAnalistaClienteSolicitante: Number(values.idAnalistaClienteSolicitante),
         idCoordinadorTiCw: Number(values.idCoordinadorTiCw),
@@ -605,13 +784,12 @@ private cargarTodosLosCatalogos() {
             html: `Número OT: <strong>#${res.ot}</strong>`,
             timer: 2400,
             timerProgressBar: true,
-            showConfirmButton: false
+            showConfirmButton: false,
+            background: '#f8f9fa'
           });
 
-          // Emitir evento guardado
           this.saved.emit();
 
-          // Cerrar automáticamente después de mostrar el mensaje
           setTimeout(() => {
             this.onClose();
           }, 2500);
@@ -641,7 +819,8 @@ private cargarTodosLosCatalogos() {
         confirmButtonColor: '#dc3545',
         cancelButtonColor: '#6c757d',
         confirmButtonText: 'Sí, descartar',
-        cancelButtonText: 'Cancelar'
+        cancelButtonText: 'Cancelar',
+        reverseButtons: true
       }).then(result => {
         if (result.isConfirmed) {
           this.canceled.emit();
@@ -667,47 +846,58 @@ private cargarTodosLosCatalogos() {
       showCancelButton: true,
       confirmButtonColor: '#dc3545',
       cancelButtonText: 'Cancelar',
-      confirmButtonText: this.isEditMode ? 'Descartar' : 'Limpiar'
+      confirmButtonText: this.isEditMode ? 'Descartar' : 'Limpiar',
+      reverseButtons: true
     }).then(result => {
       if (!result.isConfirmed) return;
 
-      if (this.isEditMode) {
-        // Recargar datos originales
-        if (this.otId) {
-          this.loading = true;
-          const resetSub = this.otService.getOtParaEdicion(this.otId).subscribe({
-            next: (ot) => {
-              this.form.reset();
-              this.form.patchValue(ot);
-              this.loading = false;
-            },
-            error: () => {
-              Swal.fire({
-                icon: 'error',
-                title: 'Error',
-                text: 'No se pudieron restaurar los datos',
-                confirmButtonColor: '#dc3545'
-              });
-              this.loading = false;
-            }
-          });
-
-          this.subscriptions.push(resetSub);
-        }
+      if (this.isEditMode && this.otId) {
+        this.loading = true;
+        const resetSub = this.otService.getOtParaEdicion(this.otId).subscribe({
+          next: (ot) => {
+            this.form.reset();
+            this.patchFormValues(ot);
+            this.loading = false;
+          },
+          error: () => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Error',
+              text: 'No se pudieron restaurar los datos',
+              confirmButtonColor: '#dc3545'
+            });
+            this.loading = false;
+          }
+        });
+        this.subscriptions.push(resetSub);
       } else {
         const hoy = new Date().toISOString().split('T')[0];
         this.form.reset({
           fechaApertura: hoy
         });
+        
+        // Resetear todos los IDs seleccionados
+        this.selectedClienteId = null;
+        this.selectedAreaId = null;
+        this.selectedProyectoId = null;
+        this.selectedFaseId = null;
+        this.selectedSiteId = null;
+        this.selectedRegionId = null;
+        this.selectedJefaturaClienteId = null;
+        this.selectedAnalistaClienteId = null;
+        this.selectedCoordinadorTiCwId = null;
+        this.selectedJefaturaResponsableId = null;
+        this.selectedLiquidadorId = null;
+        this.selectedEjecutanteId = null;
+        this.selectedAnalistaContableId = null;
+        this.selectedEstadoOTId = null;
+        
         this.submitted = false;
         this.areas = [];
         this.form.get('idArea')?.disable();
         this.actualizarDescripcion();
-
-        // Volver al paso 1
         this.currentStep = 1;
 
-        // Scroll al inicio
         if (this.scrollContainer) {
           this.scrollContainer.nativeElement.scrollTop = 0;
         }
