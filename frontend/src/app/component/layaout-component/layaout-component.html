@@ -143,15 +143,6 @@
           </a>
         </li>
 
-        <!-- Reportes -->
-        <li *appPermiso="'REPORTES_VIEW'">
-          <a routerLink="/reportes" routerLinkActive="active" (click)="closeMobile()">
-            <div class="menu-icon-wrapper">
-              <i class="bi bi-graph-up"></i>
-            </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Reportes</span>
-          </a>
-        </li>
 
 
 
@@ -170,15 +161,7 @@
           </a>
         </li>
 
-        <!-- Configuración Personal -->
-        <li *appPermiso="'PERFIL_EDIT'">
-          <a routerLink="/configuracion-personal" routerLinkActive="active" (click)="closeMobile()">
-            <div class="menu-icon-wrapper">
-              <i class="bi bi-sliders"></i>
-            </div>
-            <span class="menu-label" *ngIf="!isCollapsed">Configuración</span>
-          </a>
-        </li>
+     
       </ul>
     </nav>
 

@@ -7,7 +7,7 @@ import java.time.LocalDate;
 public class OtCreateRequest {
 
     // Campos básicos
-    private Integer idOtsAnterior;
+    private Integer idOtsAnterior;  // Integer permite null
     private Integer idOts;
 
     // Campos obligatorios para importación
