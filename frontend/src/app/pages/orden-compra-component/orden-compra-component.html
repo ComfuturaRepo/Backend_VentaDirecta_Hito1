@@ -181,7 +181,7 @@
   *ngIf="showFormModal"
   [isEdit]="isEditMode"
   [ocToEdit]="selectedOc"
-  [tipoSeleccionado]="tipoSeleccionado"
+
   (onClose)="showFormModal = false"
   (onSubmitted)="onFormSubmitted($event)">
 </app-form-orden-compra-component>
@@ -189,7 +189,7 @@
 
 <app-pagination
   [currentPage]="currentPage"
-  [totalItems]="pageData?.totalElements ?? 0"
+  
   [totalPages]="totalPages"
   [pageSize]="pageSize"
   (pageChange)="irAPagina($event)"

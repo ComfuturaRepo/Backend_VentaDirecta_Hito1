@@ -2,20 +2,13 @@ package com.backend.comfutura.controller;
 
 import com.backend.comfutura.dto.request.OrdenCompraRequestDTO;
 import com.backend.comfutura.dto.response.OrdenCompraResponseDTO;
-import com.backend.comfutura.dto.response.OcDetalleResponseDTO;
-import com.backend.comfutura.model.Empresa;
-import com.backend.comfutura.service.OcDetalleService;
 import com.backend.comfutura.service.OrdenCompraService;
-import com.backend.comfutura.service.EmpresaService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.charset.StandardCharsets;
-import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.util.List;
 
 @RestController
 @RequestMapping("/api/ordenes-compra")
@@ -23,18 +16,11 @@ import java.util.List;
 public class OrdenCompraController {
 
     private final OrdenCompraService ordenCompraService;
-    private final OcDetalleService ocDetalleService;
-    private final EmpresaService empresaService;
 
     /* ================= CREAR OC ================= */
     @PostMapping
     public ResponseEntity<OrdenCompraResponseDTO> crear(@RequestBody OrdenCompraRequestDTO dto) {
         OrdenCompraResponseDTO oc = ordenCompraService.guardar(null, dto);
-
-        if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {
-            ocDetalleService.guardarDetalles(oc.getIdOc(), dto.getDetalles());
-        }
-
         return ResponseEntity.ok(oc);
     }
 
@@ -45,11 +31,6 @@ public class OrdenCompraController {
             @RequestBody OrdenCompraRequestDTO dto
     ) {
         OrdenCompraResponseDTO oc = ordenCompraService.guardar(idOc, dto);
-
-        if (dto.getDetalles() != null) {
-            ocDetalleService.guardarDetalles(idOc, dto.getDetalles());
-        }
-
         return ResponseEntity.ok(oc);
     }
 
