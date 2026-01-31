@@ -51,7 +51,6 @@ INSERT INTO cliente (razon_social, ruc) VALUES
                                             ('SOLUCIONES TECNOLOGICAS LATINOAMERICA S.A.C.', '20600726219'),
                                             ('SUDCOM GROUP S.A.C.', '20603078986'),
                                             ('COMFUTURA', '20516285517'),
-                                            ('AMERICA MOVIL PERU S.A.C.', '20467534026'),
                                             ('ENTEL PERU S.A', '20492917011');
 
 -- 3. Niveles

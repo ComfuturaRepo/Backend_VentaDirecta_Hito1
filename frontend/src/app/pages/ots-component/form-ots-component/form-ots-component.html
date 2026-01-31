@@ -1,834 +1,684 @@
-<div class="form-ots-container bg-white min-vh-100">
+<div class="form-ots-container bg-white min-vh-100 position-relative">
   <!-- Loading -->
   <div *ngIf="loading" class="loading-overlay d-flex align-items-center justify-content-center">
     <div class="text-center">
       <div class="spinner-grow text-primary" style="width: 3.5rem; height: 3.5rem;" role="status">
         <span class="visually-hidden">Cargando...</span>
       </div>
-      <h5 class="mt-4 text-primary fw-semibold">
-        {{ isEditMode ? 'Cargando datos de la OT...' : 'Cargando formulario...' }}
+      <h5 class="mt-4 text-primary fw-bold">
+        {{ isEditMode ? 'Cargando datos de la OT...' : 'Inicializando formulario...' }}
       </h5>
+      <p class="text-muted mt-2">
+        <i class="bi bi-hourglass-split me-1"></i>
+        Por favor espere un momento
+      </p>
     </div>
   </div>
 
   <!-- Formulario principal -->
   <ng-container *ngIf="!loading">
-    <div class="form-header bg-primary text-white p-4">
-      <div class="d-flex align-items-center justify-content-between mb-3">
-        <div class="d-flex align-items-center gap-3">
-          <div class="header-icon bg-white text-primary rounded-circle p-3 shadow-sm">
-            <i class="bi bi-file-earmark-text fs-2"></i>
+    <!-- Header con gradiente y sombra -->
+    <div class="form-header bg-gradient-primary text-white p-4 pb-3 shadow-sm">
+      <div class="container-fluid">
+        <div class="d-flex align-items-center justify-content-between mb-3">
+          <div class="d-flex align-items-center gap-3">
+            <div class="header-icon bg-white text-primary rounded-circle p-3 shadow-lg">
+              <i class="bi bi-clipboard2-data fs-2"></i>
+            </div>
+            <div>
+              <h3 class="mb-1 fw-bold">
+                {{ isEditMode ? 'Editar Orden de Trabajo' : 'Nueva Orden de Trabajo' }}
+                <span *ngIf="isEditMode && form.value.idOts" class="badge bg-light text-primary ms-2 fs-6 px-3 py-1">
+                  OT #{{ form.value.idOts }}
+                </span>
+              </h3>
+              <p class="mb-0 opacity-75 small">
+                <i class="bi bi-info-circle me-1"></i>
+                {{ isEditMode ? 'Modifique los datos necesarios y guarde los cambios' : 'Complete los datos requeridos paso a paso' }}
+              </p>
+            </div>
           </div>
-          <div>
-            <h3 class="mb-1 fw-bold">
-              {{ isEditMode ? 'Editar Orden de Trabajo' : 'Nueva Orden de Trabajo' }}
-              <span *ngIf="isEditMode && form.value.idOts" class="badge bg-light text-primary ms-2 fs-6">
-                #{{ form.value.idOts }}
-              </span>
-            </h3>
-            <p class="mb-0 opacity-75">
-              {{ isEditMode ? 'Modifique los datos necesarios' : 'Complete todos los campos obligatorios' }}
-            </p>
-          </div>
+
+          <!-- Botón cerrar -->
+          <button type="button" class="btn-close btn-close-white opacity-75 btn-close-lg"
+                  (click)="onCancel()" aria-label="Cerrar" title="Cerrar formulario">
+          </button>
         </div>
 
-        <!-- Botón cerrar -->
-        <button type="button" class="btn-close btn-close-white opacity-75"
-                (click)="onCancel()" aria-label="Cerrar">
-        </button>
-      </div>
-
-      <!-- Usuario logueado -->
-      <div class="user-info small bg-primary-dark rounded-pill px-3 py-1 d-inline-flex align-items-center gap-2">
-        <i class="bi bi-person-circle"></i>
-        <span>{{ usernameLogueado }}</span>
-        <span *ngIf="trabajadorIdLogueado" class="opacity-75">
-          (ID: {{ trabajadorIdLogueado }})
-        </span>
+        <!-- Usuario logueado y modo -->
+        <div class="d-flex align-items-center justify-content-between mt-3">
+          <div class="user-info bg-primary-light rounded-pill px-3 py-1 d-inline-flex align-items-center gap-2 small">
+            <i class="bi bi-person-check-fill"></i>
+            <span class="fw-medium">{{ usernameLogueado }}</span>
+            <span *ngIf="trabajadorIdLogueado" class="opacity-75">
+              (ID: {{ trabajadorIdLogueado }})
+            </span>
+          </div>
+          
+          <div class="mode-badge">
+            <span class="badge" [ngClass]="{
+              'bg-warning': mode === 'edit',
+              'bg-info': mode === 'create',
+              'bg-secondary': isViewMode
+            }">
+              <i class="bi me-1" [ngClass]="{
+                'bi-pencil-square': mode === 'edit',
+                'bi-plus-circle': mode === 'create',
+                'bi-eye': isViewMode
+              }"></i>
+              {{ isViewMode ? 'Solo Lectura' : (mode === 'edit' ? 'Edición' : 'Creación') }}
+            </span>
+          </div>
+        </div>
       </div>
     </div>
 
-    <!-- Steps Navigation -->
-    <div class="steps-navigation bg-light px-4 py-3 border-bottom">
-      <div class="d-flex justify-content-center gap-2">
-        <button type="button" class="step-btn rounded-pill px-4 py-2 border-0 fw-medium"
-                [class.active]="currentStep === 1"
-                [class.completed]="currentStep > 1"
-                (click)="cambiarPaso(1)">
-          <i class="bi bi-1-circle me-2"></i>
-          Información Principal
-        </button>
-        <div class="step-divider d-flex align-items-center px-2">
-          <i class="bi bi-chevron-right text-muted"></i>
+    <!-- Steps Navigation Mejorada -->
+    <div class="steps-navigation bg-white px-4 py-3 border-bottom shadow-sm">
+      <div class="container-fluid">
+        <div class="d-flex justify-content-center align-items-center">
+          <div class="step-item" [class.active]="currentStep === 1" [class.completed]="currentStep > 1">
+            <button type="button" class="step-btn btn p-0 border-0 bg-transparent"
+                    (click)="cambiarPaso(1)" [disabled]="isViewMode">
+              <div class="step-circle d-flex align-items-center justify-content-center">
+                <span class="step-number">{{ currentStep > 1 ? '✓' : '1' }}</span>
+              </div>
+              <span class="step-label mt-2">Información<br>Principal</span>
+            </button>
+          </div>
+          
+          <div class="step-connector" [class.active]="currentStep > 1"></div>
+          
+          <div class="step-item" [class.active]="currentStep === 2" [class.completed]="currentStep > 2">
+            <button type="button" class="step-btn btn p-0 border-0 bg-transparent"
+                    (click)="cambiarPaso(2)" [disabled]="currentStep < 2 || isViewMode">
+              <div class="step-circle d-flex align-items-center justify-content-center">
+                <span class="step-number">{{ currentStep > 2 ? '✓' : '2' }}</span>
+              </div>
+              <span class="step-label mt-2">Responsables<br>y Contactos</span>
+            </button>
+          </div>
+          
+          <div class="step-connector" [class.active]="currentStep > 2"></div>
+          
+          <div class="step-item" [class.active]="currentStep === 3">
+            <button type="button" class="step-btn btn p-0 border-0 bg-transparent"
+                    (click)="cambiarPaso(3)" [disabled]="currentStep < 3 || isViewMode">
+              <div class="step-circle d-flex align-items-center justify-content-center">
+                <span class="step-number">3</span>
+              </div>
+              <span class="step-label mt-2">Revisar y<br>Confirmar</span>
+            </button>
+          </div>
         </div>
-        <button type="button" class="step-btn rounded-pill px-4 py-2 border-0 fw-medium"
-                [class.active]="currentStep === 2"
-                [class.completed]="currentStep > 2"
-                (click)="cambiarPaso(2)">
-          <i class="bi bi-2-circle me-2"></i>
-          Responsables
-        </button>
-        <div class="step-divider d-flex align-items-center px-2">
-          <i class="bi bi-chevron-right text-muted"></i>
-        </div>
-        <button type="button" class="step-btn rounded-pill px-4 py-2 border-0 fw-medium"
-                [class.active]="currentStep === 3"
-                (click)="cambiarPaso(3)">
-          <i class="bi bi-3-circle me-2"></i>
-          Confirmar
-        </button>
       </div>
     </div>
 
-    <!-- Contenido del formulario con scroll -->
+    <!-- Contenido del formulario -->
     <div class="form-content-scrollable" #scrollContainer>
-      <div class="p-4">
+      <div class="container-fluid py-4">
         <form [formGroup]="form" (ngSubmit)="onSubmit()" novalidate>
           <!-- Paso 1: Información Principal -->
           <div *ngIf="currentStep === 1" class="step-content animate__animated animate__fadeIn">
-            <h5 class="step-title mb-4 pb-2 border-bottom">
-              <i class="bi bi-card-checklist text-primary me-2"></i>
-              Información Principal de la OT
-              <span class="badge bg-primary-subtle text-primary ms-2 fs-7">Todos obligatorios</span>
-            </h5>
+            <div class="step-header mb-4">
+              <h4 class="step-title text-primary fw-bold mb-2">
+                <i class="bi bi-file-earmark-text me-2"></i>
+                Información Principal de la OT
+              </h4>
+              <p class="text-muted mb-0">
+                Complete la información básica de la Orden de Trabajo. Todos los campos marcados con <span class="text-danger">*</span> son obligatorios.
+              </p>
+            </div>
 
-            <div class="row g-4">
+            <div class="row g-3">
               <!-- Cliente -->
-              <div class="col-md-6">
-                <div class="form-group" [class.has-error]="submitted && f['idCliente'].invalid">
-                  <label class="form-label fw-medium">
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="form-floating" [class.has-error]="submitted && f['idCliente'].invalid">
+                  <app-ngselect-dropdown
+                    [items]="clientes"
+                    [placeholder]="'Seleccione cliente'"
+                    [loading]="loadingClientes"
+                    [multiple]="false"
+                    [isInvalid]="submitted && f['idCliente'].invalid"
+                    (selectionChange)="onClienteChange($event)"
+                    id="clienteSelect">
+                  </app-ngselect-dropdown>
+                  <label for="clienteSelect" class="fw-medium">
+                    <i class="bi bi-building me-1"></i>
                     Cliente <span class="text-danger">*</span>
                   </label>
-                  <ng-select
-                    [items]="clientes"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione cliente'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idCliente"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="onClienteChange($event)"
-                    [loading]="loading"
-                    [class.is-invalid]="submitted && f['idCliente'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
-                      </div>
-                    </ng-template>
-
-                    <ng-template ng-notfound-tmp>
-                      <div class="text-center p-2">
-                        <i class="bi bi-search text-muted"></i>
-                        <p class="mb-0">No se encontraron clientes</p>
-                      </div>
-                    </ng-template>
-
-                  </ng-select>
-                  <div *ngIf="submitted && f['idCliente'].invalid" class="invalid-feedback d-block">
+                  <div *ngIf="submitted && f['idCliente'].invalid" class="invalid-feedback d-block mt-1">
+                    <i class="bi bi-exclamation-circle me-1"></i>
                     Debe seleccionar un cliente
                   </div>
                 </div>
               </div>
 
               <!-- Área -->
-              <div class="col-md-6">
-                <div class="form-group" [class.has-error]="submitted && f['idArea'].invalid">
-                  <label class="form-label fw-medium">
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="form-floating" [class.has-error]="submitted && f['idArea'].invalid">
+                  <app-ngselect-dropdown
+                    [items]="areas"
+                    [placeholder]="selectedClienteId ? 'Seleccione área' : 'Primero seleccione cliente'"
+                    [loading]="loadingAreas"
+                    [multiple]="false"
+                    [isInvalid]="submitted && f['idArea'].invalid"
+                    (selectionChange)="onAreaChange($event)"
+                    [disabled]="!selectedClienteId "
+                    id="areaSelect">
+                  </app-ngselect-dropdown>
+                  <label for="areaSelect" class="fw-medium">
+                    <i class="bi bi-diagram-3 me-1"></i>
                     Área <span class="text-danger">*</span>
                   </label>
-                  <ng-select
-                    [items]="areas"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione área'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idArea"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idArea')?.setValue($event?.id)"
-                    [disabled]="!form.get('idCliente')?.value || loading"
-                    [class.is-invalid]="submitted && f['idArea'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
-                      </div>
-                    </ng-template>
-
-                  </ng-select>
-                  <div *ngIf="!form.get('idCliente')?.value" class="text-muted small mt-1">
+                  <div *ngIf="!selectedClienteId" class="form-text text-warning">
                     <i class="bi bi-info-circle me-1"></i>
-                    Seleccione un cliente primero
+                    Primero seleccione un cliente
                   </div>
-                  <div *ngIf="submitted && f['idArea'].invalid" class="invalid-feedback d-block">
+                  <div *ngIf="submitted && f['idArea'].invalid" class="invalid-feedback d-block mt-1">
+                    <i class="bi bi-exclamation-circle me-1"></i>
                     Debe seleccionar un área
                   </div>
                 </div>
               </div>
 
               <!-- Fecha Apertura -->
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label class="form-label fw-medium">
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="form-floating">
+                  <input type="date" class="form-control" formControlName="fechaApertura"
+                         [class.is-invalid]="submitted && f['fechaApertura'].invalid"
+                         id="fechaApertura">
+                  <label for="fechaApertura" class="fw-medium">
+                    <i class="bi bi-calendar-date me-1"></i>
                     Fecha de Apertura <span class="text-danger">*</span>
                   </label>
-                  <input type="date" class="form-control form-control-lg" formControlName="fechaApertura"
-                         [class.is-invalid]="submitted && f['fechaApertura'].invalid">
                   <div *ngIf="submitted && f['fechaApertura'].invalid" class="invalid-feedback">
-                    Fecha requerida
+                    <i class="bi bi-exclamation-circle me-1"></i>
+                    La fecha es requerida
                   </div>
                 </div>
               </div>
 
               <!-- Proyecto -->
-              <div class="col-md-6">
-                <div class="form-group" [class.has-error]="submitted && f['idProyecto'].invalid">
-                  <label class="form-label fw-medium">
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="form-floating" [class.has-error]="submitted && f['idProyecto'].invalid">
+                  <app-ngselect-dropdown
+                    [items]="proyectos"
+                    [placeholder]="'Seleccione proyecto'"
+                    [loading]="loadingProyectos"
+                    [multiple]="false"
+                    [isInvalid]="submitted && f['idProyecto'].invalid"
+                    (selectionChange)="onProyectoChange($event)"
+                    id="proyectoSelect">
+                  </app-ngselect-dropdown>
+                  <label for="proyectoSelect" class="fw-medium">
+                    <i class="bi bi-kanban me-1"></i>
                     Proyecto <span class="text-danger">*</span>
                   </label>
-                  <ng-select
-                    [items]="proyectos"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione proyecto'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idProyecto"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idProyecto')?.setValue($event?.id)"
-                    [class.is-invalid]="submitted && f['idProyecto'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
-                      </div>
-                    </ng-template>
-
-                  </ng-select>
-                  <div *ngIf="submitted && f['idProyecto'].invalid" class="invalid-feedback d-block">
+                  <div *ngIf="submitted && f['idProyecto'].invalid" class="invalid-feedback d-block mt-1">
+                    <i class="bi bi-exclamation-circle me-1"></i>
                     Debe seleccionar un proyecto
                   </div>
                 </div>
               </div>
 
               <!-- Fase -->
-              <div class="col-md-6">
-                <div class="form-group" [class.has-error]="submitted && f['idFase'].invalid">
-                  <label class="form-label fw-medium">
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="form-floating" [class.has-error]="submitted && f['idFase'].invalid">
+                  <app-ngselect-dropdown
+                    [items]="fases"
+                    [placeholder]="'Seleccione fase'"
+                    [loading]="loadingFases"
+                    [multiple]="false"
+                    [isInvalid]="submitted && f['idFase'].invalid"
+                    (selectionChange)="onFaseChange($event)"
+                    id="faseSelect">
+                  </app-ngselect-dropdown>
+                  <label for="faseSelect" class="fw-medium">
+                    <i class="bi bi-list-stars me-1"></i>
                     Fase <span class="text-danger">*</span>
                   </label>
-                  <ng-select
-                    [items]="fases"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione fase'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idFase"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idFase')?.setValue($event?.id)"
-                    [class.is-invalid]="submitted && f['idFase'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
-                      </div>
-                    </ng-template>
-
-                  </ng-select>
-                  <div *ngIf="submitted && f['idFase'].invalid" class="invalid-feedback d-block">
+                  <div *ngIf="submitted && f['idFase'].invalid" class="invalid-feedback d-block mt-1">
+                    <i class="bi bi-exclamation-circle me-1"></i>
                     Debe seleccionar una fase
                   </div>
                 </div>
               </div>
 
               <!-- Site -->
-              <div class="col-md-6">
-                <div class="form-group" [class.has-error]="submitted && f['idSite'].invalid">
-                  <label class="form-label fw-medium">
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="form-floating" [class.has-error]="submitted && f['idSite'].invalid">
+                  <app-ngselect-dropdown
+                    [items]="sites"
+                    [placeholder]="'Seleccione site'"
+                    [loading]="loadingSites"
+                    [multiple]="false"
+                    [isInvalid]="submitted && f['idSite'].invalid"
+                    (selectionChange)="onSiteChange($event)"
+                    id="siteSelect">
+                  </app-ngselect-dropdown>
+                  <label for="siteSelect" class="fw-medium">
+                    <i class="bi bi-geo-alt me-1"></i>
                     Site <span class="text-danger">*</span>
                   </label>
-                  <ng-select
-                    [items]="sites"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione site'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idSite"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idSite')?.setValue($event?.id)"
-                    [class.is-invalid]="submitted && f['idSite'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
-                      </div>
-                    </ng-template>
-
-                  </ng-select>
-                  <div *ngIf="submitted && f['idSite'].invalid" class="invalid-feedback d-block">
+                  <div *ngIf="submitted && f['idSite'].invalid" class="invalid-feedback d-block mt-1">
+                    <i class="bi bi-exclamation-circle me-1"></i>
                     Debe seleccionar un site
                   </div>
                 </div>
               </div>
 
               <!-- Región -->
-              <div class="col-md-6">
-                <div class="form-group" [class.has-error]="submitted && f['idRegion'].invalid">
-                  <label class="form-label fw-medium">
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="form-floating" [class.has-error]="submitted && f['idRegion'].invalid">
+                  <app-ngselect-dropdown
+                    [items]="regiones"
+                    [placeholder]="'Seleccione región'"
+                    [loading]="loadingRegiones"
+                    [multiple]="false"
+                    [isInvalid]="submitted && f['idRegion'].invalid"
+                    (selectionChange)="onRegionChange($event)"
+                    id="regionSelect">
+                  </app-ngselect-dropdown>
+                  <label for="regionSelect" class="fw-medium">
+                    <i class="bi bi-globe-americas me-1"></i>
                     Región <span class="text-danger">*</span>
                   </label>
-                  <ng-select
-                    [items]="regiones"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione región'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idRegion"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idRegion')?.setValue($event?.id)"
-                    [class.is-invalid]="submitted && f['idRegion'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
-                      </div>
-                    </ng-template>
-
-                  </ng-select>
-                  <div *ngIf="submitted && f['idRegion'].invalid" class="invalid-feedback d-block">
+                  <div *ngIf="submitted && f['idRegion'].invalid" class="invalid-feedback d-block mt-1">
+                    <i class="bi bi-exclamation-circle me-1"></i>
                     Debe seleccionar una región
                   </div>
                 </div>
               </div>
 
               <!-- OT Anterior -->
-              <div class="col-md-6">
-                <div class="form-group">
-                  <label class="form-label fw-medium">
+              <div class="col-12 col-md-6 col-lg-4">
+                <div class="form-floating">
+                  <input type="number" class="form-control" formControlName="idOtsAnterior"
+                         min="1" placeholder="Número de OT anterior"
+                         id="otAnterior">
+                  <label for="otAnterior" class="fw-medium">
+                    <i class="bi bi-arrow-return-left me-1"></i>
                     OT Anterior
                     <span class="badge bg-secondary-subtle text-secondary ms-1 fs-7">Opcional</span>
                   </label>
-                  <input type="number" class="form-control form-control-lg"
-                         formControlName="idOtsAnterior"
-                         min="1"
-                         placeholder="Número de OT anterior">
-                  <small class="form-text text-muted">
-                    Número de OT previa si aplica (único campo opcional)
-                  </small>
+                  <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Número de OT previa si aplica
+                  </div>
                 </div>
               </div>
 
               <!-- Descripción -->
               <div class="col-12">
-                <div class="form-group">
-                  <label class="form-label fw-medium">
-                    Descripción <span class="text-danger">*</span>
-                    <span *ngIf="!isEditMode" class="badge bg-info-subtle text-info ms-1 fs-7">Auto-generada</span>
-                  </label>
-                  <textarea class="form-control" formControlName="descripcion" rows="3"
-                            [readonly]="!isEditMode || isViewMode"
-                            [class.bg-light]="!isEditMode || isViewMode"
-                            placeholder="Descripción automática según selección..."></textarea>
-                  <div *ngIf="submitted && f['descripcion'].invalid" class="invalid-feedback d-block">
-                    La descripción es requerida
+                <div class="card border-0 shadow-sm mt-2">
+                  <div class="card-header bg-transparent border-bottom py-3">
+                    <h6 class="mb-0 fw-bold text-primary">
+                      <i class="bi bi-card-text me-2"></i>
+                      Descripción de la OT
+                      <span *ngIf="!isEditMode" class="badge bg-info-subtle text-info ms-2">
+                        <i class="bi bi-magic me-1"></i>
+                        Auto-generada
+                      </span>
+                    </h6>
                   </div>
-                  <small *ngIf="!isEditMode" class="form-text text-info">
-                    <i class="bi bi-info-circle me-1"></i>
-                    La descripción se genera automáticamente según las selecciones realizadas
-                  </small>
+                  <div class="card-body">
+                    <div class="form-floating">
+                      <textarea class="form-control" formControlName="descripcion" rows="3"
+                                [readonly]="!isEditMode || isViewMode"
+                                [class.bg-light]="!isEditMode || isViewMode"
+                                placeholder="Descripción automática según selección..."
+                                id="descripcion"></textarea>
+                      <label for="descripcion" class="fw-medium">
+                        Descripción <span class="text-danger">*</span>
+                      </label>
+                    </div>
+                    <div *ngIf="submitted && f['descripcion'].invalid" class="invalid-feedback d-block mt-2">
+                      <i class="bi bi-exclamation-circle me-1"></i>
+                      La descripción es requerida
+                    </div>
+                    <div *ngIf="!isEditMode" class="alert alert-info border-0 bg-info-subtle mt-3 mb-0">
+                      <div class="d-flex align-items-center">
+                        <i class="bi bi-lightbulb fs-5 me-3"></i>
+                        <div>
+                          <strong>Descripción automática</strong>
+                          <p class="mb-0 small">La descripción se genera automáticamente basada en las selecciones de Proyecto, Área y Site.</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Resumen Preliminar -->
+            <div class="row mt-4" *ngIf="!isEditMode">
+              <div class="col-12">
+                <div class="card border-primary border-2">
+                  <div class="card-header bg-primary-subtle border-primary">
+                    <h6 class="mb-0 fw-bold text-primary">
+                      <i class="bi bi-eye me-2"></i>
+                      Vista Preliminar
+                    </h6>
+                  </div>
+                  <div class="card-body">
+                    <div class="row small">
+                      <div class="col-md-4 mb-2">
+                        <strong>Cliente:</strong> {{ clienteNombre || '—' }}
+                      </div>
+                      <div class="col-md-4 mb-2">
+                        <strong>Área:</strong> {{ areaNombre || '—' }}
+                      </div>
+                      <div class="col-md-4 mb-2">
+                        <strong>Proyecto:</strong> {{ proyectoNombre || '—' }}
+                      </div>
+                      <div class="col-md-4 mb-2">
+                        <strong>Site:</strong> {{ siteNombre || '—' }}
+                      </div>
+                      <div class="col-md-4 mb-2">
+                        <strong>Región:</strong> {{ regionNombre || '—' }}
+                      </div>
+                      <div class="col-md-4 mb-2">
+                        <strong>Fecha:</strong> {{ fechaAperturaFormatted || '—' }}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
 
             <!-- Botones paso 1 -->
-            <div class="step-actions mt-5 pt-4 border-top">
-              <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-outline-danger btn-lg px-4"
+            <div class="step-actions mt-4 pt-3 border-top">
+              <div class="d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-outline-danger px-4" 
                         (click)="resetForm()" [disabled]="loading || isViewMode">
-                  <i class="bi bi-x-circle me-2"></i>
-                  {{ isEditMode ? 'Cancelar' : 'Limpiar' }}
+                  <i class="bi bi-eraser me-2"></i>
+                  {{ isEditMode ? 'Cancelar Cambios' : 'Limpiar Todo' }}
                 </button>
-                <button *ngIf="!isViewMode" type="button" class="btn btn-primary btn-lg px-5"
-                        (click)="cambiarPaso(2)"
-                        [disabled]="form.invalid || loading">
-                  Continuar
-                  <i class="bi bi-arrow-right ms-2"></i>
-                </button>
+                
+                <div class="d-flex gap-2">
+                  <button type="button" class="btn btn-outline-secondary px-4"
+                          (click)="onCancel()">
+                    <i class="bi bi-x-lg me-2"></i>
+                    Cancelar
+                  </button>
+                  
+                  <button *ngIf="!isViewMode" type="button" class="btn btn-primary px-4"
+                          (click)="cambiarPaso(2)"
+                          [disabled]="!validarPaso1()">
+                    Continuar al Paso 2
+                    <i class="bi bi-arrow-right ms-2"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Paso 2: Responsables -->
           <div *ngIf="currentStep === 2" class="step-content animate__animated animate__fadeIn">
-            <h5 class="step-title mb-4 pb-2 border-bottom">
-              <i class="bi bi-person-badge text-primary me-2"></i>
-              Responsables y Contactos
-              <span class="badge bg-primary-subtle text-primary ms-2 fs-7">Todos obligatorios</span>
-            </h5>
-
-            <div class="alert alert-info border-0 bg-info-subtle mb-4">
-              <i class="bi bi-info-circle me-2"></i>
-              <strong>Todos los siguientes campos son obligatorios.</strong> Debe asignar todos los responsables para continuar.
+            <div class="step-header mb-4">
+              <h4 class="step-title text-primary fw-bold mb-2">
+                <i class="bi bi-people-fill me-2"></i>
+                Responsables y Contactos
+              </h4>
+              <p class="text-muted mb-0">
+                Asigne los responsables y contactos para esta OT. Todos los campos marcados con <span class="text-danger">*</span> son obligatorios.
+              </p>
             </div>
 
-            <div class="row g-4">
-              <!-- Columna Izquierda -->
-              <div class="col-md-6">
-                <h6 class="text-muted mb-3">
-                  <i class="bi bi-building me-2"></i>
-                  Cliente Solicitante
-                </h6>
-
-                <!-- Jefatura Cliente -->
-                <div class="form-group mb-4" [class.has-error]="submitted && f['idJefaturaClienteSolicitante'].invalid">
-                  <label class="form-label fw-medium">
-                    Jefatura Cliente <span class="text-danger">*</span>
-                  </label>
-                  <ng-select
-                    [items]="jefaturasCliente"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione jefatura cliente'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idJefaturaClienteSolicitante"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idJefaturaClienteSolicitante')?.setValue($event?.id)"
-                    (search)="onSearchJefaturaCliente($event)"
-                    [class.is-invalid]="submitted && f['idJefaturaClienteSolicitante'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
-                      </div>
-                    </ng-template>
-
-                  </ng-select>
-                  <div *ngIf="submitted && f['idJefaturaClienteSolicitante'].invalid" class="invalid-feedback d-block">
-                    Debe seleccionar una jefatura cliente
+            <div class="row g-3">
+              <!-- Columna Izquierda: Cliente Solicitante -->
+              <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-header bg-gradient-primary text-white py-3">
+                    <h6 class="mb-0 fw-bold">
+                      <i class="bi bi-building me-2"></i>
+                      Cliente Solicitante
+                    </h6>
                   </div>
-                </div>
-
-                <!-- Analista Cliente -->
-                <div class="form-group mb-4" [class.has-error]="submitted && f['idAnalistaClienteSolicitante'].invalid">
-                  <label class="form-label fw-medium">
-                    Analista Cliente <span class="text-danger">*</span>
-                  </label>
-                  <ng-select
-                    [items]="analistasCliente"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione analista cliente'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idAnalistaClienteSolicitante"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idAnalistaClienteSolicitante')?.setValue($event?.id)"
-                    (search)="onSearchAnalistaCliente($event)"
-                    [class.is-invalid]="submitted && f['idAnalistaClienteSolicitante'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
+                  <div class="card-body">
+                    <!-- Jefatura Cliente -->
+                    <div class="form-floating mb-3" [class.has-error]="submitted && f['idJefaturaClienteSolicitante'].invalid">
+                      <app-ngselect-dropdown
+                        [items]="jefaturasCliente"
+                        [placeholder]="'Seleccione jefatura cliente'"
+                        [loading]="loadingJefaturasCliente"
+                        [multiple]="false"
+                        [isInvalid]="submitted && f['idJefaturaClienteSolicitante'].invalid"
+                        (selectionChange)="onJefaturaClienteChange($event)"
+                        (searchChange)="onSearchJefaturaCliente($event)"
+                        id="jefaturaCliente">
+                      </app-ngselect-dropdown>
+                      <label for="jefaturaCliente" class="fw-medium">
+                        Jefatura Cliente <span class="text-danger">*</span>
+                      </label>
+                      <div *ngIf="submitted && f['idJefaturaClienteSolicitante'].invalid" class="invalid-feedback d-block mt-1">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Debe seleccionar una jefatura cliente
                       </div>
-                    </ng-template>
+                    </div>
 
-                  </ng-select>
-                  <div *ngIf="submitted && f['idAnalistaClienteSolicitante'].invalid" class="invalid-feedback d-block">
-                    Debe seleccionar un analista cliente
-                  </div>
-                </div>
-
-                <!-- Coordinador TI/CW -->
-                <div class="form-group mb-4" [class.has-error]="submitted && f['idCoordinadorTiCw'].invalid">
-                  <label class="form-label fw-medium">
-                    Coordinador TI/CW <span class="text-danger">*</span>
-                  </label>
-                  <ng-select
-                    [items]="coordinadoresTiCw"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione coordinador TI/CW'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idCoordinadorTiCw"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idCoordinadorTiCw')?.setValue($event?.id)"
-                    (search)="onSearchCoordinadorTiCw($event)"
-                    [class.is-invalid]="submitted && f['idCoordinadorTiCw'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
+                    <!-- Analista Cliente -->
+                    <div class="form-floating mb-3" [class.has-error]="submitted && f['idAnalistaClienteSolicitante'].invalid">
+                      <app-ngselect-dropdown
+                        [items]="analistasCliente"
+                        [placeholder]="'Seleccione analista cliente'"
+                        [loading]="loadingAnalistasCliente"
+                        [multiple]="false"
+                        [isInvalid]="submitted && f['idAnalistaClienteSolicitante'].invalid"
+                        (selectionChange)="onAnalistaClienteChange($event)"
+                        (searchChange)="onSearchAnalistaCliente($event)"
+                        id="analistaCliente">
+                      </app-ngselect-dropdown>
+                      <label for="analistaCliente" class="fw-medium">
+                        Analista Cliente <span class="text-danger">*</span>
+                      </label>
+                      <div *ngIf="submitted && f['idAnalistaClienteSolicitante'].invalid" class="invalid-feedback d-block mt-1">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Debe seleccionar un analista cliente
                       </div>
-                    </ng-template>
+                    </div>
 
-                  </ng-select>
-                  <div *ngIf="submitted && f['idCoordinadorTiCw'].invalid" class="invalid-feedback d-block">
-                    Debe seleccionar un coordinador TI/CW
+                    <!-- Coordinador TI/CW -->
+                    <div class="form-floating" [class.has-error]="submitted && f['idCoordinadorTiCw'].invalid">
+                      <app-ngselect-dropdown
+                        [items]="coordinadoresTiCw"
+                        [placeholder]="'Seleccione coordinador TI/CW'"
+                        [loading]="loadingCoordinadoresTiCw"
+                        [multiple]="false"
+                        [isInvalid]="submitted && f['idCoordinadorTiCw'].invalid"
+                        (selectionChange)="onCoordinadorTiCwChange($event)"
+                        (searchChange)="onSearchCoordinadorTiCw($event)"
+                        id="coordinadorTiCw">
+                      </app-ngselect-dropdown>
+                      <label for="coordinadorTiCw" class="fw-medium">
+                        Coordinador TI/CW <span class="text-danger">*</span>
+                      </label>
+                      <div *ngIf="submitted && f['idCoordinadorTiCw'].invalid" class="invalid-feedback d-block mt-1">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Debe seleccionar un coordinador TI/CW
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
 
-              <!-- Columna Derecha -->
-              <div class="col-md-6">
-                <h6 class="text-muted mb-3">
-                  <i class="bi bi-person-gear me-2"></i>
-                  Responsables Internos
-                </h6>
-
-                <!-- Jefatura Responsable -->
-                <div class="form-group mb-4" [class.has-error]="submitted && f['idJefaturaResponsable'].invalid">
-                  <label class="form-label fw-medium">
-                    Jefatura Responsable <span class="text-danger">*</span>
-                  </label>
-                  <ng-select
-                    [items]="jefaturasResponsable"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione jefatura responsable'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idJefaturaResponsable"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idJefaturaResponsable')?.setValue($event?.id)"
-                    (search)="onSearchJefaturaResponsable($event)"
-                    [class.is-invalid]="submitted && f['idJefaturaResponsable'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
-                      </div>
-                    </ng-template>
-
-                  </ng-select>
-                  <div *ngIf="submitted && f['idJefaturaResponsable'].invalid" class="invalid-feedback d-block">
-                    Debe seleccionar una jefatura responsable
+              <!-- Columna Derecha: Responsables Internos -->
+              <div class="col-12 col-lg-6">
+                <div class="card border-0 shadow-sm h-100">
+                  <div class="card-header bg-gradient-info text-white py-3">
+                    <h6 class="mb-0 fw-bold">
+                      <i class="bi bi-gear-fill me-2"></i>
+                      Responsables Internos
+                    </h6>
                   </div>
-                </div>
-
-                <!-- Liquidador -->
-                <div class="form-group mb-4" [class.has-error]="submitted && f['idLiquidador'].invalid">
-                  <label class="form-label fw-medium">
-                    Liquidador <span class="text-danger">*</span>
-                  </label>
-                  <ng-select
-                    [items]="liquidadores"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione liquidador'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idLiquidador"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idLiquidador')?.setValue($event?.id)"
-                    (search)="onSearchLiquidador($event)"
-                    [class.is-invalid]="submitted && f['idLiquidador'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
+                  <div class="card-body">
+                    <!-- Jefatura Responsable -->
+                    <div class="form-floating mb-3" [class.has-error]="submitted && f['idJefaturaResponsable'].invalid">
+                      <app-ngselect-dropdown
+                        [items]="jefaturasResponsable"
+                        [placeholder]="'Seleccione jefatura responsable'"
+                        [loading]="loadingJefaturasResponsable"
+                        [multiple]="false"
+                        [isInvalid]="submitted && f['idJefaturaResponsable'].invalid"
+                        (selectionChange)="onJefaturaResponsableChange($event)"
+                        (searchChange)="onSearchJefaturaResponsable($event)"
+                        id="jefaturaResponsable">
+                      </app-ngselect-dropdown>
+                      <label for="jefaturaResponsable" class="fw-medium">
+                        Jefatura Responsable <span class="text-danger">*</span>
+                      </label>
+                      <div *ngIf="submitted && f['idJefaturaResponsable'].invalid" class="invalid-feedback d-block mt-1">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Debe seleccionar una jefatura responsable
                       </div>
-                    </ng-template>
+                    </div>
 
-                  </ng-select>
-                  <div *ngIf="submitted && f['idLiquidador'].invalid" class="invalid-feedback d-block">
-                    Debe seleccionar un liquidador
-                  </div>
-                </div>
-
-                <!-- Ejecutante -->
-                <div class="form-group mb-4" [class.has-error]="submitted && f['idEjecutante'].invalid">
-                  <label class="form-label fw-medium">
-                    Ejecutante <span class="text-danger">*</span>
-                  </label>
-                  <ng-select
-                    [items]="ejecutantes"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione ejecutante'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idEjecutante"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idEjecutante')?.setValue($event?.id)"
-                    (search)="onSearchEjecutante($event)"
-                    [class.is-invalid]="submitted && f['idEjecutante'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
+                    <!-- Liquidador -->
+                    <div class="form-floating mb-3" [class.has-error]="submitted && f['idLiquidador'].invalid">
+                      <app-ngselect-dropdown
+                        [items]="liquidadores"
+                        [placeholder]="'Seleccione liquidador'"
+                        [loading]="loadingLiquidadores"
+                        [multiple]="false"
+                        [isInvalid]="submitted && f['idLiquidador'].invalid"
+                        (selectionChange)="onLiquidadorChange($event)"
+                        (searchChange)="onSearchLiquidador($event)"
+                        id="liquidador">
+                      </app-ngselect-dropdown>
+                      <label for="liquidador" class="fw-medium">
+                        Liquidador <span class="text-danger">*</span>
+                      </label>
+                      <div *ngIf="submitted && f['idLiquidador'].invalid" class="invalid-feedback d-block mt-1">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Debe seleccionar un liquidador
                       </div>
-                    </ng-template>
+                    </div>
 
-                  </ng-select>
-                  <div *ngIf="submitted && f['idEjecutante'].invalid" class="invalid-feedback d-block">
-                    Debe seleccionar un ejecutante
-                  </div>
-                </div>
-
-                <!-- Analista Contable -->
-                <div class="form-group mb-4" [class.has-error]="submitted && f['idAnalistaContable'].invalid">
-                  <label class="form-label fw-medium">
-                    Analista Contable <span class="text-danger">*</span>
-                  </label>
-                  <ng-select
-                    [items]="analistasContable"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione analista contable'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idAnalistaContable"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idAnalistaContable')?.setValue($event?.id)"
-                    (search)="onSearchAnalistaContable($event)"
-                    [class.is-invalid]="submitted && f['idAnalistaContable'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
+                    <!-- Ejecutante -->
+                    <div class="form-floating mb-3" [class.has-error]="submitted && f['idEjecutante'].invalid">
+                      <app-ngselect-dropdown
+                        [items]="ejecutantes"
+                        [placeholder]="'Seleccione ejecutante'"
+                        [loading]="loadingEjecutantes"
+                        [multiple]="false"
+                        [isInvalid]="submitted && f['idEjecutante'].invalid"
+                        (selectionChange)="onEjecutanteChange($event)"
+                        (searchChange)="onSearchEjecutante($event)"
+                        id="ejecutante">
+                      </app-ngselect-dropdown>
+                      <label for="ejecutante" class="fw-medium">
+                        Ejecutante <span class="text-danger">*</span>
+                      </label>
+                      <div *ngIf="submitted && f['idEjecutante'].invalid" class="invalid-feedback d-block mt-1">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Debe seleccionar un ejecutante
                       </div>
-                    </ng-template>
+                    </div>
 
-                  </ng-select>
-                  <div *ngIf="submitted && f['idAnalistaContable'].invalid" class="invalid-feedback d-block">
-                    Debe seleccionar un analista contable
-                  </div>
-                </div>
-
-                <!-- ESTADO OT -->
-                <div class="form-group mb-4" *ngIf="isEditMode" [class.has-error]="submitted && f['idEstadoOt'].invalid">
-                  <label class="form-label fw-medium">
-                    Estado OT <span class="text-danger">*</span>
-                  </label>
-                  <ng-select
-                    [items]="estadoOT"
-                    bindLabel="label"
-                    bindValue="id"
-                    [placeholder]="'Seleccione estado OT'"
-                    [clearable]="true"
-                    [searchable]="true"
-                    [(ngModel)]="form.value.idEstadoOt"
-                    [ngModelOptions]="{standalone: true}"
-                    (change)="form.get('idEstadoOt')?.setValue($event?.id)"
-                    (search)="onSearchEstadoOT($event)"
-                    [class.is-invalid]="submitted && f['idEstadoOt'].invalid">
-
-                    <ng-template ng-label-tmp let-item="item">
-                      <span *ngIf="item">
-                        {{ getItemDisplay(item) }}
-                      </span>
-                    </ng-template>
-
-                    <ng-template ng-option-tmp let-item="item">
-                      <div class="dropdown-option">
-                        <div class="fw-medium">
-                          {{ getItemDisplay(item) }}
-                        </div>
-                        <small *ngIf="item.adicional" class="text-muted">
-                          {{ item.adicional }}
-                        </small>
+                    <!-- Analista Contable -->
+                    <div class="form-floating mb-3" [class.has-error]="submitted && f['idAnalistaContable'].invalid">
+                      <app-ngselect-dropdown
+                        [items]="analistasContable"
+                        [placeholder]="'Seleccione analista contable'"
+                        [loading]="loadingAnalistasContable"
+                        [multiple]="false"
+                        [isInvalid]="submitted && f['idAnalistaContable'].invalid"
+                        (selectionChange)="onAnalistaContableChange($event)"
+                        (searchChange)="onSearchAnalistaContable($event)"
+                        id="analistaContable">
+                      </app-ngselect-dropdown>
+                      <label for="analistaContable" class="fw-medium">
+                        Analista Contable <span class="text-danger">*</span>
+                      </label>
+                      <div *ngIf="submitted && f['idAnalistaContable'].invalid" class="invalid-feedback d-block mt-1">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Debe seleccionar un analista contable
                       </div>
-                    </ng-template>
+                    </div>
 
-                  </ng-select>
-                  <div *ngIf="submitted && f['idEstadoOt'].invalid" class="invalid-feedback d-block">
-                    Debe seleccionar un estado OT
+                    <!-- Estado OT (solo edición) -->
+                    <div class="form-floating" *ngIf="isEditMode" [class.has-error]="submitted && f['idEstadoOt'].invalid">
+                      <app-ngselect-dropdown
+                        [items]="estadoOT"
+                        [placeholder]="'Seleccione estado OT'"
+                        [loading]="loadingEstadoOT"
+                        [multiple]="false"
+                        [isInvalid]="submitted && f['idEstadoOt'].invalid"
+                        (selectionChange)="onEstadoOTChange($event)"
+                        (searchChange)="onSearchEstadoOT($event)"
+                        id="estadoOT">
+                      </app-ngselect-dropdown>
+                      <label for="estadoOT" class="fw-medium">
+                        <i class="bi bi-flag-fill me-1"></i>
+                        Estado OT <span class="text-danger">*</span>
+                      </label>
+                      <div *ngIf="submitted && f['idEstadoOt'].invalid" class="invalid-feedback d-block mt-1">
+                        <i class="bi bi-exclamation-circle me-1"></i>
+                        Debe seleccionar un estado OT
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
 
             <!-- Botones paso 2 -->
-            <div class="step-actions mt-5 pt-4 border-top">
-              <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-outline-secondary btn-lg px-4"
+            <div class="step-actions mt-4 pt-3 border-top">
+              <div class="d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-outline-secondary px-4"
                         (click)="cambiarPaso(1)">
                   <i class="bi bi-arrow-left me-2"></i>
-                  Regresar
+                  Volver al Paso 1
                 </button>
-                <button *ngIf="!isViewMode" type="button" class="btn btn-primary btn-lg px-5"
-                        (click)="cambiarPaso(3)">
-                  Continuar
-                  <i class="bi bi-arrow-right ms-2"></i>
-                </button>
+                
+                <div class="d-flex gap-2">
+                  <button type="button" class="btn btn-outline-danger px-4"
+                          (click)="resetForm()" [disabled]="loading || isViewMode">
+                    <i class="bi bi-eraser me-2"></i>
+                    Reiniciar
+                  </button>
+                  
+                  <button *ngIf="!isViewMode" type="button" class="btn btn-primary px-4"
+                          (click)="cambiarPaso(3)"
+                          [disabled]="!validarPaso2()">
+                    Continuar al Paso 3
+                    <i class="bi bi-arrow-right ms-2"></i>
+                  </button>
+                </div>
               </div>
             </div>
           </div>
 
           <!-- Paso 3: Confirmar -->
           <div *ngIf="currentStep === 3" class="step-content animate__animated animate__fadeIn">
-            <h5 class="step-title mb-4 pb-2 border-bottom">
-              <i class="bi bi-clipboard-check text-primary me-2"></i>
-              Confirmación de Datos
-            </h5>
+            <div class="step-header mb-4">
+              <h4 class="step-title text-primary fw-bold mb-2">
+                <i class="bi bi-clipboard2-check-fill me-2"></i>
+                Confirmar y Guardar
+              </h4>
+              <p class="text-muted mb-0">
+                Revise cuidadosamente toda la información antes de {{ isEditMode ? 'guardar los cambios' : 'crear la nueva OT' }}.
+              </p>
+            </div>
 
-            <div class="alert alert-success border-0 bg-success-subtle mb-5">
+            <div class="alert alert-success border-0 bg-success-subtle mb-4">
               <div class="d-flex align-items-center">
-                <i class="bi bi-check-circle-fill text-success fs-4 me-3"></i>
+                <i class="bi bi-check-circle-fill text-success fs-3 me-3"></i>
                 <div>
-                  <h6 class="alert-heading mb-1">¡Revisión final!</h6>
-                  <p class="mb-0">Verifique que toda la información sea correcta antes de guardar.</p>
+                  <h5 class="alert-heading mb-1 fw-bold">¡Revisión final!</h5>
+                  <p class="mb-0">Verifique que toda la información sea correcta antes de proceder.</p>
                 </div>
               </div>
             </div>
 
             <!-- Resumen en tarjetas -->
-            <div class="row g-4 mb-5">
+            <div class="row g-4 mb-4">
               <!-- Información Principal -->
-              <div class="col-lg-8">
+              <div class="col-12 col-lg-8">
                 <div class="card border-0 shadow-sm h-100">
-                  <div class="card-header bg-white border-bottom">
-                    <h6 class="mb-0 fw-bold text-primary">
+                  <div class="card-header bg-gradient-primary text-white py-3">
+                    <h6 class="mb-0 fw-bold">
                       <i class="bi bi-card-checklist me-2"></i>
                       Información Principal
                     </h6>
@@ -836,47 +686,50 @@
                   <div class="card-body">
                     <div class="row">
                       <div class="col-md-6">
-                        <div class="mb-3">
+                        <div class="info-item mb-3">
                           <small class="text-muted d-block mb-1">Cliente</small>
-                          <p class="fw-medium mb-0">{{ clienteNombre || '—' }}</p>
+                          <p class="fw-bold mb-0 text-primary">{{ clienteNombre || '—' }}</p>
                         </div>
-                        <div class="mb-3">
+                        <div class="info-item mb-3">
                           <small class="text-muted d-block mb-1">Área</small>
-                          <p class="fw-medium mb-0">{{ areaNombre || '—' }}</p>
+                          <p class="fw-bold mb-0">{{ areaNombre || '—' }}</p>
                         </div>
-                        <div class="mb-3">
+                        <div class="info-item mb-3">
                           <small class="text-muted d-block mb-1">Proyecto</small>
-                          <p class="fw-medium mb-0">{{ proyectoNombre || '—' }}</p>
+                          <p class="fw-bold mb-0">{{ proyectoNombre || '—' }}</p>
                         </div>
-                        <div class="mb-3">
+                        <div class="info-item mb-3">
                           <small class="text-muted d-block mb-1">Fase</small>
-                          <p class="fw-medium mb-0">{{ faseNombre || '—' }}</p>
+                          <p class="fw-bold mb-0">{{ faseNombre || '—' }}</p>
                         </div>
                       </div>
                       <div class="col-md-6">
-                        <div class="mb-3">
+                        <div class="info-item mb-3">
                           <small class="text-muted d-block mb-1">Site</small>
-                          <p class="fw-medium mb-0">{{ siteNombre || '—' }}</p>
+                          <p class="fw-bold mb-0">{{ siteNombre || '—' }}</p>
                         </div>
-                        <div class="mb-3">
+                        <div class="info-item mb-3">
                           <small class="text-muted d-block mb-1">Región</small>
-                          <p class="fw-medium mb-0">{{ regionNombre || '—' }}</p>
+                          <p class="fw-bold mb-0">{{ regionNombre || '—' }}</p>
                         </div>
-                        <div class="mb-3">
+                        <div class="info-item mb-3">
                           <small class="text-muted d-block mb-1">Fecha Apertura</small>
-                          <p class="fw-medium mb-0">{{ fechaAperturaFormatted || '—' }}</p>
+                          <p class="fw-bold mb-0">{{ fechaAperturaFormatted || '—' }}</p>
                         </div>
-                        <div class="mb-3">
+                        <div class="info-item mb-3">
                           <small class="text-muted d-block mb-1">OT Anterior</small>
-                          <p class="fw-medium mb-0">{{ form.value.idOtsAnterior || 'No especificada (opcional)' }}</p>
+                          <p class="fw-bold mb-0">{{ form.value.idOtsAnterior || 'No especificada' }}</p>
                         </div>
                       </div>
                     </div>
 
                     <div class="mt-4">
-                      <small class="text-muted d-block mb-1">Descripción</small>
+                      <small class="text-muted d-block mb-2">Descripción</small>
                       <div class="bg-light p-3 rounded border">
-                        <p class="mb-0 text-muted">{{ form.value.descripcion || 'Descripción automática' }}</p>
+                        <p class="mb-0">
+                          <i class="bi bi-quote text-primary me-1"></i>
+                          {{ form.value.descripcion || 'Descripción automática' }}
+                        </p>
                       </div>
                     </div>
                   </div>
@@ -884,56 +737,46 @@
               </div>
 
               <!-- Responsables -->
-              <div class="col-lg-4">
+              <div class="col-12 col-lg-4">
                 <div class="card border-0 shadow-sm h-100">
-                  <div class="card-header bg-white border-bottom">
-                    <h6 class="mb-0 fw-bold text-primary">
-                      <i class="bi bi-people me-2"></i>
+                  <div class="card-header bg-gradient-info text-white py-3">
+                    <h6 class="mb-0 fw-bold">
+                      <i class="bi bi-people-fill me-2"></i>
                       Responsables
                     </h6>
                   </div>
                   <div class="card-body">
-                    <div class="mb-3">
+                    <div class="info-item mb-3">
                       <small class="text-muted d-block mb-1">Jefatura Cliente</small>
-                      <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('jefaturaCliente') || '—' }}
-                      </p>
+                      <p class="fw-bold mb-0 small">{{ getItemNombre(selectedJefaturaClienteId, jefaturasCliente) || '—' }}</p>
                     </div>
-                    <div class="mb-3">
+                    <div class="info-item mb-3">
                       <small class="text-muted d-block mb-1">Analista Cliente</small>
-                      <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('analistaCliente') || '—' }}
-                      </p>
+                      <p class="fw-bold mb-0 small">{{ getItemNombre(selectedAnalistaClienteId, analistasCliente) || '—' }}</p>
                     </div>
-                    <div class="mb-3">
-                      <small class="text-muted d-block mb-1">Coordinador</small>
-                      <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('coordinadorTiCw') || '—' }}
-                      </p>
+                    <div class="info-item mb-3">
+                      <small class="text-muted d-block mb-1">Coordinador TI/CW</small>
+                      <p class="fw-bold mb-0 small">{{ getItemNombre(selectedCoordinadorTiCwId, coordinadoresTiCw) || '—' }}</p>
                     </div>
-                    <div class="mb-3">
+                    <div class="info-item mb-3">
                       <small class="text-muted d-block mb-1">Jefatura Responsable</small>
-                      <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('jefaturaResponsable') || '—' }}
-                      </p>
+                      <p class="fw-bold mb-0 small">{{ getItemNombre(selectedJefaturaResponsableId, jefaturasResponsable) || '—' }}</p>
                     </div>
-                    <div class="mb-3">
+                    <div class="info-item mb-3">
                       <small class="text-muted d-block mb-1">Liquidador</small>
-                      <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('liquidador') || '—' }}
-                      </p>
+                      <p class="fw-bold mb-0 small">{{ getItemNombre(selectedLiquidadorId, liquidadores) || '—' }}</p>
                     </div>
-                    <div class="mb-3">
+                    <div class="info-item mb-3">
                       <small class="text-muted d-block mb-1">Ejecutante</small>
-                      <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('ejecutante') || '—' }}
-                      </p>
+                      <p class="fw-bold mb-0 small">{{ getItemNombre(selectedEjecutanteId, ejecutantes) || '—' }}</p>
                     </div>
-                    <div class="mb-3">
+                    <div class="info-item mb-3">
                       <small class="text-muted d-block mb-1">Analista Contable</small>
-                      <p class="fw-medium mb-0 small">
-                        {{ getResponsableNombre('analistaContable') || '—' }}
-                      </p>
+                      <p class="fw-bold mb-0 small">{{ getItemNombre(selectedAnalistaContableId, analistasContable) || '—' }}</p>
+                    </div>
+                    <div *ngIf="isEditMode" class="info-item mb-3">
+                      <small class="text-muted d-block mb-1">Estado OT</small>
+                      <p class="fw-bold mb-0 small">{{ getItemNombre(selectedEstadoOTId, estadoOT) || '—' }}</p>
                     </div>
                   </div>
                 </div>
@@ -941,21 +784,23 @@
             </div>
 
             <!-- Botones finales -->
-            <div class="step-actions mt-5 pt-4 border-top">
-              <div class="d-flex justify-content-between">
-                <button type="button" class="btn btn-outline-secondary btn-lg px-4"
+            <div class="step-actions mt-4 pt-3 border-top">
+              <div class="d-flex justify-content-between align-items-center">
+                <button type="button" class="btn btn-outline-secondary px-4"
                         (click)="cambiarPaso(2)">
                   <i class="bi bi-arrow-left me-2"></i>
-                  Regresar
+                  Volver al Paso 2
                 </button>
-
+                
                 <div class="d-flex gap-3">
-                  <button type="button" class="btn btn-outline-danger btn-lg px-4"
+                  <button type="button" class="btn btn-outline-danger px-4"
                           (click)="onCancel()">
+                    <i class="bi bi-x-lg me-2"></i>
                     Cancelar
                   </button>
-                  <button *ngIf="!isViewMode" type="submit" class="btn btn-success btn-lg px-5 shadow-sm"
-                          [disabled]="loading || form.invalid">
+                  
+                  <button *ngIf="!isViewMode" type="submit" class="btn btn-success px-4 shadow-sm"
+                          [disabled]="loading || !form.valid">
                     <ng-container *ngIf="!loading">
                       <i class="bi me-2" [ngClass]="isEditMode ? 'bi-save' : 'bi-plus-circle'"></i>
                       {{ isEditMode ? 'Guardar Cambios' : 'Crear OT' }}
@@ -974,10 +819,25 @@
     </div>
 
     <!-- Footer -->
-    <div class="form-footer bg-light border-top p-3 text-center text-muted small">
-      <i class="bi bi-shield-lock me-1"></i>
-      <span class="text-danger">*</span> Todos los campos son obligatorios •
-      Único campo opcional: OT Anterior
+    <div class="form-footer bg-light border-top p-3">
+      <div class="container-fluid">
+        <div class="row align-items-center">
+          <div class="col-md-8">
+            <div class="text-muted small">
+              <i class="bi bi-shield-lock me-1"></i>
+              <span class="text-danger">*</span> Campos obligatorios • 
+              <i class="bi bi-info-circle ms-2 me-1"></i>
+              Único campo opcional: OT Anterior
+            </div>
+          </div>
+          <div class="col-md-4 text-md-end">
+            <div class="badge bg-light text-dark">
+              <i class="bi bi-lightning-charge me-1"></i>
+              Paso {{ currentStep }} de 3
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
   </ng-container>
 </div>
