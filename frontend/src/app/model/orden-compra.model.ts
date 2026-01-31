@@ -1,8 +1,4 @@
-// orden-compra.model.ts
-
-// 🔹 Detalle para request (crear/actualizar OC)
-// src/app/model/orden-compra.model.ts
-
+// Detalle para request (crear/actualizar OC)
 export interface OcDetalleRequest {
   idMaestro: number;
   cantidad: number;
@@ -10,109 +6,69 @@ export interface OcDetalleRequest {
   subtotal: number;
   igv: number;
   total: number;
-    tipo?: ''; // <-- NUEVO CAMPO
-
+  tipo?: string; // cadena libre, se asigna según el código del maestro
 }
 
-
-// 🔹 Detalle para response (cuando recibes OC del backend)
+// Detalle para response (cuando recibes OC del backend)
 export interface OcDetalleResponse {
-  idDetalle?: number;         // ID del detalle
-  idProducto?: number;        // ID del producto
-  productoNombre?: string;    // Nombre del producto
-  cantidad?: number;          // Cantidad solicitada
-  precioUnitario?: number;    // Precio por unidad
-  total?: number;             // Total de la línea
-  observacion?: string;       // Observación del detalle
-    // Maestro / Producto
+  idDetalle?: number;
+  idProducto?: number;
+  productoNombre?: string;
+  cantidad?: number;
+  precioUnitario?: number;
+  total?: number;
+  observacion?: string;
   idMaestro?: number;
-  codigo?: string;        // 🔹 el código del maestro
-  descripcion?: string;   // 🔹 la descripción del maestro
-  unidad?: string;        // 🔹 la unidad
+  codigo?: string;
+  descripcion?: string;
+  unidad?: string;
 }
 
-// 🔹 DTO para crear o actualizar OC (request)
+// DTO para crear o actualizar OC (request)
 export interface OrdenCompraRequest {
   idEstadoOc: number;
   idOts: number;
   idProveedor: number;
   formaPago: string;
-
   subtotal: number;
   igvPorcentaje: number;
   igvTotal: number;
   total: number;
-
-  fechaOc: string;            // ISO string (ej: "2026-01-28T15:00:00")
+  fechaOc: string;
   observacion?: string;
-
   detalles: OcDetalleRequest[];
+  aplicarIgv: true // 🔹 asegurarte de que está aquí
 
-  aplicarIgv: boolean;
+
 }
 
-// 🔹 DTO de respuesta de OC (response)
+// DTO de respuesta de OC (response)
 export interface OrdenCompraResponse {
   idOc: number;
-
-  // Estado OC
   idEstadoOc: number;
   estadoNombre: string;
-
-  // OTS
   idOts: number;
   otsDescripcion: string;
-  ot: string;          // <-- Cambiado a string
-
-  // Cliente
+  ot: string;
   clienteNombre: string;
   clienteRuc: string;
-
-  // Proveedor
   idProveedor: number;
-  proveedorNombre: string;   // <-- nombre de la razon social
+  proveedorNombre: string;
   proveedorRuc: string;
   proveedorDireccion: string;
   proveedorContacto: string;
   proveedorBanco: string;
-
-  // Forma de pago y montos
   formaPago: string;
   subtotal: number;
   igvPorcentaje: number;
   igvTotal: number;
   total: number;
-
-  fechaOc: string;            // ISO string
+  fechaOc: string;
   observacion?: string;
-
   detalles: OcDetalleResponse[];
 }
 
-
-
-// 🔹 Paginación de OC (Page de Spring Data)
-export interface PageOrdenCompra {
-  content: OrdenCompraResponse[];
-  pageable: {
-    sort: { sorted: boolean; unsorted: boolean; empty: boolean };
-    offset: number;
-    pageNumber: number;
-    pageSize: number;
-    paged: boolean;
-    unpaged: boolean;
-  };
-  last: boolean;
-  totalPages: number;
-  totalElements: number;
-  size: number;
-  number: number;
-  sort: { sorted: boolean; unsorted: boolean; empty: boolean };
-  first: boolean;
-  numberOfElements: number;
-  empty: boolean;
-}
-
+// Paginación
 export interface PageInfo {
   size: number;
   number: number;

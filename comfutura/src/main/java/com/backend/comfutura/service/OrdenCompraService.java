@@ -2,17 +2,11 @@ package com.backend.comfutura.service;
 
 import com.backend.comfutura.dto.request.OrdenCompraRequestDTO;
 import com.backend.comfutura.dto.response.OrdenCompraResponseDTO;
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 
 public interface OrdenCompraService {
 
     OrdenCompraResponseDTO guardar(Integer idOc, OrdenCompraRequestDTO dto);
-
-    /* =====================================================
-       CRUD - CREAR / EDITAR ORDEN DE COMPRA
-       ===================================================== */
-
 
     Page<OrdenCompraResponseDTO> listarPaginado(
             int page,
@@ -21,9 +15,5 @@ public interface OrdenCompraService {
             String direction
     );
 
-
-
-    // 🔹 HTML con empresa seleccionada (NUEVO)
     String generarHtml(Integer idOc, Integer idEmpresa);
-
 }
