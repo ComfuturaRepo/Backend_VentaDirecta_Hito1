@@ -44,6 +44,7 @@ public class OtServiceImpl implements OtService {
     private final JefaturaClienteSolicitanteRepository jefaturaClienteRepository;
     private final AnalistaClienteSolicitanteRepository analistaClienteRepository;
     private final EstadoOtRepository estadoOtRepository;
+    private final TipoOtRepository tipoOtRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -93,10 +94,17 @@ public class OtServiceImpl implements OtService {
                 .estadoOt(ofNullable(ots.getEstadoOt()).map(EstadoOt::getDescripcion).orElse("—"))
                 .proyecto(ofNullable(ots.getProyecto()).map(Proyecto::getNombre).orElse("—"))
                 .siteNombre(ofNullable(ots.getSite()).map(Site::getCodigoSitio).orElse("—"))
-                .site_descripcion(ofNullable(ots.getSite()).map(Site::getDescripcion).orElse("—"))
+                .site_descripcion(
+                        ofNullable(ots.getSite())
+                                .flatMap(site -> site.getDescripciones().stream().findFirst())
+                                .map(SiteDescripcion::getDescripcion)
+                                .orElse("—")
+                )
                 .cliente(ofNullable(ots.getCliente()).map(Cliente::getRazonSocial).orElse("—"))
                 .cliente_id(ofNullable(ots.getCliente()).map(Cliente::getRuc).orElse("—"))
                 .region(ofNullable(ots.getRegion()).map(Region::getNombre).orElse("—"))
+                .tipoOtCodigo(ofNullable(ots.getTipoOt()).map(TipoOt::getCodigo).orElse("—"))
+                .tipoOtDescripcion(ofNullable(ots.getTipoOt()).map(TipoOt::getDescripcion).orElse("—"))
                 .activo(ots.getActivo())
                 .build();
     }
@@ -110,6 +118,7 @@ public class OtServiceImpl implements OtService {
 
         return toOtDetailResponse(ots);
     }
+
 
     private OtDetailResponse toOtDetailResponse(Ots ots) {
         int diasAsignados = 0;
@@ -127,6 +136,10 @@ public class OtServiceImpl implements OtService {
                 .diasAsignados(diasAsignados)
                 .fechaCreacion(ots.getFechaCreacion())
                 .activo(ots.getActivo())
+
+                .idTipoOt(ofNullable(ots.getTipoOt()).map(TipoOt::getIdTipoOt).orElse(null))
+                .tipoOtCodigo(ofNullable(ots.getTipoOt()).map(TipoOt::getCodigo).orElse(null))
+                .tipoOtDescripcion(ofNullable(ots.getTipoOt()).map(TipoOt::getDescripcion).orElse(null))
 
                 .idCliente(ofNullable(ots.getCliente()).map(Cliente::getIdCliente).orElse(null))
                 .clienteRazonSocial(ofNullable(ots.getCliente()).map(Cliente::getRazonSocial).orElse(null))
@@ -174,7 +187,7 @@ public class OtServiceImpl implements OtService {
                 .build();
     }
 
-    // PARA EDICIÓN (solo IDs)
+
     @Override
     @Transactional(readOnly = true)
     public OtFullResponse obtenerParaEdicion(Integer idOts) {
@@ -191,6 +204,7 @@ public class OtServiceImpl implements OtService {
                 .idArea(ofNullable(ots.getArea()).map(Area::getIdArea).orElse(null))
                 .idProyecto(ofNullable(ots.getProyecto()).map(Proyecto::getIdProyecto).orElse(null))
                 .idFase(ofNullable(ots.getFase()).map(Fase::getIdFase).orElse(null))
+                .idTipoOt(ofNullable(ots.getTipoOt()).map(TipoOt::getIdTipoOt).orElse(null))
                 .idSite(ofNullable(ots.getSite()).map(Site::getIdSite).orElse(null))
                 .idRegion(ofNullable(ots.getRegion()).map(Region::getIdRegion).orElse(null))
                 .idJefaturaClienteSolicitante(ofNullable(ots.getJefaturaClienteSolicitante()).map(JefaturaClienteSolicitante::getId).orElse(null))
@@ -201,12 +215,11 @@ public class OtServiceImpl implements OtService {
                 .idLiquidador(ofNullable(ots.getLiquidador()).map(Trabajador::getIdTrabajador).orElse(null))
                 .idEjecutante(ofNullable(ots.getEjecutante()).map(Trabajador::getIdTrabajador).orElse(null))
                 .idAnalistaContable(ofNullable(ots.getAnalistaContable()).map(Trabajador::getIdTrabajador).orElse(null))
+                .idEstadoOt(ots.getEstadoOt().getIdEstadoOt())
                 .activo(ots.getActivo())
                 .fechaCreacion(ots.getFechaCreacion())
-                .idEstadoOt(ots.getEstadoOt().getIdEstadoOt())
                 .build();
     }
-
     // CREAR / ACTUALIZAR
     @Override
     @Transactional
@@ -268,7 +281,8 @@ public class OtServiceImpl implements OtService {
                     ? anioActual * 10000 + 1   // 20260001
                     : ultimoOt + 1;
         }
-
+        TipoOt tipoOt = tipoOtRepository.findById(req.getIdTipoOt())
+                .orElseThrow(() -> new ResourceNotFoundException("Tipo de OT no encontrado con ID: " + req.getIdTipoOt()));
         EstadoOt estadoPendiente = estadoOtRepository
                 .findByDescripcion("ASIGNACION")
                 .orElseThrow(() -> new ResourceNotFoundException(
@@ -279,6 +293,7 @@ public class OtServiceImpl implements OtService {
                 .idOtsAnterior(req.getIdOtsAnterior())
                 .descripcion(req.getDescripcion())
                 .fechaApertura(req.getFechaApertura())
+                .tipoOt(tipoOt)  // ← Añadido
                 .activo(true)
                 .trabajador(creador)
                 .estadoOt(estadoPendiente)
@@ -300,6 +315,7 @@ public class OtServiceImpl implements OtService {
         setRelations(ots, req);
     }
 
+
     private void setRelations(Ots ots, OtCreateRequest req) {
         if (req.getIdCliente() != null)
             ots.setCliente(find(clienteRepository, req.getIdCliente(), "Cliente"));
@@ -309,11 +325,14 @@ public class OtServiceImpl implements OtService {
             ots.setProyecto(find(proyectoRepository, req.getIdProyecto(), "Proyecto"));
         if (req.getIdFase() != null)
             ots.setFase(find(faseRepository, req.getIdFase(), "Fase"));
+        if (req.getIdTipoOt() != null)
+            ots.setTipoOt(find(tipoOtRepository, req.getIdTipoOt(), "Tipo OT"));
         if (req.getIdSite() != null)
             ots.setSite(find(siteRepository, req.getIdSite(), "Site"));
         if (req.getIdRegion() != null)
             ots.setRegion(find(regionRepository, req.getIdRegion(), "Región"));
-
+        if (req.getIdEstadoOt() != null)
+            ots.setEstadoOt(find(estadoOtRepository, req.getIdEstadoOt(), "EstadoOt"));
 
         ots.setJefaturaClienteSolicitante(
                 req.getIdJefaturaClienteSolicitante() != null ?

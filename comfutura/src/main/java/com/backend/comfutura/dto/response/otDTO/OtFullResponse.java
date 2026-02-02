@@ -10,6 +10,9 @@ import java.time.LocalDateTime;
 @Data
 @Builder
 public class OtFullResponse {
+    private Integer idTipoOt;
+
+
     private Integer idOts;
     private Integer ot;
     private Integer idOtsAnterior;

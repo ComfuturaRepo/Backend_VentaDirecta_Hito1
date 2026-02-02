@@ -24,6 +24,7 @@ public class ExcelOtExportDTO {
     private String proyecto;
     private String fase;
     private String site;
+    private String siteDescripcion;
     private String region;
 
     private String jefaturaClienteSolicitante;

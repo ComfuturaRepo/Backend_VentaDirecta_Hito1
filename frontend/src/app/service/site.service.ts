@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Site } from '../model/site.interface';
+import { Site, SiteRequest } from '../model/site.interface';
 import { PageResponse } from '../model/page.interface';
 import { environment } from '../../environment';
 
@@ -9,18 +9,26 @@ import { environment } from '../../environment';
   providedIn: 'root'
 })
 export class SiteService {
-  private apiUrl = `${environment.baseUrl}/api/site`;
+  private apiUrl = `${environment.baseUrl}/api/site`; // Cambiado a plural
 
   constructor(private http: HttpClient) {}
 
-  // Crear o actualizar site
-  guardar(site: Site): Observable<Site> {
-    if (site.idSite) {
-      // Si tiene ID, es una actualización
-      return this.http.put<Site>(`${this.apiUrl}/${site.idSite}`, site);
+  // Crear nuevo site con descripciones
+  crear(siteRequest: SiteRequest): Observable<Site> {
+    return this.http.post<Site>(this.apiUrl, siteRequest);
+  }
+
+  // Actualizar site existente
+  actualizar(id: number, siteRequest: SiteRequest): Observable<Site> {
+    return this.http.put<Site>(`${this.apiUrl}/${id}`, siteRequest);
+  }
+
+  // Método de conveniencia para guardar (crear o actualizar)
+  guardar(siteRequest: SiteRequest, id?: number): Observable<Site> {
+    if (id) {
+      return this.actualizar(id, siteRequest);
     } else {
-      // Si no tiene ID, es una creación
-      return this.http.post<Site>(this.apiUrl, site);
+      return this.crear(siteRequest);
     }
   }
 
@@ -65,8 +73,10 @@ export class SiteService {
     return this.http.post<void>(`${this.apiUrl}/${id}/toggle`, {});
   }
 
-  // Eliminar site (soft delete) - usa el mismo toggle
-  eliminar(id?: number): Observable<void> {
-    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+
+
+  // Verificar si código existe
+  verificarCodigo(codigo: string): Observable<boolean> {
+    return this.http.get<boolean>(`${this.apiUrl}/verificar-codigo/${codigo}`);
   }
 }

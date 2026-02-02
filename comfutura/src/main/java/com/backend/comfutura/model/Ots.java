@@ -44,8 +44,12 @@ public class Ots {
     @JoinColumn(name = "id_fase")
     private Fase fase;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "id_site")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_tipo_ot", nullable = false)
+    private TipoOt tipoOt;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_site", nullable = false)
     private Site site;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
