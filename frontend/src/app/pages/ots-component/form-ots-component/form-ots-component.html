@@ -205,23 +205,28 @@
                       </div>
                     </div>
 
-                    <!-- Tipo OT -->
-                    <div class="col-md-6">
-                      <label class="form-label small fw-medium text-gray-700 mb-1">
-                        <i class="bi bi-tag me-1"></i> Tipo OT <span class="text-danger">*</span>
-                      </label>
-                      <app-ngselect-dropdown
-                        [items]="tiposOt"
-                        [placeholder]="'Seleccione tipo OT'"
-                        [loading]="loading"
-                        [isInvalid]="submitted && f['idTipoOt'].invalid"
-                        [required]="true"
-                        (selectionChange)="onTipoOtChange($event)">
-                      </app-ngselect-dropdown>
-                      <div *ngIf="submitted && f['idTipoOt'].invalid" class="invalid-feedback small mt-1">
-                        <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
-                      </div>
-                    </div>
+                   <!-- Tipo OT -->
+<div class="col-md-6">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    <i class="bi bi-tag me-1"></i> Tipo OT <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    [items]="tiposOt"
+    [placeholder]="'Seleccione tipo OT'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idTipoOt'].invalid"
+    [required]="true"
+    (selectionChange)="onTipoOtChange($event)">
+  </app-ngselect-dropdown>
+  <div *ngIf="submitted && f['idTipoOt'].invalid" class="invalid-feedback small mt-1">
+    <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
+  </div>
+
+  <!-- Agrega esto para depuración -->
+  <div class="mt-1 small text-muted">
+    Debug: ID seleccionado: {{ selectedTipoOtId }} | Valor en form: {{ form.get('idTipoOt')?.value }}
+  </div>
+</div>
 
                     <!-- Región -->
                     <div class="col-md-6">

@@ -7,7 +7,6 @@ import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
-
 @Entity
 @Table(name = "ots")
 @Getter
@@ -48,9 +47,17 @@ public class Ots {
     @JoinColumn(name = "id_tipo_ot", nullable = false)
     private TipoOt tipoOt;
 
+    // =========================
+    // MODIFICACIÓN AQUÍ: Site y SiteDescripcion
+    // =========================
+
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "id_site", nullable = false)
-    private Site site;
+    @JoinColumn(name = "id_site")
+    private Site site;  // Hacer nullable para compatibilidad
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_site_descripcion")
+    private SiteDescripcion siteDescripcion;  // NUEVA RELACIÓN
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "id_region")
@@ -65,8 +72,6 @@ public class Ots {
 
     @Column(name = "fecha_apertura", nullable = false)
     private LocalDate fechaApertura;
-
-
 
     // =========================
     // ROLES → TODOS SON TRABAJADORES
@@ -111,4 +116,49 @@ public class Ots {
     @CreationTimestamp
     @Column(name = "fecha_creacion", updatable = false)
     private LocalDateTime fechaCreacion;
+
+    // =========================
+    // MÉTODOS HELPER PARA OBTENER DATOS DE SITE
+    // =========================
+
+    @Transient
+    public String getSiteDisplayText() {
+        if (siteDescripcion != null && siteDescripcion.getSite() != null) {
+            String codigo = siteDescripcion.getSite().getCodigoSitio() != null
+                    ? siteDescripcion.getSite().getCodigoSitio().trim()
+                    : "-";
+            String desc = siteDescripcion.getDescripcion() != null
+                    ? siteDescripcion.getDescripcion().trim()
+                    : "";
+            return codigo + " " + desc;
+        } else if (site != null) {
+            String codigo = site.getCodigoSitio() != null
+                    ? site.getCodigoSitio().trim()
+                    : "-";
+            return codigo;
+        }
+        return "-";
+    }
+
+    @Transient
+    public String getSiteCodigo() {
+        if (siteDescripcion != null && siteDescripcion.getSite() != null) {
+            return siteDescripcion.getSite().getCodigoSitio() != null
+                    ? siteDescripcion.getSite().getCodigoSitio().trim()
+                    : "-";
+        } else if (site != null) {
+            return site.getCodigoSitio() != null ? site.getCodigoSitio().trim() : "-";
+        }
+        return "-";
+    }
+
+    @Transient
+    public String getSiteDescripcionText() {
+        if (siteDescripcion != null) {
+            return siteDescripcion.getDescripcion() != null
+                    ? siteDescripcion.getDescripcion().trim()
+                    : "";
+        }
+        return "";
+    }
 }

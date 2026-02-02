@@ -96,7 +96,7 @@ tiposOt: DropdownItem[] = [];
     this.fechaActualFormatted = this.formatDate(new Date());
   }
 
- ngOnInit(): void {
+ngOnInit(): void {
   console.log('FormOtsComponent inicializando...');
 
   this.isEditMode = this.mode === 'edit';
@@ -116,6 +116,7 @@ tiposOt: DropdownItem[] = [];
     if (clienteId) {
       this.cargarAreasPorCliente(clienteId);
     }
+    // Asegúrate de cargar tiposOt aquí también
     this.cargarTodosLosCatalogos();
   } else {
     this.cargarDropdownsParaCreacion();
@@ -413,11 +414,28 @@ private cargarDropdownsParaCreacion(): void {
     this.subscriptions.push(otSub);
   }
 onTipoOtChange(event: any): void {
-  this.selectedTipoOtId = event?.id || null;
-  this.form.get('idTipoOt')?.setValue(event?.id || null);
-  if (event) this.form.get('idTipoOt')?.markAsTouched();
-  // Podrías querer actualizar la descripción automática también
-  this.actualizarDescripcion();
+  console.log('Tipo OT change event:', event); // DEBUG
+
+  // Verificar diferentes formatos del evento
+  let idTipoOt = null;
+
+  if (event) {
+    // Dependiendo de cómo envía el componente dropdown el evento
+    if (typeof event === 'object') {
+      idTipoOt = event.id || event.value || event.valor || null;
+    } else if (typeof event === 'number') {
+      idTipoOt = event;
+    }
+  }
+
+  this.selectedTipoOtId = idTipoOt;
+  this.form.get('idTipoOt')?.setValue(idTipoOt);
+  this.form.get('idTipoOt')?.markAsTouched();
+
+  console.log('Selected Tipo OT ID:', idTipoOt); // DEBUG
+  console.log('Form value idTipoOt:', this.form.get('idTipoOt')?.value); // DEBUG
+
+  this.cdr.detectChanges();
 }
 private cargarTodosLosCatalogos(): void {
   const catalogSub = forkJoin({
@@ -525,7 +543,28 @@ private cargarTodosLosCatalogos(): void {
     if (event) this.form.get('idRegion')?.markAsTouched();
   }
 get tipoOtNombre(): string {
-  return this.getItemNombre(this.selectedTipoOtId, this.tiposOt);
+  console.log('Getting tipoOtNombre:', {
+    selectedId: this.selectedTipoOtId,
+    items: this.tiposOt,
+    formValue: this.form.get('idTipoOt')?.value
+  }); // DEBUG
+
+  // Usar el valor del formulario si selectedTipoOtId es null
+  const id = this.selectedTipoOtId || this.form.get('idTipoOt')?.value;
+
+  if (!id || !this.tiposOt || this.tiposOt.length === 0) {
+    return '';
+  }
+
+  const item = this.tiposOt.find(i => i.id === id);
+  if (!item) {
+    console.log('Item no encontrado para ID:', id);
+    return '';
+  }
+
+  if (item.label && item.label.trim() !== '') return item.label;
+  if (item.adicional && item.adicional.trim() !== '') return item.adicional;
+  return '—';
 }
   onJefaturaClienteChange(event: any): void {
     this.selectedJefaturaClienteId = event?.id || null;
@@ -817,6 +856,8 @@ private getAnioDeFecha(fechaString: string): number | null {
 private patchFormValues(data: any): void {
   if (!data) return;
 
+  console.log('Patching form values:', data); // DEBUG
+
   this.form.patchValue(data);
 
   this.selectedClienteId = data.idCliente || null;
@@ -828,12 +869,15 @@ private patchFormValues(data: any): void {
   this.selectedJefaturaClienteId = data.idJefaturaClienteSolicitante || null;
   this.selectedAnalistaClienteId = data.idAnalistaClienteSolicitante || null;
   this.selectedCoordinadorTiCwId = data.idCoordinadorTiCw || null;
-  this.selectedTipoOtId = data.idTipoOt || null;
+  this.selectedTipoOtId = data.idTipoOt || null; // ✅ Esto debería estar
   this.selectedJefaturaResponsableId = data.idJefaturaResponsable || null;
   this.selectedLiquidadorId = data.idLiquidador || null;
   this.selectedEjecutanteId = data.idEjecutante || null;
   this.selectedAnalistaContableId = data.idAnalistaContable || null;
   this.selectedEstadoOTId = data.idEstadoOt || null;
+
+  console.log('Selected Tipo OT ID after patch:', this.selectedTipoOtId); // DEBUG
+  console.log('Form idTipoOt value:', this.form.get('idTipoOt')?.value); // DEBUG
 
   // Ejecutar validación condicional después de cargar datos
   setTimeout(() => {
@@ -933,8 +977,9 @@ private ejecutarGuardado(): void {
   console.log('Valores del formulario:', values);
   console.log('idOtsAnterior value:', values.idOtsAnterior, 'Tipo:', typeof values.idOtsAnterior);
 
+  // ⚠️ ERROR AQUÍ: Estás validando idOtsAnterior en lugar de idTipoOt
   // Validar que idTipoOt tenga un valor
-  if (!values.idOtsAnterior) {
+  if (!values.idTipoOt) { // Cambia esto de idOtsAnterior a idTipoOt
     this.loadingSubmit = false;
     this.mostrarError('El campo Tipo OT es requerido');
     return;
@@ -948,7 +993,7 @@ private ejecutarGuardado(): void {
     idFase: Number(values.idFase),
     idSite: Number(values.idSite),
     idRegion: Number(values.idRegion),
-    idTipoOt: Number(values.idTipoOt),
+    idTipoOt: Number(values.idTipoOt), // Esto debe tener un valor
     descripcion: values.descripcion.trim(),
     fechaApertura: values.fechaApertura,
     idOtsAnterior: values.idOtsAnterior ? Number(values.idOtsAnterior) : null,
@@ -987,7 +1032,6 @@ private ejecutarGuardado(): void {
 
   this.subscriptions.push(saveSub);
 }
-
   // ============================================
   // MÉTODOS DE RESET Y CANCELAR
   // ============================================
