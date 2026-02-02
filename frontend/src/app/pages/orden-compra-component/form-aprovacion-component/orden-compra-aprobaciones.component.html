@@ -1,0 +1,27 @@
+<div *ngIf="loading" class="text-center py-3">Cargando aprobaciones...</div>
+
+<div *ngIf="!loading && aprobaciones.length > 0" class="timeline-container">
+  <div *ngFor="let aprob of aprobaciones" class="timeline-item mb-3 p-3 border rounded shadow-sm">
+    <div class="d-flex align-items-center mb-2">
+      <div class="timeline-dot" [ngStyle]="{'background-color': getColor(aprob.estado), 'width.px': 16, 'height.px': 16, 'border-radius': '50%', 'margin-right': '10px'}"></div>
+      <strong>Nivel {{ aprob.nivel }}</strong>
+      <span class="badge ms-2" [ngStyle]="{'background-color': getColor(aprob.estado), 'color': '#fff'}">{{ aprob.estado }}</span>
+    </div>
+    <div class="ms-4">
+      <p>Aprobado por: {{ aprob.aprobadoPor || '-' }}</p>
+      <p>Fecha inicio: {{ aprob.fechaInicio | date:'short' }}</p>
+      <p *ngIf="aprob.fechaFin">Fecha fin: {{ aprob.fechaFin | date:'short' }}</p>
+      <p>Días en estado: {{ aprob.diasEnEstado }}</p>
+      <p *ngIf="aprob.comentario">Comentario: {{ aprob.comentario }}</p>
+
+      <div *ngIf="aprob.estado === 'PENDIENTE' && usuarioPuedeAprobar(aprob)" class="mt-2">
+        <button class="btn btn-sm btn-success me-1" (click)="aprobarNivel(aprob)">Aprobar</button>
+        <button class="btn btn-sm btn-danger" (click)="rechazarNivel(aprob)">Rechazar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div *ngIf="!loading && aprobaciones.length === 0" class="text-center py-3 text-muted">
+  No hay aprobaciones registradas
+</div>

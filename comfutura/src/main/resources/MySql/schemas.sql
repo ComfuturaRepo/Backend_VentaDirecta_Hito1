@@ -388,24 +388,40 @@ CREATE TABLE orden_compra_aprobacion (
     -- PENDIENTE | APROBADO | RECHAZADO
 
                                          aprobado_por VARCHAR(150),
-                                         aprobado_email VARCHAR(150),
 
-                                         comentario TEXT,
 
                                          fecha_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
                                          fecha_fin DATETIME NULL,
-
-                                         dias_en_estado INT GENERATED ALWAYS AS (
-                                             IF(fecha_fin IS NOT NULL,
-                                                DATEDIFF(fecha_fin, fecha_inicio),
-                                                NULL)
-                                             ) STORED,
 
                                          CONSTRAINT fk_aprobacion_oc
                                              FOREIGN KEY (id_oc) REFERENCES orden_compra(id_oc)
 );
 
+-- ======================================
+-- TABLA: APROBADOR PARA LAS ORDENES DE COMPRA
+-- ======================================
 
+
+CREATE TABLE aprobador (
+                           id_aprobador BIGINT AUTO_INCREMENT PRIMARY KEY,
+
+                           id_trabajador INT NOT NULL,
+                           id_cliente INT NOT NULL,
+                           id_area INT NOT NULL,
+
+                           nivel INT NOT NULL, -- 1, 2 o 3
+
+                           activo BOOLEAN NOT NULL DEFAULT TRUE,
+
+                           CONSTRAINT fk_aprobador_trabajador
+                               FOREIGN KEY (id_trabajador) REFERENCES trabajador(id_trabajador),
+
+                           CONSTRAINT fk_aprobador_cliente
+                               FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
+
+                           CONSTRAINT fk_aprobador_area
+                               FOREIGN KEY (id_area) REFERENCES area(id_area)
+);
 -- ======================================
 -- TABLA: Maestro partida
 -- ======================================

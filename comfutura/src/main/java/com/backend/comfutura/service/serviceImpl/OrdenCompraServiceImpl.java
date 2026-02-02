@@ -5,6 +5,7 @@ import com.backend.comfutura.dto.response.OcDetalleResponseDTO;
 import com.backend.comfutura.dto.response.OrdenCompraResponseDTO;
 import com.backend.comfutura.model.*;
 import com.backend.comfutura.repository.*;
+import com.backend.comfutura.service.OrdenCompraAprobacionService;
 import com.backend.comfutura.service.OrdenCompraService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -32,6 +33,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     private final MaestroCodigoRepository maestroCodigoRepository;
     private final EmpresaRepository empresaRepository;
     private final SpringTemplateEngine templateEngine;
+    private final OrdenCompraAprobacionService ordenCompraAprobacionService;
 
     @Override
     @Transactional
@@ -110,6 +112,8 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
         oc.setTotal(subtotalOc.add(igvTotal));
 
         OrdenCompra guardado = ordenCompraRepository.save(oc);
+        ordenCompraAprobacionService.inicializarAprobaciones(guardado);
+
         return mapToResponseCompleto(guardado);
     }
 
