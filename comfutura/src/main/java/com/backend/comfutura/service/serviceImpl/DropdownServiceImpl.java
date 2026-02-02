@@ -11,6 +11,7 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -179,47 +180,30 @@ public class DropdownServiceImpl implements DropdownService {
     }
     @Override
     public List<DropdownDTO> getDescripcionesBySiteCodigo(String codigoSite) {
-        // Si el código es nulo o vacío, buscar los que tienen código null o vacío
-        if (codigoSite == null || codigoSite.trim().isEmpty()) {
-            // Usar el método corregido
-            return siteDescripcionRepository
-                    .findBySiteCodigoSitioIsNullOrSiteCodigoSitioEmpty()                    .stream()
-                    .filter(desc -> desc.getActivo() != null && desc.getActivo())
-                    .map(desc -> {
-                        String descripcionTexto = desc.getDescripcion() != null
-                                ? desc.getDescripcion().trim()
-                                : "";
 
-                        return new DropdownDTO(
-                                desc.getIdSiteDescripcion(),
-                                descripcionTexto,
-                                "SIN CÓDIGO",
-                                desc.getActivo()
-                        );
-                    })
-                    .collect(Collectors.toList());
+        boolean sinCodigo =
+                codigoSite == null ||
+                        codigoSite.trim().isEmpty() ||
+                        codigoSite.trim().equals("-") ||
+                        codigoSite.trim().equalsIgnoreCase("SIN CÓDIGO");
+
+        List<SiteDescripcion> lista;
+
+        if (sinCodigo) {
+            lista = siteDescripcionRepository
+                    .findBySiteCodigoSitioIsNullOrSiteCodigoSitioEmpty();
+        } else {
+            lista = siteDescripcionRepository
+                    .findBySiteCodigoSitioIgnoreCaseAndActivoTrue(codigoSite.trim());
         }
 
-        // Buscar por código específico (case-insensitive)
-        return siteDescripcionRepository.findBySiteCodigoSitioIgnoreCaseAndActivoTrue(codigoSite.trim())
-                .stream()
-                .filter(desc -> desc.getActivo() != null && desc.getActivo())
-                .map(desc -> {
-                    Site site = desc.getSite();
-                    String descripcionTexto = desc.getDescripcion() != null
-                            ? desc.getDescripcion().trim()
-                            : "";
-                    String codigo = site.getCodigoSitio() != null
-                            ? site.getCodigoSitio().trim()
-                            : "SIN CÓDIGO";
-
-                    return new DropdownDTO(
-                            desc.getIdSiteDescripcion(),
-                            descripcionTexto,
-                            codigo,
-                            desc.getActivo()
-                    );
-                })
+        return lista.stream()
+                .map(desc -> new DropdownDTO(
+                        desc.getIdSiteDescripcion(),
+                        Optional.ofNullable(desc.getDescripcion()).orElse("").trim(),
+                        sinCodigo ? "SIN CÓDIGO" : codigoSite.trim(),
+                        true
+                ))
                 .collect(Collectors.toList());
     }
 

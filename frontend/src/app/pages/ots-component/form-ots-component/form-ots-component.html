@@ -462,20 +462,7 @@
                             </app-ngselect-dropdown>
                           </div>
 
-                          <!-- Coordinador TI/CW -->
-                          <div class="mb-0">
-                            <label class="form-label small fw-medium text-gray-700 mb-1">
-                              Coordinador TI/CW <span class="text-danger">*</span>
-                            </label>
-                            <app-ngselect-dropdown
-                              [items]="coordinadoresTiCw"
-                              [placeholder]="'Seleccione coordinador'"
-                              [loading]="loading"
-                              [isInvalid]="submitted && f['idCoordinadorTiCw'].invalid"
-                              [required]="true"
-                              (selectionChange)="onCoordinadorTiCwChange($event)">
-                            </app-ngselect-dropdown>
-                          </div>
+
                         </div>
                       </div>
                     </div>
@@ -534,7 +521,20 @@
                               (selectionChange)="onEjecutanteChange($event)">
                             </app-ngselect-dropdown>
                           </div>
-
+      <!-- Coordinador TI/CW -->
+                          <div class="mb-0">
+                            <label class="form-label small fw-medium text-gray-700 mb-1">
+                              Coordinador <span class="text-danger">*</span>
+                            </label>
+                            <app-ngselect-dropdown
+                              [items]="coordinadoresTiCw"
+                              [placeholder]="'Seleccione coordinador'"
+                              [loading]="loading"
+                              [isInvalid]="submitted && f['idCoordinadorTiCw'].invalid"
+                              [required]="true"
+                              (selectionChange)="onCoordinadorTiCwChange($event)">
+                            </app-ngselect-dropdown>
+                          </div>
                           <!-- Analista Contable -->
                           <div class="mb-3">
                             <label class="form-label small fw-medium text-gray-700 mb-1">
@@ -696,7 +696,7 @@
                             <dt class="col-sm-5 text-gray-600">Analista Cliente</dt>
                             <dd class="col-sm-7 text-gray-800 fw-medium">{{ getItemNombre(selectedAnalistaClienteId, analistasCliente) || '—' }}</dd>
 
-                            <dt class="col-sm-5 text-gray-600">Coordinador TI/CW</dt>
+                            <dt class="col-sm-5 text-gray-600">Coordinador </dt>
                             <dd class="col-sm-7 text-gray-800 fw-medium">{{ getItemNombre(selectedCoordinadorTiCwId, coordinadoresTiCw) || '—' }}</dd>
 
                             <dt class="col-sm-5 text-gray-600">Jefatura Responsable</dt>
