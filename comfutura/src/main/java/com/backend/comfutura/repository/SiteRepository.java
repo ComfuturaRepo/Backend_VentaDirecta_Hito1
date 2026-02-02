@@ -23,6 +23,7 @@ public interface SiteRepository extends JpaRepository<Site, Integer> {
     boolean existsByCodigoSitio(String codigoSitio);
 
     boolean existsByCodigoSitioAndIdSiteNot(String codigoSitio, Integer id);
+    List<Site> findAllByActivo(Boolean activo);
 
     @Query("SELECT DISTINCT s FROM Site s LEFT JOIN FETCH s.descripciones d WHERE s.activo = true AND d.activo = true")
     Page<Site> findAllActivosWithDescripciones(Pageable pageable);

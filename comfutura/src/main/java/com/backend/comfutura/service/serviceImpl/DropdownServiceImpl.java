@@ -1,11 +1,14 @@
 package com.backend.comfutura.service.serviceImpl;
 
+import com.backend.comfutura.model.Site;
+import com.backend.comfutura.model.SiteDescripcion;
 import com.backend.comfutura.record.DropdownDTO;
 import com.backend.comfutura.repository.*;
 import com.backend.comfutura.service.DropdownService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -173,19 +176,35 @@ public class DropdownServiceImpl implements DropdownService {
                 ))
                 .toList();
     }
-    @Override
     public List<DropdownDTO> getSiteCompuesto() {
+        return siteDescripcionRepository.findAll().stream()
+                .filter(desc -> desc.getActivo() != null && desc.getActivo())
+                .map(desc -> {
+                    Site site = desc.getSite();
 
-        return siteRepository.findByActivoTrueOrderByCodigoSitioAsc()
-                .stream()
-                .flatMap(s -> s.getDescripciones().stream()
-                        .map(d -> new DropdownDTO(
-                                d.getIdSiteDescripcion(),
-                                s.getCodigoSitio(),
-                                d.getDescripcion(),
-                                null
-                        )))
-                .toList();
+                    // Obtener código del site (puede ser nulo/vacío)
+                    String codigo = (site.getCodigoSitio() != null && !site.getCodigoSitio().trim().isEmpty())
+                            ? site.getCodigoSitio().trim()
+                            : "-";
+
+                    // Obtener descripción
+                    String descripcionTexto = desc.getDescripcion() != null
+                            ? desc.getDescripcion().trim()
+                            : "";
+
+                    // Construir label
+                    String label = codigo + " " + descripcionTexto;
+
+                    return new DropdownDTO(
+                            desc.getIdSiteDescripcion(),  // Usar el ID de la descripción
+                            label,                         // Ej: "225 NAT LOS MAESTROS"
+                            codigo,                       // Código para referencia
+                            desc.getActivo()
+                    );
+                })
+                .filter(dto -> !dto.label().trim().isEmpty())
+                .sorted(Comparator.comparing(DropdownDTO::label, String.CASE_INSENSITIVE_ORDER))
+                .collect(Collectors.toList());
     }
 
     @Override
