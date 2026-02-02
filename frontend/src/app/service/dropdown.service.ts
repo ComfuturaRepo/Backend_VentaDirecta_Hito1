@@ -1,6 +1,6 @@
 // src/app/core/services/dropdown.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin } from 'rxjs';
 import { environment } from '../../environment';
 
@@ -96,9 +96,16 @@ export class DropdownService {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/analistas-contable`);
   }
 
-  getMaestroCodigo(): Observable<DropdownItem[]> {
-    return this.http.get<DropdownItem[]>(`${this.apiUrl}/maestro-codigos`);
-  }
+getDescripcionesBySiteCodigo(siteCodigo: string): Observable<DropdownItem[]> {
+  const params = new HttpParams().set('siteCodigo', siteCodigo || '');
+  return this.http.get<DropdownItem[]>(`${this.apiUrl}/DescripcionesBySiteCodigo`, { params });
+}
+
+
+getSitesConDescripciones(): Observable<DropdownItem[]> {
+  return this.http.get<DropdownItem[]>(`${this.apiUrl}/SitesConDescripciones`);
+}
+
   // =============================
   // ORDEN DE COMPRA
   // =============================
@@ -177,7 +184,7 @@ loadOrdenCompraDropdowns(): Observable<{
 }> {
   return forkJoin({
     ots: this.getOtsActivas(),
-    maestros: this.getMaestroCodigo(),    // ← agregado
+    maestros: this.getEmpresas(),    // ← agregado
     proveedores: this.getProveedores()
   });
 }

@@ -22,6 +22,9 @@ public interface DropdownService {
     List<DropdownDTO> getTrabajadores();
     List<DropdownDTO> getNivelesAll();
     List<DropdownDTO> getTrabajadoresSinUsuarioActivo();
+    // Nuevos métodos para Site
+    List<DropdownDTO> getDescripcionesBySiteCodigo(String codigoSite);
+    List<DropdownDTO> getSitesConDescripciones();
     // Nuevos métodos para responsables
     List<DropdownDTO> getJefaturasClienteSolicitante();
     List<DropdownDTO> getAnalistasClienteSolicitante();

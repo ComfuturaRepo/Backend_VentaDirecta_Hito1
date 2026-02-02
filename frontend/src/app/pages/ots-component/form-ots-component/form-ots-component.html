@@ -187,23 +187,47 @@
                       </div>
                     </div>
 
-                    <!-- Site -->
-                    <div class="col-md-6">
-                      <label class="form-label small fw-medium text-gray-700 mb-1">
-                        <i class="bi bi-geo-alt me-1"></i> Site <span class="text-danger">*</span>
-                      </label>
-                      <app-ngselect-dropdown
-                        [items]="sites"
-                        [placeholder]="'Seleccione un site'"
-                        [loading]="loading"
-                        [isInvalid]="submitted && f['idSite'].invalid"
-                        [required]="true"
-                        (selectionChange)="onSiteChange($event)">
-                      </app-ngselect-dropdown>
-                      <div *ngIf="submitted && f['idSite'].invalid" class="invalid-feedback small mt-1">
-                        <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
-                      </div>
-                    </div>
+<!-- Site (Código) -->
+<div class="col-md-6">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    <i class="bi bi-geo-alt me-1"></i> Código Site <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    [items]="sites"
+    [placeholder]="'Seleccione un código de site'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idSite'].invalid"
+    [required]="true"
+    (selectionChange)="onSiteCodigoChange($event)">
+  </app-ngselect-dropdown>
+  <div *ngIf="submitted && f['idSite'].invalid" class="invalid-feedback small mt-1">
+    <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
+  </div>
+</div>
+
+<!-- Descripción del Site -->
+<div class="col-md-6" *ngIf="selectedSiteCodigo">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    <i class="bi bi-card-text me-1"></i> Descripción del Site
+    <span *ngIf="siteDescripciones.length > 0" class="text-danger">*</span>
+    <span *ngIf="siteDescripciones.length === 0" class="text-muted small ms-1">(Opcional - sin descripciones)</span>
+  </label>
+  <app-ngselect-dropdown
+    [items]="siteDescripciones"
+    [placeholder]="siteDescripciones.length > 0 ? 'Seleccione una descripción' : 'No hay descripciones para este código'"
+    [loading]="loading"
+    [isInvalid]="submitted && siteDescripciones.length > 0 && !selectedSiteDescripcionId"
+    [required]="siteDescripciones.length > 0"
+    [disabled]="!selectedSiteCodigo"
+    (selectionChange)="onSiteDescripcionChange($event)">
+  </app-ngselect-dropdown>
+  <div *ngIf="submitted && siteDescripciones.length > 0 && !selectedSiteDescripcionId" class="invalid-feedback small mt-1">
+    <i class="bi bi-exclamation-circle me-1"></i> Seleccione una descripción
+  </div>
+  <div *ngIf="selectedSiteCodigo && siteDescripciones.length === 0" class="text-muted small mt-1">
+    <i class="bi bi-info-circle me-1"></i> Este código no tiene descripciones registradas
+  </div>
+</div>
 
                    <!-- Tipo OT -->
 <div class="col-md-6">
@@ -623,8 +647,11 @@
                             <dt class="col-sm-5 text-gray-600">Región</dt>
                             <dd class="col-sm-7 text-gray-800 fw-medium">{{ regionNombre || '—' }}</dd>
 
-                            <dt class="col-sm-5 text-gray-600">Tipo OT</dt>
-                            <dd class="col-sm-7 text-gray-800 fw-medium">{{ tipoOtNombre || '—' }}</dd>
+                   <!-- En la sección de Vista Preliminar del Paso 1 -->
+<div class="col-md-3 col-6">
+  <small class="text-gray-600 d-block">Tipo OT</small>
+  <div class="fw-medium text-gray-800 text-truncate small">{{ tipoOtNombre || '—' }}</div>
+</div>
 
                             <dt class="col-sm-5 text-gray-600">Fecha Apertura</dt>
                             <dd class="col-sm-7 text-gray-800 fw-medium">{{ fechaAperturaFormatted || '—' }}</dd>

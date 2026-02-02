@@ -47,6 +47,7 @@ public class OtCreateRequest {
     @NotNull(message = "Tipo OT es requerido")
     @Min(value = 1, message = "ID Tipo OT inválido")
     private Integer idTipoOt;
+    private Integer idSiteDescripcion;
 
     @NotNull(message = "Estado OT es requerido")
     @Min(value = 1, message = "ID Estado OT inválido")
