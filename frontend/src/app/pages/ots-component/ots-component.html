@@ -5,17 +5,22 @@
       <div class="row align-items-center mb-4">
         <div class="col-md-6">
           <div class="page-title-section">
-            <h1 class="page-title">
-              <i class="bi bi-clipboard-check me-2"></i>Órdenes de Trabajo
-            </h1>
-            <p class="page-subtitle">Gestión completa de OTs del sistema</p>
+            <div class="d-flex align-items-center">
+              <div class="title-icon me-3">
+                <i class="bi bi-clipboard-check"></i>
+              </div>
+              <div>
+                <h1 class="page-title">Órdenes de Trabajo</h1>
+                <p class="page-subtitle">Gestión completa de OTs del sistema</p>
+              </div>
+            </div>
           </div>
         </div>
 
         <div class="col-md-6">
           <div class="d-flex justify-content-end align-items-center gap-2">
             <!-- Botón de refrescar -->
-            <button class="btn btn-outline-light btn-lg px-4"
+            <button class="btn btn-action btn-lg"
                     (click)="refreshTable()"
                     [disabled]="loading"
                     [title]="'Refrescar tabla'">
@@ -25,17 +30,20 @@
 
             <!-- Exportación dropdown -->
             <div class="dropdown" ngbDropdown>
-              <button class="btn btn-outline-light btn-lg px-4" ngbDropdownToggle>
+              <button class="btn btn-action btn-lg" ngbDropdownToggle>
                 <i class="bi bi-download me-2"></i>Exportar
               </button>
               <div class="dropdown-menu dropdown-menu-end shadow" ngbDropdownMenu>
-                <h6 class="dropdown-header text-muted">Opciones de exportación</h6>
+                <h6 class="dropdown-header">
+                  <i class="bi bi-file-earmark-excel me-2 text-primary"></i>
+                  Exportar a Excel
+                </h6>
 
                 <button class="dropdown-item" (click)="exportSelectedOts()"
                         [disabled]="selectedCount === 0">
                   <div class="d-flex justify-content-between align-items-center">
                     <div>
-                      <i class="bi bi-check-circle me-2 text-primary"></i>
+                      <i class="bi bi-check-circle me-2 text-success"></i>
                       Seleccionadas
                     </div>
                     <span *ngIf="selectedCount > 0" class="badge bg-primary rounded-pill">
@@ -50,28 +58,31 @@
                 </button>
 
                 <button class="dropdown-item" (click)="openExportModal()">
-                  <i class="bi bi-funnel me-2 text-warning"></i>
-                  Avanzada
+                  <i class="bi bi-sliders me-2 text-warning"></i>
+                  Exportación Avanzada
                 </button>
 
                 <div class="dropdown-divider"></div>
 
-                <h6 class="dropdown-header text-muted">Plantilla</h6>
+                <h6 class="dropdown-header">
+                  <i class="bi bi-file-earmark-arrow-down me-2 text-success"></i>
+                  Plantillas
+                </h6>
 
                 <button class="dropdown-item" (click)="downloadImportTemplate()">
-                  <i class="bi bi-file-earmark-arrow-down me-2 text-success"></i>
-                  Plantilla
+                  <i class="bi bi-file-earmark-spreadsheet me-2 text-success"></i>
+                  Plantilla de Importación
                 </button>
               </div>
             </div>
 
             <!-- Botón de importación -->
-            <button class="btn btn-outline-light btn-lg px-4" (click)="openImportModal()">
+            <button class="btn btn-action btn-lg" (click)="openImportModal()">
               <i class="bi bi-upload me-2"></i>Importar
             </button>
 
             <!-- Botón de nueva OT -->
-            <button class="btn btn-primary btn-lg px-4" (click)="openCreateModal()">
+            <button class="btn btn-primary btn-lg btn-primary-gradient" (click)="openCreateModal()">
               <i class="bi bi-plus-lg me-2"></i>Nueva OT
             </button>
           </div>
@@ -81,21 +92,24 @@
       <!-- Filtros mejorados -->
       <div class="row">
         <div class="col-12">
-          <div class="filters-card">
-            <div class="row g-3">
+          <div class="filters-card glass-effect">
+            <div class="row g-3 align-items-end">
               <div class="col-md-5 col-lg-6">
-                <div class="input-group input-group-lg">
+                <label class="form-label text-white fw-medium mb-2">
+                  <i class="bi bi-search me-1"></i>Búsqueda
+                </label>
+                <div class="input-group input-group-lg search-box">
                   <span class="input-group-text bg-white border-end-0">
-                    <i class="bi bi-search text-muted"></i>
+                    <i class="bi bi-search text-primary"></i>
                   </span>
                   <input type="text" class="form-control border-start-0"
                          [(ngModel)]="searchText"
                          (keyup.enter)="onSearch()"
                          placeholder="Buscar por OT, descripción, cliente...">
-                  <button class="btn btn-outline-secondary" type="button" (click)="onSearch()">
+                  <button class="btn btn-light" type="button" (click)="onSearch()">
                     Buscar
                   </button>
-                  <button class="btn btn-outline-secondary" type="button" (click)="clearFilters()"
+                  <button class="btn btn-outline-light" type="button" (click)="clearFilters()"
                           title="Limpiar filtros">
                     <i class="bi bi-x-circle"></i>
                   </button>
@@ -103,16 +117,21 @@
               </div>
 
               <div class="col-md-4 col-lg-3">
+                <label class="form-label text-white fw-medium mb-2">
+                  <i class="bi bi-filter me-1"></i>Estado
+                </label>
                 <select class="form-select form-select-lg" [(ngModel)]="estadoFilter" (change)="onSearch()">
                   <option *ngFor="let estado of estados" [value]="estado.value">
-                    {{estado.label}}
+                    <i [class]="estado.icon + ' me-2'"></i>{{estado.label}}
                   </option>
                 </select>
               </div>
 
               <div class="col-md-3 col-lg-3">
                 <div class="d-flex align-items-center justify-content-end gap-2">
-                  <span class="text-white opacity-75 d-none d-sm-inline">Mostrar:</span>
+                  <label class="form-label text-white fw-medium mb-0">
+                    <i class="bi bi-list-ul me-1"></i>Mostrar:
+                  </label>
                   <select class="form-select w-auto" [(ngModel)]="pageSize" (change)="changePageSize(pageSize)">
                     <option [value]="10">10</option>
                     <option [value]="20">20</option>
@@ -131,21 +150,31 @@
   <!-- Contenido principal -->
   <div class="container-fluid py-4">
     <!-- Mensajes de estado -->
-    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show mb-4" role="alert">
-      <i class="bi bi-exclamation-triangle-fill me-2"></i>
-      {{errorMessage}}
-      <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    <div *ngIf="errorMessage" class="alert alert-danger alert-dismissible fade show mb-4 glass-effect" role="alert">
+      <div class="d-flex align-items-center">
+        <i class="bi bi-exclamation-triangle-fill me-2 fs-4"></i>
+        <div class="flex-grow-1">
+          <strong class="d-block mb-1">Error al cargar datos</strong>
+          <span class="d-block">{{errorMessage}}</span>
+        </div>
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+      </div>
     </div>
 
     <!-- Contador de seleccionadas -->
-    <div *ngIf="selectedCount > 0" class="alert alert-info alert-dismissible fade show mb-4" role="alert">
+    <div *ngIf="selectedCount > 0" class="alert alert-info alert-dismissible fade show mb-4 glass-effect" role="alert">
       <div class="d-flex justify-content-between align-items-center">
-        <div>
-          <i class="bi bi-check-circle-fill me-2"></i>
-          <strong>{{selectedCount}}</strong> OT{{selectedCount > 1 ? 's' : ''}} seleccionada{{selectedCount > 1 ? 's' : ''}}
+        <div class="d-flex align-items-center">
+          <div class="selection-count me-3">
+            <i class="bi bi-check2-circle fs-3"></i>
+          </div>
+          <div>
+            <h6 class="mb-0 text-dark fw-bold">{{selectedCount}} OT{{selectedCount > 1 ? 's' : ''}} seleccionada{{selectedCount > 1 ? 's' : ''}}</h6>
+            <small class="text-muted">Listas para exportar o procesar</small>
+          </div>
         </div>
-        <div>
-          <button class="btn btn-sm btn-outline-primary me-2" (click)="exportSelectedOts()">
+        <div class="d-flex gap-2">
+          <button class="btn btn-sm btn-primary" (click)="exportSelectedOts()">
             <i class="bi bi-download me-1"></i>Exportar
           </button>
           <button class="btn btn-sm btn-outline-secondary"
@@ -156,14 +185,61 @@
       </div>
     </div>
 
+    <!-- Resumen de datos -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="stats-grid">
+          <div class="stat-card stat-card-primary">
+            <div class="stat-icon">
+              <i class="bi bi-clipboard-data"></i>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-value">{{totalElements}}</h3>
+              <p class="stat-label">Total OTs</p>
+            </div>
+          </div>
+          <div class="stat-card stat-card-success">
+            <div class="stat-icon">
+              <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="stat-content">
+<h3 class="stat-value">{{ activosCount }}</h3>
+              <p class="stat-label">Activas</p>
+            </div>
+          </div>
+          <div class="stat-card stat-card-warning">
+            <div class="stat-icon">
+              <i class="bi bi-clock-history"></i>
+            </div>
+            <div class="stat-content">
+              <h3 class="stat-value">{{selectedCount}}</h3>
+              <p class="stat-label">Seleccionadas</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Tabla de OTs - Versión Desktop -->
-    <div class="card shadow-sm border d-none d-lg-block">
+    <div class="card shadow-lg border-0 main-table-card d-none d-lg-block">
+      <div class="card-header bg-white border-bottom-0 py-3">
+        <div class="d-flex justify-content-between align-items-center">
+          <h5 class="mb-0 text-dark fw-bold">
+            <i class="bi bi-table me-2 text-primary"></i>
+            Lista de Órdenes de Trabajo
+          </h5>
+          <span class="badge bg-light text-dark border">
+            {{ots.length}} de {{totalElements}}
+          </span>
+        </div>
+      </div>
+
       <div class="card-body p-0">
         <div class="table-responsive">
           <table class="table table-hover align-middle mb-0">
             <thead class="table-light">
               <tr>
-                <th class="border-0" style="width: 40px;">
+                <th class="border-0 ps-4" style="width: 40px;">
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox"
                            [checked]="selectAllChecked"
@@ -177,7 +253,7 @@
                 <th class="border-0">Estado</th>
                 <th class="border-0">Site</th>
                 <th class="border-0">Fecha</th>
-                <th class="border-0 text-end">Acciones</th>
+                <th class="border-0 text-end pe-4">Acciones</th>
               </tr>
             </thead>
             <tbody>
@@ -185,10 +261,10 @@
               <tr *ngIf="loading">
                 <td colspan="8" class="text-center py-5">
                   <div class="d-flex flex-column align-items-center">
-                    <div class="spinner-border text-primary" role="status">
+                    <div class="spinner-border text-primary spinner-lg" role="status">
                       <span class="visually-hidden">Cargando...</span>
                     </div>
-                    <p class="mt-3 text-muted">Cargando órdenes de trabajo...</p>
+                    <p class="mt-3 text-muted fw-medium">Cargando órdenes de trabajo...</p>
                   </div>
                 </td>
               </tr>
@@ -196,19 +272,21 @@
               <!-- No results -->
               <tr *ngIf="!loading && ots.length === 0">
                 <td colspan="8" class="text-center py-5">
-                  <i class="bi bi-inbox display-1 text-muted"></i>
-                  <h4 class="mt-3 text-muted">No se encontraron OTs</h4>
-                  <p class="text-muted">Intenta ajustar los filtros o crear una nueva OT.</p>
-                  <button class="btn btn-primary mt-3" (click)="openCreateModal()">
-                    <i class="bi bi-plus-lg me-2"></i>Crear primera OT
-                  </button>
+                  <div class="empty-state">
+                    <i class="bi bi-inbox display-1 text-muted mb-4"></i>
+                    <h4 class="text-muted fw-bold mb-3">No se encontraron OTs</h4>
+                    <p class="text-muted mb-4">Intenta ajustar los filtros o crear una nueva OT.</p>
+                    <button class="btn btn-primary btn-lg" (click)="openCreateModal()">
+                      <i class="bi bi-plus-lg me-2"></i>Crear primera OT
+                    </button>
+                  </div>
                 </td>
               </tr>
 
               <!-- OTs list -->
               <tr *ngFor="let ot of ots"
-                  [class.table-active]="selectedOts.has(ot.idOts!)">
-                <td>
+                  [class.table-primary-light]="selectedOts.has(ot.idOts!)">
+                <td class="ps-4">
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox"
                            [checked]="selectedOts.has(ot.idOts!)"
@@ -218,7 +296,7 @@
                 <td>
                   <div class="d-flex align-items-center">
                     <div class="ot-number">
-                      <span class="badge bg-light text-primary border border-primary rounded-pill px-3 py-2">
+                      <span class="badge bg-primary bg-opacity-10 text-primary border border-primary border-opacity-25 rounded-pill px-3 py-2 fw-bold">
                         #{{ot.ot}}
                       </span>
                     </div>
@@ -226,7 +304,7 @@
                 </td>
                 <td>
                   <div class="d-flex flex-column">
-                    <span class="fw-medium text-dark" [title]="ot.proyecto">
+                    <span class="fw-semibold text-dark" [title]="ot.proyecto">
                       {{truncateText(ot.proyecto, 60) || 'Sin descripción'}}
                     </span>
                     <small class="text-muted">{{ot.region || 'Sin región'}}</small>
@@ -234,8 +312,13 @@
                 </td>
                 <td>
                   <div class="d-flex align-items-center">
+                    <div class="customer-avatar me-3">
+                      <div class="avatar-circle bg-primary bg-opacity-10 text-primary">
+                        {{ot.cliente?.charAt(0) || 'C'}}
+                      </div>
+                    </div>
                     <div class="customer-info">
-                      <div class="fw-medium text-dark" [title]="ot.cliente">
+                      <div class="fw-semibold text-dark" [title]="ot.cliente">
                         {{truncateText(ot.cliente, 40) || 'Sin cliente'}}
                       </div>
                       <small class="text-muted">{{ot.cliente_id || 'Sin site'}}</small>
@@ -243,7 +326,7 @@
                   </div>
                 </td>
                 <td>
-                  <span class="badge" [ngClass]="getEstadoClass(ot.estadoOt)">
+                  <span class="badge estado-badge" [ngClass]="getEstadoClass(ot.estadoOt)">
                     <i class="bi me-1" [ngClass]="getEstadoIcon(ot.estadoOt)"></i>
                     {{ot.estadoOt || 'SIN ESTADO'}}
                   </span>
@@ -259,27 +342,30 @@
                   </div>
                 </td>
                 <td>
-                  <div class="d-flex flex-column">
-                    <span class="fw-medium text-dark">{{ot.fechaApertura | date:'dd/MM/yyyy'}}</span>
-                    <small class="text-muted">Apertura</small>
+                  <div class="date-badge">
+                    <span class="date-day">{{ot.fechaApertura | date:'dd'}}</span>
+                    <span class="date-month">{{ot.fechaApertura | date:'MMM'}}</span>
+                    <span class="date-year">{{ot.fechaApertura | date:'yyyy'}}</span>
                   </div>
                 </td>
-                <td class="text-end">
-                  <div class="btn-group" role="group">
-                    <button class="btn btn-sm btn-outline-secondary"
+                <td class="pe-4">
+                  <div class="action-buttons">
+                    <button class="btn btn-action btn-sm me-1"
                             (click)="openViewModal(ot)"
                             title="Ver detalle">
                       <i class="bi bi-eye"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-primary"
+                    <button class="btn btn-action btn-sm me-1"
                             (click)="openEditModal(ot)"
                             title="Editar">
                       <i class="bi bi-pencil"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-warning"
+                    <button class="btn btn-action btn-sm"
                             (click)="toggleEstado(ot)"
+                            [class.btn-warning]="!ot.activo"
+                            [class.btn-success]="ot.activo"
                             [title]="ot.activo ? 'Desactivar' : 'Activar'">
-                      <i class="bi" [ngClass]="ot.activo ? 'bi-toggle-off' : 'bi-toggle-on'"></i>
+                      <i class="bi" [ngClass]="ot.activo ? 'bi-toggle-on' : 'bi-toggle-off'"></i>
                     </button>
                   </div>
                 </td>
@@ -289,24 +375,26 @@
         </div>
 
         <!-- Paginación Desktop -->
-        <div *ngIf="!loading && totalPages > 0" class="pagination-section">
-          <app-pagination
-            [currentPage]="currentPage"
-            [totalItems]="totalElements"
-            [totalPages]="totalPages"
-            [pageSize]="pageSize"
-            [showInfo]="true"
-            [showSizeSelector]="false"
-            [showNavigation]="true"
-            [showJumpToPage]="true"
-            [pageSizes]="[10, 20, 50, 100]"
-            [align]="'center'"
-            [size]="'md'"
-            [isLoading]="loading"
-            (pageChange)="goToPage($event)"
-            (pageSizeChange)="changePageSize($event)"
-            (refresh)="refreshTable()">
-          </app-pagination>
+        <div *ngIf="!loading && totalPages > 0" class="pagination-section bg-light">
+          <div class="container-fluid">
+            <app-pagination
+              [currentPage]="currentPage"
+              [totalItems]="totalElements"
+              [totalPages]="totalPages"
+              [pageSize]="pageSize"
+              [showInfo]="true"
+              [showSizeSelector]="false"
+              [showNavigation]="true"
+              [showJumpToPage]="true"
+              [pageSizes]="[10, 20, 50, 100]"
+              [align]="'center'"
+              [size]="'md'"
+              [isLoading]="loading"
+              (pageChange)="goToPage($event)"
+              (pageSizeChange)="changePageSize($event)"
+              (refresh)="refreshTable()">
+            </app-pagination>
+          </div>
         </div>
       </div>
     </div>
@@ -315,53 +403,60 @@
     <div class="d-block d-lg-none">
       <!-- Loading state mobile -->
       <div *ngIf="loading" class="text-center py-5">
-        <div class="spinner-border text-primary" role="status"></div>
-        <p class="mt-3 text-muted">Cargando órdenes de trabajo...</p>
+        <div class="spinner-border text-primary spinner-lg" role="status"></div>
+        <p class="mt-3 text-muted fw-medium">Cargando órdenes de trabajo...</p>
       </div>
 
       <!-- No results mobile -->
       <div *ngIf="!loading && ots.length === 0" class="text-center py-5">
-        <i class="bi bi-inbox display-1 text-muted"></i>
-        <h4 class="mt-3 text-muted">No se encontraron OTs</h4>
-        <p class="text-muted">Intenta ajustar los filtros o crear una nueva OT.</p>
-        <button class="btn btn-primary mt-3" (click)="openCreateModal()">
-          <i class="bi bi-plus-lg me-2"></i>Crear primera OT
-        </button>
+        <div class="empty-state">
+          <i class="bi bi-inbox display-1 text-muted mb-4"></i>
+          <h4 class="text-muted fw-bold mb-3">No se encontraron OTs</h4>
+          <p class="text-muted mb-4">Intenta ajustar los filtros o crear una nueva OT.</p>
+          <button class="btn btn-primary btn-lg" (click)="openCreateModal()">
+            <i class="bi bi-plus-lg me-2"></i>Crear primera OT
+          </button>
+        </div>
       </div>
 
       <!-- OTs list mobile -->
       <div *ngIf="!loading && ots.length > 0">
-        <div class="row">
-          <div class="col-12 mb-3">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox"
-                     [checked]="selectAllChecked"
-                     (change)="toggleSelectAll($event)">
-              <label class="form-check-label ms-2">
-                Seleccionar todas ({{selectedCount}}/{{ots.length}})
-              </label>
-            </div>
+        <div class="mobile-header mb-3">
+          <div class="form-check d-flex align-items-center">
+            <input class="form-check-input me-2" type="checkbox"
+                   [checked]="selectAllChecked"
+                   (change)="toggleSelectAll($event)">
+            <label class="form-check-label fw-medium">
+              Seleccionar todas ({{selectedCount}}/{{ots.length}})
+            </label>
           </div>
         </div>
 
         <div class="row g-3">
           <div class="col-12" *ngFor="let ot of ots">
-            <div class="card mobile-ot-card" [class.border-primary]="selectedOts.has(ot.idOts!)">
+            <div class="card mobile-ot-card" [class.border-primary-selected]="selectedOts.has(ot.idOts!)">
               <div class="card-body">
                 <!-- Checkbox y header -->
                 <div class="d-flex justify-content-between align-items-start mb-3">
-                  <div class="form-check mb-0">
-                    <input class="form-check-input" type="checkbox"
-                           [checked]="selectedOts.has(ot.idOts!)"
-                           (change)="toggleSelectOt(ot)">
+                  <div class="d-flex align-items-center">
+                    <div class="form-check me-3">
+                      <input class="form-check-input" type="checkbox"
+                             [checked]="selectedOts.has(ot.idOts!)"
+                             (change)="toggleSelectOt(ot)">
+                    </div>
+                    <div class="ot-number">
+                      <span class="badge bg-primary text-white rounded-pill px-3 py-1">
+                        #{{ot.ot}}
+                      </span>
+                    </div>
                   </div>
-                  <div class="d-flex gap-2">
-                    <button class="btn btn-sm btn-outline-secondary"
+                  <div class="d-flex gap-1">
+                    <button class="btn btn-action btn-sm"
                             (click)="openViewModal(ot)"
                             title="Ver detalle">
                       <i class="bi bi-eye"></i>
                     </button>
-                    <button class="btn btn-sm btn-outline-primary"
+                    <button class="btn btn-action btn-sm"
                             (click)="openEditModal(ot)"
                             title="Editar">
                       <i class="bi bi-pencil"></i>
@@ -369,58 +464,62 @@
                   </div>
                 </div>
 
-                <!-- OT Number -->
-                <div class="mb-3">
-                  <span class="badge bg-primary rounded-pill px-3 py-2 fs-6">
-                    OT #{{ot.ot}}
-                  </span>
-                </div>
-
                 <!-- Información principal -->
                 <div class="mobile-info-grid">
                   <div class="info-item">
-                    <small class="text-muted">Proyecto</small>
-                    <div class="fw-medium" [title]="ot.proyecto">
+                    <small class="text-muted d-block mb-1">
+                      <i class="bi bi-briefcase me-1"></i>Proyecto
+                    </small>
+                    <div class="fw-semibold text-dark" [title]="ot.proyecto">
                       {{truncateText(ot.proyecto, 80) || 'Sin Proyecto'}}
                     </div>
                   </div>
 
                   <div class="info-item">
-                    <small class="text-muted">Cliente</small>
-                    <div class="fw-medium" [title]="ot.cliente">
+                    <small class="text-muted d-block mb-1">
+                      <i class="bi bi-person me-1"></i>Cliente
+                    </small>
+                    <div class="fw-semibold text-dark" [title]="ot.cliente">
                       {{truncateText(ot.cliente, 40) || 'Sin cliente'}}
                     </div>
                   </div>
 
                   <div class="info-item">
-                    <small class="text-muted">Estado</small>
-                    <span class="badge" [ngClass]="getEstadoClass(ot.estadoOt)">
+                    <small class="text-muted d-block mb-1">
+                      <i class="bi bi-tags me-1"></i>Estado
+                    </small>
+                    <span class="badge estado-badge" [ngClass]="getEstadoClass(ot.estadoOt)">
                       <i class="bi me-1" [ngClass]="getEstadoIcon(ot.estadoOt)"></i>
                       {{ot.estadoOt || 'SIN ESTADO'}}
                     </span>
                   </div>
 
                   <div class="info-item">
-                    <small class="text-muted">Site</small>
-                    <div class="fw-medium" [title]="ot.siteNombre">
+                    <small class="text-muted d-block mb-1">
+                      <i class="bi bi-geo-alt me-1"></i>Site
+                    </small>
+                    <div class="fw-semibold text-dark" [title]="ot.siteNombre">
                       {{truncateText(ot.siteNombre, 30) || '—'}}
                     </div>
                   </div>
-
-                  <div class="info-item">
-                    <small class="text-muted">Fecha</small>
-                    <div class="fw-medium">{{ot.fechaApertura | date:'dd/MM/yyyy'}}</div>
-                  </div>
                 </div>
 
-                <!-- Acciones adicionales -->
-                <div class="mt-3 pt-3 border-top d-flex justify-content-end">
-                  <button class="btn btn-sm btn-outline-warning"
-                          (click)="toggleEstado(ot)"
-                          [title]="ot.activo ? 'Desactivar' : 'Activar'">
-                    <i class="bi me-1" [ngClass]="ot.activo ? 'bi-toggle-off' : 'bi-toggle-on'"></i>
-                    {{ot.activo ? 'Desactivar' : 'Activar'}}
-                  </button>
+                <!-- Fecha y acciones -->
+                <div class="d-flex justify-content-between align-items-center mt-3 pt-3 border-top">
+                  <div class="date-info">
+                    <small class="text-muted d-block mb-1">Fecha apertura</small>
+                    <div class="fw-semibold">{{ot.fechaApertura | date:'dd/MM/yyyy'}}</div>
+                  </div>
+                  <div>
+                    <button class="btn btn-sm"
+                            [class.btn-warning]="!ot.activo"
+                            [class.btn-success]="ot.activo"
+                            (click)="toggleEstado(ot)"
+                            [title]="ot.activo ? 'Desactivar' : 'Activar'">
+                      <i class="bi me-1" [ngClass]="ot.activo ? 'bi-toggle-on' : 'bi-toggle-off'"></i>
+                      {{ot.activo ? 'Activa' : 'Inactiva'}}
+                    </button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -452,16 +551,16 @@
   </div>
 </div>
 
-
-
-
 <!-- Modal de Exportación Avanzada -->
 <ng-template #exportModal>
   <div class="modal-content border-0 modal-scrollable">
-    <div class="modal-header bg-primary text-white border-0 sticky-top">
-      <h5 class="modal-title">
-        <i class="bi bi-download me-2"></i>Exportación Avanzada
-      </h5>
+    <div class="modal-header bg-primary-gradient text-white border-0 sticky-top">
+      <div class="modal-header-content">
+        <h5 class="modal-title">
+          <i class="bi bi-download me-2"></i>Exportación Avanzada
+        </h5>
+        <p class="modal-subtitle mb-0 text-white-75">Selecciona el tipo de exportación</p>
+      </div>
       <button type="button" class="btn-close btn-close-white"
               (click)="closeAllModals()" aria-label="Cerrar"></button>
     </div>
@@ -470,24 +569,29 @@
       <div class="row g-4">
         <!-- Opción 1: Seleccionadas -->
         <div class="col-md-6">
-          <div class="card h-100 border option-card"
-               [class.border-primary]="exportFiltroActivo"
+          <div class="card option-card h-100"
+               [class.option-selected]="exportFiltroActivo"
                (click)="exportFiltroActivo = true">
-            <div class="card-body text-center py-4">
-              <div class="mb-3">
+            <div class="card-body text-center p-4">
+              <div class="option-icon mb-3">
                 <i class="bi bi-check-circle display-4"
                    [class.text-primary]="exportFiltroActivo"
-                   [class.text-secondary]="!exportFiltroActivo"></i>
+                   [class.text-muted]="!exportFiltroActivo"></i>
               </div>
-              <h5 class="card-title mb-2">Seleccionadas</h5>
-              <p class="card-text text-muted mb-3">
-                {{selectedCount}} OTs seleccionadas
+              <h5 class="option-title mb-2">Seleccionadas</h5>
+              <p class="option-text text-muted mb-3">
+                Exportar únicamente las OTs seleccionadas
               </p>
-              <div class="form-check form-switch">
+              <div class="selection-count">
+                <span class="badge bg-primary rounded-pill px-3 py-2">
+                  {{selectedCount}} OTs
+                </span>
+              </div>
+              <div class="form-check form-switch mt-3">
                 <input class="form-check-input" type="checkbox"
                        [(ngModel)]="exportFiltroActivo"
                        (click)="$event.stopPropagation()">
-                <label class="form-check-label">Usar esta opción</label>
+                <label class="form-check-label">Seleccionar</label>
               </div>
             </div>
           </div>
@@ -495,24 +599,29 @@
 
         <!-- Opción 2: Todas -->
         <div class="col-md-6">
-          <div class="card h-100 border option-card"
-               [class.border-info]="!exportFiltroActivo"
+          <div class="card option-card h-100"
+               [class.option-selected]="!exportFiltroActivo"
                (click)="exportFiltroActivo = false">
-            <div class="card-body text-center py-4">
-              <div class="mb-3">
+            <div class="card-body text-center p-4">
+              <div class="option-icon mb-3">
                 <i class="bi bi-database display-4"
                    [class.text-info]="!exportFiltroActivo"
-                   [class.text-secondary]="exportFiltroActivo"></i>
+                   [class.text-muted]="exportFiltroActivo"></i>
               </div>
-              <h5 class="card-title mb-2">Todas</h5>
-              <p class="card-text text-muted mb-3">
-                {{totalElements}} OTs en total
+              <h5 class="option-title mb-2">Todas las OTs</h5>
+              <p class="option-text text-muted mb-3">
+                Exportar todas las OTs del sistema
               </p>
-              <div class="form-check form-switch">
+              <div class="selection-count">
+                <span class="badge bg-info rounded-pill px-3 py-2">
+                  {{totalElements}} OTs
+                </span>
+              </div>
+              <div class="form-check form-switch mt-3">
                 <input class="form-check-input" type="checkbox"
                        [(ngModel)]="exportFiltroActivo" [value]="false"
                        (click)="$event.stopPropagation()">
-                <label class="form-check-label">Usar esta opción</label>
+                <label class="form-check-label">Seleccionar</label>
               </div>
             </div>
           </div>
@@ -525,43 +634,46 @@
           <i class="bi bi-funnel me-2"></i>Filtros adicionales
         </h6>
 
-        <div class="mb-4">
-          <label class="form-label fw-semibold">Texto de búsqueda:</label>
-          <div class="input-group">
-            <span class="input-group-text">
-              <i class="bi bi-search"></i>
-            </span>
-            <input type="text" class="form-control"
-                   [(ngModel)]="exportFiltroText"
-                   placeholder="Buscar en descripción, cliente, etc.">
-          </div>
-          <small class="form-text text-muted">Deja vacío para exportar todas las OTs</small>
-        </div>
-
-        <div class="row g-3 mb-4">
-          <div class="col-md-6">
-            <label class="form-label fw-semibold">Fecha desde:</label>
+        <div class="filters-container">
+          <div class="mb-4">
+            <label class="form-label fw-semibold">
+              <i class="bi bi-search me-1"></i>Texto de búsqueda:
+            </label>
             <div class="input-group">
               <span class="input-group-text">
-                <i class="bi bi-calendar"></i>
+                <i class="bi bi-search"></i>
               </span>
-              <input type="date" class="form-control" [(ngModel)]="exportFechaDesde">
+              <input type="text" class="form-control"
+                     [(ngModel)]="exportFiltroText"
+                     placeholder="Buscar en descripción, cliente, etc.">
             </div>
+            <small class="form-text text-muted">Deja vacío para exportar todas las OTs</small>
           </div>
-          <div class="col-md-6">
-            <label class="form-label fw-semibold">Fecha hasta:</label>
-            <div class="input-group">
-              <span class="input-group-text">
-                <i class="bi bi-calendar"></i>
-              </span>
-              <input type="date" class="form-control" [(ngModel)]="exportFechaHasta">
-            </div>
-          </div>
-        </div>
 
-        <div class="alert alert-info">
-          <i class="bi bi-info-circle me-2"></i>
-          Los filtros se aplicarán a todas las OTs del sistema.
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">
+                <i class="bi bi-calendar me-1"></i>Fecha desde:
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bi bi-calendar"></i>
+                </span>
+                <input type="date" class="form-control" [(ngModel)]="exportFechaDesde">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label fw-semibold">
+                <i class="bi bi-calendar me-1"></i>Fecha hasta:
+              </label>
+              <div class="input-group">
+                <span class="input-group-text">
+                  <i class="bi bi-calendar"></i>
+                </span>
+                <input type="date" class="form-control" [(ngModel)]="exportFechaHasta">
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -573,7 +685,7 @@
           <i class="bi bi-x-lg me-2"></i>Cancelar
         </button>
         <div>
-          <button type="button" class="btn btn-primary px-4"
+          <button type="button" class="btn btn-primary btn-lg px-4"
                   (click)="export()"
                   [disabled]="exportFiltroActivo && selectedCount === 0">
             <i class="bi bi-download me-2"></i>
@@ -588,10 +700,13 @@
 <!-- Modal de Importación -->
 <ng-template #importModal>
   <div class="modal-content border-0 modal-scrollable">
-    <div class="modal-header bg-primary text-white border-0 sticky-top">
-      <h5 class="modal-title">
-        <i class="bi bi-upload me-2"></i>Importar OTs desde Excel
-      </h5>
+    <div class="modal-header bg-primary-gradient text-white border-0 sticky-top">
+      <div class="modal-header-content">
+        <h5 class="modal-title">
+          <i class="bi bi-upload me-2"></i>Importar OTs desde Excel
+        </h5>
+        <p class="modal-subtitle mb-0 text-white-75">Sube tu archivo Excel para importar OTs</p>
+      </div>
       <button type="button" class="btn-close btn-close-white"
               (click)="closeAllModals()" aria-label="Cerrar"></button>
     </div>
@@ -601,10 +716,10 @@
       <div *ngIf="importStep === 1" class="import-step">
         <div class="text-center mb-5">
           <div class="import-icon mb-3">
-            <i class="bi bi-cloud-arrow-up display-1 text-primary"></i>
+            <i class="bi bi-cloud-arrow-up-fill display-1 text-primary"></i>
           </div>
-          <h4 class="mb-2 text-white">Sube tu archivo Excel</h4>
-          <p class="text-white-50 mb-4">Archivos .xlsx hasta 10MB</p>
+          <h4 class="mb-2 text-dark fw-bold">Sube tu archivo Excel</h4>
+          <p class="text-muted mb-4">Archivos .xlsx hasta 10MB</p>
         </div>
 
         <div class="drop-zone mb-5"
@@ -613,61 +728,109 @@
              (drop)="onFileDrop($event)">
           <input #fileInput type="file" hidden accept=".xlsx" (change)="onFileSelected($event)">
 
-          <div class="py-5">
-            <i class="bi bi-file-earmark-excel display-1 text-muted mb-3"></i>
+          <div class="drop-content py-5">
+            <i class="bi bi-file-earmark-excel display-1 text-primary mb-3"></i>
             <h5 class="mb-2 text-dark">Arrastra tu archivo aquí</h5>
             <p class="text-muted mb-0">o haz clic para seleccionar</p>
+            <div class="mt-3">
+              <button class="btn btn-outline-primary">
+                <i class="bi bi-folder2-open me-2"></i>Seleccionar archivo
+              </button>
+            </div>
           </div>
 
-          <div *ngIf="importFile" class="alert alert-success mt-3 border-0">
-            <div class="d-flex align-items-center">
-              <i class="bi bi-file-excel fs-4 text-success me-3"></i>
-              <div>
-                <h6 class="mb-1">{{importFile.name}}</h6>
-<small class="text-muted">{{ importFile.size | fileSize }}</small>              </div>
-              <button class="btn btn-sm btn-outline-danger ms-auto"
-                      (click)="importFile = null; $event.stopPropagation()">
-                <i class="bi bi-trash"></i>
-              </button>
+          <div *ngIf="importFile" class="file-preview mt-4">
+            <div class="alert alert-success border-0">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-file-excel fs-4 text-success me-3"></i>
+                <div class="flex-grow-1">
+                  <h6 class="mb-1">{{importFile.name}}</h6>
+                  <small class="text-muted">{{ importFile.size | fileSize }}</small>
+                </div>
+                <button class="btn btn-sm btn-outline-danger"
+                        (click)="importFile = null; $event.stopPropagation()">
+                  <i class="bi bi-trash"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
 
         <div class="text-center mt-4">
-          <button class="btn btn-outline-light" (click)="downloadImportTemplate()">
-            <i class="bi bi-download me-2"></i>Descargar plantilla
-          </button>
-          <button class="btn btn-outline-light ms-2" (click)="showImportHelp()">
-            <i class="bi bi-question-circle me-2"></i>Ver ayuda
-          </button>
+          <div class="btn-group" role="group">
+            <button class="btn btn-outline-primary" (click)="downloadImportTemplate()">
+              <i class="bi bi-download me-2"></i>Descargar plantilla
+            </button>
+            <button class="btn btn-outline-primary" (click)="showImportHelp()">
+              <i class="bi bi-question-circle me-2"></i>Ver ayuda
+            </button>
+          </div>
         </div>
       </div>
 
       <!-- Paso 2: Opciones -->
       <div *ngIf="importStep === 2" class="import-step">
-        <h4 class="mb-4 text-white">
-          <i class="bi bi-gear me-2"></i>Configuración de importación
+        <h4 class="mb-4 text-dark fw-bold">
+          <i class="bi bi-gear-fill me-2 text-primary"></i>Configuración de importación
         </h4>
 
-        <div class="mb-4">
-          <label class="form-label fw-bold text-white">Modo de importación:</label>
-          <select class="form-select form-select-lg" [(ngModel)]="importMode">
-            <option value="normal">Normal (hasta 50 registros)</option>
-            <option value="masivo">Masivo (más de 50 registros)</option>
-          </select>
-        </div>
+        <div class="row g-4">
+          <div class="col-12">
+            <label class="form-label fw-bold text-dark">Modo de importación:</label>
+            <div class="mode-selector">
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <div class="mode-option" [class.selected]="importMode === 'normal'"
+                       (click)="importMode = 'normal'">
+                    <div class="mode-icon">
+                      <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div class="mode-content">
+                      <h6 class="mode-title mb-1">Normal</h6>
+                      <p class="mode-desc mb-0">Hasta 50 registros</p>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio"
+                             [(ngModel)]="importMode" value="normal"
+                             (click)="$event.stopPropagation()">
+                    </div>
+                  </div>
+                </div>
+                <div class="col-md-6">
+                  <div class="mode-option" [class.selected]="importMode === 'masivo'"
+                       (click)="importMode = 'masivo'">
+                    <div class="mode-icon">
+                      <i class="bi bi-database"></i>
+                    </div>
+                    <div class="mode-content">
+                      <h6 class="mode-title mb-1">Masivo</h6>
+                      <p class="mode-desc mb-0">Más de 50 registros</p>
+                    </div>
+                    <div class="form-check">
+                      <input class="form-check-input" type="radio"
+                             [(ngModel)]="importMode" value="masivo"
+                             (click)="$event.stopPropagation()">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <div *ngIf="importMode === 'masivo'" class="alert alert-warning">
-          <div class="d-flex">
-            <i class="bi bi-exclamation-triangle-fill fs-4 me-3 mt-1"></i>
-            <div>
-              <h6 class="alert-heading mb-2">Modo masivo activado</h6>
-              <p class="mb-2">El procesamiento se realizará en segundo plano y puede tomar varios minutos.</p>
-              <ul class="mb-0">
-                <li>Más eficiente para grandes volúmenes de datos</li>
-                <li>Puedes cerrar el modal y continuar trabajando</li>
-                <li>Recibirás una notificación cuando termine</li>
-              </ul>
+          <div *ngIf="importMode === 'masivo'" class="col-12">
+            <div class="alert alert-warning border-0">
+              <div class="d-flex">
+                <i class="bi bi-exclamation-triangle-fill fs-4 me-3 mt-1 text-warning"></i>
+                <div>
+                  <h6 class="alert-heading mb-2 text-dark">Modo masivo activado</h6>
+                  <p class="mb-2 text-dark">El procesamiento se realizará en segundo plano y puede tomar varios minutos.</p>
+                  <ul class="mb-0 text-dark">
+                    <li>Más eficiente para grandes volúmenes de datos</li>
+                    <li>Puedes cerrar el modal y continuar trabajando</li>
+                    <li>Recibirás una notificación cuando termine</li>
+                  </ul>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -676,29 +839,35 @@
       <!-- Paso 3: Resultados -->
       <div *ngIf="importStep === 3 && importResult" class="import-step">
         <div class="text-center mb-5">
-          <div class="mb-4">
+          <div class="result-icon mb-4">
             <i class="bi bi-check-circle-fill display-1 text-success"></i>
           </div>
-          <h4 class="mb-3 text-white">Importación completada</h4>
-          <p class="text-white-50">El proceso ha finalizado con los siguientes resultados:</p>
+          <h4 class="mb-3 text-dark fw-bold">Importación completada</h4>
+          <p class="text-muted">El proceso ha finalizado con los siguientes resultados:</p>
         </div>
 
-        <div class="row g-4 mb-5">
-          <div class="col-md-6">
-            <div class="card border-success border-2">
-              <div class="card-body text-center py-4">
-                <h2 class="text-success display-4 mb-2">{{importResult.exitosos || 0}}</h2>
-                <p class="text-success fw-bold mb-0">Registros exitosos</p>
-                <small class="text-muted">Se han importado correctamente</small>
+        <div class="result-stats mb-5">
+          <div class="row g-4">
+            <div class="col-md-6">
+              <div class="stat-card-success">
+                <div class="stat-icon">
+                  <i class="bi bi-check2-circle"></i>
+                </div>
+                <div class="stat-content">
+                  <h3 class="stat-value">{{importResult.exitosos || 0}}</h3>
+                  <p class="stat-label">Registros exitosos</p>
+                </div>
               </div>
             </div>
-          </div>
-          <div class="col-md-6">
-            <div class="card border-danger border-2">
-              <div class="card-body text-center py-4">
-                <h2 class="text-danger display-4 mb-2">{{importResult.fallidos || 0}}</h2>
-                <p class="text-danger fw-bold mb-0">Registros fallidos</p>
-                <small class="text-muted">No se pudieron importar</small>
+            <div class="col-md-6">
+              <div class="stat-card-danger">
+                <div class="stat-icon">
+                  <i class="bi bi-x-circle"></i>
+                </div>
+                <div class="stat-content">
+                  <h3 class="stat-value">{{importResult.fallidos || 0}}</h3>
+                  <p class="stat-label">Registros fallidos</p>
+                </div>
               </div>
             </div>
           </div>
@@ -708,15 +877,13 @@
           <h6 class="text-warning mb-3 d-flex align-items-center">
             <i class="bi bi-exclamation-triangle me-2"></i>Detalle de errores:
           </h6>
-          <div class="alert alert-warning">
-            <div class="error-list">
-              <div *ngFor="let error of importResult.registrosConError" class="error-item mb-3">
-                <div class="error-header d-flex justify-content-between align-items-start mb-1">
-                  <strong class="text-dark">Fila {{error.filaExcel}}</strong>
-                  <small class="text-muted">{{error.tipoError || 'Error de validación'}}</small>
-                </div>
-                <p class="error-message mb-0 text-dark">{{error.mensajeError}}</p>
+          <div class="error-list">
+            <div *ngFor="let error of importResult.registrosConError" class="error-item">
+              <div class="error-header d-flex justify-content-between align-items-start mb-1">
+                <strong class="text-dark">Fila {{error.filaExcel}}</strong>
+                <small class="text-muted">{{error.tipoError || 'Error de validación'}}</small>
               </div>
+              <p class="error-message mb-0 text-dark">{{error.mensajeError}}</p>
             </div>
           </div>
         </div>

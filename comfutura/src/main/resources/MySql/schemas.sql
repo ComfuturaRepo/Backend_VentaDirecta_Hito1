@@ -210,10 +210,23 @@ CREATE TABLE fase (
 );
 CREATE TABLE site (
                       id_site INT AUTO_INCREMENT PRIMARY KEY,
-                      codigo_sitio VARCHAR(150)  NULL,
-                      descripcion VARCHAR(255) not null,
-                      activo TINYINT(1) DEFAULT 1
+                      codigo_sitio VARCHAR(150) NOT NULL UNIQUE,
+                      activo TINYINT(1) DEFAULT 1,
+                      fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE site_descripcion (
+                                  id_site_descripcion INT AUTO_INCREMENT PRIMARY KEY,
+                                  id_site INT NOT NULL,
+                                  descripcion VARCHAR(255) NOT NULL,
+                                  fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                  activo TINYINT(1) DEFAULT 1,
+
+                                  CONSTRAINT fk_site_desc
+                                      FOREIGN KEY (id_site) REFERENCES site(id_site)
+                                          ON DELETE CASCADE
+);
+
 CREATE TABLE region (
                         id_region INT AUTO_INCREMENT PRIMARY KEY,
                         nombre VARCHAR(100) NOT NULL,
@@ -240,7 +253,12 @@ CREATE TABLE analista_cliente_solicitante (
                                               activo TINYINT(1) DEFAULT 1
 );
 
-
+CREATE TABLE tipo_ot (
+                         id_tipo_ot INT AUTO_INCREMENT PRIMARY KEY,
+                         codigo VARCHAR(20) UNIQUE,
+                         descripcion VARCHAR(100) NOT NULL,
+                         activo TINYINT(1) DEFAULT 1
+);
 
 CREATE TABLE ots (
                      id_ots INT AUTO_INCREMENT PRIMARY KEY,
@@ -263,6 +281,7 @@ CREATE TABLE ots (
                      id_liquidador           INT DEFAULT NULL,
                      id_ejecutante           INT DEFAULT NULL,
                      id_analista_contable    INT DEFAULT NULL,
+                     id_tipo_ot    INT not NULL,
 
                      id_trabajador int not null,
 
@@ -310,7 +329,10 @@ CREATE TABLE ots (
                          FOREIGN KEY (id_ejecutante) REFERENCES trabajador(id_trabajador),
 
                      CONSTRAINT fk_ots_anal_cont
-                         FOREIGN KEY (id_analista_contable) REFERENCES trabajador(id_trabajador)
+                         FOREIGN KEY (id_analista_contable) REFERENCES trabajador(id_trabajador),
+
+                     CONSTRAINT fk_ots_tipo_ots
+                         FOREIGN KEY (id_tipo_ot) REFERENCES tipo_ot(id_tipo_ot)
 );
 
 
@@ -671,3 +693,4 @@ CREATE TABLE permiso_cargo (
                                FOREIGN KEY (id_permiso) REFERENCES permiso(id_permiso),
                                FOREIGN KEY (id_cargo) REFERENCES cargo(id_cargo)
 );
+

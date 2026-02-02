@@ -5,14 +5,15 @@ import { Subscription, debounceTime, distinctUntilChanged, Subject } from 'rxjs'
 import Swal from 'sweetalert2';
 import { PaginationComponent } from '../../component/pagination.component/pagination.component';
 import { DEFAULT_PAGINATION_CONFIG, PageResponse } from '../../model/page.interface';
-import { Site } from '../../model/site.interface';
+import { Site, SiteRequest, SiteDescripcionRequest } from '../../model/site.interface';
 import { SiteService } from '../../service/site.service';
-
+import { DropdownItem, DropdownService } from '../../service/dropdown.service';
+import { NgselectDropdownComponent } from '../../component/ngselect-dropdown-component/ngselect-dropdown-component';
 
 @Component({
   selector: 'app-site',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, NgselectDropdownComponent],
   templateUrl: './site-component.html',
   styleUrls: ['./site-component.css']
 })
@@ -20,7 +21,7 @@ export class SiteComponent implements OnInit, OnDestroy {
   // Datos principales
   sites: Site[] = [];
 
-  // Configuración de paginación con valores por defecto EXPLÍCITOS
+  // Configuración de paginación
   paginationConfig = {
     showInfo: true,
     showSizeSelector: true,
@@ -44,8 +45,13 @@ export class SiteComponent implements OnInit, OnDestroy {
   // Formulario modal
   showModal = false;
   isEditMode = false;
-  currentSite: Site = { codigoSitio: '', descripcion: '', activo: true };
+  currentSite: Site = { codigoSitio: '', descripciones: [] };
   formSubmitted = false;
+  descripcionesTemporal: string[] = [''];
+
+  // Dropdown para sitios compuestos
+  siteOptions: DropdownItem[] = [];
+  selectedSiteId: number | null = null;
 
   // Loading y mensajes
   isLoading = false;
@@ -58,7 +64,10 @@ export class SiteComponent implements OnInit, OnDestroy {
   totalElements = 0;
   totalPages = 0;
 
-  constructor(private siteService: SiteService) {
+  constructor(
+    private siteService: SiteService,
+    private dropdownService: DropdownService
+  ) {
     // Configuración específica para este componente
     this.paginationConfig.pageSizes = [10, 25, 50, 100];
     this.paginationConfig.showInfo = true;
@@ -73,8 +82,20 @@ export class SiteComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.setupSearchDebounce();
     this.loadSites();
+    this.loadSiteOptions();
+  }
+isFormValid(): boolean {
+  if (!this.formSubmitted) {
+    return true;
   }
 
+  // Verificar que haya al menos una descripción válida
+  const hasValidDescription = this.descripcionesTemporal.some(
+    desc => desc && desc.trim() !== ''
+  );
+
+  return hasValidDescription;
+}
   ngOnDestroy(): void {
     this.searchSubscription?.unsubscribe();
   }
@@ -108,13 +129,25 @@ export class SiteComponent implements OnInit, OnDestroy {
       this.pageSize,
       'codigoSitio',
       'asc',
-      useFilter ? this.filterActivos : undefined // Ahora sí es compatible
+      useFilter ? this.filterActivos : undefined
     ).subscribe({
       next: (response: PageResponse<Site>) => {
         this.handleSuccessResponse(response, page);
       },
       error: (err) => {
         this.handleError(err, 'Error al cargar los sitios');
+      }
+    });
+  }
+
+  // Cargar opciones para dropdown de sitios compuestos
+  loadSiteOptions(): void {
+    this.dropdownService.getSiteCompuesto().subscribe({
+      next: (options) => {
+        this.siteOptions = options;
+      },
+      error: (err) => {
+        console.error('Error cargando opciones de sitios:', err);
       }
     });
   }
@@ -146,19 +179,17 @@ export class SiteComponent implements OnInit, OnDestroy {
   }
 
   // Cambiar filtro de activos
-  changeFilterActivos(filter?: boolean): void { // Cambiado de boolean | null a boolean | undefined
+  changeFilterActivos(filter?: boolean): void {
     this.filterActivos = filter;
     this.currentPage = 0;
     this.loadSites(0, true);
   }
 
-  // Métodos auxiliares para la vista (usados en el HTML)
+  // Métodos auxiliares para la vista
   getFilterButtonClass(filterValue?: boolean, currentFilter?: boolean): string {
     if (filterValue === undefined) {
-      // Botón "Todos"
       return currentFilter === undefined ? 'btn-primary' : 'btn-outline-primary';
     } else {
-      // Botón "Activos" o "Inactivos"
       return currentFilter === filterValue
         ? (filterValue ? 'btn-success' : 'btn-secondary')
         : (filterValue ? 'btn-outline-success' : 'btn-outline-secondary');
@@ -170,15 +201,16 @@ export class SiteComponent implements OnInit, OnDestroy {
     return filterValue ? 'Activos' : 'Inactivos';
   }
 
-  // Resto de los métodos permanecen igual...
+  // Modal methods
   openCreateModal(): void {
     this.isEditMode = false;
     this.formSubmitted = false;
     this.currentSite = {
       codigoSitio: '',
-      descripcion: '',
-      activo: true
+      descripciones: []
     };
+    this.descripcionesTemporal = [''];
+    this.selectedSiteId = null;
     this.showModal = true;
     this.errorMessage = '';
   }
@@ -190,31 +222,93 @@ export class SiteComponent implements OnInit, OnDestroy {
     this.currentSite = {
       idSite: site.idSite,
       codigoSitio: site.codigoSitio || '',
-      descripcion: site.descripcion || '',
-      activo: site.activo ?? true
+      activo: site.activo ?? true,
+      descripciones: [...site.descripciones]
     };
+
+    // Convertir descripciones a array temporal para edición
+    this.descripcionesTemporal = site.descripciones.map(d => d.descripcion);
+    if (this.descripcionesTemporal.length === 0) {
+      this.descripcionesTemporal = [''];
+    }
 
     this.showModal = true;
     this.errorMessage = '';
   }
 
+  openDuplicateModal(): void {
+    if (this.selectedSiteId) {
+      this.siteService.obtenerPorId(this.selectedSiteId).subscribe({
+        next: (site) => {
+          this.isEditMode = false;
+          this.formSubmitted = false;
+          this.currentSite = {
+            codigoSitio: `${site.codigoSitio}_COPIA`,
+            activo: site.activo ?? true,
+            descripciones: [...site.descripciones]
+          };
+          this.descripcionesTemporal = site.descripciones.map(d => d.descripcion);
+          this.showModal = true;
+          this.selectedSiteId = null;
+        },
+        error: (err) => {
+          this.handleError(err, 'Error al cargar sitio para duplicar');
+        }
+      });
+    }
+  }
+
+  // Métodos para manejar descripciones
+  addDescripcion(): void {
+    this.descripcionesTemporal.push('');
+  }
+
+  removeDescripcion(index: number): void {
+    this.descripcionesTemporal.splice(index, 1);
+    if (this.descripcionesTemporal.length === 0) {
+      this.descripcionesTemporal.push('');
+    }
+  }
+
+  trackByIndex(index: number): number {
+    return index;
+  }
+
   saveSite(): void {
     this.formSubmitted = true;
 
-    if (!this.currentSite.descripcion?.trim()) {
-      this.errorMessage = 'La descripción es obligatoria';
+    // Validar que haya al menos una descripción válida
+    const descripcionesValidas = this.descripcionesTemporal
+      .filter(desc => desc.trim() !== '')
+      .map(desc => desc.trim());
+
+    if (descripcionesValidas.length === 0) {
+      this.errorMessage = 'Debe ingresar al menos una descripción';
       return;
     }
 
-    if (this.currentSite.descripcion.length > 255) {
-      this.errorMessage = 'La descripción no puede exceder los 255 caracteres';
+    // Validar códigos de sitio únicos
+    if (this.currentSite.codigoSitio && this.currentSite.codigoSitio.length > 150) {
+      this.errorMessage = 'El código no puede exceder los 150 caracteres';
       return;
     }
+
+    // Crear request con descripciones
+    const siteRequest: SiteRequest = {
+      codigoSitio: this.currentSite.codigoSitio || undefined,
+      activo: this.currentSite.activo ?? true,
+      descripciones: descripcionesValidas.map(descripcion => ({
+        descripcion,
+        activo: true
+      }))
+    };
 
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.siteService.guardar(this.currentSite).subscribe({
+    const id = this.isEditMode ? this.currentSite.idSite : undefined;
+
+    this.siteService.guardar(siteRequest, id).subscribe({
       next: (savedSite) => {
         this.handleSaveSuccess(savedSite);
       },
@@ -229,6 +323,8 @@ export class SiteComponent implements OnInit, OnDestroy {
     this.formSubmitted = false;
     this.errorMessage = '';
     this.isLoading = false;
+    this.descripcionesTemporal = [''];
+    this.selectedSiteId = null;
   }
 
   toggleActivo(site: Site): void {
@@ -274,37 +370,7 @@ export class SiteComponent implements OnInit, OnDestroy {
     });
   }
 
-  deleteSite(site: Site): void {
-    if (!site.idSite) {
-      this.showError('El sitio no tiene un ID válido');
-      return;
-    }
 
-    Swal.fire({
-      title: '¿Eliminar sitio?',
-      text: 'Esta acción no se puede deshacer. El sitio será marcado como inactivo.',
-      icon: 'warning',
-      showCancelButton: true,
-      confirmButtonColor: '#ef4444',
-      cancelButtonColor: '#6b7280',
-      confirmButtonText: 'Sí, eliminar',
-      cancelButtonText: 'Cancelar'
-    }).then((result) => {
-      if (result.isConfirmed) {
-        this.isLoading = true;
-
-        this.siteService.eliminar(site.idSite).subscribe({
-          next: () => {
-            this.loadSites(this.currentPage);
-            this.showSuccess('Sitio eliminado correctamente');
-          },
-          error: (err) => {
-            this.handleError(err, 'Error al eliminar el sitio');
-          }
-        });
-      }
-    });
-  }
 
   // Métodos para paginación
   onPageChange(page: number): void {
@@ -349,6 +415,7 @@ export class SiteComponent implements OnInit, OnDestroy {
     this.errorMessage = errorMessage;
     console.error('Error:', err);
     this.isTableLoading = false;
+    this.isLoading = false;
 
     Swal.fire({
       icon: 'error',
@@ -360,6 +427,7 @@ export class SiteComponent implements OnInit, OnDestroy {
 
   private handleSaveSuccess(savedSite: Site): void {
     this.showModal = false;
+    this.descripcionesTemporal = [''];
 
     Swal.fire({
       icon: 'success',
@@ -443,5 +511,25 @@ export class SiteComponent implements OnInit, OnDestroy {
     const start = this.currentPage * this.pageSize + 1;
     const end = Math.min((this.currentPage + 1) * this.pageSize, this.totalElements);
     return `${start}-${end}`;
+  }
+
+  // Helper para mostrar descripciones en tarjetas
+  getDescripcionesDisplay(descripciones: SiteDescripcionRequest[]): string {
+    if (!descripciones || descripciones.length === 0) return 'Sin descripciones';
+    return descripciones.map(d => d.descripcion).join(', ');
+  }
+
+  // Helper para mostrar primera descripción
+  getFirstDescripcion(descripciones: SiteDescripcionRequest[]): string {
+    if (!descripciones || descripciones.length === 0) return 'Sin descripción';
+    return descripciones[0].descripcion;
+  }
+
+  onSiteSelectionChange(event: any): void {
+    if (event) {
+      this.selectedSiteId = event.id;
+    } else {
+      this.selectedSiteId = null;
+    }
   }
 }

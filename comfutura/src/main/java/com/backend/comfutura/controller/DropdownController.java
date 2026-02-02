@@ -37,6 +37,8 @@ public class DropdownController {
     public ResponseEntity<List<DropdownDTO>> getAreas() {
         return ResponseEntity.ok(dropdownService.getAreas());
     }
+
+
     @GetMapping("/cargos")
     public ResponseEntity<List<DropdownDTO>> getCargos() {
         return ResponseEntity.ok(dropdownService.getCargos());
@@ -56,6 +58,12 @@ public class DropdownController {
         return ResponseEntity.ok(dropdownService.getSites());
     }
 
+
+    @GetMapping("/sitesCompuesto")
+    public ResponseEntity<List<DropdownDTO>> getSiteCompuesto() {
+        return ResponseEntity.ok(dropdownService.getSiteCompuesto());
+    }
+
     @GetMapping("/regiones")
     public ResponseEntity<List<DropdownDTO>> getRegiones() {
         return ResponseEntity.ok(dropdownService.getRegiones());
@@ -68,6 +76,11 @@ public class DropdownController {
     @GetMapping("/nivel")
     public ResponseEntity<List<DropdownDTO>> getnivel() {
         return ResponseEntity.ok(dropdownService.getNivelesAll());
+    }
+
+    @GetMapping("/tipoOt")
+    public ResponseEntity<List<DropdownDTO>> getTipoOt() {
+        return ResponseEntity.ok(dropdownService.getOtTipo());
     }
 
     // ────────────────────────────────────────────────────────

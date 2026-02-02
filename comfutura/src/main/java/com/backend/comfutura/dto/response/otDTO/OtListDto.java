@@ -20,4 +20,7 @@ public class OtListDto {
     private String proyecto;
     private String region;
     private Boolean activo;
+
+    private String tipoOtCodigo;
+    private String tipoOtDescripcion;
 }

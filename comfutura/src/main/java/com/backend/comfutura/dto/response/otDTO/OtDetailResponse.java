@@ -29,6 +29,10 @@ public class OtDetailResponse {
     private Integer idProyecto;
     private String proyectoNombre;
 
+    private Integer idTipoOt;
+    private String tipoOtCodigo;
+    private String tipoOtDescripcion;
+
     private Integer idFase;
     private String faseNombre;
 

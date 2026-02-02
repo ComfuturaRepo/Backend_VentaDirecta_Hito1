@@ -466,102 +466,83 @@ INSERT INTO fase (nombre, orden) VALUES
                                      ('8', 80),
                                      ('9', 90),
                                      ('10', 100);
+INSERT INTO site (codigo_sitio) VALUES
+                                    ('COMFUTURA'),
+                                    ('LI0625'),
+                                    ('TJ1435'),
+                                    ('TL2410'),
+                                    ('TL0590'),
+                                    ('TL5949'),
+                                    ('TL6477'),
+                                    ('TP0332'),
+                                    ('TL4021'),
+                                    ('TJ5160'),
+                                    ('TA2227'),
+                                    ('TP2538'),
+                                    ('TP0038'),
+                                    ('TP0074'),
+                                    ('TPS417'),
+                                    ('TL5977'),
+                                    ('TL5573'),
+                                    ('TL5999'),
+                                    ('TL5928'),
+                                    ('TL5993'),
+                                    ('LI4108'),
+                                    ('0133994'),
+                                    ('0134198'),
+                                    ('0130849'),
+                                    ('0132207'),
+                                    ('0132210'),
+                                    ('0132290'),
+                                    ('0133515'),
+                                    ('0135172'),
+                                    ('0135702'),
+                                    ('0130173'),
+                                    ('0130235'),
+                                    ('0135627'),
+                                    ('0135644'),
+                                    ('0132231'),
+                                    ('0135941'),
+                                    ('LI3295'),
+                                    ('LI3288'),
+                                    ('LI3299'),
+                                    ('LA2829'),
+                                    ('LA2826'),
+                                    ('-'),
+                                    ('LJ4222'),
+                                    ('0135322'),
+                                    ('0130280'),
+                                    ('0133641'),
+                                    ('0132525'),
+                                    ('0130493'),
+                                    ('0131810'),
+                                    ('0134312'),
+                                    ('0105840'),
+                                    ('0100144'),
+                                    ('0134301'),
+                                    ('0134302'),
+                                    ('0135081'),
+                                    ('TP6167'),
+                                    ('TT6301'),
+                                    ('LI0477'),
+                                    ('TL0600'),
+                                    ('LI6045'),
+                                    ('L13230'),
+                                    ('103082'),
+                                    ('100610'),
+                                    ('LI1485'),
+                                    ('LI0599'),
+                                    ('LI3161'),
+                                    ('LI2442'),
+                                    ('0134562'),
+                                    ('0130077'),
+                                    ('0131322'),
+                                    ('0133695'),
+                                    ('013251509'),
+                                    ('013250668'),
+                                    ('LI0692'),
+                                    (NULL);
 
-INSERT INTO site (codigo_sitio, descripcion) VALUES
-                                                 ('COMFUTURA', 'ARELLANO'),
-                                                 ('COMFUTURA', 'COMFUTURA'),
-                                                 ('COMFUTURA', 'ADMIN'),
-                                                 ('LI0625', 'VOLVO'),
-                                                 (NULL, 'MODEM COMFUTURA'),
-                                                 ('TJ1435', 'NAT_EL_HUARANCHAL'),
-                                                 ('TL2410', 'AULAS _USS'),
-                                                 ('TL0590', 'NAT_PARQUE_SANTIAGO'),
-                                                 ('TL5949', 'NAT_CASA_BLANCA_TUMAN'),
-                                                 ('TL6477', 'NAT_AV_LAS_FLORES'),
-                                                 ('TP0332', 'NAT_JR_D_MAITE'),
-                                                 ('TP0332', 'NAT_VIA_COLECTORA'),
-                                                 ('TL2410', 'NAT_EXPLANADA_USS'),
-                                                 ('TL2410', 'NAT_PARQUE_ITALIA'),
-                                                 ('TL4021', 'NAT_URB_FLEMING'),
-                                                 ('TL5949', 'NAT_PAMPA_EL_TORO'),
-                                                 ('TJ5160', 'NAT_ALMAGRO'),
-                                                 ('TA2227', 'NAT_PAMPAC'),
-                                                 ('TP2538', 'NAT_COI_U_PIURA  N'),
-                                                 ('TP0038', 'NAT_COI_ENTRADA_PRINCIPAL'),
-                                                 ('TP0074', 'NAT_COI_IE_IGNACIO_MERINO'),
-                                                 ('TPS417', 'NAT_COI_JOSE_OLAYA'),
-                                                 ('TL5977', 'NAT_COI_1108    N'),
-                                                 ('TL5573', 'NAT_COI_SAN_JOSE_OBRERO'),
-                                                 ('TL5999', 'NAT_COI_EX_COSOME'),
-                                                 ('TL5928', 'NAT_COI_JUAN_TOMIS_S'),
-                                                 ('TL5993', 'NAT_LLAMPAYEC'),
-                                                 ('TL5949', 'NAT_LA_HACIENDA'),
-                                                 ('LI4108', 'NAT_HUALCARA'),
-                                                 (NULL, 'NAT_LAURA CALLER'),
-                                                 (NULL, 'NAT_TORRE BLANCA'),
-                                                 ('0133994', 'AN_Chimbote_Centro_2'),
-                                                 ('0134198', 'LM_Ferretero_Paruro'),
-                                                 ('0130849', 'IC_Entel_Ica'),
-                                                 ('0132207', 'IC_Av_Artemio_Molina'),
-                                                 ('0132210', 'IC_Belaunde_Chincha'),
-                                                 ('0132290', 'IC_Plaza_Nazca'),
-                                                 ('0133515', 'LH_La_Laguna'),
-                                                 ('0135172', 'LM_Los_Aguilas'),
-                                                 ('0135702', 'LM_Caylloma'),
-                                                 ('0130173', 'LM_Zavala'),
-                                                 ('0130235', 'LM_Huachipa_Norte'),
-                                                 ('0135627', 'IC_Nicolas_Rivera'),
-                                                 ('0135627', 'LM_Mercado_Salamanca'),
-                                                 ('0135644', 'LM_Tersicore'),
-                                                 ('0132231', 'IC_Pasaje_Cilesa'),
-                                                 ('0135941', 'LM_Soyuz'),
-                                                 ('LI3295', 'ONCE EUCALIPTOS'),
-                                                 ('LI3288', 'PARQUE ONTORIO'),
-                                                 ('LI3299', 'RESIDENCIAL VENTANILLA'),
-                                                 ('LA2829', 'NAT GLORIETA'),
-                                                 ('LA2826', 'NAT JOSE OLAYA 2'),
-                                                 ('-', 'NAT_ACHINAMIZA'),
-                                                 ('LJ4222', 'NAT_FRANCISCO_CARLE'),
-                                                 ('-', 'BAJO MARIANKIARI'),
-                                                 ('0135322', 'LM_Parque_Los_Pozos'),
-                                                 ('0130280', 'LM_Villa_San_Roque'),
-                                                 ('0133641', 'HU_Ccochaccasa'),
-                                                 ('0132525', 'AQ_Coropuna'),
-                                                 ('0130493', 'LM_Mercedarias'),
-                                                 ('0130493', 'LM_Bertello'),
-                                                 ('0131810', 'TU_Plazuela_Bolognesi'),
-                                                 ('0134312', 'LI_Salaverry_Plaza'),
-                                                 ('0105840', 'LM_Hacienda_San_Juan'),
-                                                 ('0100144', 'LM_Pamplona'),
-                                                 (NULL, 'NODO OVERLAP PRECO LMSC026-S'),
-                                                 (NULL, 'NODO OVERLAP PRECO LMSC018-S'),
-                                                 (NULL, 'NODO OVERLAP PRECO LMSC021-S'),
-                                                 (NULL, 'NODO OVERLAP PRECO LMSC035-S'),
-                                                 ('0134301', 'LM_PS_Hiraoka'),
-                                                 ('0134302', 'LM_PS_UCV_SJL'),
-                                                 ('0135081', 'LM_PS_Dona_Marcela'),
-                                                 ('TP6167', 'NAT_PIURA_P4'),
-                                                 ('TT6301', 'NAT_COLON'),
-                                                 ('LI0477', 'MIRONES'),
-                                                 ('TL0600', 'PUBLIMOVIL BOLOGNESI'),
-                                                 ('LI6045', 'NAT PRIMAVERA P2'),
-                                                 ('L13230', 'LOS_GRANADOS'),
-                                                 ('103082', 'JU_El_Tambo_R1'),
-                                                 ('100610', 'LI_El_Porvenir'),
-                                                 ('LI1485', 'LAS_LOJAS'),
-                                                 ('LI0599', 'POLVO_ROSADO'),
-                                                 ('LI3161', 'ZAFIROS_SAN_JUAN'),
-                                                 ('LI2442', 'HIEDRA'),
-                                                 ('0134562', 'LM_PS_PABLO_CONTI'),
-                                                 ('0130077', 'LM_Ugarte_y_Moscoso'),
-                                                 ('0131322', 'CS_Espinar'),
-                                                 ('0133695', 'CS_Cusco_Antonio'),
-                                                 ('013251509', 'LM_PS_Brigada_Especial_R1'),
-                                                 ('013250668', 'LM_PS_Fronteras_Unidas'),
-                                                 ('LI0692', 'NAT_POLVORITA'),
-                                                 (NULL, 'NAT CONDORCANQUI VENT'),
-                                                 (NULL, 'NAT CUMBRE VENT'),
-                                                 (NULL, 'NAT LOS MAESTROS');
 
 -- 25 Regiones del Perú (24 departamentos + Provincia Constitucional del Callao)
 INSERT INTO region (nombre) VALUES
@@ -591,6 +572,36 @@ INSERT INTO region (nombre) VALUES
                                 ('Tacna'),
                                 ('Tumbes'),
                                 ('Ucayali');
+INSERT INTO site_descripcion (id_site, descripcion)
+SELECT s.id_site, t.descripcion
+FROM (
+         SELECT 'COMFUTURA' codigo, 'ARELLANO' descripcion UNION ALL
+         SELECT 'COMFUTURA','COMFUTURA' UNION ALL
+         SELECT 'COMFUTURA','ADMIN' UNION ALL
+         SELECT 'LI0625','VOLVO' UNION ALL
+         SELECT NULL,'MODEM COMFUTURA' UNION ALL
+         SELECT 'TJ1435','NAT_EL_HUARANCHAL' UNION ALL
+         SELECT 'TL2410','AULAS _USS' UNION ALL
+         SELECT 'TL2410','NAT_EXPLANADA_USS' UNION ALL
+         SELECT 'TL2410','NAT_PARQUE_ITALIA' UNION ALL
+         SELECT 'TL5949','NAT_CASA_BLANCA_TUMAN' UNION ALL
+         SELECT 'TL5949','NAT_PAMPA_EL_TORO' UNION ALL
+         SELECT 'TL5949','NAT_LA_HACIENDA' UNION ALL
+         SELECT '0130493','LM_Mercedarias' UNION ALL
+         SELECT '0130493','LM_Bertello' UNION ALL
+         SELECT NULL,'NAT_LAURA CALLER' UNION ALL
+         SELECT NULL,'NAT_TORRE BLANCA' UNION ALL
+         SELECT NULL,'NODO OVERLAP PRECO LMSC026-S' UNION ALL
+         SELECT NULL,'NODO OVERLAP PRECO LMSC018-S' UNION ALL
+         SELECT NULL,'NODO OVERLAP PRECO LMSC021-S' UNION ALL
+         SELECT NULL,'NODO OVERLAP PRECO LMSC035-S' UNION ALL
+         SELECT NULL,'NAT CONDORCANQUI VENT' UNION ALL
+         SELECT NULL,'NAT CUMBRE VENT' UNION ALL
+         SELECT NULL,'NAT LOS MAESTROS'
+     ) t
+         JOIN site s
+              ON ( (t.codigo IS NULL AND s.codigo_sitio IS NULL)
+                  OR (t.codigo = s.codigo_sitio) );
 
 INSERT INTO jefatura_cliente_solicitante (descripcion) VALUES
                                                            ('NC'),
@@ -1567,3 +1578,7 @@ WHERE c.nombre = 'ANALISTA CONTABLE'
 -- INSERCIONES DE TRABAJADORES DE PRUEBA
 -- =====================================================
 
+INSERT INTO tipo_ot (codigo, descripcion, activo) VALUES
+                                                      ('INST',  'Instalación', 1),
+                                                      ('MANT',  'Mantenimiento preventivo', 1),
+                                                      ('TMP',   'Temporal', 0);

@@ -365,7 +365,7 @@ export interface DropdownItem {
         min-height: 46px;
         font-size: 0.9rem;
       }
-      
+
       ::ng-deep .ng-option {
         padding: 10px 16px !important;
       }
