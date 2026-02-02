@@ -36,8 +36,10 @@ public class OtDetailResponse {
     private Integer idFase;
     private String faseNombre;
 
-    private Integer idSite;
-    private String siteNombre;
+    private Integer idSite;           // ID del sitio
+    private String siteNombre;        // ¿Esto es el código o la descripción?
+    private String siteCodigo;        // ¿Existe este campo?
+    private String siteDescripcion;   // ¿Existe este campo?
 
     private Integer idRegion;
     private String regionNombre;

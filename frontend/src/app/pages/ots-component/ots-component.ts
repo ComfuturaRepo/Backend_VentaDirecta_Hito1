@@ -20,8 +20,7 @@ import { PageResponse } from '../../model/page.interface';
     CommonModule,
     FormsModule,
     NgbDropdownModule,
-    PaginationComponent,
-    FileSizePipe,
+    PaginationComponent
   ],
   templateUrl: './ots-component.html',
   styleUrls: ['./ots-component.css']
@@ -35,7 +34,7 @@ export class OtsComponent implements OnInit {
   @ViewChild('exportModal') exportModal!: TemplateRef<any>;
 
   // Datos principales
-ots: OtListDto[] = [];
+  ots: OtListDto[] = [];
   page: PageResponse<OtListDto> | null = null;
   loading = false;
   errorMessage: string | null = null;
@@ -57,15 +56,15 @@ ots: OtListDto[] = [];
 
   // Opciones de estado con iconos
   estados = [
-    { value: '', label: 'Todos los estados', icon: 'bi-grid', color: '#6c757d' },
-    { value: 'ASIGNACION', label: 'Asignación', icon: 'bi-person-badge', color: '#0d6efd' },
-    { value: 'PRESUPUESTO_ENVIADO', label: 'Presupuesto Enviado', icon: 'bi-send-check', color: '#20c997' },
-    { value: 'CREACION_DE_OC', label: 'Creación de OC', icon: 'bi-file-earmark-text', color: '#6f42c1' },
-    { value: 'EN_EJECUCION', label: 'En Ejecución', icon: 'bi-gear', color: '#fd7e14' },
-    { value: 'EN_LIQUIDACION', label: 'En Liquidación', icon: 'bi-cash-stack', color: '#e83e8c' },
-    { value: 'EN_FACTURACION', label: 'En Facturación', icon: 'bi-receipt', color: '#17a2b8' },
-    { value: 'FINALIZADO', label: 'Finalizado', icon: 'bi-check-circle', color: '#198754' },
-    { value: 'CANCELADA', label: 'Cancelada', icon: 'bi-x-circle', color: '#dc3545' }
+    { value: '', label: 'Todos los estados', icon: 'bi-grid', color: '#6b7280' },
+    { value: 'ASIGNACION', label: 'Asignación', icon: 'bi-person-badge', color: '#3b82f6' },
+    { value: 'PRESUPUESTO_ENVIADO', label: 'Presupuesto Enviado', icon: 'bi-send-check', color: '#10b981' },
+    { value: 'CREACION_DE_OC', label: 'Creación de OC', icon: 'bi-file-earmark-text', color: '#8b5cf6' },
+    { value: 'EN_EJECUCION', label: 'En Ejecución', icon: 'bi-gear', color: '#f59e0b' },
+    { value: 'EN_LIQUIDACION', label: 'En Liquidación', icon: 'bi-cash-stack', color: '#ec4899' },
+    { value: 'EN_FACTURACION', label: 'En Facturación', icon: 'bi-receipt', color: '#06b6d4' },
+    { value: 'FINALIZADO', label: 'Finalizado', icon: 'bi-check-circle', color: '#22c55e' },
+    { value: 'CANCELADA', label: 'Cancelada', icon: 'bi-x-circle', color: '#ef4444' }
   ];
 
   // Selección múltiple
@@ -85,16 +84,17 @@ ots: OtListDto[] = [];
   exportFiltroText = '';
   exportFechaDesde: string = '';
   exportFechaHasta: string = '';
-get activosCount(): number {
-  return this.ots.filter(o => o.activo).length;
-}
+
+  // Propiedades adicionales para estadísticas
+  pendientesCount = 0;
+  lastUpdate = new Date();
+
   // Modal references
   private modalRefs: NgbModalRef[] = [];
 
   // Constantes
   private readonly MAX_FILE_SIZE_NORMAL = 20 * 1024 * 1024; // 20MB
   private readonly MAX_FILE_SIZE_MASIVO = 50 * 1024 * 1024; // 50MB
-  private readonly MAX_ROWS = 1000;
 
   ngOnInit(): void {
     this.loadOts();
@@ -122,6 +122,16 @@ get activosCount(): number {
         this.currentPage = pageData.currentPage ?? 0;
         this.pageSize = pageData.pageSize ?? this.pageSize;
         this.totalPages = pageData.totalPages ?? 1;
+
+        // Actualizar contador de pendientes
+        this.pendientesCount = this.ots.filter(ot =>
+          ot.estadoOt === 'ASIGNACION' ||
+          ot.estadoOt === 'EN_EJECUCION'
+        ).length;
+
+        // Actualizar última actualización
+        this.lastUpdate = new Date();
+
         this.updateSelectionState();
       },
       error: (err) => {
@@ -129,6 +139,11 @@ get activosCount(): number {
         this.showErrorAlert('Error', 'No se pudieron cargar las OTs');
       }
     });
+  }
+
+  // ==================== GETTERS ====================
+  get activosCount(): number {
+    return this.ots.filter(o => o.activo).length;
   }
 
   // ==================== FILTROS Y BÚSQUEDA ====================
@@ -220,7 +235,7 @@ get activosCount(): number {
       html: `
         <div class="text-start">
           <p>¿Exportar <span class="fw-bold text-primary">${this.selectedCount} OTs</span> a Excel?</p>
-          <div class="alert alert-info mt-3 border-0 bg-light-blue">
+          <div class="alert alert-info mt-3 border-0">
             <i class="bi bi-info-circle me-2"></i>
             Se generará un archivo con todas las OTs seleccionadas
           </div>
@@ -228,8 +243,8 @@ get activosCount(): number {
       `,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#0d6efd',
-      cancelButtonColor: '#6c757d',
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#6b7280',
       confirmButtonText: '<i class="bi bi-download me-2"></i>Exportar',
       cancelButtonText: '<i class="bi bi-x me-2"></i>Cancelar',
       customClass: {
@@ -251,7 +266,7 @@ get activosCount(): number {
       html: `
         <div class="text-start">
           <p>¿Exportar las <span class="fw-bold text-primary">${this.totalElements} órdenes de trabajo</span> a Excel?</p>
-          <div class="alert alert-warning mt-3 border-0 bg-light-warning">
+          <div class="alert alert-warning mt-3 border-0">
             <i class="bi bi-exclamation-triangle me-2"></i>
             Esta operación puede tomar varios segundos dependiendo de la cantidad de datos
           </div>
@@ -259,8 +274,8 @@ get activosCount(): number {
       `,
       icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#0d6efd',
-      cancelButtonColor: '#6c757d',
+      confirmButtonColor: '#3b82f6',
+      cancelButtonColor: '#6b7280',
       confirmButtonText: '<i class="bi bi-database me-2"></i>Exportar todo',
       cancelButtonText: '<i class="bi bi-x me-2"></i>Cancelar',
       customClass: {
@@ -398,7 +413,6 @@ get activosCount(): number {
   }
 
   private validateFile(file: File): { isValid: boolean; message: string } {
-    // Validar extensión
     const validExtensions = ['.xlsx', '.xls'];
     const fileExtension = file.name.substring(file.name.lastIndexOf('.')).toLowerCase();
 
@@ -409,7 +423,6 @@ get activosCount(): number {
       };
     }
 
-    // Validar tamaño según modo
     const maxSize = this.importMode === 'masivo' ? this.MAX_FILE_SIZE_MASIVO : this.MAX_FILE_SIZE_NORMAL;
     if (file.size > maxSize) {
       const maxSizeMB = maxSize / (1024 * 1024);
@@ -436,7 +449,6 @@ get activosCount(): number {
       return;
     }
 
-    // Validar archivo nuevamente
     const validation = this.validateFile(this.importFile);
     if (!validation.isValid) {
       this.showErrorAlert('Archivo inválido', validation.message);
@@ -538,7 +550,7 @@ get activosCount(): number {
             </tbody>
           </table>
         </div>
-        <div class="alert alert-info mt-3 border-0 bg-light-blue">
+        <div class="alert alert-info mt-3 border-0">
           <i class="bi bi-info-circle me-2"></i>
           <strong>Total errores:</strong> ${this.importResult.fallidos} de ${this.importResult.totalRegistros} registros
         </div>
@@ -719,11 +731,125 @@ get activosCount(): number {
     });
   }
 
+
+  sortBy(field: keyof OtListDto): void {
+    this.ots.sort((a, b) => {
+      const valueA = a[field];
+      const valueB = b[field];
+
+      if (valueA == null && valueB == null) return 0;
+      if (valueA == null) return 1;
+      if (valueB == null) return -1;
+
+      if (typeof valueA === 'string' && typeof valueB === 'string') {
+        return valueA.localeCompare(valueB);
+      }
+
+      if (valueA < valueB) return -1;
+      if (valueA > valueB) return 1;
+      return 0;
+    });
+  }
+
+  filterTable(event: Event): void {
+    const searchTerm = (event.target as HTMLInputElement).value.toLowerCase();
+    if (searchTerm === '') {
+      this.onSearch();
+      return;
+    }
+  }
+
+  toggleColumnVisibility(): void {
+    Swal.fire({
+      title: '<strong>Columnas visibles</strong>',
+      html: `
+        <div class="text-start">
+          <p>Selecciona las columnas que deseas mostrar:</p>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="col-ot" checked>
+            <label class="form-check-label" for="col-ot">Número OT</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="col-proyecto" checked>
+            <label class="form-check-label" for="col-proyecto">Proyecto</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="col-cliente" checked>
+            <label class="form-check-label" for="col-cliente">Cliente</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="col-estado" checked>
+            <label class="form-check-label" for="col-estado">Estado</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="col-site" checked>
+            <label class="form-check-label" for="col-site">Site</label>
+          </div>
+          <div class="form-check">
+            <input class="form-check-input" type="checkbox" id="col-fecha" checked>
+            <label class="form-check-label" for="col-fecha">Fecha</label>
+          </div>
+        </div>
+      `,
+      showCancelButton: true,
+      confirmButtonText: '<i class="bi bi-check me-2"></i>Aplicar',
+      cancelButtonText: '<i class="bi bi-x me-2"></i>Cancelar',
+      customClass: {
+        popup: 'sweet-alert-popup border-0',
+        confirmButton: 'btn btn-primary',
+        cancelButton: 'btn btn-secondary'
+      },
+      buttonsStyling: false
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.showSuccessAlert('Configuración guardada', 'Las columnas se han actualizado', 'success');
+      }
+    });
+  }
+
+  setEstadoFilter(tipo: string): void {
+    switch(tipo) {
+      case 'activo':
+        this.estadoFilter = 'ASIGNACION,EN_EJECUCION,EN_LIQUIDACION';
+        break;
+      case 'inactivo':
+        this.estadoFilter = 'CANCELADA';
+        break;
+      case 'urgente':
+        this.dateRange.desde = new Date().toISOString().split('T')[0];
+        break;
+      case 'mes':
+        const now = new Date();
+        const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+        const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+        this.dateRange.desde = firstDay.toISOString().split('T')[0];
+        this.dateRange.hasta = lastDay.toISOString().split('T')[0];
+        break;
+    }
+    this.onSearch();
+  }
+
   // ==================== HELPERS ====================
   getEstadoClass(estado: string | undefined | null): string {
-    if (!estado) return 'badge-light text-dark';
+    if (!estado) return 'badge-gray';
+
     const estadoObj = this.estados.find(e => e.value === estado.toUpperCase());
-    return estadoObj ? `badge-light text-${estadoObj.color?.replace('#', '')}` : 'badge-light text-dark';
+    if (!estadoObj) return 'badge-gray';
+
+    // Mapear colores a clases CSS
+    const colorMap: { [key: string]: string } = {
+      '#6b7280': 'badge-gray',
+      '#3b82f6': 'badge-blue',
+      '#10b981': 'badge-green',
+      '#8b5cf6': 'badge-purple',
+      '#f59e0b': 'badge-orange',
+      '#ec4899': 'badge-pink',
+      '#06b6d4': 'badge-cyan',
+      '#22c55e': 'badge-emerald',
+      '#ef4444': 'badge-red'
+    };
+
+    return colorMap[estadoObj.color] || 'badge-gray';
   }
 
   getEstadoIcon(estado: string | undefined | null): string {
@@ -736,7 +862,7 @@ get activosCount(): number {
     const action = ot.activo ? 'desactivar' : 'activar';
     const actionText = ot.activo ? 'Desactivar' : 'Activar';
     const icon = ot.activo ? 'bi-toggle-off' : 'bi-toggle-on';
-    const color = ot.activo ? '#fd7e14' : '#198754';
+    const color = ot.activo ? '#f59e0b' : '#22c55e';
 
     Swal.fire({
       title: `<strong>${actionText} OT</strong>`,
@@ -752,7 +878,7 @@ get activosCount(): number {
       icon: ot.activo ? 'warning' : 'question',
       showCancelButton: true,
       confirmButtonColor: color,
-      cancelButtonColor: '#6c757d',
+      cancelButtonColor: '#6b7280',
       confirmButtonText: `<i class="bi ${icon} me-2"></i>${actionText}`,
       cancelButtonText: '<i class="bi bi-x me-2"></i>Cancelar',
       customClass: {
@@ -809,7 +935,7 @@ get activosCount(): number {
               </tbody>
             </table>
           </div>
-          <div class="alert alert-info mt-3 border-0 bg-light-blue">
+          <div class="alert alert-info mt-3 border-0">
             <i class="bi bi-info-circle me-2"></i>
             <strong>Importante:</strong> Los encabezados deben ser exactos, en minúsculas y sin espacios
           </div>

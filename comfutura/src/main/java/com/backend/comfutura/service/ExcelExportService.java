@@ -2,8 +2,11 @@ package com.backend.comfutura.service;
 
 import com.backend.comfutura.dto.Page.PageResponseDTO;
 import com.backend.comfutura.dto.response.ExcelOtExportDTO;
+import com.backend.comfutura.dto.response.SiteDTO;
+import com.backend.comfutura.dto.response.SiteDescripcionDTO;
 import com.backend.comfutura.dto.response.otDTO.OtDetailResponse;
 import com.backend.comfutura.dto.response.otDTO.OtListDto;
+import com.backend.comfutura.model.Site;
 import lombok.RequiredArgsConstructor;
 import org.apache.poi.ss.usermodel.*;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -22,6 +25,7 @@ import java.util.List;
 public class ExcelExportService {
 
     private final OtService otService;
+    private final SiteService siteService;
 
     // Método para exportar OTs específicas
     public byte[] exportOtsToExcel(List<Integer> otIds) throws IOException {
@@ -144,12 +148,13 @@ public class ExcelExportService {
         Row headerRow = sheet.createRow(startRow);
         CellStyle headerStyle = createHeaderStyle(workbook);
 
+        // MODIFICA LOS HEADERS AÑADIENDO DOS COLUMNAS PARA SITE
         String[] headers = {
                 "ID OT", "OT", "OT Anterior", "Descripción", "Fecha Apertura",
                 "Días Asignados", "Fecha Creación", "Activo", "Cliente", "Área",
-                "Proyecto", "Fase", "Site", "Región", "Jefatura Cliente",
-                "Analista Cliente", "Creador", "Coordinador TI/CW", "Jefatura Responsable",
-                "Liquidador", "Ejecutante", "Analista Contable", "Estado"
+                "Proyecto", "Fase", "Site Código", "Site Descripción", "Región",  // <-- CAMBIO AQUÍ
+                "Jefatura Cliente", "Analista Cliente", "Creador", "Coordinador TI/CW",
+                "Jefatura Responsable", "Liquidador", "Ejecutante", "Analista Contable", "Estado"
         };
 
         for (int i = 0; i < headers.length; i++) {
@@ -246,8 +251,11 @@ public class ExcelExportService {
         // Fase
         createCell(row, col++, dto.getFase() != null ? dto.getFase() : "", dataStyle);
 
-        // Site
+        // Site Código (nueva columna)
         createCell(row, col++, dto.getSite() != null ? dto.getSite() : "", dataStyle);
+
+        // Site Descripción (nueva columna)
+        createCell(row, col++, dto.getSiteDescripcion() != null ? dto.getSiteDescripcion() : "", dataStyle);
 
         // Región
         createCell(row, col++, dto.getRegion() != null ? dto.getRegion() : "", dataStyle);
@@ -279,7 +287,6 @@ public class ExcelExportService {
         // Estado
         createCell(row, col++, dto.getEstadoOt() != null ? dto.getEstadoOt() : "", dataStyle);
     }
-
     private void createCell(Row row, int column, String value, CellStyle style) {
         Cell cell = row.createCell(column);
         cell.setCellValue(value);
@@ -311,6 +318,16 @@ public class ExcelExportService {
     }
 
     private ExcelOtExportDTO convertToExcelDto(OtDetailResponse detail) {
+        // Manejo seguro de siteId
+        Integer siteId = null;
+        try {
+            // Intenta obtener siteId si el método existe
+            siteId = detail.getIdSite();
+        } catch (Exception e) {
+            // Si no existe el método getSiteId()
+            System.err.println("Error: OtDetailResponse no tiene getSiteId()");
+        }
+
         return ExcelOtExportDTO.builder()
                 .idOts(detail.getIdOts())
                 .ot(detail.getOt())
@@ -324,7 +341,8 @@ public class ExcelExportService {
                 .area(detail.getAreaNombre())
                 .proyecto(detail.getProyectoNombre())
                 .fase(detail.getFaseNombre())
-                .site(detail.getSiteNombre())
+                .site(siteId != null ? obtenerCodigoSitio(siteId) : "")  // Solo si tenemos siteId
+                .siteDescripcion(siteId != null ? obtenerDescripcionSitio(siteId) : detail.getSiteNombre()) // Usar siteNombre como fallback
                 .region(detail.getRegionNombre())
                 .jefaturaClienteSolicitante(detail.getJefaturaClienteSolicitanteNombre())
                 .analistaClienteSolicitante(detail.getAnalistaClienteSolicitanteNombre())
@@ -337,9 +355,43 @@ public class ExcelExportService {
                 .estadoOt(detail.getEstadoOt())
                 .build();
     }
+    private String obtenerCodigoSitio(Integer siteId) {
+        if (siteId == null) return "";
 
+        try {
+            SiteDTO siteDTO = siteService.obtenerPorId(siteId);
+            return siteDTO != null ? siteDTO.getCodigoSitio() : "";
+        } catch (Exception e) {
+            System.err.println("Error al obtener código del sitio ID: " + siteId + " - " + e.getMessage());
+            return "";
+        }
+    }
+
+    private String obtenerDescripcionSitio(Integer siteId) {
+        if (siteId == null) return "";
+
+        try {
+            SiteDTO siteDTO = siteService.obtenerPorId(siteId);
+            if (siteDTO == null) return "";
+
+            // Si el DTO tiene una lista de descripciones
+            if (siteDTO.getDescripciones() != null && !siteDTO.getDescripciones().isEmpty()) {
+                // Toma la primera descripción activa
+                return siteDTO.getDescripciones().stream()
+                        .filter(desc -> Boolean.TRUE.equals(desc.getActivo()))
+                        .findFirst()
+                        .map(SiteDescripcionDTO::getDescripcion)
+                        .orElse("");
+            }
+            return "";
+        } catch (Exception e) {
+            System.err.println("Error al obtener descripción del sitio ID: " + siteId + " - " + e.getMessage());
+            return "";
+        }
+    }
     private void autoSizeColumns(Sheet sheet) {
-        for (int i = 0; i < 23; i++) {
+        // Aumenta de 23 a 24 porque ahora tenemos una columna adicional
+        for (int i = 0; i < 24; i++) {  // <-- CAMBIA DE 23 A 24
             sheet.autoSizeColumn(i);
         }
     }
