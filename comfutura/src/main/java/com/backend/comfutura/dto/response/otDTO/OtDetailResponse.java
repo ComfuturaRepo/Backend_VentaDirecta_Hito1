@@ -23,6 +23,8 @@ public class OtDetailResponse {
     private Integer idCliente;
     private String clienteRazonSocial;
 
+    private String siteDescripcionNombre;
+    private Integer idSiteDescripcion;
     private Integer idArea;
     private String areaNombre;
 

@@ -47,7 +47,9 @@ export class FormOtsComponent implements OnInit, OnDestroy {
 
   // Fecha actual para mostrar
   fechaActualFormatted: string = '';
-
+siteDescripciones: DropdownItem[] = [];
+selectedSiteCodigo: string | null = null;
+selectedSiteDescripcionId: number | null = null;
   // IDs seleccionados
   selectedTipoOtId: number | null = null;
   selectedClienteId: number | null = null;
@@ -151,11 +153,13 @@ private crearFormularioBase(): void {
     idArea: [null, Validators.required],
     idProyecto: [null, Validators.required],
     idFase: [null, Validators.required],
-    idSite: [null, Validators.required],
+        idSite: [null, Validators.required],
     idTipoOt: [null, Validators.required],
     idRegion: [null, Validators.required],
     descripcion: ['', [Validators.required, Validators.minLength(10)]],
     fechaApertura: [hoy, [Validators.required, this.fechaAperturaValidator]],
+        idSiteDescripcion: [null], // ← NUEVO CAMPO
+
     idOtsAnterior: [null, [
       // Validadores básicos que siempre aplican
       Validators.min(1),
@@ -172,10 +176,12 @@ private crearFormularioBase(): void {
     idEjecutante: [null, Validators.required],
     idAnalistaContable: [null, Validators.required],
     idEstadoOt: [null]
+
   });
 
   // Deshabilitar área hasta que se seleccione cliente
   this.form.get('idArea')?.disable();
+  this.setupSiteValidation();
 
   // Si no es edición, deshabilitar descripción (se genera automática)
   if (!this.isEditMode) {
@@ -197,6 +203,29 @@ private crearFormularioBase(): void {
 // MÉTODO PARA VALIDACIÓN CONDICIONAL
 // ============================================
 
+private setupSiteValidation(): void {
+  // Remover el validador personalizado - solo usar Validators.required para idSite
+  this.form.get('idSite')?.setValidators(Validators.required);
+
+  // Para idSiteDescripcion, agregar validación condicional
+  this.form.get('idSiteDescripcion')?.valueChanges.subscribe(() => {
+    this.validarDescripcionSite();
+  });
+}
+
+private validarDescripcionSite(): void {
+  const idSiteDescripcion = this.form.get('idSiteDescripcion')?.value;
+  const selectedSite = this.sites.find(s => s.id === this.selectedSiteId);
+
+  // Si hay descripciones disponibles y no se seleccionó ninguna, marcar error
+  if (selectedSite &&
+      this.siteDescripciones.length > 0 &&
+      !idSiteDescripcion) {
+    this.form.get('idSiteDescripcion')?.setErrors({ descripcionRequired: true });
+  } else {
+    this.form.get('idSiteDescripcion')?.setErrors(null);
+  }
+}
 private actualizarValidacionOtAnterior(): void {
   const fechaAperturaControl = this.form.get('fechaApertura');
   const otAnteriorControl = this.form.get('idOtsAnterior');
@@ -335,17 +364,26 @@ private cargarDropdownsParaCreacion(): void {
     clientes: this.dropdownService.getClientes().pipe(catchError(() => of([]))),
     proyectos: this.dropdownService.getProyectos().pipe(catchError(() => of([]))),
     fases: this.dropdownService.getFases().pipe(catchError(() => of([]))),
-    sites: this.dropdownService.getSiteCompuesto().pipe(catchError(() => of([]))),
+    // USAR EL ENDPOINT CORRECTO
+    sites: this.dropdownService.getSitesConDescripciones().pipe(catchError(() => of([]))),
     regiones: this.dropdownService.getRegiones().pipe(catchError(() => of([]))),
-    tiposOt: this.dropdownService.getTipoOt().pipe(catchError(() => of([]))) // ✅ AGREGAR ESTA LÍNEA
+    tiposOt: this.dropdownService.getTipoOt().pipe(catchError(() => of([])))
   }).subscribe({
     next: (data) => {
       this.clientes = data.clientes || [];
       this.proyectos = data.proyectos || [];
       this.fases = data.fases || [];
-      this.sites = data.sites || [];
+
+      // Procesar sites para manejar null en adicional
+      this.sites = (data.sites || []).map((site: any) => ({
+        id: site.id,
+        label: site.label || site.adicional || 'SIN CÓDIGO',
+        adicional: site.adicional || site.label || 'SIN CÓDIGO',
+        estado: site.estado
+      }));
+
       this.regiones = data.regiones || [];
-      this.tiposOt = data.tiposOt || []; // ✅ AGREGAR ESTA LÍNEA
+      this.tiposOt = data.tiposOt || [];
 
       // Cargar responsables
       this.cargarDropdownsResponsables();
@@ -414,27 +452,26 @@ private cargarDropdownsParaCreacion(): void {
     this.subscriptions.push(otSub);
   }
 onTipoOtChange(event: any): void {
-  console.log('Tipo OT change event:', event); // DEBUG
-
-  // Verificar diferentes formatos del evento
-  let idTipoOt = null;
+  console.log('Tipo OT change event:', event);
 
   if (event) {
-    // Dependiendo de cómo envía el componente dropdown el evento
+    // Extraer el ID del evento
     if (typeof event === 'object') {
-      idTipoOt = event.id || event.value || event.valor || null;
+      this.selectedTipoOtId = event.id || event.value || event.valor || null;
     } else if (typeof event === 'number') {
-      idTipoOt = event;
+      this.selectedTipoOtId = event;
+    } else if (typeof event === 'string') {
+      this.selectedTipoOtId = parseInt(event, 10) || null;
     }
+  } else {
+    this.selectedTipoOtId = null;
   }
 
-  this.selectedTipoOtId = idTipoOt;
-  this.form.get('idTipoOt')?.setValue(idTipoOt);
+  // Establecer el valor en el formulario
+  this.form.get('idTipoOt')?.setValue(this.selectedTipoOtId);
   this.form.get('idTipoOt')?.markAsTouched();
 
-  console.log('Selected Tipo OT ID:', idTipoOt); // DEBUG
-  console.log('Form value idTipoOt:', this.form.get('idTipoOt')?.value); // DEBUG
-
+  console.log('Tipo OT ID establecido:', this.selectedTipoOtId);
   this.cdr.detectChanges();
 }
 private cargarTodosLosCatalogos(): void {
@@ -442,9 +479,10 @@ private cargarTodosLosCatalogos(): void {
     clientes: this.dropdownService.getClientes().pipe(catchError(() => of([]))),
     proyectos: this.dropdownService.getProyectos().pipe(catchError(() => of([]))),
     fases: this.dropdownService.getFases().pipe(catchError(() => of([]))),
-    sites: this.dropdownService.getSiteCompuesto().pipe(catchError(() => of([]))),
+    // CAMBIAR ESTO TAMBIÉN:
+    sites: this.dropdownService.getSitesConDescripciones().pipe(catchError(() => of([]))),  // Cambiado
     regiones: this.dropdownService.getRegiones().pipe(catchError(() => of([]))),
-    tiposOt: this.dropdownService.getTipoOt().pipe(catchError(() => of([]))), // ✅ AGREGAR
+    tiposOt: this.dropdownService.getTipoOt().pipe(catchError(() => of([]))),
     jefaturasCliente: this.dropdownService.getJefaturasClienteSolicitante().pipe(catchError(() => of([]))),
     analistasCliente: this.dropdownService.getAnalistasClienteSolicitante().pipe(catchError(() => of([]))),
     coordinadoresTiCw: this.dropdownService.getCoordinadoresTiCw().pipe(catchError(() => of([]))),
@@ -457,9 +495,9 @@ private cargarTodosLosCatalogos(): void {
     this.clientes = data.clientes || [];
     this.proyectos = data.proyectos || [];
     this.fases = data.fases || [];
-    this.sites = data.sites || [];
+    this.sites = data.sites || [];  // Ahora con descripciones
     this.regiones = data.regiones || [];
-    this.tiposOt = data.tiposOt || []; // ✅ AGREGAR
+    this.tiposOt = data.tiposOt || [];
     this.jefaturasCliente = data.jefaturasCliente || [];
     this.analistasCliente = data.analistasCliente || [];
     this.coordinadoresTiCw = data.coordinadoresTiCw || [];
@@ -529,13 +567,31 @@ private cargarTodosLosCatalogos(): void {
     this.form.get('idFase')?.setValue(event?.id || null);
     if (event) this.form.get('idFase')?.markAsTouched();
   }
+onSiteChange(event: any): void {
+  if (event) {
+    // Ahora event.id es id_site_descripcion si tiene descripción
+    // o id_site si no tiene descripción
+    this.selectedSiteId = event.id;
 
-  onSiteChange(event: any): void {
-    this.selectedSiteId = event?.id || null;
-    this.form.get('idSite')?.setValue(event?.id || null);
-    if (event) this.form.get('idSite')?.markAsTouched();
-    this.actualizarDescripcion();
+    // Ya no necesitas manejar siteDescripciones separadamente
+    // porque ahora el dropdown incluye las descripciones
+    this.form.get('idSiteDescripcion')?.setValue(
+      event.adicional !== 'Sin descripción' ? event.id : null
+    );
+    this.form.get('idSite')?.setValue(
+      event.adicional === 'Sin descripción' ? event.id : null
+    );
+  } else {
+    this.selectedSiteId = null;
+    this.form.get('idSite')?.setValue(null);
+    this.form.get('idSiteDescripcion')?.setValue(null);
   }
+  this.actualizarDescripcion();
+}
+
+
+
+
 
   onRegionChange(event: any): void {
     this.selectedRegionId = event?.id || null;
@@ -543,13 +599,6 @@ private cargarTodosLosCatalogos(): void {
     if (event) this.form.get('idRegion')?.markAsTouched();
   }
 get tipoOtNombre(): string {
-  console.log('Getting tipoOtNombre:', {
-    selectedId: this.selectedTipoOtId,
-    items: this.tiposOt,
-    formValue: this.form.get('idTipoOt')?.value
-  }); // DEBUG
-
-  // Usar el valor del formulario si selectedTipoOtId es null
   const id = this.selectedTipoOtId || this.form.get('idTipoOt')?.value;
 
   if (!id || !this.tiposOt || this.tiposOt.length === 0) {
@@ -557,14 +606,9 @@ get tipoOtNombre(): string {
   }
 
   const item = this.tiposOt.find(i => i.id === id);
-  if (!item) {
-    console.log('Item no encontrado para ID:', id);
-    return '';
-  }
+  if (!item) return '';
 
-  if (item.label && item.label.trim() !== '') return item.label;
-  if (item.adicional && item.adicional.trim() !== '') return item.adicional;
-  return '—';
+  return item.label || item.adicional || '—';
 }
   onJefaturaClienteChange(event: any): void {
     this.selectedJefaturaClienteId = event?.id || null;
@@ -644,19 +688,32 @@ get tipoOtNombre(): string {
   get faseNombre(): string {
     return this.getItemNombre(this.selectedFaseId, this.fases);
   }
-
-  get siteNombre(): string {
-    const item = this.sites.find(s => s.id === this.selectedSiteId);
-    if (!item) return '';
-
-    if (item.label && item.label.trim() !== '') {
-      const adicional = item.adicional?.trim();
-      return adicional ? `${item.label} ${adicional}` : item.label;
+get siteNombre(): string {
+  // Si hay descripción seleccionada
+  if (this.selectedSiteDescripcionId) {
+    const descItem = this.siteDescripciones.find(d => d.id === this.selectedSiteDescripcionId);
+    if (descItem) {
+      const codigo = this.selectedSiteCodigo || '';
+      const descripcion = descItem.label || '';
+      return `${codigo} ${descripcion}`.trim();
     }
-    if (item.adicional && item.adicional.trim() !== '') return item.adicional;
-    return '—';
   }
 
+  // Si no hay descripción, mostrar solo el código
+  if (this.selectedSiteCodigo) {
+    return this.selectedSiteCodigo;
+  }
+
+  // Si no hay nada seleccionado, buscar en el array de sites
+  if (this.selectedSiteId && this.sites.length > 0) {
+    const site = this.sites.find(s => s.id === this.selectedSiteId);
+    if (site) {
+      return site.adicional || site.label || '—';
+    }
+  }
+
+  return '—';
+}
   get regionNombre(): string {
     return this.getItemNombre(this.selectedRegionId, this.regiones);
   }
@@ -706,7 +763,7 @@ get tipoOtNombre(): string {
     this.form.get('descripcion')?.setValue(desc);
   }
 
-  validarPaso1(): boolean {
+validarPaso1(): boolean {
   this.submitted = true;
 
   const controlesPaso1 = [
@@ -714,7 +771,7 @@ get tipoOtNombre(): string {
     'idArea',
     'idProyecto',
     'idFase',
-    'idSite',
+    'idSite', // ✅ Ahora SI es requerido (el ID del registro)
     'idRegion',
     'idTipoOt',
     'fechaApertura',
@@ -726,15 +783,43 @@ get tipoOtNombre(): string {
     controlesPaso1.push('idOtsAnterior');
   }
 
+  // Marcar todos los controles como tocados
   controlesPaso1.forEach(control => {
     if (this.f[control]) {
       this.f[control].markAsTouched();
     }
   });
 
+  // Debug: Verifica el estado de cada control
+  console.log('=== VALIDACIÓN PASO 1 ===');
+  controlesPaso1.forEach(control => {
+    if (this.f[control]) {
+      console.log(`${control}:`, {
+        value: this.f[control].value,
+        valid: this.f[control].valid,
+        invalid: this.f[control].invalid,
+        errors: this.f[control].errors
+      });
+    }
+  });
+
+  // Validación especial: si el site tiene código (no es "SIN CÓDIGO" o "-")
+  // y hay descripciones disponibles, entonces debe seleccionar una descripción
+  if (this.selectedSiteCodigo &&
+      this.selectedSiteCodigo !== 'SIN CÓDIGO' &&
+      this.selectedSiteCodigo !== '-' &&
+      this.siteDescripciones.length > 0 &&
+      !this.selectedSiteDescripcionId) {
+    this.mostrarError('Debe seleccionar una descripción para el site seleccionado.');
+    return false;
+  }
+
+  // Verifica si algún control es inválido
   const invalidos = controlesPaso1.filter(control =>
     this.f[control] && this.f[control].invalid
   );
+
+  console.log('Campos inválidos:', invalidos);
 
   if (invalidos.length > 0) {
     this.mostrarErrorValidacion('Información Principal', invalidos.length);
@@ -742,6 +827,7 @@ get tipoOtNombre(): string {
     return false;
   }
 
+  // Validación adicional de descripción
   const descripcion = this.form.get('descripcion')?.value;
   if (!descripcion || descripcion.trim() === '' || descripcion.trim().length < 10) {
     this.mostrarError('La descripción debe tener al menos 10 caracteres.');
@@ -856,30 +942,51 @@ private getAnioDeFecha(fechaString: string): number | null {
 private patchFormValues(data: any): void {
   if (!data) return;
 
-  console.log('Patching form values:', data); // DEBUG
+  console.log('Patching form values:', data);
 
-  this.form.patchValue(data);
+  // Primero establecer valores en el formulario
+  this.form.patchValue({
+    ...data,
+    idSite: data.idSite || null,
+    idSiteDescripcion: data.idSiteDescripcion || null
+  });
 
+  // Establecer otros IDs seleccionados
   this.selectedClienteId = data.idCliente || null;
   this.selectedAreaId = data.idArea || null;
   this.selectedProyectoId = data.idProyecto || null;
   this.selectedFaseId = data.idFase || null;
-  this.selectedSiteId = data.idSite || null;
   this.selectedRegionId = data.idRegion || null;
-  this.selectedJefaturaClienteId = data.idJefaturaClienteSolicitante || null;
-  this.selectedAnalistaClienteId = data.idAnalistaClienteSolicitante || null;
-  this.selectedCoordinadorTiCwId = data.idCoordinadorTiCw || null;
-  this.selectedTipoOtId = data.idTipoOt || null; // ✅ Esto debería estar
-  this.selectedJefaturaResponsableId = data.idJefaturaResponsable || null;
-  this.selectedLiquidadorId = data.idLiquidador || null;
-  this.selectedEjecutanteId = data.idEjecutante || null;
-  this.selectedAnalistaContableId = data.idAnalistaContable || null;
-  this.selectedEstadoOTId = data.idEstadoOt || null;
+  this.selectedTipoOtId = data.idTipoOt || null;
 
-  console.log('Selected Tipo OT ID after patch:', this.selectedTipoOtId); // DEBUG
-  console.log('Form idTipoOt value:', this.form.get('idTipoOt')?.value); // DEBUG
+  // Manejar site
+  this.selectedSiteId = data.idSite || null;
 
-  // Ejecutar validación condicional después de cargar datos
+  // Si hay descripción seleccionada
+  if (data.idSiteDescripcion) {
+    this.selectedSiteDescripcionId = data.idSiteDescripcion;
+  }
+
+  // Buscar el código del site en la lista
+  if (this.selectedSiteId && this.sites.length > 0) {
+    const site = this.sites.find(s => s.id === this.selectedSiteId);
+    if (site) {
+      this.selectedSiteCodigo = site.adicional || site.label;
+
+      // Si tiene código y no es "SIN CÓDIGO" o "-", cargar descripciones
+      if (this.selectedSiteCodigo &&
+          this.selectedSiteCodigo !== 'SIN CÓDIGO' &&
+          this.selectedSiteCodigo !== '-') {
+        this.cargarDescripcionesPorSiteCodigo(this.selectedSiteCodigo);
+      }
+    }
+  }
+
+  // Cargar áreas si hay cliente
+  if (data.idCliente) {
+    this.cargarAreasPorCliente(data.idCliente);
+  }
+
   setTimeout(() => {
     this.actualizarValidacionOtAnterior();
   }, 100);
@@ -954,7 +1061,84 @@ get otAnteriorLimite(): number {
 get otAnteriorLimiteFormateado(): string {
   return '2,147,483,647';
 }
+onSiteCodigoChange(event: any): void {
+  if (event) {
+    // Guardar el ID del site (siempre tiene ID)
+    this.selectedSiteId = event.id;
+    this.selectedSiteCodigo = event.adicional || event.label || 'SIN CÓDIGO';
 
+    // Establecer el valor en el formulario
+    this.form.get('idSite')?.setValue(event.id); // ✅ CORRECTO
+
+    // Si hay descripciones, cargarlas
+    if (event.adicional && event.adicional !== 'SIN CÓDIGO' && event.adicional !== '-') {
+      this.cargarDescripcionesPorSiteCodigo(event.adicional);
+    } else {
+      // Si no hay código o es "SIN CÓDIGO", limpiar descripciones
+      this.siteDescripciones = [];
+      this.form.get('idSiteDescripcion')?.setValue(null);
+      this.selectedSiteDescripcionId = null;
+    }
+  } else {
+    // Limpiar todo
+    this.selectedSiteId = null;
+    this.selectedSiteCodigo = null;
+    this.selectedSiteDescripcionId = null;
+    this.siteDescripciones = [];
+    this.form.get('idSite')?.setValue(null);
+    this.form.get('idSiteDescripcion')?.setValue(null);
+  }
+
+  this.actualizarDescripcion();
+  this.cdr.detectChanges();
+}
+
+onSiteDescripcionChange(event: any): void {
+  if (event) {
+    this.selectedSiteDescripcionId = event.id;
+    // ✅ SOLO establecer la descripción, NO modificar idSite
+    this.form.get('idSiteDescripcion')?.setValue(event.id);
+    // this.form.get('idSite') NO se modifica - debe mantener su valor
+  } else {
+    this.selectedSiteDescripcionId = null;
+    this.form.get('idSiteDescripcion')?.setValue(null);
+  }
+
+  this.actualizarDescripcion();
+  this.cdr.detectChanges();
+}
+private cargarDescripcionesPorSiteCodigo(codigoSite: string | null): void {
+  if (!codigoSite || codigoSite === 'SIN CÓDIGO' || codigoSite === '-') {
+    this.siteDescripciones = [];
+    return;
+  }
+
+  const sub = this.dropdownService.getDescripcionesBySiteCodigo(codigoSite)
+    .pipe(catchError(() => of([])))
+    .subscribe({
+      next: (descripciones) => {
+        this.siteDescripciones = descripciones || [];
+
+        // Si hay descripciones y ya había una seleccionada previamente (en modo edición)
+        // mantenerla seleccionada
+        if (this.selectedSiteDescripcionId && this.siteDescripciones.length > 0) {
+          const existe = this.siteDescripciones.some(d => d.id === this.selectedSiteDescripcionId);
+          if (!existe) {
+            this.selectedSiteDescripcionId = null;
+            this.form.get('idSiteDescripcion')?.setValue(null);
+          }
+        }
+
+        this.cdr.detectChanges();
+      },
+      error: () => {
+        this.siteDescripciones = [];
+        this.cdr.detectChanges();
+      }
+    });
+
+  this.subscriptions.push(sub);
+}
 // Método para verificar si está dentro del límite
 esOtAnteriorValido(): boolean {
   const valor = this.form.get('idOtsAnterior')?.value;
@@ -985,28 +1169,31 @@ private ejecutarGuardado(): void {
     return;
   }
 
-  const payload: OtCreateRequest = {
-    idOts: this.isEditMode ? Number(values.idOts) : undefined,
-    idCliente: Number(values.idCliente),
-    idArea: Number(values.idArea),
-    idProyecto: Number(values.idProyecto),
-    idFase: Number(values.idFase),
-    idSite: Number(values.idSite),
-    idRegion: Number(values.idRegion),
-    idTipoOt: Number(values.idTipoOt), // Esto debe tener un valor
-    descripcion: values.descripcion.trim(),
-    fechaApertura: values.fechaApertura,
-    idOtsAnterior: values.idOtsAnterior ? Number(values.idOtsAnterior) : null,
-    idJefaturaClienteSolicitante: Number(values.idJefaturaClienteSolicitante),
-    idAnalistaClienteSolicitante: Number(values.idAnalistaClienteSolicitante),
-    idCoordinadorTiCw: Number(values.idCoordinadorTiCw),
-    idJefaturaResponsable: Number(values.idJefaturaResponsable),
-    idLiquidador: Number(values.idLiquidador),
-    idEjecutante: Number(values.idEjecutante),
-    idAnalistaContable: Number(values.idAnalistaContable),
-    idEstadoOt: this.isEditMode ? Number(values.idEstadoOt) : null
-  };
+const payload: OtCreateRequest = {
+   idOts: this.isEditMode ? Number(values.idOts) : undefined,
+  idCliente: Number(values.idCliente),
+  idArea: Number(values.idArea),
+  idProyecto: Number(values.idProyecto),
+  idFase: Number(values.idFase),
+  // ✅ SIEMPRE enviar idSite (el ID del registro en la tabla sites)
+  idSite: Number(values.idSite), // Esto siempre debe tener valor
+  // ✅ Enviar descripción si existe
+  idSiteDescripcion: values.idSiteDescripcion ? Number(values.idSiteDescripcion) : undefined,
 
+  idRegion: Number(values.idRegion),
+  idTipoOt: Number(values.idTipoOt),
+  descripcion: values.descripcion.trim(),
+  fechaApertura: values.fechaApertura,
+  idOtsAnterior: values.idOtsAnterior ? Number(values.idOtsAnterior) : null,
+  idJefaturaClienteSolicitante: Number(values.idJefaturaClienteSolicitante),
+  idAnalistaClienteSolicitante: Number(values.idAnalistaClienteSolicitante),
+  idCoordinadorTiCw: Number(values.idCoordinadorTiCw),
+  idJefaturaResponsable: Number(values.idJefaturaResponsable),
+  idLiquidador: Number(values.idLiquidador),
+  idEjecutante: Number(values.idEjecuntante),
+  idAnalistaContable: Number(values.idAnalistaContable),
+  idEstadoOt: this.isEditMode ? Number(values.idEstadoOt) : null
+};
   console.log('Payload enviado:', payload); // DEBUG
 
   const saveSub = this.otService.saveOt(payload).subscribe({
@@ -1094,10 +1281,10 @@ resetForm(): void {
       });
       this.subscriptions.push(resetSub);
     } else {
-      const hoy = new Date().toISOString().split('T')[0];
-      this.form.reset({
-        fechaApertura: hoy
-      });
+    const hoy = new Date().toISOString().split('T')[0];
+    this.form.reset({
+      fechaApertura: hoy
+    });
 
       // Resetear IDs seleccionados
       this.selectedClienteId = null;
@@ -1109,6 +1296,8 @@ resetForm(): void {
       this.selectedTipoOtId = null; // ✅ AGREGAR ESTA LÍNEA
       this.selectedJefaturaClienteId = null;
       this.selectedAnalistaClienteId = null;
+          this.selectedSiteCodigo = null; // ← NUEVO
+    this.selectedSiteDescripcionId = null; // ← NUEVO
       this.selectedCoordinadorTiCwId = null;
       this.selectedJefaturaResponsableId = null;
       this.selectedLiquidadorId = null;
@@ -1121,6 +1310,7 @@ resetForm(): void {
       this.form.get('idArea')?.disable();
       this.actualizarDescripcion();
       this.currentStep = 1;
+    this.siteDescripciones = []; // ← Limpiar descripciones
 
       if (this.scrollContainer) {
         this.scrollContainer.nativeElement.scrollTop = 0;

@@ -8,8 +8,10 @@ import com.backend.comfutura.service.DropdownService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -176,6 +178,56 @@ public class DropdownServiceImpl implements DropdownService {
                 ))
                 .toList();
     }
+    @Override
+    public List<DropdownDTO> getDescripcionesBySiteCodigo(String codigoSite) {
+
+        boolean sinCodigo =
+                codigoSite == null ||
+                        codigoSite.trim().isEmpty() ||
+                        codigoSite.trim().equals("-") ||
+                        codigoSite.trim().equalsIgnoreCase("SIN CÓDIGO");
+
+        List<SiteDescripcion> lista;
+
+        if (sinCodigo) {
+            lista = siteDescripcionRepository
+                    .findBySiteCodigoSitioIsNullOrSiteCodigoSitioEmpty();
+        } else {
+            lista = siteDescripcionRepository
+                    .findBySiteCodigoSitioIgnoreCaseAndActivoTrue(codigoSite.trim());
+        }
+
+        return lista.stream()
+                .map(desc -> new DropdownDTO(
+                        desc.getIdSiteDescripcion(),
+                        Optional.ofNullable(desc.getDescripcion()).orElse("").trim(),
+                        sinCodigo ? "SIN CÓDIGO" : codigoSite.trim(),
+                        true
+                ))
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
+    public List<DropdownDTO> getSitesConDescripciones() {
+        return siteRepository.findByActivoTrueOrderByCodigoSitioAsc()
+                .stream()
+                .map(site -> {
+                    String codigo = (site.getCodigoSitio() != null && !site.getCodigoSitio().trim().isEmpty())
+                            ? site.getCodigoSitio().trim()
+                            : "SIN CÓDIGO";
+
+                    return new DropdownDTO(
+                            site.getIdSite(),  // ID del site, no de la descripción
+                            codigo,
+                            codigo,  // Código como adicional también
+                            site.getActivo()
+                    );
+                })
+                .distinct()  // Para evitar duplicados si hay sites con el mismo código
+                .collect(Collectors.toList());
+    }
+    @Override
     public List<DropdownDTO> getSiteCompuesto() {
         return siteDescripcionRepository.findAll().stream()
                 .filter(desc -> desc.getActivo() != null && desc.getActivo())
@@ -185,19 +237,19 @@ public class DropdownServiceImpl implements DropdownService {
                     // Obtener código del site (puede ser nulo/vacío)
                     String codigo = (site.getCodigoSitio() != null && !site.getCodigoSitio().trim().isEmpty())
                             ? site.getCodigoSitio().trim()
-                            : "-";
+                            : "SIN CÓDIGO";
 
                     // Obtener descripción
                     String descripcionTexto = desc.getDescripcion() != null
                             ? desc.getDescripcion().trim()
                             : "";
 
-                    // Construir label
-                    String label = codigo + " " + descripcionTexto;
+                    // Construir label: código + descripción
+                    String label = codigo + " - " + descripcionTexto;
 
                     return new DropdownDTO(
                             desc.getIdSiteDescripcion(),  // Usar el ID de la descripción
-                            label,                         // Ej: "225 NAT LOS MAESTROS"
+                            label,                         // Ej: "225 - LOS MAESTROS"
                             codigo,                       // Código para referencia
                             desc.getActivo()
                     );

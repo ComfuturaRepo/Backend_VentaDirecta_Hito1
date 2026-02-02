@@ -85,11 +85,11 @@ export interface OtCreateRequest {
   idArea: number;
   idProyecto: number;
   idFase: number;
-  idSite: number;
+  idSite?: number;
   idRegion: number;
 idEstadoOt: number | null;
   idTipoOt: number; // ✅ AGREGAR ESTE CAMPO
-
+  idSiteDescripcion?: number; // ← AGREGAR ESTA LÍNEA
   descripcion?: string;
   fechaApertura?: string;
 

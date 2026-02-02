@@ -45,6 +45,7 @@ public class OtServiceImpl implements OtService {
     private final AnalistaClienteSolicitanteRepository analistaClienteRepository;
     private final EstadoOtRepository estadoOtRepository;
     private final TipoOtRepository tipoOtRepository;
+    private final SiteDescripcionRepository siteDescripcionRepository;
 
     @Override
     @Transactional(readOnly = true)
@@ -93,13 +94,8 @@ public class OtServiceImpl implements OtService {
                 .fechaApertura(ots.getFechaApertura())
                 .estadoOt(ofNullable(ots.getEstadoOt()).map(EstadoOt::getDescripcion).orElse("—"))
                 .proyecto(ofNullable(ots.getProyecto()).map(Proyecto::getNombre).orElse("—"))
-                .siteNombre(ofNullable(ots.getSite()).map(Site::getCodigoSitio).orElse("—"))
-                .site_descripcion(
-                        ofNullable(ots.getSite())
-                                .flatMap(site -> site.getDescripciones().stream().findFirst())
-                                .map(SiteDescripcion::getDescripcion)
-                                .orElse("—")
-                )
+                .siteNombre(ots.getSiteDisplayText())  // ✅ Usar el método helper
+                .site_descripcion(ots.getSiteDescripcionText())  // ✅ Usar el método helper
                 .cliente(ofNullable(ots.getCliente()).map(Cliente::getRazonSocial).orElse("—"))
                 .cliente_id(ofNullable(ots.getCliente()).map(Cliente::getRuc).orElse("—"))
                 .region(ofNullable(ots.getRegion()).map(Region::getNombre).orElse("—"))
@@ -136,7 +132,8 @@ public class OtServiceImpl implements OtService {
                 .diasAsignados(diasAsignados)
                 .fechaCreacion(ots.getFechaCreacion())
                 .activo(ots.getActivo())
-
+                .idSiteDescripcion(ofNullable(ots.getSiteDescripcion()).map(SiteDescripcion::getIdSiteDescripcion).orElse(null))
+                .siteDescripcionNombre(ofNullable(ots.getSiteDescripcion()).map(SiteDescripcion::getDescripcion).orElse(null))
                 .idTipoOt(ofNullable(ots.getTipoOt()).map(TipoOt::getIdTipoOt).orElse(null))
                 .tipoOtCodigo(ofNullable(ots.getTipoOt()).map(TipoOt::getCodigo).orElse(null))
                 .tipoOtDescripcion(ofNullable(ots.getTipoOt()).map(TipoOt::getDescripcion).orElse(null))
@@ -334,6 +331,11 @@ public class OtServiceImpl implements OtService {
         if (req.getIdEstadoOt() != null)
             ots.setEstadoOt(find(estadoOtRepository, req.getIdEstadoOt(), "EstadoOt"));
 
+        // ✅ AGREGAR ESTA LÍNEA para manejar SiteDescripcion
+        if (req.getIdSiteDescripcion() != null) {
+            ots.setSiteDescripcion(find(siteDescripcionRepository, req.getIdSiteDescripcion(), "SiteDescripcion"));
+        }
+
         ots.setJefaturaClienteSolicitante(
                 req.getIdJefaturaClienteSolicitante() != null ?
                         find(jefaturaClienteRepository, req.getIdJefaturaClienteSolicitante(), "Jefatura cliente") : null);
@@ -348,7 +350,6 @@ public class OtServiceImpl implements OtService {
         ots.setEjecutante(req.getIdEjecutante() != null ? findTrabajador(req.getIdEjecutante()) : null);
         ots.setAnalistaContable(req.getIdAnalistaContable() != null ? findTrabajador(req.getIdAnalistaContable()) : null);
     }
-
     private Trabajador findTrabajador(Integer id) {
         return trabajadorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado: " + id));

@@ -1,5 +1,6 @@
 package com.backend.comfutura.controller;
 
+import com.backend.comfutura.model.Site;
 import com.backend.comfutura.record.DropdownDTO;
 import com.backend.comfutura.service.DropdownService;
 import lombok.RequiredArgsConstructor;
@@ -57,6 +58,17 @@ public class DropdownController {
     public ResponseEntity<List<DropdownDTO>> getSites() {
         return ResponseEntity.ok(dropdownService.getSites());
     }
+
+    @GetMapping("/DescripcionesBySiteCodigo")
+    public ResponseEntity<List<DropdownDTO>> getDescripcionesBySiteCodigo(@RequestParam(required = false) String siteCodigo) {
+        return ResponseEntity.ok(dropdownService.getDescripcionesBySiteCodigo(siteCodigo));
+    }
+
+    @GetMapping("/SitesConDescripciones")
+    public ResponseEntity<List<DropdownDTO>> getSitesConDescripciones() {
+        return ResponseEntity.ok(dropdownService.getSitesConDescripciones());
+    }
+
 
 
     @GetMapping("/sitesCompuesto")

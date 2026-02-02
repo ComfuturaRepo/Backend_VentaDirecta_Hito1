@@ -30,4 +30,24 @@ public interface SiteRepository extends JpaRepository<Site, Integer> {
 
     @Query("SELECT s FROM Site s WHERE s.idSite = :id AND s.activo = true")
     Site findActivoById(@Param("id") Integer id);
+
+    @Query("SELECT s FROM Site s WHERE s.codigoSitio IS NULL OR TRIM(s.codigoSitio) = ''")
+    List<Site> findByCodigoSitioNullOrEmpty();
+
+    // 2. Método para buscar por código (case-insensitive)
+    @Query("SELECT s FROM Site s WHERE LOWER(s.codigoSitio) = LOWER(:codigo) AND s.activo = true")
+    List<Site> findByCodigoSitioIgnoreCaseAndActivoTrue(@Param("codigo") String codigo);
+
+    // 3. Método simple para buscar por código (sin importar mayúsculas/minúsculas)
+    List<Site> findByCodigoSitioIgnoreCase(String codigoSitio);
+
+
+
+    // 5. Método para buscar sites con código específico
+    List<Site> findByCodigoSitio(String codigoSitio);
+
+    // 6. Método para buscar sites nulos
+    List<Site> findByCodigoSitioIsNull();
+
+
 }
