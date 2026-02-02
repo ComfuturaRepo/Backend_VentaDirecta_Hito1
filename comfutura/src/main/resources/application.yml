@@ -1,8 +1,9 @@
 spring:
   datasource:
-    url: ${SPRING_DATASOURCE_URL}
-    username: ${SPRING_DATASOURCE_USERNAME}
-    password: ${SPRING_DATASOURCE_PASSWORD}
+    url: jdbc:mysql://localhost:3306/comfutura?useSSL=false&serverTimezone=UTC&allowPublicKeyRetrieval=true
+
+    username: root
+    password: mysql
     driver-class-name: com.mysql.cj.jdbc.Driver
 
   jpa:
@@ -21,3 +22,6 @@ security:
   jwt:
     secret-key: 586B633834416E396D7436753879382F423F4428482B4C6250655367566B5970
     expiration-minutes: 480
+resend:
+  api-key: re_WeHouLSq_AC4Egdx8wBmgs1rX7pkSNts7
+  from-email: j.herrera@sudcomgroup.com

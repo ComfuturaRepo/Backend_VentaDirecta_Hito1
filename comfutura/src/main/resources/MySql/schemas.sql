@@ -369,6 +369,12 @@ CREATE TABLE IF NOT EXISTS orden_compra (
     FOREIGN KEY (id_estado_oc)
     REFERENCES estado_oc(id_estado_oc)
     );
+ALTER TABLE orden_compra
+    ADD COLUMN estado_flujo VARCHAR(30) NOT NULL DEFAULT 'PENDIENTE',
+ADD COLUMN nivel_aprobacion INT NOT NULL DEFAULT 0,
+ADD COLUMN fecha_estado DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+ADD COLUMN aprobador_actual_email VARCHAR(150),
+ADD COLUMN usuario_creacion VARCHAR(150);
 
 -- ======================================
 -- TABLA: DETALLE DE ORDEN DE COMPRA
@@ -390,6 +396,42 @@ CREATE TABLE IF NOT EXISTS oc_detalle (
     FOREIGN KEY (id_oc)
     REFERENCES orden_compra(id_oc)
     );
+-- ======================================
+-- TABLA:ORDEN DE COMPRA APROVACION
+-- ======================================
+
+CREATE TABLE orden_compra_aprobacion (
+                                         id_aprobacion BIGINT AUTO_INCREMENT PRIMARY KEY,  -- Cambiado a BIGINT
+
+                                         id_oc INT NOT NULL,
+                                         nivel INT NOT NULL, -- 1,2,3
+
+                                         estado VARCHAR(30) NOT NULL,
+    -- PENDIENTE | APROBADO | RECHAZADO
+
+                                         aprobado_por VARCHAR(150),
+                                         aprobado_email VARCHAR(150),
+
+                                         comentario TEXT,
+
+                                         fecha_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                         fecha_fin DATETIME NULL,
+
+                                         dias_en_estado INT GENERATED ALWAYS AS (
+                                             IF(fecha_fin IS NOT NULL,
+                                                DATEDIFF(fecha_fin, fecha_inicio),
+                                                NULL)
+                                             ) STORED,
+
+                                         CONSTRAINT fk_aprobacion_oc
+                                             FOREIGN KEY (id_oc) REFERENCES orden_compra(id_oc)
+);
+
+
+-- ======================================
+-- TABLA: Maestro partida
+-- ======================================
+
 
 CREATE TABLE maestro_partida (
                                  id_maestro_partida INT AUTO_INCREMENT PRIMARY KEY,
@@ -400,6 +442,17 @@ CREATE TABLE maestro_partida (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 CREATE INDEX idx_maestro_partida_codigo ON maestro_partida(codigo);
+
+
+
+
+
+
+
+
+
+
+
 
 -- Maestro Servicios
 CREATE TABLE maestro_servicio (
