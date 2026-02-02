@@ -26,9 +26,9 @@ import { PageResponse } from '../../model/page.interface';
   styleUrls: ['./ots-component.css']
 })
 export class OtsComponent implements OnInit {
+  public modalService = inject(NgbModal);
   private otService = inject(OtService);
   private excelService = inject(ExcelService);
-  private modalService = inject(NgbModal);
 
   @ViewChild('importModal') importModal!: TemplateRef<any>;
   @ViewChild('exportModal') exportModal!: TemplateRef<any>;
@@ -435,14 +435,14 @@ export class OtsComponent implements OnInit {
     return { isValid: true, message: 'Archivo válido' };
   }
 
-  private formatFileSize(bytes: number): string {
+  // Haz público el método formatFileSize
+  public formatFileSize(bytes: number): string {
     if (bytes === 0) return '0 Bytes';
     const k = 1024;
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
-
   startImport(): void {
     if (!this.importFile) {
       this.showErrorAlert('Error', 'No hay archivo seleccionado');
@@ -578,7 +578,7 @@ export class OtsComponent implements OnInit {
     });
   }
 
-  private downloadErrorReport(): void {
+public downloadErrorReport(): void {
     if (!this.importResult?.registrosConError) return;
 
     const reportContent = this.generateErrorReport();

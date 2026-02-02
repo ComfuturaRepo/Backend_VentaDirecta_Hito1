@@ -477,3 +477,258 @@
     </div>
   </div>
 </div>
+<!-- ==================== MODAL DE IMPORTACIÓN ==================== -->
+<ng-template #importModal>
+  <div class="modal-header border-0 pb-0">
+    <div>
+      <h5 class="modal-title fw-bold text-gray-800">
+        <i class="bi bi-upload me-2 text-primary"></i>
+        Importar Órdenes de Trabajo
+      </h5>
+      <p class="text-muted small mb-0">Sube un archivo Excel para importar múltiples OTs</p>
+    </div>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modalService.dismissAll()"></button>
+  </div>
+
+  <div class="modal-body py-4">
+    <!-- Paso 1: Selección de archivo -->
+    <div *ngIf="importStep === 1" class="text-center py-3">
+      <div class="drop-zone rounded-3 border-2 border-dashed border-gray-300 p-5"
+           (dragover)="onDragOver($event)"
+           (dragleave)="onDragLeave($event)"
+           (drop)="onFileDrop($event)"
+           [class.drag-over]="false">
+        <div class="py-4">
+          <div class="upload-icon mb-3">
+            <i class="bi bi-file-earmark-excel text-success fs-1"></i>
+          </div>
+          <h5 class="text-gray-700 fw-bold mb-2">Arrastra tu archivo aquí</h5>
+          <p class="text-gray-600 mb-4">O haz clic para seleccionar</p>
+
+          <div class="mb-3">
+            <label class="btn btn-primary btn-lg cursor-pointer">
+              <i class="bi bi-folder me-2"></i>
+              Seleccionar archivo
+              <input type="file"
+                     class="d-none"
+                     accept=".xlsx,.xls"
+                     (change)="onFileSelected($event)">
+            </label>
+          </div>
+
+          <div class="alert alert-info border-0 bg-light mt-4">
+            <div class="d-flex align-items-start">
+              <i class="bi bi-info-circle fs-5 me-3"></i>
+              <div class="text-start">
+                <h6 class="alert-heading mb-2 small">Formatos soportados</h6>
+                <p class="mb-1 small">• Archivos Excel (.xlsx, .xls)</p>
+                <p class="mb-1 small">• Tamaño máximo: 20MB</p>
+                <p class="mb-0 small">• Descarga la plantilla para ver el formato requerido</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 2: Confirmación -->
+    <div *ngIf="importStep === 2 && importFile" class="text-center py-3">
+      <div class="file-preview bg-light rounded-3 p-4">
+        <div class="file-icon mb-3">
+          <i class="bi bi-file-earmark-excel text-success fs-1"></i>
+        </div>
+
+        <div class="file-info mb-4">
+          <h6 class="text-gray-800 fw-bold mb-1">{{ importFile.name }}</h6>
+          <p class="text-gray-600 small mb-0">
+            <i class="bi bi-file-text me-1"></i>
+            {{ formatFileSize(importFile.size) }} •
+            <i class="bi bi-calendar ms-3 me-1"></i>
+Última modificación: {{ importFile.lastModified | date:'dd/MM/yyyy HH:mm' }}
+          </p>
+        </div>
+
+        <div class="mode-selection mb-4">
+          <label class="form-label fw-medium text-gray-700 mb-2">Modo de importación:</label>
+          <div class="d-flex gap-3 justify-content-center">
+            <div class="form-check">
+              <input class="form-check-input" type="radio" id="modeNormal"
+                     [(ngModel)]="importMode" value="normal" checked>
+              <label class="form-check-label fw-medium" for="modeNormal">
+                <i class="bi bi-arrow-up-circle me-1"></i>
+                Normal
+              </label>
+              <small class="d-block text-muted">Hasta 100 registros</small>
+            </div>
+            <div class="form-check">
+              <input class="form-check-input" type="radio" id="modeMasivo"
+                     [(ngModel)]="importMode" value="masivo">
+              <label class="form-check-label fw-medium" for="modeMasivo">
+                <i class="bi bi-lightning me-1"></i>
+                Masivo
+              </label>
+              <small class="d-block text-muted">Más de 100 registros</small>
+            </div>
+          </div>
+        </div>
+
+        <div class="d-flex justify-content-center gap-3 mt-4">
+          <button type="button" class="btn btn-outline-gray"
+                  (click)="importStep = 1; importFile = null">
+            <i class="bi bi-arrow-left me-2"></i>
+            Cambiar archivo
+          </button>
+          <button type="button" class="btn btn-success"
+                  (click)="startImport()"
+                  [disabled]="importing">
+            <span *ngIf="!importing">
+              <i class="bi bi-upload me-2"></i>
+              Iniciar importación
+            </span>
+            <span *ngIf="importing">
+              <span class="spinner-border spinner-border-sm me-2"></span>
+              Importando...
+            </span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Paso 3: Resultados -->
+    <div *ngIf="importStep === 3 && importResult" class="py-3">
+      <div class="text-center mb-4">
+        <div class="result-icon mb-3">
+          <i *ngIf="importResult.exito" class="bi bi-check-circle-fill text-success fs-1"></i>
+          <i *ngIf="!importResult.exito" class="bi bi-exclamation-triangle-fill text-warning fs-1"></i>
+        </div>
+        <h5 [class]="importResult.exito ? 'text-success' : 'text-warning'">
+          {{ importResult.exito ? 'Importación exitosa' : 'Importación con advertencias' }}
+        </h5>
+      </div>
+
+      <div class="row g-3 mb-4">
+        <div class="col-6">
+          <div class="card border-success bg-success bg-opacity-10 h-100">
+            <div class="card-body text-center py-3">
+              <h2 class="text-success fw-bold">{{ importResult.exitosos || 0 }}</h2>
+              <p class="text-success mb-0 small">Registros exitosos</p>
+            </div>
+          </div>
+        </div>
+        <div class="col-6">
+          <div class="card border-warning bg-warning bg-opacity-10 h-100">
+            <div class="card-body text-center py-3">
+              <h2 class="text-warning fw-bold">{{ importResult.fallidos || 0 }}</h2>
+              <p class="text-warning mb-0 small">Registros fallidos</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="importResult.fallidos > 0" class="alert alert-warning border-0">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-exclamation-triangle me-3 fs-5"></i>
+          <div class="flex-grow-1">
+            <h6 class="alert-heading mb-2">Algunos registros no se importaron</h6>
+            <p class="mb-0 small">Revisa los errores y corrige el archivo para reintentar.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex justify-content-between mt-4">
+        <button type="button" class="btn btn-outline-gray"
+                (click)="importStep = 1; importFile = null; importResult = null">
+          <i class="bi bi-plus-circle me-2"></i>
+          Nueva importación
+        </button>
+
+        <div class="d-flex gap-2">
+          <button *ngIf="importResult.fallidos > 0" type="button"
+                  class="btn btn-outline-primary"
+                  (click)="downloadErrorReport()">
+            <i class="bi bi-download me-2"></i>
+            Descargar errores
+          </button>
+          <button type="button" class="btn btn-primary"
+                  (click)="modalService.dismissAll(); refreshTable()">
+            <i class="bi bi-check me-2"></i>
+            Finalizar
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer border-0 pt-0">
+    <div class="w-100 text-center">
+      <button type="button" class="btn btn-link text-decoration-none text-gray-600"
+              (click)="downloadImportTemplate()">
+        <i class="bi bi-download me-2"></i>
+        Descargar plantilla
+      </button>
+      <button type="button" class="btn btn-link text-decoration-none text-gray-600"
+              (click)="showImportHelp()">
+        <i class="bi bi-question-circle me-2"></i>
+        Ayuda de formato
+      </button>
+    </div>
+  </div>
+</ng-template>
+
+<!-- ==================== MODAL DE EXPORTACIÓN ==================== -->
+<ng-template #exportModal>
+  <div class="modal-header border-0 pb-0">
+    <div>
+      <h5 class="modal-title fw-bold text-gray-800">
+        <i class="bi bi-download me-2 text-primary"></i>
+        Exportar Órdenes de Trabajo
+      </h5>
+      <p class="text-muted small mb-0">Configura los filtros para exportar</p>
+    </div>
+    <button type="button" class="btn-close" aria-label="Close" (click)="modalService.dismissAll()"></button>
+  </div>
+
+  <div class="modal-body py-4">
+    <div class="mb-4">
+      <div class="form-check form-switch mb-3">
+        <input class="form-check-input" type="checkbox" id="exportFiltroActivo"
+               [(ngModel)]="exportFiltroActivo">
+        <label class="form-check-label fw-medium text-gray-700" for="exportFiltroActivo">
+          Exportar solo seleccionadas
+          <span *ngIf="exportFiltroActivo" class="badge bg-primary ms-2">{{selectedCount}} OTs</span>
+        </label>
+      </div>
+
+      <div *ngIf="!exportFiltroActivo" class="mb-3">
+        <label class="form-label fw-medium text-gray-700 mb-2">Filtro de búsqueda:</label>
+        <input type="text" class="form-control"
+               [(ngModel)]="exportFiltroText"
+               placeholder="Mismo filtro de la tabla...">
+      </div>
+    </div>
+
+    <div class="alert alert-info border-0">
+      <div class="d-flex align-items-start">
+        <i class="bi bi-info-circle me-3 fs-5"></i>
+        <div class="flex-grow-1">
+          <h6 class="alert-heading mb-2 small">Información de exportación</h6>
+          <p class="mb-0 small">
+            Se generará un archivo Excel con todas las columnas visibles en la tabla.
+            El proceso puede tardar varios segundos dependiendo de la cantidad de datos.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-footer border-0">
+    <button type="button" class="btn btn-outline-gray"
+            (click)="modalService.dismissAll()">
+      Cancelar
+    </button>
+    <button type="button" class="btn btn-primary" (click)="export()">
+      <i class="bi bi-download me-2"></i>
+      Iniciar exportación
+    </button>
+  </div>
+</ng-template>
