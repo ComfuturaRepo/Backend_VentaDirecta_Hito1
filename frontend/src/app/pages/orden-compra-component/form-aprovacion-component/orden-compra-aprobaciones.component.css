@@ -1,0 +1,22 @@
+.timeline-vertical {
+  position: relative;
+  padding-left: 40px;
+}
+
+.timeline-item {
+  position: relative;
+}
+
+.timeline-dot {
+  position: relative;
+  top: 5px;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 9px; /* centro del punto */
+  top: 20px;
+  width: 4px;
+  background-color: #dee2e6;
+  z-index: 0;
+}

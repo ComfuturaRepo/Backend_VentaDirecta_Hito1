@@ -21,10 +21,10 @@ public class OrdenCompraAprobacion {
     private Integer nivel;
     private String estado;
     private String aprobadoPor;
-    private String aprobadoEmail;
 
-    @Column(columnDefinition = "TEXT")
-    private String comentario;
+
+
+
 
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaFin;

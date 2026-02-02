@@ -168,6 +168,11 @@
             </tr>
           </tbody>
         </table>
+            <!-- ✅ NUEVO: Componente de aprobaciones -->
+        <app-orden-compra-aprobaciones
+            *ngIf="detalleOcSeleccionada"
+            [idOc]="detalleOcSeleccionada.idOc">
+        </app-orden-compra-aprobaciones>
       </div>
       <div class="modal-footer">
         <button class="btn btn-secondary" (click)="showDetalleModal=false">Cerrar</button>
@@ -189,7 +194,7 @@
 
 <app-pagination
   [currentPage]="currentPage"
-  
+
   [totalPages]="totalPages"
   [pageSize]="pageSize"
   (pageChange)="irAPagina($event)"
