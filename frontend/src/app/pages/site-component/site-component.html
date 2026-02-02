@@ -26,6 +26,7 @@
     <!-- Barra de Búsqueda y Filtros -->
     <div class="search-section mb-4">
       <div class="row g-3 align-items-center">
+        <!-- Búsqueda -->
         <div class="col-md-8 col-lg-6">
           <div class="input-group input-group-lg shadow-sm">
             <span class="input-group-text bg-white border-end-0">
@@ -34,7 +35,7 @@
             <input
               type="text"
               class="form-control border-start-0"
-              placeholder="Buscar por código, descripción o ID..."
+              placeholder="Buscar por código, descripción..."
               [(ngModel)]="searchTerm"
               (input)="onSearchInput()"
               [disabled]="isLoading"
@@ -49,44 +50,68 @@
           </div>
         </div>
 
- <!-- En el archivo site.component.html -->
-<!-- Filtros de Estado -->
-<div class="col-md-4 col-lg-6">
-  <div class="filters-card bg-white rounded-3 p-3 shadow-sm">
-    <div class="d-flex justify-content-between align-items-center">
-      <div class="btn-group btn-group-sm" role="group">
-        <button type="button"
-                class="btn"
-                [ngClass]="getFilterButtonClass(undefined, filterActivos)"
-                (click)="changeFilterActivos(undefined)"
-                [disabled]="isLoading">
-          {{ getFilterButtonText(undefined) }}
-        </button>
-        <button type="button"
-                class="btn"
-                [ngClass]="getFilterButtonClass(true, filterActivos)"
-                (click)="changeFilterActivos(true)"
-                [disabled]="isLoading">
-          {{ getFilterButtonText(true) }}
-        </button>
-        <button type="button"
-                class="btn"
-                [ngClass]="getFilterButtonClass(false, filterActivos)"
-                (click)="changeFilterActivos(false)"
-                [disabled]="isLoading">
-          {{ getFilterButtonText(false) }}
-        </button>
-      </div>
+        <!-- Filtros de Estado -->
+        <div class="col-md-4 col-lg-6">
+          <div class="filters-card bg-white rounded-3 p-3 shadow-sm">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="btn-group btn-group-sm" role="group">
+                <button type="button"
+                        class="btn"
+                        [ngClass]="getFilterButtonClass(undefined, filterActivos)"
+                        (click)="changeFilterActivos(undefined)"
+                        [disabled]="isLoading">
+                  {{ getFilterButtonText(undefined) }}
+                </button>
+                <button type="button"
+                        class="btn"
+                        [ngClass]="getFilterButtonClass(true, filterActivos)"
+                        (click)="changeFilterActivos(true)"
+                        [disabled]="isLoading">
+                  {{ getFilterButtonText(true) }}
+                </button>
+                <button type="button"
+                        class="btn"
+                        [ngClass]="getFilterButtonClass(false, filterActivos)"
+                        (click)="changeFilterActivos(false)"
+                        [disabled]="isLoading">
+                  {{ getFilterButtonText(false) }}
+                </button>
+              </div>
 
-      <div class="text-end">
-        <div class="total-count">
-          <span class="fw-bold">{{ totalElements }}</span>
-          <span class="text-muted ms-1">sitios</span>
+              <div class="text-end">
+                <div class="total-count">
+                  <span class="fw-bold">{{ totalElements }}</span>
+                  <span class="text-muted ms-1">sitios</span>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-</div>
+
+        <!-- Duplicar Sitio -->
+        <div class="col-md-4 col-lg-6">
+          <div class="duplicate-section bg-white rounded-3 p-3 shadow-sm">
+            <div class="row g-2 align-items-center">
+              <div class="col-md-8">
+                <app-ngselect-dropdown
+                  [items]="siteOptions"
+                  [label]="'Duplicar sitio existente'"
+                  [placeholder]="'Seleccione un sitio para duplicar'"
+                  [loading]="isLoading"
+                  (selectionChange)="onSiteSelectionChange($event)">
+                </app-ngselect-dropdown>
+              </div>
+              <div class="col-md-4">
+                <button class="btn btn-outline-primary w-100"
+                        (click)="openDuplicateModal()"
+                        [disabled]="!selectedSiteId || isLoading">
+                  <i class="bi bi-files me-2"></i>
+                  Duplicar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -134,7 +159,19 @@
                 <h5 class="site-code">{{ site.codigoSitio || 'Sin código' }}</h5>
 
                 <div class="site-description">
-                  {{ site.descripcion || 'Sin descripción' }}
+                  <strong>Descripciones:</strong>
+                  <ul class="mb-0 mt-1 ps-3">
+                    <li *ngFor="let desc of site.descripciones" class="small">
+                      {{ desc.descripcion }}
+                    </li>
+                  </ul>
+                </div>
+
+                <div class="site-meta">
+                  <small class="text-muted">
+                    <i class="bi bi-clock me-1"></i>
+                    {{ site.fechaCreacion | date:'dd/MM/yyyy' }}
+                  </small>
                 </div>
               </div>
 
@@ -152,12 +189,7 @@
                   <i class="bi me-1" [ngClass]="site.activo ? 'bi-toggle-off' : 'bi-toggle-on'"></i>
                   {{ site.activo ? 'Desactivar' : 'Activar' }}
                 </button>
-                <button class="btn btn-outline-danger btn-sm ms-2"
-                        (click)="deleteSite(site)"
-                        [disabled]="isLoading">
-                  <i class="bi bi-trash me-1"></i>
-                  Eliminar
-                </button>
+
               </div>
             </div>
           </div>
@@ -263,31 +295,56 @@
               </div>
             </div>
 
-            <!-- Campo Descripción -->
+            <!-- Campo Descripciones -->
             <div class="form-group mb-4">
               <label class="form-label fw-medium">
-                Descripción <span class="text-danger">*</span>
-                <span class="form-hint">(Obligatorio, máximo 255 caracteres)</span>
+                Descripciones <span class="text-danger">*</span>
+                <span class="form-hint">(Al menos una descripción obligatoria)</span>
               </label>
-              <textarea
-                class="form-control"
-                [(ngModel)]="currentSite.descripcion"
-                name="descripcion"
-                rows="3"
-                maxlength="255"
-                placeholder="Descripción del sitio..."
-                required
-                [class.is-invalid]="formSubmitted && !currentSite.descripcion.trim()"
-                [disabled]="isLoading"
-              ></textarea>
-              <div *ngIf="formSubmitted && !currentSite.descripcion.trim()" class="invalid-feedback">
-                La descripción es obligatoria
+
+              <div class="descripciones-container">
+                <div *ngFor="let desc of descripcionesTemporal; let i = index"
+                     class="descripcion-item mb-3"
+                     [attr.data-index]="i">
+                  <div class="input-group">
+                    <textarea
+                      class="form-control"
+                      [(ngModel)]="descripcionesTemporal[i]"
+                      [name]="'descripcion' + i"
+                      rows="2"
+                      maxlength="255"
+                      placeholder="Ingrese una descripción..."
+                      required
+                      [class.is-invalid]="formSubmitted && descripcionesTemporal[i] && !descripcionesTemporal[i].trim()"
+                      [disabled]="isLoading"
+                    ></textarea>
+                    <button *ngIf="descripcionesTemporal.length > 1"
+                            class="btn btn-outline-danger"
+                            type="button"
+                            (click)="removeDescripcion(i)"
+                            [disabled]="isLoading">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                  <div *ngIf="formSubmitted && descripcionesTemporal[i] && !descripcionesTemporal[i].trim()"
+                       class="invalid-feedback d-block">
+                    Esta descripción no puede estar vacía
+                  </div>
+                  <div class="mt-1 text-end">
+                    <small class="text-muted">
+                      {{ (descripcionesTemporal[i] || '').length }}/255 caracteres
+                    </small>
+                  </div>
+                </div>
               </div>
-              <div class="mt-1 text-end">
-                <small class="text-muted">
-                  {{ (currentSite.descripcion || '').length }}/255 caracteres
-                </small>
-              </div>
+
+              <button type="button"
+                      class="btn btn-outline-secondary btn-sm mt-2"
+                      (click)="addDescripcion()"
+                      [disabled]="isLoading">
+                <i class="bi bi-plus-circle me-1"></i>
+                Agregar otra descripción
+              </button>
             </div>
 
             <!-- Campo Estado -->
@@ -317,27 +374,28 @@
             </div>
 
             <!-- Botones del Modal -->
-            <div class="modal-footer border-top pt-4">
-              <button type="button"
-                      class="btn btn-outline-secondary"
-                      (click)="closeModal()"
-                      [disabled]="isLoading">
-                <i class="bi bi-x-lg me-2"></i>
-                Cancelar
-              </button>
-              <button type="submit"
-                      class="btn btn-primary"
-                      [disabled]="isLoading || (!currentSite.descripcion.trim() && formSubmitted)">
-                <ng-container *ngIf="!isLoading">
-                  <i class="bi me-2" [ngClass]="isEditMode ? 'bi-save' : 'bi-plus-circle'"></i>
-                  {{ isEditMode ? 'Guardar Cambios' : 'Crear Sitio' }}
-                </ng-container>
-                <ng-container *ngIf="isLoading">
-                  <span class="spinner-border spinner-border-sm me-2"></span>
-                  Guardando...
-                </ng-container>
-              </button>
-            </div>
+          <!-- Botones del Modal -->
+<div class="modal-footer border-top pt-4">
+  <button type="button"
+          class="btn btn-outline-secondary"
+          (click)="closeModal()"
+          [disabled]="isLoading">
+    <i class="bi bi-x-lg me-2"></i>
+    Cancelar
+  </button>
+  <button type="submit"
+          class="btn btn-primary"
+          [disabled]="isLoading || !isFormValid()">
+    <ng-container *ngIf="!isLoading">
+      <i class="bi me-2" [ngClass]="isEditMode ? 'bi-save' : 'bi-plus-circle'"></i>
+      {{ isEditMode ? 'Guardar Cambios' : 'Crear Sitio' }}
+    </ng-container>
+    <ng-container *ngIf="isLoading">
+      <span class="spinner-border spinner-border-sm me-2"></span>
+      Guardando...
+    </ng-container>
+  </button>
+</div>
           </form>
         </div>
       </div>

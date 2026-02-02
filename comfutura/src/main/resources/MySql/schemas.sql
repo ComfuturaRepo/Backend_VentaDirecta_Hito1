@@ -210,10 +210,23 @@ CREATE TABLE fase (
 );
 CREATE TABLE site (
                       id_site INT AUTO_INCREMENT PRIMARY KEY,
-                      codigo_sitio VARCHAR(150)  NULL,
-                      descripcion VARCHAR(255) not null,
-                      activo TINYINT(1) DEFAULT 1
+                      codigo_sitio VARCHAR(150)  NULL ,
+                      activo TINYINT(1) DEFAULT 1,
+                      fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+CREATE TABLE site_descripcion (
+                                  id_site_descripcion INT AUTO_INCREMENT PRIMARY KEY,
+                                  id_site INT NOT NULL,
+                                  descripcion VARCHAR(255) NOT NULL,
+                                  fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                                  activo TINYINT(1) DEFAULT 1,
+
+                                  CONSTRAINT fk_site_desc
+                                      FOREIGN KEY (id_site) REFERENCES site(id_site)
+                                          ON DELETE CASCADE
+);
+
 CREATE TABLE region (
                         id_region INT AUTO_INCREMENT PRIMARY KEY,
                         nombre VARCHAR(100) NOT NULL,
@@ -240,79 +253,77 @@ CREATE TABLE analista_cliente_solicitante (
                                               activo TINYINT(1) DEFAULT 1
 );
 
+CREATE TABLE tipo_ot (
+                         id_tipo_ot INT AUTO_INCREMENT PRIMARY KEY,
+                         codigo VARCHAR(20) UNIQUE,
+                         descripcion VARCHAR(100) NOT NULL,
+                         activo TINYINT(1) DEFAULT 1
+);
 
 
+-- =====================================================
+-- OTS con relación a site_descripcion
+-- =====================================================
 CREATE TABLE ots (
                      id_ots INT AUTO_INCREMENT PRIMARY KEY,
                      ot INT NOT NULL UNIQUE,
                      id_ots_anterior INT NULL,
 
-                     id_cliente  INT NOT NULL,
-                     id_area     INT NOT NULL,
+    -- Relaciones principales
+                     id_cliente INT NOT NULL,
+                     id_area INT NOT NULL,
                      id_proyecto INT NOT NULL,
-                     id_fase     INT NOT NULL,
-                     id_site     INT NOT NULL,
-                     id_region   INT NOT NULL,
+                     id_fase INT NOT NULL,
+                     id_region INT NOT NULL,
+
+    -- Site y descripción específica
+                     id_site INT NULL, -- Referencia al site general
+                     id_site_descripcion INT NULL, -- Referencia a la descripción específica
 
                      descripcion TEXT,
                      fecha_apertura DATE NOT NULL,
-                     id_jefatura_cliente_solicitante   INT DEFAULT NULL,
-                     id_analista_cliente_solicitante   INT DEFAULT NULL,
-                     id_coordinador_ti_cw    INT DEFAULT NULL,
+
+    -- Relaciones con otras tablas
+                     id_jefatura_cliente_solicitante INT DEFAULT NULL,
+                     id_analista_cliente_solicitante INT DEFAULT NULL,
+                     id_coordinador_ti_cw INT DEFAULT NULL,
                      id_jefatura_responsable INT DEFAULT NULL,
-                     id_liquidador           INT DEFAULT NULL,
-                     id_ejecutante           INT DEFAULT NULL,
-                     id_analista_contable    INT DEFAULT NULL,
+                     id_liquidador INT DEFAULT NULL,
+                     id_ejecutante INT DEFAULT NULL,
+                     id_analista_contable INT DEFAULT NULL,
+                     id_tipo_ot INT NOT NULL,
+                     id_trabajador INT NOT NULL,
+                     id_estado_ot INT NOT NULL,
 
-                     id_trabajador int not null,
-
-                     id_estado_ot INT not null,
                      activo TINYINT(1) DEFAULT 1,
                      fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 
-    -- Relaciones normales
-                     CONSTRAINT fk_ots_cliente
-                         FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
-                     CONSTRAINT fk_ots_jefatura_cliente
-                         FOREIGN KEY (id_jefatura_cliente_solicitante) REFERENCES jefatura_cliente_solicitante(id),
-                     CONSTRAINT fk_ots_id_trabajador
-                         FOREIGN KEY (id_trabajador) REFERENCES trabajador(id_trabajador),
+    -- Constraints
+                     CONSTRAINT fk_ots_cliente FOREIGN KEY (id_cliente) REFERENCES cliente(id_cliente),
+                     CONSTRAINT fk_ots_area FOREIGN KEY (id_area) REFERENCES area(id_area),
+                     CONSTRAINT fk_ots_proyecto FOREIGN KEY (id_proyecto) REFERENCES proyecto(id_proyecto),
+                     CONSTRAINT fk_ots_fase FOREIGN KEY (id_fase) REFERENCES fase(id_fase),
+                     CONSTRAINT fk_ots_region FOREIGN KEY (id_region) REFERENCES region(id_region),
 
-                     CONSTRAINT fk_ots_analista_cliente
-                         FOREIGN KEY (id_analista_cliente_solicitante) REFERENCES analista_cliente_solicitante(id),
-                     CONSTRAINT fk_ots_area
-                         FOREIGN KEY (id_area) REFERENCES area(id_area),
+    -- Site constraints
+                     CONSTRAINT fk_ots_site FOREIGN KEY (id_site) REFERENCES site(id_site),
+                     CONSTRAINT fk_ots_site_descripcion FOREIGN KEY (id_site_descripcion)
+                         REFERENCES site_descripcion(id_site_descripcion),
 
-                     CONSTRAINT fk_ots_proyecto
-                         FOREIGN KEY (id_proyecto) REFERENCES proyecto(id_proyecto),
+    -- Estado OT
+                     CONSTRAINT fk_ot_estado FOREIGN KEY (id_estado_ot) REFERENCES estado_ot(id_estado_ot),
 
-                     CONSTRAINT fk_ots_fase
-                         FOREIGN KEY (id_fase) REFERENCES fase(id_fase),
+    -- Constraints de trabajadores
+                     CONSTRAINT fk_ots_id_trabajador FOREIGN KEY (id_trabajador) REFERENCES trabajador(id_trabajador),
+                     CONSTRAINT fk_ots_coord FOREIGN KEY (id_coordinador_ti_cw) REFERENCES trabajador(id_trabajador),
+                     CONSTRAINT fk_ots_jef_resp FOREIGN KEY (id_jefatura_responsable) REFERENCES trabajador(id_trabajador),
+                     CONSTRAINT fk_ots_liq FOREIGN KEY (id_liquidador) REFERENCES trabajador(id_trabajador),
+                     CONSTRAINT fk_ots_ejec FOREIGN KEY (id_ejecutante) REFERENCES trabajador(id_trabajador),
+                     CONSTRAINT fk_ots_anal_cont FOREIGN KEY (id_analista_contable) REFERENCES trabajador(id_trabajador),
 
-                     CONSTRAINT fk_ots_site
-                         FOREIGN KEY (id_site) REFERENCES site(id_site),
-
-                     CONSTRAINT fk_ots_region
-                         FOREIGN KEY (id_region) REFERENCES region(id_region),
-                     CONSTRAINT fk_ot_estado
-                         FOREIGN KEY (id_estado_ot) REFERENCES estado_ot(id_estado_ot),
-    -- 🔥 FKs A TRABAJADOR (NO A CARGOS)
-                     CONSTRAINT fk_ots_coord
-                         FOREIGN KEY (id_coordinador_ti_cw) REFERENCES trabajador(id_trabajador),
-
-                     CONSTRAINT fk_ots_jef_resp
-                         FOREIGN KEY (id_jefatura_responsable) REFERENCES trabajador(id_trabajador),
-
-                     CONSTRAINT fk_ots_liq
-                         FOREIGN KEY (id_liquidador) REFERENCES trabajador(id_trabajador),
-
-                     CONSTRAINT fk_ots_ejec
-                         FOREIGN KEY (id_ejecutante) REFERENCES trabajador(id_trabajador),
-
-                     CONSTRAINT fk_ots_anal_cont
-                         FOREIGN KEY (id_analista_contable) REFERENCES trabajador(id_trabajador)
+    -- Tipo OT
+                     CONSTRAINT fk_ots_tipo_ots FOREIGN KEY (id_tipo_ot) REFERENCES tipo_ot(id_tipo_ot)
 );
-
 
 
 -- ======================================
@@ -740,3 +751,4 @@ CREATE TABLE permiso_cargo (
                                FOREIGN KEY (id_permiso) REFERENCES permiso(id_permiso),
                                FOREIGN KEY (id_cargo) REFERENCES cargo(id_cargo)
 );
+

@@ -1,6 +1,6 @@
 // src/app/core/services/dropdown.service.ts
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable, forkJoin } from 'rxjs';
 import { environment } from '../../environment';
 
@@ -39,6 +39,9 @@ export class DropdownService {
   getFases(): Observable<DropdownItem[]> {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/fases`);
   }
+   getSiteCompuesto(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/sitesCompuesto`);
+  }
 
   getSites(): Observable<DropdownItem[]> {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/sites`);
@@ -46,6 +49,10 @@ export class DropdownService {
 
   getRegiones(): Observable<DropdownItem[]> {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/regiones`);
+  }
+
+   getTipoOt(): Observable<DropdownItem[]> {
+    return this.http.get<DropdownItem[]>(`${this.apiUrl}/tipoOt`);
   }
    getEmpresas(): Observable<DropdownItem[]> {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/empresas`);
@@ -89,9 +96,16 @@ export class DropdownService {
     return this.http.get<DropdownItem[]>(`${this.apiUrl}/analistas-contable`);
   }
 
-  getMaestroCodigo(): Observable<DropdownItem[]> {
-    return this.http.get<DropdownItem[]>(`${this.apiUrl}/maestro-codigos`);
-  }
+getDescripcionesBySiteCodigo(siteCodigo: string): Observable<DropdownItem[]> {
+  const params = new HttpParams().set('siteCodigo', siteCodigo || '');
+  return this.http.get<DropdownItem[]>(`${this.apiUrl}/DescripcionesBySiteCodigo`, { params });
+}
+
+
+getSitesConDescripciones(): Observable<DropdownItem[]> {
+  return this.http.get<DropdownItem[]>(`${this.apiUrl}/SitesConDescripciones`);
+}
+
   // =============================
   // ORDEN DE COMPRA
   // =============================
@@ -127,38 +141,42 @@ export class DropdownService {
   /**
    * Carga TODOS los dropdowns necesarios para crear/editar una OT
    */
-  loadOtFormDropdowns(): Observable<{
-    clientes: DropdownItem[];
-    proyectos: DropdownItem[];
-    fases: DropdownItem[];
-    sites: DropdownItem[];
-    regiones: DropdownItem[];
-    jefaturasClienteSolicitante: DropdownItem[];
-    analistasClienteSolicitante: DropdownItem[];
-    coordinadoresTiCw: DropdownItem[];
-    jefaturasResponsable: DropdownItem[];
-    liquidadores: DropdownItem[];
-    ejecutantes: DropdownItem[];
-    analistasContable: DropdownItem[];
-    estadoOt: DropdownItem[];
-  }> {
-    return forkJoin({
-      clientes: this.getClientes(),
-      proyectos: this.getProyectos(),
-      fases: this.getFases(),
-      sites: this.getSites(),
-      regiones: this.getRegiones(),
-      jefaturasClienteSolicitante: this.getJefaturasClienteSolicitante(),
-      analistasClienteSolicitante: this.getAnalistasClienteSolicitante(),
-      coordinadoresTiCw: this.getCoordinadoresTiCw(),
-      jefaturasResponsable: this.getJefaturasResponsable(),
-      liquidadores: this.getLiquidador(),
-      ejecutantes: this.getEjecutantes(),
-      analistasContable: this.getAnalistasContable(),
-      estadoOt:this.getEstadoOt()
-    });
-  }
+ // En src/app/core/services/dropdown.service.ts
 
+// Actualiza el método loadOtFormDropdowns para incluir tipoOt
+loadOtFormDropdowns(): Observable<{
+  clientes: DropdownItem[];
+  proyectos: DropdownItem[];
+  fases: DropdownItem[];
+  sites: DropdownItem[];
+  regiones: DropdownItem[];
+  tipoOt: DropdownItem[]; // ✅ AGREGAR ESTA LÍNEA
+  jefaturasClienteSolicitante: DropdownItem[];
+  analistasClienteSolicitante: DropdownItem[];
+  coordinadoresTiCw: DropdownItem[];
+  jefaturasResponsable: DropdownItem[];
+  liquidadores: DropdownItem[];
+  ejecutantes: DropdownItem[];
+  analistasContable: DropdownItem[];
+  estadoOt: DropdownItem[];
+}> {
+  return forkJoin({
+    clientes: this.getClientes(),
+    proyectos: this.getProyectos(),
+    fases: this.getFases(),
+    sites: this.getSites(),
+    regiones: this.getRegiones(),
+    tipoOt: this.getTipoOt(), // ✅ AGREGAR ESTA LÍNEA
+    jefaturasClienteSolicitante: this.getJefaturasClienteSolicitante(),
+    analistasClienteSolicitante: this.getAnalistasClienteSolicitante(),
+    coordinadoresTiCw: this.getCoordinadoresTiCw(),
+    jefaturasResponsable: this.getJefaturasResponsable(),
+    liquidadores: this.getLiquidador(),
+    ejecutantes: this.getEjecutantes(),
+    analistasContable: this.getAnalistasContable(),
+    estadoOt: this.getEstadoOt()
+  });
+}
 loadOrdenCompraDropdowns(): Observable<{
   ots: DropdownItem[];
   maestros: DropdownItem[];     // ← agregado
@@ -166,7 +184,7 @@ loadOrdenCompraDropdowns(): Observable<{
 }> {
   return forkJoin({
     ots: this.getOtsActivas(),
-    maestros: this.getMaestroCodigo(),    // ← agregado
+    maestros: this.getEmpresas(),    // ← agregado
     proveedores: this.getProveedores()
   });
 }

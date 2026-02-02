@@ -1,7 +1,5 @@
 // src/app/core/models/ots.ts
 
-// DTO para el listado en tabla (liviano pero con idOts y activo)
-// src/app/core/models/ots.ts
 export interface OtListDto {
   idOts: number;
   ot: number;
@@ -13,14 +11,18 @@ export interface OtListDto {
   region?: string | null;
   cliente?: string | null;
   proyecto?: string | null;
+  tipoOtCodigo?: string | null;  // ✅ NUEVO CAMPO
+  tipoOtDescripcion?: string | null;  // ✅ NUEVO CAMPO
   activo: boolean;
 }
 
-// DTO para detalle completo (vista de detalle) - AHORA CON TODOS LOS IDs
 export interface OtDetailResponse {
   idOts: number;
   ot: number;
   idOtsAnterior?: number | null;
+  idTipoOt?: number | null;  // ✅ NUEVO CAMPO
+  tipoOtCodigo?: string | null;  // ✅ NUEVO CAMPO
+  tipoOtDescripcion?: string | null;  // ✅ NUEVO CAMPO
 
   descripcion: string;
   fechaApertura?: string | null;
@@ -83,10 +85,11 @@ export interface OtCreateRequest {
   idArea: number;
   idProyecto: number;
   idFase: number;
-  idSite: number;
+  idSite?: number;
   idRegion: number;
 idEstadoOt: number | null;
-
+  idTipoOt: number; // ✅ AGREGAR ESTE CAMPO
+  idSiteDescripcion?: number; // ← AGREGAR ESTA LÍNEA
   descripcion?: string;
   fechaApertura?: string;
 
@@ -120,4 +123,13 @@ export interface Page<T> {
   first: boolean;
   numberOfElements: number;
   empty: boolean;
+}
+// Añadir al final del archivo ots.ts
+
+// DTO para TipoOt (para dropdowns)
+export interface TipoOtDTO {
+  idTipoOt: number;
+  codigo: string;
+  descripcion: string;
+  activo: boolean;
 }

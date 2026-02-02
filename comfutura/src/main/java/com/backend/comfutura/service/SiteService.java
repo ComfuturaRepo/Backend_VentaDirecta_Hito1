@@ -1,26 +1,20 @@
 package com.backend.comfutura.service;
 
 import com.backend.comfutura.dto.Page.PageResponseDTO;
+import com.backend.comfutura.dto.request.SiteRequestDTO;
+import com.backend.comfutura.dto.response.SiteDTO;
 import com.backend.comfutura.model.Site;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface SiteService {
-
-    // Paginados con PageResponseDTO
-    PageResponseDTO<Site> listar(Pageable pageable);
-    PageResponseDTO<Site> listarActivos(Pageable pageable);
-    PageResponseDTO<Site> buscar(String search, Pageable pageable);
-
-    // Para mantener compatibilidad
-    Page<Site> listarPaginado(Pageable pageable);
-
-    // CRUD
-    Site guardar(Site site);
-    Site obtenerPorId(Integer id);
+    PageResponseDTO<SiteDTO> listar(Pageable pageable);
+    PageResponseDTO<SiteDTO> listarActivos(Pageable pageable);
+    PageResponseDTO<SiteDTO> buscar(String search, Pageable pageable);
+    SiteDTO obtenerPorId(Integer id);
+    SiteDTO guardar(SiteRequestDTO request);
+    SiteDTO actualizar(Integer id, SiteRequestDTO request);
     void toggle(Integer id);
-
-    // Métodos de validación
     boolean existeCodigoSitio(String codigoSitio);
     boolean existeCodigoSitioConOtroId(String codigoSitio, Integer id);
 }
