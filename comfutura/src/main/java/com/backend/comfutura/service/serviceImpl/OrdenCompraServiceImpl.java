@@ -8,7 +8,6 @@ import com.backend.comfutura.repository.*;
 import com.backend.comfutura.service.OrdenCompraService;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
-import org.jspecify.annotations.NonNull;
 import org.springframework.data.domain.*;
 import org.springframework.stereotype.Service;
 import org.thymeleaf.context.Context;
@@ -17,8 +16,8 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -34,16 +33,12 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     private final EmpresaRepository empresaRepository;
     private final SpringTemplateEngine templateEngine;
 
-    /* =====================================================
-       CREAR / EDITAR ORDEN DE COMPRA
-       ===================================================== */
     @Override
     @Transactional
     public OrdenCompraResponseDTO guardar(Integer idOc, OrdenCompraRequestDTO dto) {
 
         OrdenCompra oc;
 
-        // 1️⃣ OC existente o nueva
         if (idOc != null) {
             oc = ordenCompraRepository.findById(idOc)
                     .orElseThrow(() -> new RuntimeException("Orden de compra no existe"));
@@ -52,7 +47,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
             oc = new OrdenCompra();
         }
 
-        // 2️⃣ Relaciones
+        // Relaciones
         if (dto.getIdEstadoOc() != null) {
             EstadoOc estadoOC = estadoOCRepository.findById(dto.getIdEstadoOc())
                     .orElseThrow(() -> new RuntimeException("Estado OC no existe"));
@@ -71,16 +66,16 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
             oc.setOts(ots);
         }
 
-        // 3️⃣ Campos simples
+        // Campos simples
         oc.setFormaPago(dto.getFormaPago());
         oc.setFechaOc(dto.getFechaOc());
         oc.setObservacion(dto.getObservacion());
 
-        // Guardar primero para cascade
+        // Guardar primero para Cascade
         oc = ordenCompraRepository.save(oc);
         final OrdenCompra ocFinal = oc;
 
-        // 4️⃣ Detalles
+        // Detalles
         AtomicReference<BigDecimal> subtotalRef = new AtomicReference<>(BigDecimal.ZERO);
 
         if (dto.getDetalles() != null && !dto.getDetalles().isEmpty()) {
@@ -94,16 +89,15 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
                 detalle.setSubtotal(sub);
 
                 subtotalRef.updateAndGet(current -> current.add(sub));
-
                 detalle.setOrdenCompra(ocFinal);
                 return detalle;
             }).collect(Collectors.toList());
 
             oc.getDetalles().addAll(detalles);
-            ordenCompraRepository.save(oc); // CascadeType.ALL guarda detalles
+            ordenCompraRepository.save(oc);
         }
 
-        // 5️⃣ Totales
+        // Totales
         BigDecimal subtotalOc = subtotalRef.get();
         BigDecimal igvPorcentaje = dto.getIgvPorcentaje() != null ? dto.getIgvPorcentaje() : BigDecimal.ZERO;
         BigDecimal igvTotal = (dto.getAplicarIgv() != null && dto.getAplicarIgv())
@@ -119,9 +113,6 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
         return mapToResponseCompleto(guardado);
     }
 
-    /* =====================================================
-       LISTADO PAGINADO
-       ===================================================== */
     @Override
     public Page<OrdenCompraResponseDTO> listarPaginado(int page, int size, String sortBy, String direction) {
         Sort sort = direction.equalsIgnoreCase("DESC")
@@ -129,14 +120,9 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
                 : Sort.by(sortBy).ascending();
 
         Pageable pageable = PageRequest.of(page, size, sort);
-
-        return ordenCompraRepository.findAll(pageable) // <- EntityGraph carga relaciones
-                .map(this::mapToResponseCompleto);       // usa el mapper completo
+        return ordenCompraRepository.findAll(pageable).map(this::mapToResponseCompleto);
     }
 
-    /* =====================================================
-       GENERAR HTML (THYMELEAF)
-       ===================================================== */
     @Override
     public String generarHtml(Integer idOc, Integer idEmpresa) {
 
@@ -157,54 +143,37 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
         return templateEngine.process("orden-compra", context);
     }
 
-    /* =====================================================
-       MAPPERS
-       ===================================================== */
-    private OrdenCompraResponseDTO mapToResponse(@NonNull OrdenCompra oc) {
-        return OrdenCompraResponseDTO.builder()
-                .idOc(oc.getIdOc())
-                .fechaOc(oc.getFechaOc())
-                .formaPago(oc.getFormaPago())
-                .observacion(oc.getObservacion())
-                .subtotal(oc.getSubtotal())
-                .igvPorcentaje(oc.getIgvPorcentaje())
-                .igvTotal(oc.getIgvTotal())
-                .total(oc.getTotal())
-                .estadoNombre(oc.getEstadoOC() != null ? oc.getEstadoOC().getNombre() : "")
-                .idEstadoOc(oc.getEstadoOC() != null ? oc.getEstadoOC().getIdEstadoOc() : null)
-                .build();
-    }
-
+    // Mapper completo
     private OrdenCompraResponseDTO mapToResponseCompleto(OrdenCompra oc) {
 
-        // Proveedor
-        Proveedor proveedor = oc.getProveedor(); // directamente desde la relación
-        // OT
-        Ots ots = oc.getOts(); // directamente desde la relación
+        Proveedor proveedor = oc.getProveedor();
+        Ots ots = oc.getOts();
 
-        // Detalles
-        List<OcDetalleResponseDTO> detalles =
-                oc.getDetalles() == null ? List.of() :
-                        oc.getDetalles().stream()
-                                .map(d -> {
-                                    MaestroCodigo maestro = maestroCodigoRepository.findById(d.getIdMaestro()).orElse(null);
+        // Mapear detalles con todos los maestros de golpe
+        List<Integer> idsMaestro = oc.getDetalles().stream()
+                .map(OcDetalle::getIdMaestro)
+                .toList();
 
-                                    return OcDetalleResponseDTO.builder()
-                                            .idOcDetalle(d.getIdOcDetalle())
-                                            .codigo(maestro != null ? maestro.getCodigo() : "")
-                                            .descripcion(maestro != null ? maestro.getDescripcion() : "")
+        Map<Integer, MaestroCodigo> maestros = maestroCodigoRepository.findAllById(idsMaestro)
+                .stream().collect(Collectors.toMap(MaestroCodigo::getId, m -> m));
 
-                                            .unidad(maestro != null && maestro.getUnidadMedida() != null ? maestro.getUnidadMedida().getCodigo() : "")
-                                            .cantidad(d.getCantidad())
-                                            .precioUnitario(d.getPrecioUnitario())
-                                            .subtotal(d.getSubtotal())
-                                            .igv(d.getIgv())
-                                            .total(d.getTotal())
-                                            .build();
-                                })
-                                .toList();
+        List<OcDetalleResponseDTO> detalles = oc.getDetalles().stream().map(d -> {
+            MaestroCodigo m = maestros.get(d.getIdMaestro());
+            return OcDetalleResponseDTO.builder()
+                    .idOcDetalle(d.getIdOcDetalle())
+                    .idOc(oc.getIdOc())
+                    .idMaestro(d.getIdMaestro())
+                    .codigo(m != null ? m.getCodigo() : null)
+                    .descripcion(m != null ? m.getDescripcion() : null)
+                    .unidad(m != null && m.getUnidadMedida() != null ? m.getUnidadMedida().getCodigo() : null)
+                    .cantidad(d.getCantidad())
+                    .precioUnitario(d.getPrecioUnitario())
+                    .subtotal(d.getSubtotal())
+                    .igv(d.getIgv())
+                    .total(d.getTotal())
+                    .build();
+        }).toList();
 
-        // DTO final
         return OrdenCompraResponseDTO.builder()
                 .idOc(oc.getIdOc())
                 .fechaOc(oc.getFechaOc())
@@ -214,24 +183,18 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
                 .igvPorcentaje(oc.getIgvPorcentaje())
                 .igvTotal(oc.getIgvTotal())
                 .total(oc.getTotal())
-                // Estado OC
                 .idEstadoOc(oc.getEstadoOC() != null ? oc.getEstadoOC().getIdEstadoOc() : null)
                 .estadoNombre(oc.getEstadoOC() != null ? oc.getEstadoOC().getNombre() : "-")
-                // Proveedor
                 .idProveedor(proveedor != null ? proveedor.getId() : null)
                 .proveedorNombre(proveedor != null && proveedor.getRazonSocial() != null ? proveedor.getRazonSocial() : "SIN PROVEEDOR")
                 .proveedorRuc(proveedor != null ? proveedor.getRuc() : "-")
                 .proveedorDireccion(proveedor != null ? proveedor.getDireccion() : "-")
                 .proveedorContacto(proveedor != null ? proveedor.getContacto() : "-")
                 .proveedorBanco(proveedor != null && proveedor.getBanco() != null ? proveedor.getBanco().getNombre() : "-")
-                // OT
                 .idOts(ots != null ? ots.getIdOts() : null)
                 .otsDescripcion(ots != null ? ots.getDescripcion() : "-")
                 .ot(ots != null ? "OT-" + ots.getOt() : "-")
-                // Detalles
                 .detalles(detalles)
                 .build();
     }
-
-
 }
