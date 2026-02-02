@@ -153,6 +153,7 @@ private crearFormularioBase(): void {
     idArea: [null, Validators.required],
     idProyecto: [null, Validators.required],
     idFase: [null, Validators.required],
+        idSite: [null, Validators.required],
     idTipoOt: [null, Validators.required],
     idRegion: [null, Validators.required],
     descripcion: ['', [Validators.required, Validators.minLength(10)]],
@@ -203,27 +204,27 @@ private crearFormularioBase(): void {
 // ============================================
 
 private setupSiteValidation(): void {
-  // Validación personalizada para Site
-  const siteValidator = () => {
-    const idSite = this.form.get('idSite')?.value;
-    const idSiteDescripcion = this.form.get('idSiteDescripcion')?.value;
+  // Remover el validador personalizado - solo usar Validators.required para idSite
+  this.form.get('idSite')?.setValidators(Validators.required);
 
-    // Al menos uno debe tener valor
-    return (idSite || idSiteDescripcion) ? null : { siteRequired: true };
-  };
-
-  // Aplicar validación a ambos controles
-  this.form.get('idSite')?.setValidators(siteValidator);
-  this.form.get('idSiteDescripcion')?.setValidators(siteValidator);
-
-  // Actualizar cuando cambie cualquiera de los dos
-  this.form.get('idSite')?.valueChanges.subscribe(() => {
-    this.form.get('idSiteDescripcion')?.updateValueAndValidity();
-  });
-
+  // Para idSiteDescripcion, agregar validación condicional
   this.form.get('idSiteDescripcion')?.valueChanges.subscribe(() => {
-    this.form.get('idSite')?.updateValueAndValidity();
+    this.validarDescripcionSite();
   });
+}
+
+private validarDescripcionSite(): void {
+  const idSiteDescripcion = this.form.get('idSiteDescripcion')?.value;
+  const selectedSite = this.sites.find(s => s.id === this.selectedSiteId);
+
+  // Si hay descripciones disponibles y no se seleccionó ninguna, marcar error
+  if (selectedSite &&
+      this.siteDescripciones.length > 0 &&
+      !idSiteDescripcion) {
+    this.form.get('idSiteDescripcion')?.setErrors({ descripcionRequired: true });
+  } else {
+    this.form.get('idSiteDescripcion')?.setErrors(null);
+  }
 }
 private actualizarValidacionOtAnterior(): void {
   const fechaAperturaControl = this.form.get('fechaApertura');
@@ -356,7 +357,6 @@ get otAnteriorMensajeError(): string {
   // MÉTODOS DE CARGA DE DATOS
   // ============================================
 
-// Reemplaza el método cargarDropdownsParaCreacion
 private cargarDropdownsParaCreacion(): void {
   this.loading = true;
 
@@ -364,17 +364,26 @@ private cargarDropdownsParaCreacion(): void {
     clientes: this.dropdownService.getClientes().pipe(catchError(() => of([]))),
     proyectos: this.dropdownService.getProyectos().pipe(catchError(() => of([]))),
     fases: this.dropdownService.getFases().pipe(catchError(() => of([]))),
+    // USAR EL ENDPOINT CORRECTO
     sites: this.dropdownService.getSitesConDescripciones().pipe(catchError(() => of([]))),
     regiones: this.dropdownService.getRegiones().pipe(catchError(() => of([]))),
-    tiposOt: this.dropdownService.getTipoOt().pipe(catchError(() => of([]))) // ← Asegúrate que esté incluido
+    tiposOt: this.dropdownService.getTipoOt().pipe(catchError(() => of([])))
   }).subscribe({
     next: (data) => {
       this.clientes = data.clientes || [];
       this.proyectos = data.proyectos || [];
       this.fases = data.fases || [];
-      this.sites = data.sites || [];
+
+      // Procesar sites para manejar null en adicional
+      this.sites = (data.sites || []).map((site: any) => ({
+        id: site.id,
+        label: site.label || site.adicional || 'SIN CÓDIGO',
+        adicional: site.adicional || site.label || 'SIN CÓDIGO',
+        estado: site.estado
+      }));
+
       this.regiones = data.regiones || [];
-      this.tiposOt = data.tiposOt || []; // ← Asignar correctamente
+      this.tiposOt = data.tiposOt || [];
 
       // Cargar responsables
       this.cargarDropdownsResponsables();
@@ -679,13 +688,12 @@ get tipoOtNombre(): string {
   get faseNombre(): string {
     return this.getItemNombre(this.selectedFaseId, this.fases);
   }
-
 get siteNombre(): string {
   // Si hay descripción seleccionada
   if (this.selectedSiteDescripcionId) {
     const descItem = this.siteDescripciones.find(d => d.id === this.selectedSiteDescripcionId);
     if (descItem) {
-      const codigo = descItem.adicional || '';
+      const codigo = this.selectedSiteCodigo || '';
       const descripcion = descItem.label || '';
       return `${codigo} ${descripcion}`.trim();
     }
@@ -694,6 +702,14 @@ get siteNombre(): string {
   // Si no hay descripción, mostrar solo el código
   if (this.selectedSiteCodigo) {
     return this.selectedSiteCodigo;
+  }
+
+  // Si no hay nada seleccionado, buscar en el array de sites
+  if (this.selectedSiteId && this.sites.length > 0) {
+    const site = this.sites.find(s => s.id === this.selectedSiteId);
+    if (site) {
+      return site.adicional || site.label || '—';
+    }
   }
 
   return '—';
@@ -755,7 +771,7 @@ validarPaso1(): boolean {
     'idArea',
     'idProyecto',
     'idFase',
-    // ❌ QUITAR 'idSite' de la lista (ya no es requerido individualmente)
+    'idSite', // ✅ Ahora SI es requerido (el ID del registro)
     'idRegion',
     'idTipoOt',
     'fechaApertura',
@@ -774,21 +790,26 @@ validarPaso1(): boolean {
     }
   });
 
-  // Marcar también los controles de site
-  this.form.get('idSite')?.markAsTouched();
-  this.form.get('idSiteDescripcion')?.markAsTouched();
+  // Debug: Verifica el estado de cada control
+  console.log('=== VALIDACIÓN PASO 1 ===');
+  controlesPaso1.forEach(control => {
+    if (this.f[control]) {
+      console.log(`${control}:`, {
+        value: this.f[control].value,
+        valid: this.f[control].valid,
+        invalid: this.f[control].invalid,
+        errors: this.f[control].errors
+      });
+    }
+  });
 
-  // Validación especial para Site (al menos uno debe tener valor)
-  const idSite = this.form.get('idSite')?.value;
-  const idSiteDescripcion = this.form.get('idSiteDescripcion')?.value;
-
-  if (!idSite && !idSiteDescripcion) {
-    this.mostrarError('Debe seleccionar un código de Site o una descripción');
-    return false;
-  }
-
-  // Si hay descripciones disponibles pero no se seleccionó ninguna
-  if (this.selectedSiteCodigo && this.siteDescripciones.length > 0 && !this.selectedSiteDescripcionId) {
+  // Validación especial: si el site tiene código (no es "SIN CÓDIGO" o "-")
+  // y hay descripciones disponibles, entonces debe seleccionar una descripción
+  if (this.selectedSiteCodigo &&
+      this.selectedSiteCodigo !== 'SIN CÓDIGO' &&
+      this.selectedSiteCodigo !== '-' &&
+      this.siteDescripciones.length > 0 &&
+      !this.selectedSiteDescripcionId) {
     this.mostrarError('Debe seleccionar una descripción para el site seleccionado.');
     return false;
   }
@@ -797,14 +818,6 @@ validarPaso1(): boolean {
   const invalidos = controlesPaso1.filter(control =>
     this.f[control] && this.f[control].invalid
   );
-
-  // Verificar también validación de site
-  const siteError = this.form.get('idSite')?.errors?.['siteRequired'] ||
-                   this.form.get('idSiteDescripcion')?.errors?.['siteRequired'];
-
-  if (siteError) {
-    invalidos.push('idSite');
-  }
 
   console.log('Campos inválidos:', invalidos);
 
@@ -937,48 +950,35 @@ private patchFormValues(data: any): void {
     idSite: data.idSite || null,
     idSiteDescripcion: data.idSiteDescripcion || null
   });
-  // Si hay idSiteDescripcion, entonces idSite debe ser null
-  if (data.idSiteDescripcion) {
-    this.form.get('idSite')?.setValue(null);
-    this.selectedSiteDescripcionId = data.idSiteDescripcion;
-  } else if (data.idSite) {
-    this.form.get('idSiteDescripcion')?.setValue(null);
-    this.selectedSiteId = data.idSite;
-  }
+
   // Establecer otros IDs seleccionados
   this.selectedClienteId = data.idCliente || null;
   this.selectedAreaId = data.idArea || null;
   this.selectedProyectoId = data.idProyecto || null;
   this.selectedFaseId = data.idFase || null;
   this.selectedRegionId = data.idRegion || null;
-  this.selectedJefaturaClienteId = data.idJefaturaClienteSolicitante || null;
-  this.selectedAnalistaClienteId = data.idAnalistaClienteSolicitante || null;
-  this.selectedCoordinadorTiCwId = data.idCoordinadorTiCw || null;
   this.selectedTipoOtId = data.idTipoOt || null;
-  this.selectedJefaturaResponsableId = data.idJefaturaResponsable || null;
-  this.selectedLiquidadorId = data.idLiquidador || null;
-  this.selectedEjecutanteId = data.idEjecutante || null;
-  this.selectedAnalistaContableId = data.idAnalistaContable || null;
-  this.selectedEstadoOTId = data.idEstadoOt || null;
 
-  // Manejar site y descripción
+  // Manejar site
+  this.selectedSiteId = data.idSite || null;
+
+  // Si hay descripción seleccionada
   if (data.idSiteDescripcion) {
     this.selectedSiteDescripcionId = data.idSiteDescripcion;
+  }
 
-    // Necesitamos cargar el código del site para mostrar en el dropdown
-    // Esto debería venir en la respuesta del backend
-    if (data.siteCodigo) {
-      this.selectedSiteCodigo = data.siteCodigo;
-      this.selectedSiteId = data.idSite;
-      this.cargarDescripcionesPorSiteCodigo(data.siteCodigo);
-    }
-  } else if (data.idSite) {
-    this.selectedSiteId = data.idSite;
+  // Buscar el código del site en la lista
+  if (this.selectedSiteId && this.sites.length > 0) {
+    const site = this.sites.find(s => s.id === this.selectedSiteId);
+    if (site) {
+      this.selectedSiteCodigo = site.adicional || site.label;
 
-    // Necesitamos obtener el código del site
-    if (data.siteCodigo) {
-      this.selectedSiteCodigo = data.siteCodigo;
-      this.cargarDescripcionesPorSiteCodigo(data.siteCodigo);
+      // Si tiene código y no es "SIN CÓDIGO" o "-", cargar descripciones
+      if (this.selectedSiteCodigo &&
+          this.selectedSiteCodigo !== 'SIN CÓDIGO' &&
+          this.selectedSiteCodigo !== '-') {
+        this.cargarDescripcionesPorSiteCodigo(this.selectedSiteCodigo);
+      }
     }
   }
 
@@ -1063,21 +1063,30 @@ get otAnteriorLimiteFormateado(): string {
 }
 onSiteCodigoChange(event: any): void {
   if (event) {
-    this.selectedSiteCodigo = event.adicional || event.label;
+    // Guardar el ID del site (siempre tiene ID)
     this.selectedSiteId = event.id;
+    this.selectedSiteCodigo = event.adicional || event.label || 'SIN CÓDIGO';
 
     // Establecer el valor en el formulario
-    this.form.get('idSite')?.setValue(event.id);
-    this.form.get('idSiteDescripcion')?.setValue(null);
+    this.form.get('idSite')?.setValue(event.id); // ✅ CORRECTO
 
-    // Cargar descripciones
-    this.cargarDescripcionesPorSiteCodigo(this.selectedSiteCodigo);
+    // Si hay descripciones, cargarlas
+    if (event.adicional && event.adicional !== 'SIN CÓDIGO' && event.adicional !== '-') {
+      this.cargarDescripcionesPorSiteCodigo(event.adicional);
+    } else {
+      // Si no hay código o es "SIN CÓDIGO", limpiar descripciones
+      this.siteDescripciones = [];
+      this.form.get('idSiteDescripcion')?.setValue(null);
+      this.selectedSiteDescripcionId = null;
+    }
   } else {
-    this.selectedSiteCodigo = null;
+    // Limpiar todo
     this.selectedSiteId = null;
+    this.selectedSiteCodigo = null;
+    this.selectedSiteDescripcionId = null;
+    this.siteDescripciones = [];
     this.form.get('idSite')?.setValue(null);
     this.form.get('idSiteDescripcion')?.setValue(null);
-    this.siteDescripciones = [];
   }
 
   this.actualizarDescripcion();
@@ -1087,21 +1096,19 @@ onSiteCodigoChange(event: any): void {
 onSiteDescripcionChange(event: any): void {
   if (event) {
     this.selectedSiteDescripcionId = event.id;
-    // Cuando se selecciona una descripción, el idSite se debe establecer en null
+    // ✅ SOLO establecer la descripción, NO modificar idSite
     this.form.get('idSiteDescripcion')?.setValue(event.id);
-    this.form.get('idSite')?.setValue(null);
-    this.selectedSiteId = null;
+    // this.form.get('idSite') NO se modifica - debe mantener su valor
   } else {
     this.selectedSiteDescripcionId = null;
     this.form.get('idSiteDescripcion')?.setValue(null);
-    // Si no hay descripción, debería haber un código de site seleccionado
   }
 
   this.actualizarDescripcion();
   this.cdr.detectChanges();
 }
 private cargarDescripcionesPorSiteCodigo(codigoSite: string | null): void {
-  if (!codigoSite) {
+  if (!codigoSite || codigoSite === 'SIN CÓDIGO' || codigoSite === '-') {
     this.siteDescripciones = [];
     return;
   }
@@ -1111,6 +1118,17 @@ private cargarDescripcionesPorSiteCodigo(codigoSite: string | null): void {
     .subscribe({
       next: (descripciones) => {
         this.siteDescripciones = descripciones || [];
+
+        // Si hay descripciones y ya había una seleccionada previamente (en modo edición)
+        // mantenerla seleccionada
+        if (this.selectedSiteDescripcionId && this.siteDescripciones.length > 0) {
+          const existe = this.siteDescripciones.some(d => d.id === this.selectedSiteDescripcionId);
+          if (!existe) {
+            this.selectedSiteDescripcionId = null;
+            this.form.get('idSiteDescripcion')?.setValue(null);
+          }
+        }
+
         this.cdr.detectChanges();
       },
       error: () => {
@@ -1152,16 +1170,16 @@ private ejecutarGuardado(): void {
   }
 
 const payload: OtCreateRequest = {
-  idOts: this.isEditMode ? Number(values.idOts) : undefined,
+   idOts: this.isEditMode ? Number(values.idOts) : undefined,
   idCliente: Number(values.idCliente),
   idArea: Number(values.idArea),
   idProyecto: Number(values.idProyecto),
   idFase: Number(values.idFase),
-  // IMPORTANTE: Solo enviar uno de los dos
-idSite: values.idSiteDescripcion
-  ? undefined
-  : Number(values.idSite),
+  // ✅ SIEMPRE enviar idSite (el ID del registro en la tabla sites)
+  idSite: Number(values.idSite), // Esto siempre debe tener valor
+  // ✅ Enviar descripción si existe
   idSiteDescripcion: values.idSiteDescripcion ? Number(values.idSiteDescripcion) : undefined,
+
   idRegion: Number(values.idRegion),
   idTipoOt: Number(values.idTipoOt),
   descripcion: values.descripcion.trim(),
