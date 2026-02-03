@@ -287,7 +287,7 @@ CREATE TABLE ots (
                      id_site INT NULL, -- Referencia al site general
                      id_site_descripcion INT NULL, -- Referencia a la descripción específica
 
-                     descripcion TEXT,
+                     descripcion VARCHAR(255),
                      fecha_apertura DATE NOT NULL,
 
     -- Relaciones con otras tablas
