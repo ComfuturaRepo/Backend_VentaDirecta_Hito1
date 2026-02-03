@@ -14,4 +14,8 @@ private apiUrl = 'http://localhost:8080/api/oc-detalles';
   listarPorOrden(idOc: number): Observable<any[]> {
     return this.http.get<any[]>(`${this.apiUrl}/orden-compra/${idOc}`);
   }
+
+
+
+
 }

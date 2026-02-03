@@ -20,17 +20,18 @@ public class OrdenCompraAprobacionController {
     /**
      * Aprobar / Rechazar una OC por nivel
      */
-    @PostMapping("/{idOc}/{nivel}")
+    @PostMapping("/{idOc}/{nivel}/{estado}")
     public ResponseEntity<OrdenCompraAprobacionResponse> aprobar(
             @PathVariable Integer idOc,
             @PathVariable Integer nivel,
-            @RequestParam String estado,
+            @PathVariable String estado,
             @RequestBody OrdenCompraAprobacionRequest request) {
 
         return ResponseEntity.ok(
                 service.aprobar(idOc, nivel, estado, request)
         );
     }
+
 
     /**
      * Obtener historial de aprobaciones

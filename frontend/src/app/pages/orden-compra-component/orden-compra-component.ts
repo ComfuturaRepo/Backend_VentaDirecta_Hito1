@@ -6,7 +6,7 @@ import { OrdenCompraService } from '../../service/orden-compra.service';
 import { FormOrdenCompraComponent } from './form-orden-compra-component/form-orden-compra-component';
 import { PaginationComponent } from '../../component/pagination.component/pagination.component';
 import { OcDetalleResponse, OrdenCompraResponse, PageOrdenCompra } from '../../model/orden-compra.model';
-import { OrdenCompraAprobacionesComponent } from './form-aprovacion-component/orden-compra-aprobaciones.component';
+import { OrdenCompraAprobacionesComponent } from './form-aprovacion-component/orden-compra-aprobaciones-component';
 
 @Component({
   selector: 'app-orden-compra-component',

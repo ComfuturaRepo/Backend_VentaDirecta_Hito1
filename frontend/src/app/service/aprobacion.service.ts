@@ -17,13 +17,21 @@ export class OrdenCompraAprobacionService {
     return this.http.get<Aprobacion[]>(`${this.baseUrl}/${idOc}`);
   }
 
-  aprobar(payload: { idOc: number; nivel: number; estado: string; aprobadoPor: string }): Observable<Aprobacion> {
-    const token = localStorage.getItem('token'); // tu JWT
-    const headers = new HttpHeaders({
-      'Content-Type': 'application/json',
-      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
-    });
+aprobar(payload: {
+  idOc: number;
+  nivel: number;
+  estado: string;
+  aprobadoPor: string;
+}): Observable<Aprobacion> {
 
-    return this.http.post<Aprobacion>(`${this.baseUrl}/${payload.idOc}/aprobar`, payload, { headers });
-  }
+  return this.http.post<Aprobacion>(
+    `${this.baseUrl}/${payload.idOc}/${payload.nivel}/${payload.estado}`,
+    { aprobadoPor: payload.aprobadoPor }
+  );
+
+}
+
+
+
+
 }

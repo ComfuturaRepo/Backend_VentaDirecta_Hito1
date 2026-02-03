@@ -3,14 +3,13 @@ import { OrdenCompraAprobacionService } from '../../../service/aprobacion.servic
 import { Aprobacion } from '../../../model/aprobacion.model';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { FormOrdenCompraComponent } from '../form-orden-compra-component/form-orden-compra-component';
-import { PaginationComponent } from '../../../component/pagination.component/pagination.component';
+
 
 @Component({
   selector: 'app-orden-compra-aprobaciones',
-  templateUrl: './orden-compra-aprobaciones.component.html',
+  templateUrl: './orden-compra-aprobaciones-component.html',
   imports: [CommonModule, FormsModule],
-  styleUrls: ['./orden-compra-aprobaciones.component.css']
+  styleUrls: ['./orden-compra-aprobaciones-component.css']
 })
 export class OrdenCompraAprobacionesComponent implements OnInit {
 
