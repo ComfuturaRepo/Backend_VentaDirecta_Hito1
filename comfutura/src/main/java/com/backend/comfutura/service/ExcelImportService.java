@@ -38,6 +38,7 @@ public class ExcelImportService {
     // Constantes para límites
     private static final int MAX_OT_ANTERIOR = 2147483647;
     private static final int MAX_ROWS_IMPORT = 1000;
+    private static final int MAX_COLUMNAS_COMBOS = 5; // Máximo 5 columnas en hoja combos
 
     // ================ IMPORTACIÓN DE EXCEL ================
     @Transactional(rollbackFor = Exception.class)
@@ -163,11 +164,11 @@ public class ExcelImportService {
              ByteArrayOutputStream outputStream = new ByteArrayOutputStream()) {
 
             // === HOJA PRINCIPAL: PLANTILLA IMPORTACIÓN ===
-            Sheet sheet = workbook.createSheet("Plantilla Importación OT");
+            Sheet sheet = workbook.createSheet("📋 PLANTILLA OT");
 
-            // === HOJA VISIBLE: DATOS DE COMBOS ===
-            Sheet hojaCombos = workbook.createSheet("📋 DATOS_COMBOS");
-            workbook.setSheetOrder("📋 DATOS_COMBOS", 1);
+            // === HOJA VISIBLE: DATOS DE COMBOS (ORGANIZADA POR COLUMNAS) ===
+            Sheet hojaCombos = workbook.createSheet("📊 VALORES_COMBOS");
+            workbook.setSheetOrder("📊 VALORES_COMBOS", 1);
 
             // === HOJA VISIBLE: INSTRUCCIONES ===
             Sheet hojaInstrucciones = workbook.createSheet("📝 INSTRUCCIONES");
@@ -176,7 +177,7 @@ public class ExcelImportService {
             // Crear hoja de instrucciones
             crearHojaInstrucciones(hojaInstrucciones);
 
-            // Crear encabezados hoja combos
+            // Crear encabezados hoja combos (una categoría por columna)
             crearEncabezadosCombos(hojaCombos);
 
             // Crear estilos
@@ -187,25 +188,26 @@ public class ExcelImportService {
             CellStyle obligatorioStyle = crearEstiloObligatorio(workbook);
             CellStyle condicionalStyle = crearEstiloCondicional(workbook);
 
-            // Encabezados con nuevos campos
+            // Encabezados con NUEVO CAMPO para descripción de site
             String[] headers = {
-                    "fechaApertura",                  // 0 - Obligatorio
-                    "cliente",                        // 1 - Obligatorio
-                    "area",                           // 2 - Obligatorio
-                    "proyecto",                       // 3 - Obligatorio
-                    "fase",                           // 4 - Obligatorio
-                    "site",                           // 5 - Obligatorio
-                    "region",                         // 6 - Obligatorio
-                    "tipoOt",                         // 7 - Obligatorio
-                    "estado",                         // 8 - Obligatorio
-                    "otAnterior",                     // 9 - Condicional
-                    "JefaturaClienteSolicitante",     // 10 - Obligatorio
-                    "AnalistaClienteSolicitante",     // 11 - Obligatorio
-                    "CoordinadorTiCw",                // 12 - Obligatorio
-                    "JefaturaResponsable",            // 13 - Obligatorio
-                    "Liquidador",                     // 14 - Obligatorio
-                    "Ejecutante",                     // 15 - Obligatorio
-                    "AnalistaContable"                // 16 - Obligatorio
+                    "fechaApertura*",                  // 0 - Obligatorio
+                    "cliente*",                        // 1 - Obligatorio
+                    "area*",                           // 2 - Obligatorio
+                    "proyecto*",                       // 3 - Obligatorio
+                    "fase*",                           // 4 - Obligatorio
+                    "codigoSite*",                     // 5 - Obligatorio (NUEVO: solo código)
+                    "descripcionSite*",                // 6 - Obligatorio (NUEVO: descripción específica)
+                    "region*",                         // 7 - Obligatorio
+                    "tipoOt*",                         // 8 - Obligatorio
+                    "estado*",                         // 9 - Obligatorio (SIEMPRE: ASIGNACION)
+                    "otAnterior",                      // 10 - Condicional
+                    "JefaturaClienteSolicitante*",     // 11 - Obligatorio
+                    "AnalistaClienteSolicitante*",     // 12 - Obligatorio
+                    "CoordinadorTiCw*",                // 13 - Obligatorio
+                    "JefaturaResponsable*",            // 14 - Obligatorio
+                    "Liquidador*",                     // 15 - Obligatorio
+                    "Ejecutante*",                     // 16 - Obligatorio
+                    "AnalistaContable*"                // 17 - Obligatorio
             };
 
             // Crear fila de encabezados
@@ -223,8 +225,8 @@ public class ExcelImportService {
             Row ejemploRow = sheet.createRow(1);
             llenarValoresEjemplo(ejemploRow, fechaStyle);
 
-            // Aplicar dropdowns desde hoja visible de combos
-            aplicarDropdownsCompletos(workbook, sheet, hojaCombos);
+            // Aplicar dropdowns organizados en columnas
+            aplicarDropdownsPorColumnas(workbook, sheet, hojaCombos);
 
             // Aplicar estilos según tipo de campo
             aplicarEstilosPorTipo(sheet, headers.length, fechaStyle, dropdownStyle,
@@ -234,14 +236,25 @@ public class ExcelImportService {
             for (int i = 0; i < headers.length; i++) {
                 sheet.autoSizeColumn(i);
                 int currentWidth = sheet.getColumnWidth(i);
-                sheet.setColumnWidth(i, Math.max(currentWidth, 3500));
+                sheet.setColumnWidth(i, Math.max(currentWidth, 3000));
+
+                // Ajustes específicos para algunas columnas
+                if (i == 5 || i == 6) { // codigoSite y descripcionSite
+                    sheet.setColumnWidth(i, Math.max(currentWidth, 3500));
+                } else if (i == 0) { // fechaApertura
+                    sheet.setColumnWidth(i, Math.max(currentWidth, 2500));
+                }
             }
 
-            // Ajustar hoja de combos
-            hojaCombos.autoSizeColumn(0);
-            hojaCombos.autoSizeColumn(1);
-            hojaCombos.setColumnWidth(0, Math.max(hojaCombos.getColumnWidth(0), 5000));
-            hojaCombos.setColumnWidth(1, Math.max(hojaCombos.getColumnWidth(1), 8000));
+            // Ajustar hoja de combos (cada columna separada)
+            for (int i = 0; i < MAX_COLUMNAS_COMBOS * 2; i++) {
+                hojaCombos.autoSizeColumn(i);
+                if (i % 2 == 0) { // Columnas de categoría
+                    hojaCombos.setColumnWidth(i, Math.max(hojaCombos.getColumnWidth(i), 4000));
+                } else { // Columnas de valores
+                    hojaCombos.setColumnWidth(i, Math.max(hojaCombos.getColumnWidth(i), 6000));
+                }
+            }
 
             // Congelar paneles
             sheet.createFreezePane(0, 1);
@@ -264,26 +277,33 @@ public class ExcelImportService {
 
         String[] instrucciones = {
                 "1️⃣ IMPORTANTE: No modifique los nombres de las columnas",
-                "2️⃣ Los campos marcados con * son OBLIGATORIOS",
+                "2️⃣ Campos con * son OBLIGATORIOS",
                 "3️⃣ Campos CONDICIONALES:",
                 "   - otAnterior: Obligatorio si fechaApertura es del año anterior",
-                "   - Límite: Máximo 2,147,483,647",
+                "   - Límite máximo: 2,147,483,647",
                 "4️⃣ Use los dropdowns (flechas ▼) para seleccionar valores válidos",
                 "5️⃣ Fecha: Formato dd/mm/aaaa",
-                "6️⃣ Para ver todos los valores posibles, revise la hoja '📋 DATOS_COMBOS'",
+                "6️⃣ Para ver todos los valores posibles, revise la hoja '📊 VALORES_COMBOS'",
                 "7️⃣ Estado OT: Siempre debe ser 'ASIGNACION'",
                 "8️⃣ Máximo de filas por importación: 1,000",
                 "",
-                "⚠️ VALIDACIONES:",
+                "📌 FORMATO ESPECIAL PARA SITE:",
+                "- Paso 1: Seleccione el CÓDIGO del site (columna F)",
+                "- Paso 2: Seleccione la DESCRIPCIÓN específica (columna G)",
+                "- El sistema mostrará solo las descripciones del código seleccionado",
+                "- Ejemplo correcto:",
+                "   • codigoSite: 0130493",
+                "   • descripcionSite: LM_Bertello",
+                "- Ejemplo incorrecto:",
+                "   • codigoSite: 0130493 LM_Bertello (NO mezclar)",
+                "   • descripcionSite: (vacío)",
+                "",
+                "⚠️ VALIDACIONES AUTOMÁTICAS:",
                 "- Fecha no puede ser futura",
                 "- Todos los valores deben existir en el sistema",
                 "- OT anterior debe ser un número entero válido",
                 "- Se verificará que los responsables existan",
-                "",
-                "📌 IMPORTANTE:",
-                "- Site: Seleccione el valor COMPLETO que aparece en el dropdown",
-                "- Ejemplo correcto: '0130493 LM_Bertello'",
-                "- Ejemplo incorrecto: '0130493' o 'LM_Bertello'"
+                "- Las descripciones deben corresponder al código de site"
         };
 
         for (int i = 0; i < instrucciones.length; i++) {
@@ -296,10 +316,12 @@ public class ExcelImportService {
 
     private void crearEncabezadosCombos(Sheet hojaCombos) {
         Row header = hojaCombos.createRow(0);
-        header.createCell(0).setCellValue("CATEGORÍA");
-        header.createCell(1).setCellValue("VALORES VÁLIDOS");
-        header.createCell(2).setCellValue("TIPO");
-        header.createCell(3).setCellValue("OBSERVACIONES");
+        // Crear 5 columnas independientes (cada una con su categoría y valores)
+        for (int col = 0; col < MAX_COLUMNAS_COMBOS; col++) {
+            int baseCol = col * 2; // Cada categoría ocupa 2 columnas
+            header.createCell(baseCol).setCellValue("CATEGORÍA " + (col + 1));
+            header.createCell(baseCol + 1).setCellValue("VALORES " + (col + 1));
+        }
     }
 
     private void agregarComentarioCampo(Cell cell, int colIndex) {
@@ -313,10 +335,11 @@ public class ExcelImportService {
         String mensaje = "";
         switch (colIndex) {
             case 0: mensaje = "Fecha de apertura (OBLIGATORIO)\nFormato: dd/mm/aaaa"; break;
-            case 5: mensaje = "Site (OBLIGATORIO)\nSeleccione el valor COMPLETO del dropdown\nEjemplo: '0130493 LM_Bertello'"; break;
+            case 5: mensaje = "Código del Site (OBLIGATORIO)\nSeleccione solo el código\nEjemplo: '0130493'"; break;
+            case 6: mensaje = "Descripción del Site (OBLIGATORIO)\nSeleccione la descripción específica\nSe mostrarán solo las opciones del código seleccionado\nEjemplo: 'LM_Bertello'"; break;
             case 7: mensaje = "Tipo OT (OBLIGATORIO)\nSeleccione de la lista"; break;
-            case 8: mensaje = "Estado OT (OBLIGATORIO)\nSiempre: ASIGNACION"; break;
-            case 9: mensaje = "OT Anterior (CONDICIONAL)\nObligatorio si fecha es del año anterior\nLímite: 2,147,483,647"; break;
+            case 9: mensaje = "Estado OT (OBLIGATORIO)\nSiempre: ASIGNACION"; break;
+            case 10: mensaje = "OT Anterior (CONDICIONAL)\nObligatorio si fecha es del año anterior\nLímite: 2,147,483,647"; break;
             default: mensaje = "Campo obligatorio\nSeleccione de la lista";
         }
 
@@ -354,194 +377,198 @@ public class ExcelImportService {
             ejemploRow.createCell(4).setCellValue(fases.get(0).label());
         }
 
-        // Site
-        List<DropdownDTO> sites = dropdownService.getSiteCompuesto();
+        // Código Site (NUEVO: solo el código)
+        List<DropdownDTO> sites = dropdownService.getSitesConDescripciones();
         if (!sites.isEmpty() && sites.get(0) != null) {
-            DropdownDTO site = sites.get(0);
-            String valorSite = construirValorSite(site);
-            ejemploRow.createCell(5).setCellValue(valorSite);
+            ejemploRow.createCell(5).setCellValue(sites.get(0).adicional());
         }
+
+        // Descripción Site (NUEVO: se llenará dinámicamente según el código)
+        // Dejar vacío por ahora, se llenará con dropdown condicional
+        ejemploRow.createCell(6).setCellValue("");
 
         // Región
         List<DropdownDTO> regiones = dropdownService.getRegiones();
         if (!regiones.isEmpty() && regiones.get(0) != null && regiones.get(0).label() != null) {
-            ejemploRow.createCell(6).setCellValue(regiones.get(0).label());
+            ejemploRow.createCell(7).setCellValue(regiones.get(0).label());
         }
 
         // Tipo OT
         List<DropdownDTO> tiposOt = dropdownService.getOtTipo();
         if (!tiposOt.isEmpty() && tiposOt.get(0) != null && tiposOt.get(0).label() != null) {
-            ejemploRow.createCell(7).setCellValue(tiposOt.get(0).label());
+            ejemploRow.createCell(8).setCellValue(tiposOt.get(0).label());
         } else {
-            ejemploRow.createCell(7).setCellValue("CORRECTIVO");
+            ejemploRow.createCell(8).setCellValue("CORRECTIVO");
         }
 
         // Estado (¡DEBE SER "ASIGNACION"!)
-        ejemploRow.createCell(8).setCellValue("ASIGNACION");
+        ejemploRow.createCell(9).setCellValue("ASIGNACION");
 
         // OT Anterior (vacío)
-        ejemploRow.createCell(9).setCellValue("");
+        ejemploRow.createCell(10).setCellValue("");
 
-        // Responsables - Asegurar que todos tengan valores
+        // Responsables
         llenarResponsablesEjemplo(ejemploRow);
-    }
-
-    private String construirValorSite(DropdownDTO site) {
-        if (site == null) return "";
-
-        StringBuilder valorSite = new StringBuilder();
-
-        // Si hay label, agregarlo
-        if (site.label() != null && !site.label().trim().isEmpty()) {
-            valorSite.append(site.label().trim());
-        }
-
-        // Si hay adicional, agregarlo con espacio
-        if (site.adicional() != null && !site.adicional().trim().isEmpty()) {
-            if (valorSite.length() > 0) {
-                valorSite.append(" ");
-            }
-            valorSite.append(site.adicional().trim());
-        }
-
-        return valorSite.toString();
     }
 
     private void llenarResponsablesEjemplo(Row row) {
         // Jefatura Cliente
         List<DropdownDTO> jefaturas = dropdownService.getJefaturasClienteSolicitante();
         if (!jefaturas.isEmpty() && jefaturas.get(0) != null && jefaturas.get(0).label() != null) {
-            row.createCell(10).setCellValue(jefaturas.get(0).label());
+            row.createCell(11).setCellValue(jefaturas.get(0).label());
         } else {
-            row.createCell(10).setCellValue("JEFATURA EJEMPLO");
+            row.createCell(11).setCellValue("JEFATURA EJEMPLO");
         }
 
         // Analista Cliente
         List<DropdownDTO> analistas = dropdownService.getAnalistasClienteSolicitante();
         if (!analistas.isEmpty() && analistas.get(0) != null && analistas.get(0).label() != null) {
-            row.createCell(11).setCellValue(analistas.get(0).label());
+            row.createCell(12).setCellValue(analistas.get(0).label());
         } else {
-            row.createCell(11).setCellValue("ANALISTA EJEMPLO");
+            row.createCell(12).setCellValue("ANALISTA EJEMPLO");
         }
 
-        // Coordinador Ti CW (OBLIGATORIO)
+        // Coordinador Ti CW
         List<DropdownDTO> coordinadores = dropdownService.getCoordinadoresTiCw();
         if (!coordinadores.isEmpty() && coordinadores.get(0) != null && coordinadores.get(0).label() != null) {
-            row.createCell(12).setCellValue(coordinadores.get(0).label());
+            row.createCell(13).setCellValue(coordinadores.get(0).label());
         } else {
-            row.createCell(12).setCellValue("COORDINADOR EJEMPLO");
+            row.createCell(13).setCellValue("COORDINADOR EJEMPLO");
         }
 
-        // Jefatura Responsable (OBLIGATORIO)
+        // Jefatura Responsable
         List<DropdownDTO> jefaturasResp = dropdownService.getJefaturasResponsable();
         if (!jefaturasResp.isEmpty() && jefaturasResp.get(0) != null && jefaturasResp.get(0).label() != null) {
-            row.createCell(13).setCellValue(jefaturasResp.get(0).label());
+            row.createCell(14).setCellValue(jefaturasResp.get(0).label());
         } else {
-            row.createCell(13).setCellValue("JEFATURA RESPONSABLE EJEMPLO");
+            row.createCell(14).setCellValue("JEFATURA RESPONSABLE EJEMPLO");
         }
 
-        // Liquidador (OBLIGATORIO)
+        // Liquidador
         List<DropdownDTO> liquidador = dropdownService.getLiquidador();
         if (!liquidador.isEmpty() && liquidador.get(0) != null && liquidador.get(0).label() != null) {
-            row.createCell(14).setCellValue(liquidador.get(0).label());
+            row.createCell(15).setCellValue(liquidador.get(0).label());
         } else {
-            row.createCell(14).setCellValue("LIQUIDADOR EJEMPLO");
+            row.createCell(15).setCellValue("LIQUIDADOR EJEMPLO");
         }
 
-        // Ejecutante (OBLIGATORIO)
+        // Ejecutante
         List<DropdownDTO> ejecutantes = dropdownService.getEjecutantes();
         if (!ejecutantes.isEmpty() && ejecutantes.get(0) != null && ejecutantes.get(0).label() != null) {
-            row.createCell(15).setCellValue(ejecutantes.get(0).label());
+            row.createCell(16).setCellValue(ejecutantes.get(0).label());
         } else {
-            row.createCell(15).setCellValue("EJECUTANTE EJEMPLO");
+            row.createCell(16).setCellValue("EJECUTANTE EJEMPLO");
         }
 
-        // Analista Contable (OBLIGATORIO)
+        // Analista Contable
         List<DropdownDTO> analistasCont = dropdownService.getAnalistasContable();
         if (!analistasCont.isEmpty() && analistasCont.get(0) != null && analistasCont.get(0).label() != null) {
-            row.createCell(16).setCellValue(analistasCont.get(0).label());
+            row.createCell(17).setCellValue(analistasCont.get(0).label());
         } else {
-            row.createCell(16).setCellValue("ANALISTA CONTABLE EJEMPLO");
+            row.createCell(17).setCellValue("ANALISTA CONTABLE EJEMPLO");
         }
     }
 
-    private void aplicarDropdownsCompletos(XSSFWorkbook workbook, Sheet sheetPrincipal, Sheet hojaCombos) {
+    private void aplicarDropdownsPorColumnas(XSSFWorkbook workbook, Sheet sheetPrincipal, Sheet hojaCombos) {
         try {
-            log.info("=== APLICANDO DROPDOWNS COMPLETOS ===");
+            log.info("=== APLICANDO DROPDOWNS POR COLUMNAS ===");
 
-            // Configuración de columnas
-            Object[][] configs = {
-                    {1, "Cliente", dropdownService.getClientes()},
-                    {2, "Área", dropdownService.getAreas()},
-                    {3, "Proyecto", dropdownService.getProyectos()},
-                    {4, "Fase", dropdownService.getFases()},
-                    {5, "Site", dropdownService.getSiteCompuesto()},
-                    {6, "Región", dropdownService.getRegiones()},
-                    {7, "Tipo OT", dropdownService.getOtTipo()},
-                    {8, "Estado", Arrays.asList("ASIGNACION")},
-                    {10, "Jefatura Cliente", dropdownService.getJefaturasClienteSolicitante()},
-                    {11, "Analista Cliente", dropdownService.getAnalistasClienteSolicitante()},
-                    {12, "Coordinador Ti CW", dropdownService.getCoordinadoresTiCw()},
-                    {13, "Jefatura Responsable", dropdownService.getJefaturasResponsable()},
-                    {14, "Liquidador", dropdownService.getLiquidador()},
-                    {15, "Ejecutante", dropdownService.getEjecutantes()},
-                    {16, "Analista Contable", dropdownService.getAnalistasContable()}
+            // Configuración de dropdowns - ORGANIZAR EN 5 COLUMNAS INDEPENDIENTES
+            Object[][][] configsPorColumna = {
+                    // COLUMNA 0 (columnas A-B en hoja combos)
+                    {
+                            {1, "Cliente", dropdownService.getClientes()},
+                            {2, "Área", dropdownService.getAreas()},
+                            {3, "Proyecto", dropdownService.getProyectos()},
+                            {4, "Fase", dropdownService.getFases()}
+                    },
+                    // COLUMNA 1 (columnas C-D en hoja combos)
+                    {
+                            {5, "Código Site", dropdownService.getSitesConDescripciones()},
+                            // La descripción site (columna 6) se manejará con validación condicional
+                            {7, "Región", dropdownService.getRegiones()},
+                            {8, "Tipo OT", dropdownService.getOtTipo()}
+                    },
+                    // COLUMNA 2 (columnas E-F en hoja combos)
+                    {
+                            {9, "Estado", Arrays.asList("ASIGNACION")},
+                            {11, "Jefatura Cliente", dropdownService.getJefaturasClienteSolicitante()},
+                            {12, "Analista Cliente", dropdownService.getAnalistasClienteSolicitante()}
+                    },
+                    // COLUMNA 3 (columnas G-H en hoja combos)
+                    {
+                            {13, "Coordinador Ti CW", dropdownService.getCoordinadoresTiCw()},
+                            {14, "Jefatura Responsable", dropdownService.getJefaturasResponsable()},
+                            {15, "Liquidador", dropdownService.getLiquidador()}
+                    },
+                    // COLUMNA 4 (columnas I-J en hoja combos)
+                    {
+                            {16, "Ejecutante", dropdownService.getEjecutantes()},
+                            {17, "Analista Contable", dropdownService.getAnalistasContable()}
+                    }
             };
 
-            int currentRow = 1; // Empezar después del encabezado en hoja combos
+            // Procesar cada columna
+            for (int columnaIndex = 0; columnaIndex < configsPorColumna.length; columnaIndex++) {
+                Object[][] configs = configsPorColumna[columnaIndex];
+                int startRow = 1; // Empezar después del encabezado
 
-            for (Object[] config : configs) {
-                int colIndex = (int) config[0];
-                String nombreCampo = (String) config[1];
-                Object datos = config[2];
+                // Calcular desplazamiento de columnas en hoja combos
+                int colBaseHojaCombos = columnaIndex * 2; // Cada columna ocupa 2 columnas
 
-                // Guardar en hoja de combos
-                if (datos instanceof List) {
-                    @SuppressWarnings("unchecked")
-                    List<DropdownDTO> items = (List<DropdownDTO>) datos;
+                for (Object[] config : configs) {
+                    int colIndex = (int) config[0];
+                    String nombreCampo = (String) config[1];
+                    Object datos = config[2];
 
-                    if (items != null && !items.isEmpty()) {
-                        int startRow = currentRow;
-                        int validItemsCount = 0;
+                    if (datos instanceof List) {
+                        @SuppressWarnings("unchecked")
+                        List<DropdownDTO> items = (List<DropdownDTO>) datos;
 
-                        // Escribir categoría
-                        Row categoryRow = hojaCombos.createRow(currentRow++);
-                        categoryRow.createCell(0).setCellValue(nombreCampo + ":");
-                        categoryRow.createCell(2).setCellValue("OBLIGATORIO");
-
-                        // Contar items válidos
-                        for (DropdownDTO item : items) {
-                            String valor = construirValorSite(item);
-                            if (valor != null && !valor.trim().isEmpty()) {
-                                validItemsCount++;
+                        if (items != null && !items.isEmpty()) {
+                            // Escribir categoría en hoja combos
+                            Row categoriaRow = hojaCombos.getRow(startRow);
+                            if (categoriaRow == null) {
+                                categoriaRow = hojaCombos.createRow(startRow);
                             }
-                        }
-                        categoryRow.createCell(3).setCellValue(validItemsCount + " opciones disponibles");
+                            categoriaRow.createCell(colBaseHojaCombos).setCellValue(nombreCampo + ":");
 
-                        // Escribir valores
-                        for (int i = 0; i < Math.min(items.size(), 1000); i++) {
-                            DropdownDTO item = items.get(i);
-                            if (item == null) continue;
+                            // Escribir valores
+                            int dataRow = startRow + 1;
+                            for (int i = 0; i < Math.min(items.size(), 100); i++) {
+                                DropdownDTO item = items.get(i);
+                                if (item == null) continue;
 
-                            String valor = construirValorSite(item);
-                            if (valor != null && !valor.trim().isEmpty()) {
-                                Row dataRow = hojaCombos.createRow(currentRow++);
-                                dataRow.createCell(0).setCellValue("");
-                                dataRow.createCell(1).setCellValue(valor);
+                                String valor = obtenerValorDropdown(item);
+                                if (valor != null && !valor.trim().isEmpty()) {
+                                    Row valorRow = hojaCombos.getRow(dataRow);
+                                    if (valorRow == null) {
+                                        valorRow = hojaCombos.createRow(dataRow);
+                                    }
+                                    valorRow.createCell(colBaseHojaCombos + 1).setCellValue(valor);
+                                    dataRow++;
+                                }
                             }
-                        }
 
-                        // Crear dropdown desde rango (solo si hay items válidos)
-                        if (currentRow > startRow + 2) {
-                            String rango = "'📋 DATOS_COMBOS'!$B$" + (startRow + 2) + ":$B$" + (currentRow - 1);
-                            crearDropdownDesdeRango(workbook, sheetPrincipal, colIndex, rango, nombreCampo);
-                        }
+                            // Crear dropdown si hay valores válidos
+                            if (dataRow > startRow + 1) {
+                                String rango = "'📊 VALORES_COMBOS'!$" +
+                                        getColumnaExcel(colBaseHojaCombos + 1) + "$" + (startRow + 1) +
+                                        ":$" + getColumnaExcel(colBaseHojaCombos + 1) + "$" + (dataRow - 1);
 
-                        // Espacio entre categorías
-                        currentRow++;
+                                // Crear validación de datos
+                                crearDropdownDesdeRango(workbook, sheetPrincipal, colIndex, rango, nombreCampo);
+                            }
+
+                            // Avanzar startRow para la siguiente categoría en esta columna
+                            startRow = Math.max(startRow, dataRow) + 2; // +2 para espacio entre categorías
+                        }
                     }
                 }
             }
+
+            // Crear validación condicional para descripción site (columna 6)
+            crearValidacionCondicionalSite(workbook, sheetPrincipal, hojaCombos);
 
             log.info("✅ Todos los dropdowns aplicados exitosamente");
 
@@ -550,19 +577,119 @@ public class ExcelImportService {
         }
     }
 
+    private void crearValidacionCondicionalSite(XSSFWorkbook workbook, Sheet sheetPrincipal, Sheet hojaCombos) {
+        try {
+            log.info("=== CREANDO VALIDACIÓN CONDICIONAL PARA SITE ===");
+
+            // Obtener todos los sites con sus descripciones
+            List<DropdownDTO> sitesCodigos = dropdownService.getSitesConDescripciones();
+
+            // Para cada código de site, obtener sus descripciones
+            int currentRow = 1;
+            int colBase = 10; // Empezar en columna K (columna 10) para las descripciones
+
+            for (DropdownDTO siteCodigo : sitesCodigos) {
+                if (siteCodigo.adicional() == null || siteCodigo.adicional().trim().isEmpty()) {
+                    continue;
+                }
+
+                String codigo = siteCodigo.adicional();
+
+                // Obtener descripciones para este código
+                List<DropdownDTO> descripciones = dropdownService.getDescripcionesBySiteCodigo(codigo);
+
+                if (descripciones != null && !descripciones.isEmpty()) {
+                    // Escribir código como categoría
+                    Row categoriaRow = hojaCombos.getRow(currentRow);
+                    if (categoriaRow == null) {
+                        categoriaRow = hojaCombos.createRow(currentRow);
+                    }
+                    categoriaRow.createCell(colBase).setCellValue("Descripciones para: " + codigo);
+
+                    // Escribir descripciones
+                    int dataRow = currentRow + 1;
+                    for (DropdownDTO desc : descripciones) {
+                        String descripcionTexto = obtenerValorDropdown(desc);
+                        if (descripcionTexto != null && !descripcionTexto.trim().isEmpty()) {
+                            Row valorRow = hojaCombos.getRow(dataRow);
+                            if (valorRow == null) {
+                                valorRow = hojaCombos.createRow(dataRow);
+                            }
+                            valorRow.createCell(colBase + 1).setCellValue(descripcionTexto);
+                            dataRow++;
+                        }
+                    }
+
+                    // Crear rango para validación condicional
+                    if (dataRow > currentRow + 1) {
+                        String rangoDescripciones = "'📊 VALORES_COMBOS'!$" +
+                                getColumnaExcel(colBase + 1) + "$" + (currentRow + 1) +
+                                ":$" + getColumnaExcel(colBase + 1) + "$" + (dataRow - 1);
+
+                        // Crear nombre definido para este rango
+                        String nombreDefinido = "Descripciones_" + codigo.replaceAll("[^A-Za-z0-9]", "");
+
+                        // Agregar nombre definido al workbook
+                        XSSFName definedName = ((XSSFWorkbook) workbook).createName();
+                        definedName.setNameName(nombreDefinido);
+                        definedName.setRefersToFormula(rangoDescripciones);
+
+                        // Crear validación de datos dependiente
+                        crearDropdownDependiente(workbook, sheetPrincipal, 6, nombreDefinido, codigo);
+                    }
+
+                    currentRow = Math.max(currentRow, dataRow) + 2;
+                }
+            }
+
+            log.info("✅ Validación condicional creada para {} códigos de site", sitesCodigos.size());
+
+        } catch (Exception e) {
+            log.error("❌ Error creando validación condicional: {}", e.getMessage(), e);
+        }
+    }
+
+    private void crearDropdownDependiente(XSSFWorkbook workbook, Sheet sheet, int colIndex,
+                                          String nombreRango, String codigoSite) {
+        try {
+            XSSFDataValidationHelper dvHelper = new XSSFDataValidationHelper((XSSFSheet) sheet);
+
+            // Crear fórmula que dependa del código seleccionado
+            String formula = "IF($F2=\"" + codigoSite + "\",INDIRECT(\"" + nombreRango + "\"),\"\")";
+
+            DataValidationConstraint constraint = dvHelper.createFormulaListConstraint(formula);
+
+            CellRangeAddressList addressList = new CellRangeAddressList(1, 10000, colIndex, colIndex);
+
+            XSSFDataValidation validation = (XSSFDataValidation) dvHelper.createValidation(constraint, addressList);
+
+            validation.setSuppressDropDownArrow(true);
+            validation.setShowErrorBox(true);
+            validation.setErrorStyle(DataValidation.ErrorStyle.STOP);
+            validation.createErrorBox("Descripción no válida",
+                    "Seleccione una descripción válida para el código de site " + codigoSite);
+
+            validation.setShowPromptBox(true);
+            validation.createPromptBox("Seleccione descripción",
+                    "Seleccione una descripción para el código " + codigoSite);
+
+            sheet.addValidationData(validation);
+
+        } catch (Exception e) {
+            log.warn("Error creando dropdown dependiente para {}: {}", codigoSite, e.getMessage());
+        }
+    }
+
     private void crearDropdownDesdeRango(XSSFWorkbook workbook, Sheet sheetPrincipal,
                                          int colIndex, String rango, String nombreCampo) {
         try {
             XSSFDataValidationHelper dvHelper = new XSSFDataValidationHelper((XSSFSheet) sheetPrincipal);
 
-            DataValidationConstraint constraint =
-                    dvHelper.createFormulaListConstraint(rango);
+            DataValidationConstraint constraint = dvHelper.createFormulaListConstraint(rango);
 
-            CellRangeAddressList addressList =
-                    new CellRangeAddressList(1, 10000, colIndex, colIndex);
+            CellRangeAddressList addressList = new CellRangeAddressList(1, 10000, colIndex, colIndex);
 
-            XSSFDataValidation validation =
-                    (XSSFDataValidation) dvHelper.createValidation(constraint, addressList);
+            XSSFDataValidation validation = (XSSFDataValidation) dvHelper.createValidation(constraint, addressList);
 
             validation.setSuppressDropDownArrow(false);
             validation.setShowErrorBox(true);
@@ -600,15 +727,32 @@ public class ExcelImportService {
                 // Aplicar estilo según tipo de campo
                 if (colNum == 0) {
                     cell.setCellStyle(fechaStyle); // Fecha
-                } else if (colNum == 9) {
+                } else if (colNum == 10) {
                     cell.setCellStyle(condicionalStyle); // OT Anterior (condicional)
-                } else if (colNum == 8) {
+                } else if (colNum == 9) {
                     cell.setCellStyle(obligatorioStyle); // Estado (fijo)
+                } else if (colNum == 6) {
+                    // Columna de descripción site - estilo diferente
+                    cell.setCellStyle(crearEstiloSiteDescripcion(sheet.getWorkbook()));
                 } else {
                     cell.setCellStyle(dropdownStyle); // Dropdowns
                 }
             }
         }
+    }
+
+    private CellStyle crearEstiloSiteDescripcion(Workbook workbook) {
+        CellStyle style = workbook.createCellStyle();
+        style.setFillForegroundColor(IndexedColors.LIGHT_CORNFLOWER_BLUE.getIndex());
+        style.setFillPattern(FillPatternType.SOLID_FOREGROUND);
+        style.setBorderBottom(BorderStyle.THIN);
+        style.setBorderTop(BorderStyle.THIN);
+        style.setBorderLeft(BorderStyle.THIN);
+        style.setBorderRight(BorderStyle.THIN);
+        Font font = workbook.createFont();
+        font.setItalic(true);
+        style.setFont(font);
+        return style;
     }
 
     // ================ ESTILOS ================
@@ -685,6 +829,33 @@ public class ExcelImportService {
         return style;
     }
 
+    // ================ MÉTODOS AUXILIARES ================
+
+    private String obtenerValorDropdown(DropdownDTO dto) {
+        if (dto == null) return null;
+
+        if (dto.label() != null && !dto.label().trim().isEmpty()) {
+            return dto.label().trim();
+        }
+
+        if (dto.adicional() != null && !dto.adicional().trim().isEmpty()) {
+            return dto.adicional().trim();
+        }
+
+        return null;
+    }
+
+    private String getColumnaExcel(int colIndex) {
+        StringBuilder column = new StringBuilder();
+        while (colIndex >= 0) {
+            column.insert(0, (char) ('A' + (colIndex % 26)));
+            colIndex = (colIndex / 26) - 1;
+        }
+        return column.toString();
+    }
+
+    // ================ MÉTODOS PARA IMPORTACIÓN ================
+
     private Map<String, Integer> mapColumnHeaders(Row headerRow) {
         Map<String, Integer> columnIndex = new HashMap<>();
         for (Cell cell : headerRow) {
@@ -706,15 +877,16 @@ public class ExcelImportService {
     private void verificarEncabezadosRequeridos(Map<String, Integer> columnIndex) throws IOException {
         // Lista de encabezados con todas las posibles variaciones
         Map<String, List<String>> encabezadosConVariaciones = Map.of(
-                "fechaApertura", Arrays.asList("fechaapertura", "fecha", "fechaapertura"),
-                "cliente", Arrays.asList("cliente"),
-                "area", Arrays.asList("area"),
-                "proyecto", Arrays.asList("proyecto"),
-                "fase", Arrays.asList("fase"),
-                "site", Arrays.asList("site"),
-                "region", Arrays.asList("region"),
-                "tipoOt", Arrays.asList("tipoot", "tipot", "tipo", "tipoot", "tipoOt", "tipoot"),
-                "estado", Arrays.asList("estado")
+                "fechaapertura", Arrays.asList("fechaapertura", "fecha", "fechaapertura*"),
+                "cliente", Arrays.asList("cliente", "cliente*"),
+                "area", Arrays.asList("area", "area*"),
+                "proyecto", Arrays.asList("proyecto", "proyecto*"),
+                "fase", Arrays.asList("fase", "fase*"),
+                "codigosite", Arrays.asList("codigosite", "codigosite*", "site", "site*"),
+                "descripcionsite", Arrays.asList("descripcionsite", "descripcionsite*", "descripcion", "descripcion*"),
+                "region", Arrays.asList("region", "region*"),
+                "tipoot", Arrays.asList("tipoot", "tipoot*", "tipo", "tipo*", "tipot"),
+                "estado", Arrays.asList("estado", "estado*")
         );
 
         List<String> faltantes = new ArrayList<>();
@@ -755,7 +927,8 @@ public class ExcelImportService {
                 .toLowerCase()
                 .replace("á", "a").replace("é", "e").replace("í", "i")
                 .replace("ó", "o").replace("ú", "u")
-                .replace("ñ", "n");
+                .replace("ñ", "n")
+                .replace("*", ""); // Remover asterisco si existe
 
         normalized = normalized
                 .replace(" ", "")
@@ -782,7 +955,11 @@ public class ExcelImportService {
             dto.setArea(getStringCellValue(row, columnIndex.get("area")));
             dto.setProyecto(getStringCellValue(row, columnIndex.get("proyecto")));
             dto.setFase(getStringCellValue(row, columnIndex.get("fase")));
-            dto.setSite(getStringCellValue(row, columnIndex.get("site")));
+
+            // NUEVO: Código y descripción de site separados
+            dto.setSite(getStringCellValue(row, columnIndex.get("codigosite")));
+            dto.setSiteDescripcion(getStringCellValue(row, columnIndex.get("descripcionsite")));
+
             dto.setRegion(getStringCellValue(row, columnIndex.get("region")));
 
             // Verificar y buscar tipoOt con diferentes variaciones
@@ -870,13 +1047,41 @@ public class ExcelImportService {
             validarCampoExistente(dto.getTipoOt(), dropdownService.getOtTipo(), "Tipo OT", errores);
         }
 
-        // === VALIDACIÓN DE SITE ===
-        if (dto.getSite() == null || dto.getSite().trim().isEmpty()) {
-            errores.add("Site es obligatorio");
+        // === VALIDACIÓN DE SITE (CÓDIGO Y DESCRIPCIÓN) ===
+        if (dto.getSite() == null || dto.getSiteDescripcion().trim().isEmpty()) {
+            errores.add("Código Site es obligatorio");
         } else {
-            boolean siteExiste = existeSite(dto.getSite());
-            if (!siteExiste) {
-                errores.add("Site '" + dto.getSite() + "' no existe en el sistema. Debe seleccionar un valor de la lista.");
+            // Validar que el código existe
+            boolean codigoExiste = false;
+            for (DropdownDTO site : dropdownService.getSitesConDescripciones()) {
+                if (site.adicional() != null && site.adicional().trim().equalsIgnoreCase(dto.getSite().trim())) {
+                    codigoExiste = true;
+                    break;
+                }
+            }
+
+            if (!codigoExiste) {
+                errores.add("Código Site '" + dto.getSite() + "' no existe en el sistema");
+            } else {
+                // Validar que la descripción existe para este código
+                if (dto.getSiteDescripcion() == null || dto.getSiteDescripcion().trim().isEmpty()) {
+                    errores.add("Descripción Site es obligatoria para el código " + dto.getSite());
+                } else {
+                    // Obtener descripciones para este código
+                    List<DropdownDTO> descripciones = dropdownService.getDescripcionesBySiteCodigo(dto.getSite());
+                    boolean descripcionValida = false;
+
+                    for (DropdownDTO desc : descripciones) {
+                        if (desc.label() != null && desc.label().trim().equalsIgnoreCase(dto.getSiteDescripcion().trim())) {
+                            descripcionValida = true;
+                            break;
+                        }
+                    }
+
+                    if (!descripcionValida) {
+                        errores.add("Descripción '" + dto.getSiteDescripcion() + "' no es válida para el código " + dto.getSite());
+                    }
+                }
             }
         }
 
@@ -957,154 +1162,31 @@ public class ExcelImportService {
         request.setFechaApertura(importDTO.getFechaApertura());
         request.setActivo(true);
 
-        // === RESOLVER SITE (CORREGIDO PARA MÚLTIPLES DESCRIPCIONES) ===
-        String siteExcel = importDTO.getSite().trim();
-        Site sitio = null;
+        // === RESOLVER SITE (CÓDIGO Y DESCRIPCIÓN) ===
+        String codigoSite = importDTO.getSite().trim();
+        String descripcionSite = importDTO.getSiteDescripcion().trim();
 
-        log.info("🔍 Buscando Site en Excel: '{}'", siteExcel);
+        log.info("🔍 Buscando Site: Código='{}', Descripción='{}'", codigoSite, descripcionSite);
 
-        List<Site> todosSites = siteRepository.findAllByActivo(true);
+        // Buscar el site por código
+        Site site = siteRepository.findByCodigoSitioAndActivoTrue(codigoSite)
+                .orElseThrow(() -> new RuntimeException("Site con código '" + codigoSite + "' no encontrado"));
 
-        for (Site s : todosSites) {
-            String codigo = s.getCodigoSitio() != null ? s.getCodigoSitio().trim() : "";
+        // Buscar la descripción específica
+        SiteDescripcion siteDescripcion = site.getDescripciones().stream()
+                .filter(desc -> desc.getDescripcion() != null &&
+                        desc.getDescripcion().trim().equalsIgnoreCase(descripcionSite))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Descripción '" + descripcionSite +
+                        "' no encontrada para el código " + codigoSite));
 
-            // Obtener TODAS las descripciones como lista separada
-            List<String> descripcionesIndividuales = s.getDescripciones().stream()
-                    .map(SiteDescripcion::getDescripcion)
-                    .filter(desc -> desc != null && !desc.trim().isEmpty())
-                    .map(String::trim)
-                    .collect(Collectors.toList());
-
-            // CASO A: Site CON código (ej: "0130493")
-            if (!codigo.isEmpty()) {
-                // Para cada descripción individual, crear combinación
-                for (String desc : descripcionesIndividuales) {
-                    // Formato: "CODIGO DESCRIPCION"
-                    String formatoCompleto = codigo + " " + desc;
-                    if (formatoCompleto.equalsIgnoreCase(siteExcel)) {
-                        sitio = s;
-                        log.info("✅ Site encontrado (código + 1 descripción): {}", formatoCompleto);
-                        break;
-                    }
-                }
-
-                if (sitio != null) break;
-
-                // También buscar solo por código
-                if (codigo.equalsIgnoreCase(siteExcel)) {
-                    sitio = s;
-                    log.info("✅ Site encontrado (solo código): {}", codigo);
-                    break;
-                }
-            }
-
-            // CASO B: Site SIN código (ej: ID 225)
-            if (codigo.isEmpty() && !descripcionesIndividuales.isEmpty()) {
-                // Buscar si alguna descripción individual coincide
-                for (String desc : descripcionesIndividuales) {
-                    if (desc.equalsIgnoreCase(siteExcel)) {
-                        sitio = s;
-                        log.info("✅ Site encontrado (sin código, descripción individual): {}", desc);
-                        break;
-                    }
-                }
-
-                if (sitio != null) break;
-
-                // Si hay múltiples descripciones, podrían estar concatenadas en el dropdown
-                String todasDescripcionesConcatenadas = String.join(" ", descripcionesIndividuales);
-                if (todasDescripcionesConcatenadas.equalsIgnoreCase(siteExcel)) {
-                    sitio = s;
-                    log.info("✅ Site encontrado (sin código, todas descripciones): {}", todasDescripcionesConcatenadas);
-                    break;
-                }
-            }
-        }
-
-        // === DEBUGGING DETALLADO SI NO ENCUENTRA ===
-        if (sitio == null) {
-            log.error("❌ Site NO encontrado en BD: '{}'", siteExcel);
-            log.error("=== DEBUGGING DE SITES ===");
-
-            // Mostrar todos los sites en formato útil
-            for (Site s : todosSites) {
-                String codigo = s.getCodigoSitio() != null ? s.getCodigoSitio().trim() : "(SIN CÓDIGO)";
-                List<String> descripciones = s.getDescripciones().stream()
-                        .map(SiteDescripcion::getDescripcion)
-                        .filter(desc -> desc != null && !desc.trim().isEmpty())
-                        .map(String::trim)
-                        .collect(Collectors.toList());
-
-                log.error("Site ID {}:", s.getIdSite());
-                log.error("  - Código: {}", codigo);
-                log.error("  - Descripciones individuales ({}):", descripciones.size());
-
-                for (String desc : descripciones) {
-                    log.error("      * '{}'", desc);
-
-                    // Mostrar posibles formatos
-                    if (!codigo.equals("(SIN CÓDIGO)")) {
-                        log.error("        Formato dropdown: '{} {}'", codigo, desc);
-                    }
-                }
-
-                // Mostrar si alguna coincide
-                for (String desc : descripciones) {
-                    if (!codigo.equals("(SIN CÓDIGO)")) {
-                        String formato = codigo + " " + desc;
-                        if (formato.equalsIgnoreCase(siteExcel)) {
-                            log.error("  ¡ESTA DEBERÍA HABER COINCIDIDO!");
-                        }
-                    }
-                    if (desc.equalsIgnoreCase(siteExcel)) {
-                        log.error("  ¡ESTA DESCRIPCIÓN INDIVIDUAL COINCIDE!");
-                    }
-                }
-            }
-
-            // Preguntar específicamente por el error
-            if (siteExcel.contains("COMFUTURA")) {
-                log.error("=== BUSQUEDA ESPECÍFICA PARA 'COMFUTURA' ===");
-                log.error("Probablemente estás buscando el site con ID 151 que tiene:");
-                log.error("  - Código: 'COMFUTURA'");
-                log.error("  - Descripciones: 'ADMIN', 'COMFUTURA', 'ARELLANO'");
-                log.error("Formato correcto para Excel:");
-                log.error("  'COMFUTURA ADMIN' o 'COMFUTURA COMFUTURA' o 'COMFUTURA ARELLANO'");
-            }
-
-            if (siteExcel.contains("NODO") || siteExcel.contains("NAT")) {
-                log.error("=== BUSQUEDA ESPECÍFICA PARA SITES SIN CÓDIGO ===");
-                log.error("Estás buscando un site SIN código (ID 225)");
-                log.error("Formato correcto para Excel (debe ser EXACTAMENTE una de estas):");
-                log.error("  'NAT LOS MAESTROS'");
-                log.error("  'NAT CUMBRE VENT'");
-                log.error("  'NODO OVERLAP PRECO LMSC018-S'");
-                log.error("  (etc, una descripción INDIVIDUAL)");
-            }
-
-            throw new RuntimeException("Site '" + siteExcel + "' no encontrado. "
-                    + "\n\nSugerencias:"
-                    + "\n1. Para sites CON código: Use 'CODIGO DESCRIPCION' (ej: '0130493 LM_Bertello')"
-                    + "\n2. Para sites SIN código: Use solo la DESCRIPCIÓN (ej: 'NODO OVERLAP PRECO LMSC018-S')"
-                    + "\n3. Verifique mayúsculas/minúsculas y espacios exactos.");
-        }
-
-        request.setIdSite(sitio.getIdSite());
+        request.setIdSite(site.getIdSite());
+        request.setIdSiteDescripcion(siteDescripcion.getIdSiteDescripcion());
 
         // === DESCRIPCIÓN AUTOMÁTICA ===
-        String descripcionParaOT = "";
-        if (!sitio.getDescripciones().isEmpty()) {
-            // Tomar la primera descripción disponible
-            SiteDescripcion primera = sitio.getDescripciones().get(0);
-            if (primera.getDescripcion() != null) {
-                descripcionParaOT = primera.getDescripcion().trim();
-            }
-        }
-
-        // Si no hay descripción, usar el código (si existe)
-        if (descripcionParaOT.isEmpty() && sitio.getCodigoSitio() != null) {
-            descripcionParaOT = sitio.getCodigoSitio().trim();
-        }
+        String descripcionParaOT = siteDescripcion.getDescripcion() != null
+                ? siteDescripcion.getDescripcion().trim()
+                : "";
 
         String descripcionOT = String.format("%s_%s_%s",
                 normalizeForDescripcion(importDTO.getProyecto()),
@@ -1175,14 +1257,6 @@ public class ExcelImportService {
         return request;
     }
 
-    // Método auxiliar para obtener texto de SiteDescripcion
-    private String obtenerTextoDescripcion(SiteDescripcion sd) {
-        if (sd.getDescripcion() != null) {  // CORRECTO según tu tabla
-            return sd.getDescripcion();
-        }
-        return null;
-    }
-
     private void validarRequestCompleto(OtCreateRequest request) {
         List<String> errores = new ArrayList<>();
 
@@ -1191,6 +1265,7 @@ public class ExcelImportService {
         if (request.getIdProyecto() == null) errores.add("Proyecto no encontrado");
         if (request.getIdFase() == null) errores.add("Fase no encontrada");
         if (request.getIdSite() == null) errores.add("Site no encontrado");
+        if (request.getIdSiteDescripcion() == null) errores.add("Descripción Site no encontrada");
         if (request.getIdRegion() == null) errores.add("Región no encontrada");
         if (request.getIdTipoOt() == null) errores.add("Tipo OT no encontrado");
         if (request.getIdEstadoOt() == null) errores.add("Estado OT no encontrado");
@@ -1215,46 +1290,6 @@ public class ExcelImportService {
         }
     }
 
-    private boolean existeSite(String nombre) {
-        if (nombre == null) return false;
-
-        String nombreBusqueda = nombre.trim();
-
-        return siteRepository.findAllByActivo(true).stream()
-                .anyMatch(s -> {
-                    String codigo = s.getCodigoSitio() != null ? s.getCodigoSitio().trim() : "";
-
-                    String todasDescripciones = s.getDescripciones().stream()
-                            .map(SiteDescripcion::getDescripcion)
-                            .filter(desc -> desc != null && !desc.trim().isEmpty())
-                            .map(String::trim)
-                            .collect(Collectors.joining(" "));
-
-                    // Formato 1: Con código y descripciones
-                    if (!codigo.isEmpty() && !todasDescripciones.isEmpty()) {
-                        String formatoCompleto = codigo + " " + todasDescripciones;
-                        if (formatoCompleto.equalsIgnoreCase(nombreBusqueda)) return true;
-                    }
-
-                    // Formato 2: Solo código
-                    if (!codigo.isEmpty() && todasDescripciones.isEmpty()) {
-                        if (codigo.equalsIgnoreCase(nombreBusqueda)) return true;
-                    }
-
-                    // Formato 3: Solo descripciones (SIN CÓDIGO) - ¡IMPORTANTE!
-                    if (codigo.isEmpty() && !todasDescripciones.isEmpty()) {
-                        if (todasDescripciones.equalsIgnoreCase(nombreBusqueda)) return true;
-
-                        // También buscar por descripciones individuales
-                        return s.getDescripciones().stream()
-                                .map(SiteDescripcion::getDescripcion)
-                                .filter(desc -> desc != null)
-                                .anyMatch(desc -> desc.trim().equalsIgnoreCase(nombreBusqueda));
-                    }
-
-                    return false;
-                });
-    }
     private Integer buscarIdPorNombre(List<DropdownDTO> lista, String nombre) {
         if (nombre == null || nombre.trim().isEmpty() || lista == null) {
             return null;
@@ -1277,6 +1312,7 @@ public class ExcelImportService {
                 .replaceAll("[^\\w\\s]", "")
                 .replaceAll("\\s+", " ");
     }
+
     private String getStringCellValue(Row row, int columnIndex) {
         if (columnIndex < 0) return null;
 

@@ -42,12 +42,8 @@ public interface SiteRepository extends JpaRepository<Site, Integer> {
     List<Site> findByCodigoSitioIgnoreCase(String codigoSitio);
 
 
+    Optional<Site> findByCodigoSitioAndActivoTrue(String codigoSitio);
 
-    // 5. Método para buscar sites con código específico
-    List<Site> findByCodigoSitio(String codigoSitio);
-
-    // 6. Método para buscar sites nulos
-    List<Site> findByCodigoSitioIsNull();
 
 
 }

@@ -226,35 +226,53 @@ public class DropdownServiceImpl implements DropdownService {
                 })
                 .distinct()  // Para evitar duplicados si hay sites con el mismo código
                 .collect(Collectors.toList());
-    }
-    @Override
+    }@Override
     public List<DropdownDTO> getSiteCompuesto() {
-        return siteDescripcionRepository.findAll().stream()
-                .filter(desc -> desc.getActivo() != null && desc.getActivo())
-                .map(desc -> {
-                    Site site = desc.getSite();
-
-                    // Obtener código del site (puede ser nulo/vacío)
+        return siteRepository.findByActivoTrueOrderByCodigoSitioAsc().stream()
+                .map(site -> {
                     String codigo = (site.getCodigoSitio() != null && !site.getCodigoSitio().trim().isEmpty())
                             ? site.getCodigoSitio().trim()
                             : "SIN CÓDIGO";
 
-                    // Obtener descripción
-                    String descripcionTexto = desc.getDescripcion() != null
-                            ? desc.getDescripcion().trim()
-                            : "";
+                    // Obtener todas las descripciones activas
+                    List<SiteDescripcion> descripcionesActivas = site.getDescripciones().stream()
+                            .filter(desc -> desc.getActivo() != null && desc.getActivo())
+                            .collect(Collectors.toList());
 
-                    // Construir label: código + descripción
-                    String label = codigo + " - " + descripcionTexto;
+                    List<DropdownDTO> resultados = new ArrayList<>();
 
-                    return new DropdownDTO(
-                            desc.getIdSiteDescripcion(),  // Usar el ID de la descripción
-                            label,                         // Ej: "225 - LOS MAESTROS"
-                            codigo,                       // Código para referencia
-                            desc.getActivo()
-                    );
+                    if (!descripcionesActivas.isEmpty()) {
+                        // Crear un DTO por cada descripción
+                        for (SiteDescripcion desc : descripcionesActivas) {
+                            String descripcionTexto = desc.getDescripcion() != null
+                                    ? desc.getDescripcion().trim()
+                                    : "";
+
+                            if (!descripcionTexto.isEmpty()) {
+                                // Formato: "CÓDIGO - DESCRIPCIÓN"
+                                String label = codigo + " - " + descripcionTexto;
+
+                                resultados.add(new DropdownDTO(
+                                        desc.getIdSiteDescripcion(),  // Usar ID de descripción
+                                        label,
+                                        codigo,                       // Código como adicional
+                                        true
+                                ));
+                            }
+                        }
+                    } else {
+                        // Si no hay descripciones, crear solo el código
+                        resultados.add(new DropdownDTO(
+                                site.getIdSite(),                    // Usar ID del site
+                                codigo,
+                                codigo,
+                                site.getActivo()
+                        ));
+                    }
+
+                    return resultados;
                 })
-                .filter(dto -> !dto.label().trim().isEmpty())
+                .flatMap(List::stream)  // Aplanar la lista de listas
                 .sorted(Comparator.comparing(DropdownDTO::label, String.CASE_INSENSITIVE_ORDER))
                 .collect(Collectors.toList());
     }

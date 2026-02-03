@@ -114,78 +114,86 @@
 
                 <div class="card-body px-4 py-4">
                   <div class="row g-3">
-                    <!-- Cliente -->
-                    <div class="col-md-6">
-                      <label class="form-label small fw-medium text-gray-700 mb-1">
-                        <i class="bi bi-building me-1"></i> Cliente <span class="text-danger">*</span>
-                      </label>
-                      <app-ngselect-dropdown
-                        [items]="clientes"
-                        [placeholder]="'Seleccione un cliente'"
-                        [loading]="loading"
-                        [isInvalid]="submitted && f['idCliente'].invalid"
-                        [required]="true"
-                        (selectionChange)="onClienteChange($event)">
-                      </app-ngselect-dropdown>
-                      <div *ngIf="submitted && f['idCliente'].invalid" class="invalid-feedback small mt-1">
-                        <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
-                      </div>
-                    </div>
 
-                    <!-- Área -->
-                    <div class="col-md-6">
-                      <label class="form-label small fw-medium text-gray-700 mb-1">
-                        <i class="bi bi-diagram-3 me-1"></i> Área <span class="text-danger">*</span>
-                      </label>
-                      <app-ngselect-dropdown
-                        [items]="areas"
-                        [placeholder]="selectedClienteId ? 'Seleccione un área' : 'Primero seleccione un cliente'"
-                        [loading]="loading"
-                        [isInvalid]="submitted && f['idArea'].invalid"
-                        [required]="true"
-                        [disabled]="!selectedClienteId"
-                        (selectionChange)="onAreaChange($event)">
-                      </app-ngselect-dropdown>
-                      <div *ngIf="submitted && f['idArea'].invalid" class="invalid-feedback small mt-1">
-                        <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
-                      </div>
-                    </div>
 
-                    <!-- Proyecto -->
-                    <div class="col-md-6">
-                      <label class="form-label small fw-medium text-gray-700 mb-1">
-                        <i class="bi bi-kanban me-1"></i> Proyecto <span class="text-danger">*</span>
-                      </label>
-                      <app-ngselect-dropdown
-                        [items]="proyectos"
-                        [placeholder]="'Seleccione un proyecto'"
-                        [loading]="loading"
-                        [isInvalid]="submitted && f['idProyecto'].invalid"
-                        [required]="true"
-                        (selectionChange)="onProyectoChange($event)">
-                      </app-ngselect-dropdown>
-                      <div *ngIf="submitted && f['idProyecto'].invalid" class="invalid-feedback small mt-1">
-                        <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
-                      </div>
-                    </div>
 
-                    <!-- Fase -->
-                    <div class="col-md-6">
-                      <label class="form-label small fw-medium text-gray-700 mb-1">
-                        <i class="bi bi-puzzle me-1"></i> Fase <span class="text-danger">*</span>
-                      </label>
-                      <app-ngselect-dropdown
-                        [items]="fases"
-                        [placeholder]="'Seleccione una fase'"
-                        [loading]="loading"
-                        [isInvalid]="submitted && f['idFase'].invalid"
-                        [required]="true"
-                        (selectionChange)="onFaseChange($event)">
-                      </app-ngselect-dropdown>
-                      <div *ngIf="submitted && f['idFase'].invalid" class="invalid-feedback small mt-1">
-                        <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
-                      </div>
-                    </div>
+
+<!-- Cliente -->
+<div class="col-md-6">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    <i class="bi bi-building me-1"></i> Cliente <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idCliente"
+    [items]="clientes"
+    [placeholder]="'Seleccione un cliente'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idCliente'].invalid"
+    [required]="true"
+    (selectionChange)="onClienteChange($event)">
+  </app-ngselect-dropdown>
+  <div *ngIf="submitted && f['idCliente'].invalid" class="invalid-feedback small mt-1">
+    <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
+  </div>
+</div>
+
+<!-- Área -->
+<div class="col-md-6">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    <i class="bi bi-diagram-3 me-1"></i> Área <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idArea"
+    [items]="areas"
+    [placeholder]="selectedClienteId ? 'Seleccione un área' : 'Primero seleccione un cliente'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idArea'].invalid"
+    [required]="true"
+    [disabled]="!selectedClienteId"
+    (selectionChange)="onAreaChange($event)">
+  </app-ngselect-dropdown>
+  <div *ngIf="submitted && f['idArea'].invalid" class="invalid-feedback small mt-1">
+    <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
+  </div>
+</div>
+
+<!-- Proyecto -->
+<div class="col-md-6">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    <i class="bi bi-kanban me-1"></i> Proyecto <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idProyecto"
+    [items]="proyectos"
+    [placeholder]="'Seleccione un proyecto'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idProyecto'].invalid"
+    [required]="true"
+    (selectionChange)="onProyectoChange($event)">
+  </app-ngselect-dropdown>
+  <div *ngIf="submitted && f['idProyecto'].invalid" class="invalid-feedback small mt-1">
+    <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
+  </div>
+</div>
+
+<!-- Fase -->
+<div class="col-md-6">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    <i class="bi bi-puzzle me-1"></i> Fase <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idFase"
+    [items]="fases"
+    [placeholder]="'Seleccione una fase'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idFase'].invalid"
+    [required]="true"
+    (selectionChange)="onFaseChange($event)">
+  </app-ngselect-dropdown>
+  <div *ngIf="submitted && f['idFase'].invalid" class="invalid-feedback small mt-1">
+    <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
+  </div>
+</div>
 
 <!-- Site (Código) -->
 <div class="col-md-6">
@@ -193,6 +201,7 @@
     <i class="bi bi-geo-alt me-1"></i> Site <span class="text-danger">*</span>
   </label>
   <app-ngselect-dropdown
+    formControlName="idSite"
     [items]="sites"
     [placeholder]="'Seleccione un site'"
     [loading]="loading"
@@ -217,6 +226,7 @@
     <span *ngIf="siteDescripciones.length === 0" class="text-muted small ms-1">(Opcional - sin descripciones)</span>
   </label>
   <app-ngselect-dropdown
+    formControlName="idSiteDescripcion"
     [items]="siteDescripciones"
     [placeholder]="siteDescripciones.length > 0 ? 'Seleccione una descripción' : 'No hay descripciones para este código'"
     [loading]="loading"
@@ -232,13 +242,13 @@
     <i class="bi bi-info-circle me-1"></i> Este código no tiene descripciones registradas
   </div>
 </div>
-
-                   <!-- Tipo OT -->
+<!-- Tipo OT - CORREGIDO -->
 <div class="col-md-6">
   <label class="form-label small fw-medium text-gray-700 mb-1">
     <i class="bi bi-tag me-1"></i> Tipo OT <span class="text-danger">*</span>
   </label>
   <app-ngselect-dropdown
+    formControlName="idTipoOt"
     [items]="tiposOt"
     [placeholder]="'Seleccione tipo OT'"
     [loading]="loading"
@@ -249,30 +259,26 @@
   <div *ngIf="submitted && f['idTipoOt'].invalid" class="invalid-feedback small mt-1">
     <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
   </div>
-
-  <!-- Agrega esto para depuración -->
-  <div class="mt-1 small text-muted">
-    Debug: ID seleccionado: {{ selectedTipoOtId }} | Valor en form: {{ form.get('idTipoOt')?.value }}
-  </div>
 </div>
 
-                    <!-- Región -->
-                    <div class="col-md-6">
-                      <label class="form-label small fw-medium text-gray-700 mb-1">
-                        <i class="bi bi-globe-americas me-1"></i> Región <span class="text-danger">*</span>
-                      </label>
-                      <app-ngselect-dropdown
-                        [items]="regiones"
-                        [placeholder]="'Seleccione una región'"
-                        [loading]="loading"
-                        [isInvalid]="submitted && f['idRegion'].invalid"
-                        [required]="true"
-                        (selectionChange)="onRegionChange($event)">
-                      </app-ngselect-dropdown>
-                      <div *ngIf="submitted && f['idRegion'].invalid" class="invalid-feedback small mt-1">
-                        <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
-                      </div>
-                    </div>
+<!-- Región -->
+<div class="col-md-6">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    <i class="bi bi-globe-americas me-1"></i> Región <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idRegion"
+    [items]="regiones"
+    [placeholder]="'Seleccione una región'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idRegion'].invalid"
+    [required]="true"
+    (selectionChange)="onRegionChange($event)">
+  </app-ngselect-dropdown>
+  <div *ngIf="submitted && f['idRegion'].invalid" class="invalid-feedback small mt-1">
+    <i class="bi bi-exclamation-circle me-1"></i> Este campo es obligatorio
+  </div>
+</div>
 
                     <!-- Fecha Apertura -->
                     <div class="col-md-6">
@@ -432,139 +438,136 @@
                           </h6>
                         </div>
                         <div class="card-body py-3 px-3">
-                          <!-- Jefatura Cliente -->
-                          <div class="mb-3">
-                            <label class="form-label small fw-medium text-gray-700 mb-1">
-                              Jefatura Cliente <span class="text-danger">*</span>
-                            </label>
-                            <app-ngselect-dropdown
-                              [items]="jefaturasCliente"
-                              [placeholder]="'Seleccione jefatura'"
-                              [loading]="loading"
-                              [isInvalid]="submitted && f['idJefaturaClienteSolicitante'].invalid"
-                              [required]="true"
-                              (selectionChange)="onJefaturaClienteChange($event)">
-                            </app-ngselect-dropdown>
-                          </div>
 
-                          <!-- Analista Cliente -->
-                          <div class="mb-3">
-                            <label class="form-label small fw-medium text-gray-700 mb-1">
-                              Analista Cliente <span class="text-danger">*</span>
-                            </label>
-                            <app-ngselect-dropdown
-                              [items]="analistasCliente"
-                              [placeholder]="'Seleccione analista'"
-                              [loading]="loading"
-                              [isInvalid]="submitted && f['idAnalistaClienteSolicitante'].invalid"
-                              [required]="true"
-                              (selectionChange)="onAnalistaClienteChange($event)">
-                            </app-ngselect-dropdown>
-                          </div>
+<!-- Jefatura Cliente -->
+<div class="mb-3">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    Jefatura Cliente <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idJefaturaClienteSolicitante"
+    [items]="jefaturasCliente"
+    [placeholder]="'Seleccione jefatura'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idJefaturaClienteSolicitante'].invalid"
+    [required]="true"
+    (selectionChange)="onJefaturaClienteChange($event)">
+  </app-ngselect-dropdown>
+</div>
+
+<!-- Analista Cliente -->
+<div class="mb-3">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    Analista Cliente <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idAnalistaClienteSolicitante"
+    [items]="analistasCliente"
+    [placeholder]="'Seleccione analista'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idAnalistaClienteSolicitante'].invalid"
+    [required]="true"
+    (selectionChange)="onAnalistaClienteChange($event)">
+  </app-ngselect-dropdown>
+</div>
+
+<!-- Coordinador TI/CW -->
+<div class="mb-0">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    Coordinador <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idCoordinadorTiCw"
+    [items]="coordinadoresTiCw"
+    [placeholder]="'Seleccione coordinador'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idCoordinadorTiCw'].invalid"
+    [required]="true"
+    (selectionChange)="onCoordinadorTiCwChange($event)">
+  </app-ngselect-dropdown>
+</div>
+
+<!-- Jefatura Responsable -->
+<div class="mb-3">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    Jefatura Responsable <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idJefaturaResponsable"
+    [items]="jefaturasResponsable"
+    [placeholder]="'Seleccione jefatura'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idJefaturaResponsable'].invalid"
+    [required]="true"
+    (selectionChange)="onJefaturaResponsableChange($event)">
+  </app-ngselect-dropdown>
+</div>
+
+<!-- Liquidador -->
+<div class="mb-3">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    Liquidador <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idLiquidador"
+    [items]="liquidadores"
+    [placeholder]="'Seleccione liquidador'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idLiquidador'].invalid"
+    [required]="true"
+    (selectionChange)="onLiquidadorChange($event)">
+  </app-ngselect-dropdown>
+</div>
+
+<!-- Ejecutante -->
+<div class="mb-3">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    Ejecutante <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idEjecutante"
+    [items]="ejecutantes"
+    [placeholder]="'Seleccione ejecutante'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idEjecutante'].invalid"
+    [required]="true"
+    (selectionChange)="onEjecutanteChange($event)">
+  </app-ngselect-dropdown>
+</div>
+
+<!-- Analista Contable -->
+<div class="mb-3">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    Analista Contable <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idAnalistaContable"
+    [items]="analistasContable"
+    [placeholder]="'Seleccione analista'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idAnalistaContable'].invalid"
+    [required]="true"
+    (selectionChange)="onAnalistaContableChange($event)">
+  </app-ngselect-dropdown>
+</div>
+
+<!-- Estado OT (solo edición) -->
+<div *ngIf="isEditMode" class="mb-0">
+  <label class="form-label small fw-medium text-gray-700 mb-1">
+    Estado OT <span class="text-danger">*</span>
+  </label>
+  <app-ngselect-dropdown
+    formControlName="idEstadoOt"
+    [items]="estadoOT"
+    [placeholder]="'Seleccione estado'"
+    [loading]="loading"
+    [isInvalid]="submitted && f['idEstadoOt'].invalid"
+    [required]="true"
+    (selectionChange)="onEstadoOTChange($event)">
+  </app-ngselect-dropdown>
+</div>
 
 
-                        </div>
-                      </div>
-                    </div>
-
-                    <!-- Columna Responsables Internos -->
-                    <div class="col-lg-6">
-                      <div class="card h-100 border border-gray-300">
-                        <div class="card-header bg-gray-50 border-bottom py-3 px-3">
-                          <h6 class="mb-0 text-gray-700 fw-medium small">
-                            <i class="bi bi-gear me-2 text-gray-600"></i>
-                            Responsables Internos
-                          </h6>
-                        </div>
-                        <div class="card-body py-3 px-3">
-                          <!-- Jefatura Responsable -->
-                          <div class="mb-3">
-                            <label class="form-label small fw-medium text-gray-700 mb-1">
-                              Jefatura Responsable <span class="text-danger">*</span>
-                            </label>
-                            <app-ngselect-dropdown
-                              [items]="jefaturasResponsable"
-                              [placeholder]="'Seleccione jefatura'"
-                              [loading]="loading"
-                              [isInvalid]="submitted && f['idJefaturaResponsable'].invalid"
-                              [required]="true"
-                              (selectionChange)="onJefaturaResponsableChange($event)">
-                            </app-ngselect-dropdown>
-                          </div>
-
-                          <!-- Liquidador -->
-                          <div class="mb-3">
-                            <label class="form-label small fw-medium text-gray-700 mb-1">
-                              Liquidador <span class="text-danger">*</span>
-                            </label>
-                            <app-ngselect-dropdown
-                              [items]="liquidadores"
-                              [placeholder]="'Seleccione liquidador'"
-                              [loading]="loading"
-                              [isInvalid]="submitted && f['idLiquidador'].invalid"
-                              [required]="true"
-                              (selectionChange)="onLiquidadorChange($event)">
-                            </app-ngselect-dropdown>
-                          </div>
-
-                          <!-- Ejecutante -->
-                          <div class="mb-3">
-                            <label class="form-label small fw-medium text-gray-700 mb-1">
-                              Ejecutante <span class="text-danger">*</span>
-                            </label>
-                            <app-ngselect-dropdown
-                              [items]="ejecutantes"
-                              [placeholder]="'Seleccione ejecutante'"
-                              [loading]="loading"
-                              [isInvalid]="submitted && f['idEjecutante'].invalid"
-                              [required]="true"
-                              (selectionChange)="onEjecutanteChange($event)">
-                            </app-ngselect-dropdown>
-                          </div>
-      <!-- Coordinador TI/CW -->
-                          <div class="mb-0">
-                            <label class="form-label small fw-medium text-gray-700 mb-1">
-                              Coordinador <span class="text-danger">*</span>
-                            </label>
-                            <app-ngselect-dropdown
-                              [items]="coordinadoresTiCw"
-                              [placeholder]="'Seleccione coordinador'"
-                              [loading]="loading"
-                              [isInvalid]="submitted && f['idCoordinadorTiCw'].invalid"
-                              [required]="true"
-                              (selectionChange)="onCoordinadorTiCwChange($event)">
-                            </app-ngselect-dropdown>
-                          </div>
-                          <!-- Analista Contable -->
-                          <div class="mb-3">
-                            <label class="form-label small fw-medium text-gray-700 mb-1">
-                              Analista Contable <span class="text-danger">*</span>
-                            </label>
-                            <app-ngselect-dropdown
-                              [items]="analistasContable"
-                              [placeholder]="'Seleccione analista'"
-                              [loading]="loading"
-                              [isInvalid]="submitted && f['idAnalistaContable'].invalid"
-                              [required]="true"
-                              (selectionChange)="onAnalistaContableChange($event)">
-                            </app-ngselect-dropdown>
-                          </div>
-
-                          <!-- Estado OT (solo edición) -->
-                          <div *ngIf="isEditMode" class="mb-0">
-                            <label class="form-label small fw-medium text-gray-700 mb-1">
-                              Estado OT <span class="text-danger">*</span>
-                            </label>
-                            <app-ngselect-dropdown
-                              [items]="estadoOT"
-                              [placeholder]="'Seleccione estado'"
-                              [loading]="loading"
-                              [isInvalid]="submitted && f['idEstadoOt'].invalid"
-                              [required]="true"
-                              (selectionChange)="onEstadoOTChange($event)">
-                            </app-ngselect-dropdown>
-                          </div>
-                        </div>
                       </div>
                     </div>
                   </div>
@@ -590,6 +593,7 @@
                   </div>
                 </div>
               </div>
+            </div>
             </div>
 
             <!-- Paso 3: Confirmar -->
