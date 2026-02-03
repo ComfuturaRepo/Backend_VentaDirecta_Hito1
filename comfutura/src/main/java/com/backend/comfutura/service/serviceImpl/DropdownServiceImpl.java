@@ -351,7 +351,8 @@ public class DropdownServiceImpl implements DropdownService {
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
-                        t.getApellidos() + " " + t.getNombres()
+                        // CAMBIO AQUÍ: Nombres primero, luego apellidos
+                        t.getNombres() + " " + t.getApellidos()
                 ))
                 .collect(Collectors.toList());
     }
@@ -363,10 +364,12 @@ public class DropdownServiceImpl implements DropdownService {
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
-                        t.getApellidos() + " " + t.getNombres()
+                        // CAMBIO AQUÍ: Nombres primero, luego apellidos
+                        t.getNombres() + " " + t.getApellidos()
                 ))
                 .collect(Collectors.toList());
     }
+
 
     @Override
     public List<DropdownDTO> getLiquidador() {
@@ -375,7 +378,8 @@ public class DropdownServiceImpl implements DropdownService {
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
-                        t.getApellidos() + " " + t.getNombres()
+                        // CAMBIO AQUÍ: Nombres primero, luego apellidos
+                        t.getNombres() + " " + t.getApellidos()
                 ))
                 .collect(Collectors.toList());
     }
@@ -387,7 +391,8 @@ public class DropdownServiceImpl implements DropdownService {
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
-                        t.getApellidos() + " " + t.getNombres()
+                        // CAMBIO AQUÍ: Nombres primero, luego apellidos
+                        t.getNombres() + " " + t.getApellidos()
                 ))
                 .collect(Collectors.toList());
     }
@@ -399,7 +404,8 @@ public class DropdownServiceImpl implements DropdownService {
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
-                        t.getApellidos() + " " + t.getNombres()
+                        // CAMBIO AQUÍ: Nombres primero, luego apellidos
+                        t.getNombres() + " " + t.getApellidos()
                 ))
                 .collect(Collectors.toList());
     }
