@@ -372,7 +372,7 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
                         // CAMBIO AQUÍ: Nombres primero, luego apellidos
-                        t.getApellidos() + " " + t.getNombres()
+                        t.getNombres() + " " + t.getApellidos()
                 ))
                 .collect(Collectors.toList());
     }
