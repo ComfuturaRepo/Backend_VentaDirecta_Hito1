@@ -466,8 +466,8 @@ INSERT INTO fase (nombre, orden) VALUES
                                      ('8', 80),
                                      ('9', 90),
                                      ('10', 100);
+-- Insertar sitios únicos (eliminando duplicados)
 INSERT INTO site (codigo_sitio) VALUES
-                                    ('COMFUTURA'),
                                     ('LI0625'),
                                     ('TJ1435'),
                                     ('TL2410'),
@@ -508,7 +508,6 @@ INSERT INTO site (codigo_sitio) VALUES
                                     ('LI3299'),
                                     ('LA2829'),
                                     ('LA2826'),
-                                    ('-'),
                                     ('LJ4222'),
                                     ('0135322'),
                                     ('0130280'),
@@ -528,8 +527,8 @@ INSERT INTO site (codigo_sitio) VALUES
                                     ('TL0600'),
                                     ('LI6045'),
                                     ('L13230'),
-                                    ('103082'),
-                                    ('100610'),
+                                    ('0103082'),
+                                    ('0100610'),
                                     ('LI1485'),
                                     ('LI0599'),
                                     ('LI3161'),
@@ -541,67 +540,213 @@ INSERT INTO site (codigo_sitio) VALUES
                                     ('013251509'),
                                     ('013250668'),
                                     ('LI0692'),
-                                    (NULL);
+                                    ('LI1660'),
+                                    ('LI0741'),
+                                    ('LI1035'),
+                                    ('LI0091'),
+                                    ('LI0093'),
+                                    ('LI4824'),
+                                    ('LI5791'),
+                                    ('LI5748'),
+                                    ('LI5795'),
+                                    ('LI5792'),
+                                    ('LI4550'),
+                                    ('TP6151'),
+                                    ('TJ5259'),
+                                    ('TJ1449'),
+                                    ('TJ6200'),
+                                    ('LI4911'),
+                                    ('LI6447'),
+                                    ('LI2454'),
+                                    ('LI2078'),
+                                    ('TL2156'),
+                                    ('TP2160'),
+                                    ('TL2183'),
+                                    ('TL2203'),
+                                    ('TL2199'),
+                                    ('TP2192'),
+                                    ('TL2033'),
+                                    ('0130543'),
+                                    ('0131002'),
+                                    ('0131046'),
+                                    ('0130086'),
+                                    ('0130825'),
+                                    ('0135762'),
+                                    ('0135860'),
+                                    ('0132266'),
+                                    ('0132454'),
+                                    ('0131022'),
+                                    ('0135774'),
+                                    ('0135696'),
+                                    ('sin_codigo');
+
+INSERT INTO site_descripcion (id_site, descripcion) VALUES
+-- Para cada sitio con sus descripciones únicas
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI0625'), 'VOLVO'),
+
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'GASTOS ADMINISTRATIVOS'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'TRAMITE DOCUMENTARIO - INCREMENTO DE CARGA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'MODEM COMFUTURA'),
+
+((SELECT id_site FROM site WHERE codigo_sitio = 'TJ1435'), 'NAT_EL_HUARANCHAL'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL2410'), 'AULAS _USS'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL2410'), 'NAT_EXPLANADA_USS'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL2410'), 'NAT_PARQUE_ITALIA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL0590'), 'NAT_PARQUE_SANTIAGO'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL5949'), 'NAT_CASA_BLANCA_TUMAN'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL5949'), 'NAT_PAMPA_EL_TORO'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL5949'), 'NAT_LA_HACIENDA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL6477'), 'NAT_AV_LAS_FLORES'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TP0332'), 'NAT_JR_D_MAITE'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TP0332'), 'NAT_VIA_COLECTORA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL4021'), 'NAT_URB_FLEMING'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TJ5160'), 'NAT_ALMAGRO'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TA2227'), 'NAT_PAMPAC'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TP2538'), 'NAT_COI_U_PIURA  N'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TP0038'), 'NAT_COI_ENTRADA_PRINCIPAL'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TP0074'), 'NAT_COI_IE_IGNACIO_MERINO'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TPS417'), 'NAT_COI_JOSE_OLAYA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL5977'), 'NAT_COI_1108    N'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL5573'), 'NAT_COI_SAN_JOSE_OBRERO'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL5999'), 'NAT_COI_EX_COSOME'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL5928'), 'NAT_COI_JUAN_TOMIS_S'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL5993'), 'NAT_LLAMPAYEC'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI4108'), 'NAT_HUALCARA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'NAT_LAURA CALLER'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'NAT_TORRE BLANCA'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0133994'), 'AN_Chimbote_Centro_2'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0134198'), 'LM_Ferretero_Paruro'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0130849'), 'IC_Entel_Ica'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0132207'), 'IC_Av_Artemio_Molina'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0132210'), 'IC_Belaunde_Chincha'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0132290'), 'IC_Plaza_Nazca'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0133515'), 'LH_La_Laguna'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0135172'), 'LM_Los_Aguilas'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0135702'), 'LM_Caylloma'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0130173'), 'LM_Zavala'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0130235'), 'LM_Huachipa_Norte'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0135627'), 'IC_Nicolas_Rivera'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0135627'), 'LM_Mercado_Salamanca'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0135644'), 'LM_Tersicore'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0132231'), 'IC_Pasaje_Cilesa'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0135941'), 'LM_Soyuz'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI3295'), 'ONCE EUCALIPTOS'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI3288'), 'PARQUE ONTORIO'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI3299'), 'RESIDENCIAL VENTANILLA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LA2829'), 'NAT GLORIETA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LA2826'), 'NAT JOSE OLAYA 2'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'NAT_ACHINAMIZA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LJ4222'), 'NAT_FRANCISCO_CARLE'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'BAJO MARIANKIARI'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0135322'), 'LM_Parque_Los_Pozos'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0130280'), 'LM_Villa_San_Roque'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0133641'), 'HU_Ccochaccasa'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0132525'), 'AQ_Coropuna'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0130493'), 'LM_Mercedarias'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0130493'), 'LM_Bertello'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0131810'), 'TU_Plazuela_Bolognesi'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0134312'), 'LI_Salaverry_Plaza'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0105840'), 'LM_Hacienda_San_Juan'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0100144'), 'LM_Pamplona'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'LMSC026-S'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'LMSC018-S'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'LMSC021-S'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'LMSC035-S'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0134301'), 'LM_PS_Hiraoka'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0134302'), 'LM_PS_UCV_SJL'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0135081'), 'LM_PS_Dona_Marcela'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TP6167'), 'NAT_PIURA_P4'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TT6301'), 'NAT_COLON'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI0477'), 'MIRONES'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL0600'), 'PUBLIMOVIL BOLOGNESI'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI6045'), 'NAT PRIMAVERA P2'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'L13230'), 'LOS_GRANADOS'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0103082'), 'JU_El_Tambo_R1'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0100610'), 'LI_El_Porvenir'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI1485'), 'LAS_LOJAS'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI0599'), 'POLVO_ROSADO'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI3161'), 'ZAFIROS_SAN_JUAN'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI2442'), 'HIEDRA'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0134562'), 'LM_PS_PABLO_CONTI'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0130077'), 'LM_Ugarte_y_Moscoso'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0131322'), 'CS_Espinar'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0133695'), 'CS_Cusco_Antonio'),
+((SELECT id_site FROM site WHERE codigo_sitio = '013251509'), 'LM_PS_Brigada_Especial_R1'),
+((SELECT id_site FROM site WHERE codigo_sitio = '013250668'), 'LM_PS_Fronteras_Unidas'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI0692'), 'NAT_POLVORITA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'NAT CONDORCANQUI VENT'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'NAT CUMBRE VENT'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'sin_codigo'), 'NAT LOS MAESTROS'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI1660'), 'NAT_NUESTRA_SEÑORA_DE_COCHARCAS'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI0741'), 'NAT_ANCASH_JAUJA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI1035'), 'NAT_CONVENTO_SAN_AGUSTIN'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI0091'), 'NAT_PLAZA_SAN_MARTIN_P1'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI0093'), 'NAT_MINISTERIOS'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI4824'), 'OPEN_PLAZA_P2'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI5791'), 'NAT_RISSO_P2'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI5748'), 'NAT_RESIDENCIAL_P3'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI5748'), 'NAT_RESIDENCIAL_P2'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI5795'), 'NAT_SUCRE_P1'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI5792'), 'NAT_ROOSEVELT_P4'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI5792'), 'NAT_ROOSEVELT_P3'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI5792'), 'NAT_ROOSEVELT_P2'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI4550'), 'NAT_UNIVERSIDADES_P3'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TP6151'), 'NAT_AV_CAHUIDE'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TJ5259'), 'NAT_MERCADO_HUAMAN'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TJ1449'), 'NAT_REFUGIO'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TJ6200'), 'NAT_WICHANZAO'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI4911'), 'NAT_MIYASHIRO_CHORRILLOS'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI6447'), 'NAT_PERCIN_DEZA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI2454'), 'NAT_NUEVA_LOMA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'LI2078'), 'NAT_LOS_ALPES'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL2156'), 'CESAR_VALLEJO'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TP2160'), 'SAN_JUAN_DE_BIGOTE'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL2183'), 'SANTA_ISABEL'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL2203'), 'A_CACERES'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL2199'), 'MOCUPE'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TP2192'), 'JR_PIURA'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL2033'), 'SAN_MARTIN_DE_CHICLAYO'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0130543'), 'LM_Repetidor_La_Molina'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0131002'), 'LA_Reque'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0131046'), 'LA_Puente_Once'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0130086'), 'LM_La_Capilla'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0130825'), 'IC_Tinguina'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0135762'), 'LM_Alto_De_La_Alianza'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0135860'), 'LM_Cantabrico'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0132266'), 'IC_Pampa_De_La_Isla'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0132454'), 'LA_Pacherrez'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0131022'), 'LA_Eten'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0135774'), 'LM_Lima_Centro'),
+((SELECT id_site FROM site WHERE codigo_sitio = '0135696'), 'LM_Calle_Antigua');
 
 
--- 25 Regiones del Perú (24 departamentos + Provincia Constitucional del Callao)
+-- Regiones del Perú
 INSERT INTO region (nombre) VALUES
-                                ('Amazonas'),
-                                ('Áncash'),
-                                ('Apurímac'),
-                                ('Arequipa'),
-                                ('Ayacucho'),
-                                ('Cajamarca'),
-                                ('Callao'),  -- Provincia Constitucional del Callao
-                                ('Cusco'),
-                                ('Huancavelica'),
-                                ('Huánuco'),
-                                ('Ica'),
-                                ('Junin'),
-                                ('La Libertad'),
-                                ('Lambayeque'),
-                                ('Lima'),  -- Departamento de Lima (no incluye la provincia de Lima)
-                                ('Lima Metropolitana'),  -- Provincia de Lima (especial, aunque técnicamente es provincia)
-                                ('Loreto'),
-                                ('Madre de Dios'),
-                                ('Moquegua'),
-                                ('Pasco'),
-                                ('Piura'),
-                                ('Puno'),
-                                ('San Martín'),
-                                ('Tacna'),
-                                ('Tumbes'),
-                                ('Ucayali');
-INSERT INTO site_descripcion (id_site, descripcion)
-SELECT s.id_site, t.descripcion
-FROM (
-         SELECT 'COMFUTURA' codigo, 'ARELLANO' descripcion UNION ALL
-         SELECT 'COMFUTURA','COMFUTURA' UNION ALL
-         SELECT 'COMFUTURA','ADMIN' UNION ALL
-         SELECT 'LI0625','VOLVO' UNION ALL
-         SELECT NULL,'MODEM COMFUTURA' UNION ALL
-         SELECT 'TJ1435','NAT_EL_HUARANCHAL' UNION ALL
-         SELECT 'TL2410','AULAS _USS' UNION ALL
-         SELECT 'TL2410','NAT_EXPLANADA_USS' UNION ALL
-         SELECT 'TL2410','NAT_PARQUE_ITALIA' UNION ALL
-         SELECT 'TL5949','NAT_CASA_BLANCA_TUMAN' UNION ALL
-         SELECT 'TL5949','NAT_PAMPA_EL_TORO' UNION ALL
-         SELECT 'TL5949','NAT_LA_HACIENDA' UNION ALL
-         SELECT '0130493','LM_Mercedarias' UNION ALL
-         SELECT '0130493','LM_Bertello' UNION ALL
-         SELECT NULL,'NAT_LAURA CALLER' UNION ALL
-         SELECT NULL,'NAT_TORRE BLANCA' UNION ALL
-         SELECT NULL,'NODO OVERLAP PRECO LMSC026-S' UNION ALL
-         SELECT NULL,'NODO OVERLAP PRECO LMSC018-S' UNION ALL
-         SELECT NULL,'NODO OVERLAP PRECO LMSC021-S' UNION ALL
-         SELECT NULL,'NODO OVERLAP PRECO LMSC035-S' UNION ALL
-         SELECT NULL,'NAT CONDORCANQUI VENT' UNION ALL
-         SELECT NULL,'NAT CUMBRE VENT' UNION ALL
-         SELECT NULL,'NAT LOS MAESTROS'
-     ) t
-         JOIN site s
-              ON ( (t.codigo IS NULL AND s.codigo_sitio IS NULL)
-                  OR (t.codigo = s.codigo_sitio) );
+                                ('AMAZONAS'),
+                                ('ANCASH'),
+                                ('APURIMAC'),
+                                ('AREQUIPA'),
+                                ('AYACUCHO'),
+                                ('CAJAMARCA'),
+                                ('CALLAO'),
+                                ('CUSCO'),
+                                ('HUANCAVELICA'),
+                                ('HUANUCO'),
+                                ('ICA'),
+                                ('JUNIN'),
+                                ('LA LIBERTAD'),
+                                ('LAMBAYEQUE'),
+                                ('LIMA'),
+                                ('LORETO'),
+                                ('MADRE DE DIOS'),
+                                ('MOQUEGUA'),
+                                ('PASCO'),
+                                ('PIURA'),
+                                ('PUNO'),
+                                ('SAN MARTIN'),
+                                ('TACNA'),
+                                ('TUMBES'),
+                                ('UCAYALI');
 
 INSERT INTO jefatura_cliente_solicitante (descripcion) VALUES
                                                            ('NC'),
@@ -1636,7 +1781,6 @@ INSERT INTO aprobador (id_trabajador, id_cliente, id_area, nivel, activo) VALUES
                                                                               (28, 14, 4, 3, 1),  -- SOLUCIONES TEC, CW
                                                                               (28, 17, 6, 3, 1);  -- ENTEL PERU, PEXT
 INSERT INTO tipo_ot (codigo, descripcion, activo) VALUES
-                                                      ('INST',  'Instalación', 1),
-                                                      ('MANT',  'Mantenimiento preventivo', 1),
-                                                      ('TMP',   'Temporal', 0);
+                                                      ('Operativa',  'operaciones de trabajo', 1),
+                                                      ('Administrativa',  'administracion del trabajo', 1);
 
