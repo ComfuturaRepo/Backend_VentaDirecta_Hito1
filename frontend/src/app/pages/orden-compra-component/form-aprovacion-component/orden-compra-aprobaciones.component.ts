@@ -9,7 +9,7 @@ import { PaginationComponent } from '../../../component/pagination.component/pag
 @Component({
   selector: 'app-orden-compra-aprobaciones',
   templateUrl: './orden-compra-aprobaciones.component.html',
-  imports: [CommonModule, FormsModule, FormOrdenCompraComponent, PaginationComponent],
+  imports: [CommonModule, FormsModule],
   styleUrls: ['./orden-compra-aprobaciones.component.css']
 })
 export class OrdenCompraAprobacionesComponent implements OnInit {

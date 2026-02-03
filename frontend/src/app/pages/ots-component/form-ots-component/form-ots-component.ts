@@ -28,6 +28,7 @@ export class FormOtsComponent implements OnInit, OnDestroy {
   private router = inject(Router);
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
+private lastClienteId: number | null = null;
 
   @Input() otId: number | null = null;
   @Input() isViewMode: boolean = false;
@@ -109,17 +110,18 @@ ngOnInit(): void {
   this.usernameLogueado = user?.username || 'Usuario';
   this.trabajadorIdLogueado = user?.idTrabajador ?? null;
 
-  // Cargar datos según modo
+  // ✅ CORREGIDO: Cargar primero los catálogos, luego los datos
   if (this.isEditMode && this.otId) {
-    this.cargarDatosParaEdicion(this.otId);
+    this.cargarCatalogosYDespuesDatos(this.otId);
   } else if (this.mode === 'edit' && this.otData) {
-    this.patchFormValues(this.otData);
-    const clienteId = this.form.get('idCliente')?.value;
-    if (clienteId) {
-      this.cargarAreasPorCliente(clienteId);
-    }
-    // Asegúrate de cargar tiposOt aquí también
-    this.cargarTodosLosCatalogos();
+    // Cargar catálogos primero
+    this.cargarTodosLosCatalogos().then(() => {
+      this.patchFormValues(this.otData);
+      const clienteId = this.form.get('idCliente')?.value;
+      if (clienteId) {
+        this.cargarAreasPorCliente(clienteId);
+      }
+    });
   } else {
     this.cargarDropdownsParaCreacion();
   }
@@ -137,6 +139,174 @@ ngOnInit(): void {
   }, 100);
 }
 
+// ✅ NUEVO MÉTODO: Cargar catálogos y luego datos
+private cargarCatalogosYDespuesDatos(otId: number): void {
+  this.loading = true;
+
+  // Primero cargar todos los catálogos
+  this.cargarTodosLosCatalogos().then(() => {
+    // Luego cargar los datos de la OT
+    this.cargarDatosOT(otId);
+  }).catch(error => {
+    console.error('Error al cargar catálogos:', error);
+    this.loading = false;
+    this.mostrarError('No se pudieron cargar los catálogos necesarios');
+  });
+}
+
+// ✅ MÉTODO MEJORADO para cargar catálogos (convertido a Promise)
+private cargarTodosLosCatalogos(): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const catalogSub = forkJoin({
+      clientes: this.dropdownService.getClientes().pipe(catchError(() => of([]))),
+      proyectos: this.dropdownService.getProyectos().pipe(catchError(() => of([]))),
+      fases: this.dropdownService.getFases().pipe(catchError(() => of([]))),
+      sites: this.dropdownService.getSitesConDescripciones().pipe(catchError(() => of([]))),
+      regiones: this.dropdownService.getRegiones().pipe(catchError(() => of([]))),
+      tiposOt: this.dropdownService.getTipoOt().pipe(catchError(() => of([]))),
+      jefaturasCliente: this.dropdownService.getJefaturasClienteSolicitante().pipe(catchError(() => of([]))),
+      analistasCliente: this.dropdownService.getAnalistasClienteSolicitante().pipe(catchError(() => of([]))),
+      coordinadoresTiCw: this.dropdownService.getCoordinadoresTiCw().pipe(catchError(() => of([]))),
+      jefaturasResp: this.dropdownService.getJefaturasResponsable().pipe(catchError(() => of([]))),
+      liquidadores: this.dropdownService.getLiquidador().pipe(catchError(() => of([]))),
+      ejecutantes: this.dropdownService.getEjecutantes().pipe(catchError(() => of([]))),
+      analistasCont: this.dropdownService.getAnalistasContable().pipe(catchError(() => of([]))),
+      estadoOt: this.dropdownService.getEstadoOt().pipe(catchError(() => of([])))
+    }).subscribe({
+      next: (data) => {
+        this.clientes = data.clientes || [];
+        this.proyectos = data.proyectos || [];
+        this.fases = data.fases || [];
+        this.sites = data.sites || [];
+        this.regiones = data.regiones || [];
+        this.tiposOt = data.tiposOt || [];
+        this.jefaturasCliente = data.jefaturasCliente || [];
+        this.analistasCliente = data.analistasCliente || [];
+        this.coordinadoresTiCw = data.coordinadoresTiCw || [];
+        this.jefaturasResponsable = data.jefaturasResp || [];
+        this.liquidadores = data.liquidadores || [];
+        this.ejecutantes = data.ejecutantes || [];
+        this.analistasContable = data.analistasCont || [];
+        this.estadoOT = data.estadoOt || [];
+
+        resolve();
+        this.cdr.detectChanges();
+      },
+      error: (error) => {
+        console.error('Error al cargar catálogos:', error);
+        reject(error);
+      }
+    });
+
+    this.subscriptions.push(catalogSub);
+  });
+}
+
+// ✅ MÉTODO SEPARADO para cargar datos de OT
+private cargarDatosOT(otId: number): void {
+  const otSub = this.otService.getOtParaEdicion(otId).pipe(
+    catchError(() => {
+      this.loading = false;
+      this.mostrarError('No se pudieron cargar los datos de la OT');
+      return of(null);
+    })
+  ).subscribe(ot => {
+    if (ot) {
+      this.patchFormValues(ot);
+      const clienteId = this.form.get('idCliente')?.value;
+      if (clienteId) {
+        this.cargarAreasPorCliente(clienteId);
+      }
+    }
+
+    if (this.isViewMode) {
+      this.form.disable();
+    }
+    this.loading = false;
+    this.cdr.detectChanges();
+  });
+
+  this.subscriptions.push(otSub);
+}
+
+private patchFormValues(data: any): void {
+  if (!data) return;
+
+  console.log('Patching form values para edición:', data);
+  console.log('Cliente ID:', data.idCliente);
+  console.log('Área ID:', data.idArea);
+
+  // ✅ Primero establecer el cliente y cargar áreas
+  if (data.idCliente) {
+    // Establecer cliente primero
+    this.form.get('idCliente')?.setValue(data.idCliente, { emitEvent: false });
+    this.selectedClienteId = data.idCliente;
+    this.lastClienteId = data.idCliente;
+
+    // Cargar áreas para este cliente
+    this.cargarAreasPorCliente(data.idCliente).then(() => {
+      // Una vez cargadas las áreas, establecer el área seleccionada
+      setTimeout(() => {
+        this.form.get('idArea')?.setValue(data.idArea, { emitEvent: false });
+        this.selectedAreaId = data.idArea;
+        this.form.get('idArea')?.enable();
+
+        // Establecer el resto de valores
+        this.establecerRestoValores(data);
+      }, 100);
+    });
+  } else {
+    this.establecerRestoValores(data);
+  }
+
+  this.cdr.detectChanges();
+}
+
+private establecerRestoValores(data: any): void {
+  // Establecer el resto de valores
+  this.form.patchValue({
+    idOts: data.idOts || null,
+    idProyecto: data.idProyecto || null,
+    idFase: data.idFase || null,
+    idSite: data.idSite || null,
+    idSiteDescripcion: data.idSiteDescripcion || null,
+    idTipoOt: data.idTipoOt || null,
+    idRegion: data.idRegion || null,
+    descripcion: data.descripcion || '',
+    fechaApertura: data.fechaApertura || '',
+    idOtsAnterior: data.idOtsAnterior || null,
+    idJefaturaClienteSolicitante: data.idJefaturaClienteSolicitante || null,
+    idAnalistaClienteSolicitante: data.idAnalistaClienteSolicitante || null,
+    idCoordinadorTiCw: data.idCoordinadorTiCw || null,
+    idJefaturaResponsable: data.idJefaturaResponsable || null,
+    idLiquidador: data.idLiquidador || null,
+    idEjecutante: data.idEjecutante || null, // ✅ CORREGIDO
+    idAnalistaContable: data.idAnalistaContable || null,
+    idEstadoOt: data.idEstadoOt || null
+  }, { emitEvent: false });
+
+  // Actualizar variables seleccionadas
+  this.selectedProyectoId = data.idProyecto || null;
+  this.selectedFaseId = data.idFase || null;
+  this.selectedSiteId = data.idSite || null;
+  this.selectedRegionId = data.idRegion || null;
+  this.selectedTipoOtId = data.idTipoOt || null;
+  this.selectedSiteDescripcionId = data.idSiteDescripcion || null;
+  this.selectedJefaturaClienteId = data.idJefaturaClienteSolicitante || null;
+  this.selectedAnalistaClienteId = data.idAnalistaClienteSolicitante || null;
+  this.selectedCoordinadorTiCwId = data.idCoordinadorTiCw || null;
+  this.selectedJefaturaResponsableId = data.idJefaturaResponsable || null;
+  this.selectedLiquidadorId = data.idLiquidador || null;
+  this.selectedEjecutanteId = data.idEjecutante || null; // ✅ CORREGIDO
+  this.selectedAnalistaContableId = data.idAnalistaContable || null;
+  this.selectedEstadoOTId = data.idEstadoOt || null;
+
+  // Habilitar descripción en modo edición
+  if (this.isEditMode) {
+    this.form.get('descripcion')?.enable();
+  }
+}
+
   ngOnDestroy(): void {
     this.subscriptions.forEach(sub => sub.unsubscribe());
   }
@@ -147,24 +317,26 @@ ngOnInit(): void {
 private crearFormularioBase(): void {
   const hoy = new Date().toISOString().split('T')[0];
 
+  // Inicializar lastClienteId
+  this.lastClienteId = null;
+
   this.form = this.fb.group({
     idOts: [null],
     idCliente: [null, Validators.required],
     idArea: [null, Validators.required],
     idProyecto: [null, Validators.required],
     idFase: [null, Validators.required],
-        idSite: [null, Validators.required],
+    idSite: [null, Validators.required],
     idTipoOt: [null, Validators.required],
     idRegion: [null, Validators.required],
     descripcion: ['', [Validators.required, Validators.minLength(10)]],
     fechaApertura: [hoy, [Validators.required, this.fechaAperturaValidator]],
-        idSiteDescripcion: [null], // ← NUEVO CAMPO
+    idSiteDescripcion: [null],
 
     idOtsAnterior: [null, [
-      // Validadores básicos que siempre aplican
       Validators.min(1),
-      Validators.max(2147483647), // LÍMITE MÁXIMO DE int EN JAVA
-      Validators.pattern('^[0-9]*$') // Solo números
+      Validators.max(2147483647),
+      Validators.pattern('^[0-9]*$')
     ]],
 
     // Responsables (todos requeridos)
@@ -176,7 +348,6 @@ private crearFormularioBase(): void {
     idEjecutante: [null, Validators.required],
     idAnalistaContable: [null, Validators.required],
     idEstadoOt: [null]
-
   });
 
   // Deshabilitar área hasta que se seleccione cliente
@@ -198,6 +369,106 @@ private crearFormularioBase(): void {
   this.form.get('fechaApertura')?.valueChanges.subscribe(() => {
     this.actualizarValidacionOtAnterior();
   });
+
+  // ✅ ESCUCHAR CAMBIOS DEL FORMULARIO PARA ACTUALIZAR VARIABLES
+  this.form.valueChanges.subscribe(values => {
+    console.log('Form values changed:', values); // Para debug
+
+    // Actualizar variables seleccionadas
+    this.selectedClienteId = values.idCliente;
+    this.selectedAreaId = values.idArea;
+    this.selectedProyectoId = values.idProyecto;
+    this.selectedFaseId = values.idFase;
+    this.selectedSiteId = values.idSite;
+    this.selectedRegionId = values.idRegion;
+    this.selectedTipoOtId = values.idTipoOt;
+    this.selectedSiteDescripcionId = values.idSiteDescripcion;
+
+    // Actualizar responsables
+    this.selectedJefaturaClienteId = values.idJefaturaClienteSolicitante;
+    this.selectedAnalistaClienteId = values.idAnalistaClienteSolicitante;
+    this.selectedCoordinadorTiCwId = values.idCoordinadorTiCw;
+    this.selectedJefaturaResponsableId = values.idJefaturaResponsable;
+    this.selectedLiquidadorId = values.idLiquidador;
+    this.selectedEjecutanteId = values.idEjecutante;
+    this.selectedAnalistaContableId = values.idAnalistaContable;
+    this.selectedEstadoOTId = values.idEstadoOt;
+
+    // ✅ Si cambia el cliente, cargar áreas
+    if (values.idCliente && values.idCliente !== this.lastClienteId) {
+      console.log('Cliente cambiado, cargando áreas para cliente ID:', values.idCliente);
+      this.lastClienteId = values.idCliente;
+      this.cargarAreasPorCliente(values.idCliente);
+    }
+
+    // Si se deselecciona cliente, limpiar áreas
+    if (!values.idCliente && this.lastClienteId !== null) {
+      console.log('Cliente deseleccionado, limpiando áreas');
+      this.lastClienteId = null;
+      this.areas = [];
+      this.form.get('idArea')?.disable();
+      this.form.get('idArea')?.setValue(null);
+    }
+
+    // Actualizar descripción automáticamente en modo creación
+    if (!this.isEditMode && !this.isViewMode) {
+      this.actualizarDescripcion();
+    }
+  });
+
+  // Escuchar cambios específicos para Site
+  this.form.get('idSite')?.valueChanges.subscribe(siteId => {
+    console.log('Site cambiado, ID:', siteId);
+
+    if (siteId && this.sites.length > 0) {
+      const site = this.sites.find(s => s.id === siteId);
+      if (site) {
+        this.selectedSiteCodigo = site.adicional || site.label || 'SIN CÓDIGO';
+        console.log('Código del site seleccionado:', this.selectedSiteCodigo);
+
+        // Cargar descripciones si el site tiene código
+        if (this.selectedSiteCodigo &&
+            this.selectedSiteCodigo !== 'SIN CÓDIGO' &&
+            this.selectedSiteCodigo !== '-') {
+          this.cargarDescripcionesPorSiteCodigo(this.selectedSiteCodigo);
+        } else {
+          console.log('Site sin código válido, limpiando descripciones');
+          this.siteDescripciones = [];
+          this.form.get('idSiteDescripcion')?.setValue(null);
+        }
+      }
+    } else {
+      console.log('Site deseleccionado');
+      this.selectedSiteCodigo = null;
+      this.siteDescripciones = [];
+      this.form.get('idSiteDescripcion')?.setValue(null);
+    }
+
+    this.cdr.detectChanges();
+  });
+
+  // Escuchar cambios en la descripción del site
+  this.form.get('idSiteDescripcion')?.valueChanges.subscribe(descId => {
+    console.log('Descripción de site cambiada, ID:', descId);
+    this.selectedSiteDescripcionId = descId;
+    this.actualizarDescripcion();
+  });
+
+  // Validar que la descripción no sea nula/vacía cuando el formulario se envía
+  this.form.statusChanges.subscribe(status => {
+    console.log('Estado del formulario:', status);
+    if (status === 'VALID') {
+      const descripcion = this.form.get('descripcion')?.value;
+      if (!descripcion || descripcion.trim().length < 10) {
+        this.form.get('descripcion')?.setErrors({ minlength: true });
+      }
+    }
+  });
+
+  // Forzar primera actualización
+  setTimeout(() => {
+    this.cdr.detectChanges();
+  }, 100);
 }
 // ============================================
 // MÉTODO PARA VALIDACIÓN CONDICIONAL
@@ -474,80 +745,62 @@ onTipoOtChange(event: any): void {
   console.log('Tipo OT ID establecido:', this.selectedTipoOtId);
   this.cdr.detectChanges();
 }
-private cargarTodosLosCatalogos(): void {
-  const catalogSub = forkJoin({
-    clientes: this.dropdownService.getClientes().pipe(catchError(() => of([]))),
-    proyectos: this.dropdownService.getProyectos().pipe(catchError(() => of([]))),
-    fases: this.dropdownService.getFases().pipe(catchError(() => of([]))),
-    // CAMBIAR ESTO TAMBIÉN:
-    sites: this.dropdownService.getSitesConDescripciones().pipe(catchError(() => of([]))),  // Cambiado
-    regiones: this.dropdownService.getRegiones().pipe(catchError(() => of([]))),
-    tiposOt: this.dropdownService.getTipoOt().pipe(catchError(() => of([]))),
-    jefaturasCliente: this.dropdownService.getJefaturasClienteSolicitante().pipe(catchError(() => of([]))),
-    analistasCliente: this.dropdownService.getAnalistasClienteSolicitante().pipe(catchError(() => of([]))),
-    coordinadoresTiCw: this.dropdownService.getCoordinadoresTiCw().pipe(catchError(() => of([]))),
-    jefaturasResp: this.dropdownService.getJefaturasResponsable().pipe(catchError(() => of([]))),
-    liquidadores: this.dropdownService.getLiquidador().pipe(catchError(() => of([]))),
-    ejecutantes: this.dropdownService.getEjecutantes().pipe(catchError(() => of([]))),
-    analistasCont: this.dropdownService.getAnalistasContable().pipe(catchError(() => of([]))),
-    estadoOt: this.dropdownService.getEstadoOt().pipe(catchError(() => of([])))
-  }).subscribe(data => {
-    this.clientes = data.clientes || [];
-    this.proyectos = data.proyectos || [];
-    this.fases = data.fases || [];
-    this.sites = data.sites || [];  // Ahora con descripciones
-    this.regiones = data.regiones || [];
-    this.tiposOt = data.tiposOt || [];
-    this.jefaturasCliente = data.jefaturasCliente || [];
-    this.analistasCliente = data.analistasCliente || [];
-    this.coordinadoresTiCw = data.coordinadoresTiCw || [];
-    this.jefaturasResponsable = data.jefaturasResp || [];
-    this.liquidadores = data.liquidadores || [];
-    this.ejecutantes = data.ejecutantes || [];
-    this.analistasContable = data.analistasCont || [];
-    this.estadoOT = data.estadoOt || [];
 
-    this.cdr.detectChanges();
-  });
+private cargarAreasPorCliente(idCliente: number): Promise<void> {
+  return new Promise((resolve) => {
+    console.log('Cargando áreas para cliente ID:', idCliente);
 
-  this.subscriptions.push(catalogSub);
-}
-  private cargarAreasPorCliente(idCliente: number): void {
+    // Limpiar áreas anteriores
+    this.areas = [];
+    this.form.get('idArea')?.setValue(null);
+    this.form.get('idArea')?.disable();
+
     const areasSub = this.dropdownService.getAreasByCliente(idCliente).pipe(
-      catchError(() => of([]))
+      catchError(() => {
+        console.error('Error al cargar áreas');
+        return of([]);
+      })
     ).subscribe(areas => {
+      console.log('Áreas cargadas:', areas);
       this.areas = areas || [];
+
       if (this.areas.length > 0) {
         this.form.get('idArea')?.enable();
+        console.log('Área habilitada');
+      } else {
+        console.log('No se encontraron áreas para este cliente');
       }
 
       this.cdr.detectChanges();
+      resolve();
     });
 
     this.subscriptions.push(areasSub);
-  }
+  });
+}
 
   // ============================================
   // MÉTODOS DE CAMBIOS EN DROPDOWNS
   // ============================================
 
-  onClienteChange(event: any): void {
-    if (event) {
-      this.selectedClienteId = event.id;
-      this.form.get('idCliente')?.setValue(event.id);
-      this.form.get('idCliente')?.markAsTouched();
-      this.cargarAreasPorCliente(event.id);
-    } else {
-      this.selectedClienteId = null;
-      this.form.get('idCliente')?.setValue(null);
-      this.areas = [];
-      this.selectedAreaId = null;
-      this.form.get('idArea')?.setValue(null);
-      this.form.get('idArea')?.disable();
-    }
-    this.actualizarDescripcion();
+onClienteChange(event: any): void {
+  console.log('Cliente cambiado desde dropdown:', event);
+
+  if (event) {
+    // El valor ya se establece automáticamente por formControlName
+    this.lastClienteId = event.id;
+    this.cargarAreasPorCliente(event.id);
+  } else {
+    // Cliente deseleccionado
+    this.lastClienteId = null;
+    this.areas = [];
+    this.selectedAreaId = null;
+    this.form.get('idArea')?.setValue(null);
+    this.form.get('idArea')?.disable();
   }
 
+  this.actualizarDescripcion();
+}
   onAreaChange(event: any): void {
     this.selectedAreaId = event?.id || null;
     this.form.get('idArea')?.setValue(event?.id || null);
@@ -567,26 +820,53 @@ private cargarTodosLosCatalogos(): void {
     this.form.get('idFase')?.setValue(event?.id || null);
     if (event) this.form.get('idFase')?.markAsTouched();
   }
+
+
 onSiteChange(event: any): void {
   if (event) {
-    // Ahora event.id es id_site_descripcion si tiene descripción
-    // o id_site si no tiene descripción
-    this.selectedSiteId = event.id;
+    console.log('Site seleccionado:', event);
 
-    // Ya no necesitas manejar siteDescripciones separadamente
-    // porque ahora el dropdown incluye las descripciones
-    this.form.get('idSiteDescripcion')?.setValue(
-      event.adicional !== 'Sin descripción' ? event.id : null
-    );
-    this.form.get('idSite')?.setValue(
-      event.adicional === 'Sin descripción' ? event.id : null
-    );
+    // Guardar el ID del site
+    this.selectedSiteId = event.id;
+    this.selectedSiteCodigo = event.adicional || event.label || 'SIN CÓDIGO';
+
+    // Establecer el valor en el formulario
+    this.form.get('idSite')?.setValue(event.id);
+
+    // Limpiar descripción anterior
+    this.selectedSiteDescripcionId = null;
+    this.form.get('idSiteDescripcion')?.setValue(null);
+
+    // Si hay código válido, cargar descripciones
+    if (event.adicional &&
+        event.adicional !== 'SIN CÓDIGO' &&
+        event.adicional !== '-' &&
+        event.adicional.trim() !== '') {
+
+      this.cargarDescripcionesPorSiteCodigo(event.adicional).then(() => {
+        // Si en modo edición había una descripción seleccionada, restaurarla
+        if (this.selectedSiteDescripcionId) {
+          const existe = this.siteDescripciones.some(d => d.id === this.selectedSiteDescripcionId);
+          if (existe) {
+            this.form.get('idSiteDescripcion')?.setValue(this.selectedSiteDescripcionId);
+          }
+        }
+      });
+    } else {
+      this.siteDescripciones = [];
+    }
   } else {
+    // Limpiar todo
     this.selectedSiteId = null;
+    this.selectedSiteCodigo = null;
+    this.selectedSiteDescripcionId = null;
+    this.siteDescripciones = [];
     this.form.get('idSite')?.setValue(null);
     this.form.get('idSiteDescripcion')?.setValue(null);
   }
+
   this.actualizarDescripcion();
+  this.cdr.detectChanges();
 }
 
 
@@ -939,58 +1219,7 @@ private getAnioDeFecha(fechaString: string): number | null {
   // MÉTODOS DE FORMULARIO
   // ============================================
 
-private patchFormValues(data: any): void {
-  if (!data) return;
 
-  console.log('Patching form values:', data);
-
-  // Primero establecer valores en el formulario
-  this.form.patchValue({
-    ...data,
-    idSite: data.idSite || null,
-    idSiteDescripcion: data.idSiteDescripcion || null
-  });
-
-  // Establecer otros IDs seleccionados
-  this.selectedClienteId = data.idCliente || null;
-  this.selectedAreaId = data.idArea || null;
-  this.selectedProyectoId = data.idProyecto || null;
-  this.selectedFaseId = data.idFase || null;
-  this.selectedRegionId = data.idRegion || null;
-  this.selectedTipoOtId = data.idTipoOt || null;
-
-  // Manejar site
-  this.selectedSiteId = data.idSite || null;
-
-  // Si hay descripción seleccionada
-  if (data.idSiteDescripcion) {
-    this.selectedSiteDescripcionId = data.idSiteDescripcion;
-  }
-
-  // Buscar el código del site en la lista
-  if (this.selectedSiteId && this.sites.length > 0) {
-    const site = this.sites.find(s => s.id === this.selectedSiteId);
-    if (site) {
-      this.selectedSiteCodigo = site.adicional || site.label;
-
-      // Si tiene código y no es "SIN CÓDIGO" o "-", cargar descripciones
-      if (this.selectedSiteCodigo &&
-          this.selectedSiteCodigo !== 'SIN CÓDIGO' &&
-          this.selectedSiteCodigo !== '-') {
-        this.cargarDescripcionesPorSiteCodigo(this.selectedSiteCodigo);
-      }
-    }
-  }
-
-  // Cargar áreas si hay cliente
-  if (data.idCliente) {
-    this.cargarAreasPorCliente(data.idCliente);
-  }
-
-  setTimeout(() => {
-    this.actualizarValidacionOtAnterior();
-  }, 100);
-}
   // ============================================
   // MÉTODOS DE GUARDADO
   // ============================================
@@ -1107,37 +1336,31 @@ onSiteDescripcionChange(event: any): void {
   this.actualizarDescripcion();
   this.cdr.detectChanges();
 }
-private cargarDescripcionesPorSiteCodigo(codigoSite: string | null): void {
-  if (!codigoSite || codigoSite === 'SIN CÓDIGO' || codigoSite === '-') {
-    this.siteDescripciones = [];
-    return;
-  }
+private cargarDescripcionesPorSiteCodigo(codigoSite: string | null): Promise<void> {
+  return new Promise((resolve) => {
+    if (!codigoSite || codigoSite === 'SIN CÓDIGO' || codigoSite === '-') {
+      this.siteDescripciones = [];
+      resolve();
+      return;
+    }
 
-  const sub = this.dropdownService.getDescripcionesBySiteCodigo(codigoSite)
-    .pipe(catchError(() => of([])))
-    .subscribe({
-      next: (descripciones) => {
-        this.siteDescripciones = descripciones || [];
-
-        // Si hay descripciones y ya había una seleccionada previamente (en modo edición)
-        // mantenerla seleccionada
-        if (this.selectedSiteDescripcionId && this.siteDescripciones.length > 0) {
-          const existe = this.siteDescripciones.some(d => d.id === this.selectedSiteDescripcionId);
-          if (!existe) {
-            this.selectedSiteDescripcionId = null;
-            this.form.get('idSiteDescripcion')?.setValue(null);
-          }
+    const sub = this.dropdownService.getDescripcionesBySiteCodigo(codigoSite)
+      .pipe(catchError(() => of([])))
+      .subscribe({
+        next: (descripciones) => {
+          this.siteDescripciones = descripciones || [];
+          this.cdr.detectChanges();
+          resolve();
+        },
+        error: () => {
+          this.siteDescripciones = [];
+          this.cdr.detectChanges();
+          resolve();
         }
+      });
 
-        this.cdr.detectChanges();
-      },
-      error: () => {
-        this.siteDescripciones = [];
-        this.cdr.detectChanges();
-      }
-    });
-
-  this.subscriptions.push(sub);
+    this.subscriptions.push(sub);
+  });
 }
 // Método para verificar si está dentro del límite
 esOtAnteriorValido(): boolean {
@@ -1157,53 +1380,44 @@ private ejecutarGuardado(): void {
     return;
   }
 
-  // DEBUG: Verifica los valores del formulario
-  console.log('Valores del formulario:', values);
-  console.log('idOtsAnterior value:', values.idOtsAnterior, 'Tipo:', typeof values.idOtsAnterior);
-
-  // ⚠️ ERROR AQUÍ: Estás validando idOtsAnterior en lugar de idTipoOt
-  // Validar que idTipoOt tenga un valor
-  if (!values.idTipoOt) { // Cambia esto de idOtsAnterior a idTipoOt
+  // Validar campos requeridos
+  if (!values.idTipoOt) {
     this.loadingSubmit = false;
     this.mostrarError('El campo Tipo OT es requerido');
     return;
   }
 
-const payload: OtCreateRequest = {
-   idOts: this.isEditMode ? Number(values.idOts) : undefined,
-  idCliente: Number(values.idCliente),
-  idArea: Number(values.idArea),
-  idProyecto: Number(values.idProyecto),
-  idFase: Number(values.idFase),
-  // ✅ SIEMPRE enviar idSite (el ID del registro en la tabla sites)
-  idSite: Number(values.idSite), // Esto siempre debe tener valor
-  // ✅ Enviar descripción si existe
-  idSiteDescripcion: values.idSiteDescripcion ? Number(values.idSiteDescripcion) : undefined,
+  // ✅ CORREGIDO: 'idEjecutante' no 'idEjecuntante'
+  const payload: OtCreateRequest = {
+    idOts: this.isEditMode ? Number(values.idOts) : undefined,
+    idCliente: Number(values.idCliente),
+    idArea: Number(values.idArea),
+    idProyecto: Number(values.idProyecto),
+    idFase: Number(values.idFase),
+    idSite: Number(values.idSite),
+    idSiteDescripcion: values.idSiteDescripcion ? Number(values.idSiteDescripcion) : undefined,
+    idRegion: Number(values.idRegion),
+    idTipoOt: Number(values.idTipoOt),
+    descripcion: values.descripcion.trim(),
+    fechaApertura: values.fechaApertura,
+    idOtsAnterior: values.idOtsAnterior ? Number(values.idOtsAnterior) : null,
+    idJefaturaClienteSolicitante: Number(values.idJefaturaClienteSolicitante),
+    idAnalistaClienteSolicitante: Number(values.idAnalistaClienteSolicitante),
+    idCoordinadorTiCw: Number(values.idCoordinadorTiCw),
+    idJefaturaResponsable: Number(values.idJefaturaResponsable),
+    idLiquidador: Number(values.idLiquidador),
+    idEjecutante: Number(values.idEjecutante), // ✅ CORREGIDO
+    idAnalistaContable: Number(values.idAnalistaContable),
+    idEstadoOt: this.isEditMode ? Number(values.idEstadoOt) : null
+  };
 
-  idRegion: Number(values.idRegion),
-  idTipoOt: Number(values.idTipoOt),
-  descripcion: values.descripcion.trim(),
-  fechaApertura: values.fechaApertura,
-  idOtsAnterior: values.idOtsAnterior ? Number(values.idOtsAnterior) : null,
-  idJefaturaClienteSolicitante: Number(values.idJefaturaClienteSolicitante),
-  idAnalistaClienteSolicitante: Number(values.idAnalistaClienteSolicitante),
-  idCoordinadorTiCw: Number(values.idCoordinadorTiCw),
-  idJefaturaResponsable: Number(values.idJefaturaResponsable),
-  idLiquidador: Number(values.idLiquidador),
-  idEjecutante: Number(values.idEjecuntante),
-  idAnalistaContable: Number(values.idAnalistaContable),
-  idEstadoOt: this.isEditMode ? Number(values.idEstadoOt) : null
-};
-  console.log('Payload enviado:', payload); // DEBUG
+  console.log('Payload enviado:', payload);
 
   const saveSub = this.otService.saveOt(payload).subscribe({
     next: (res: OtDetailResponse) => {
-      console.log('Respuesta del backend:', res); // DEBUG
+      console.log('Respuesta del backend:', res);
       this.loadingSubmit = false;
-
-      // Mostrar animación de éxito
       this.mostrarExito(res);
-
       this.saved.emit();
 
       setTimeout(() => {
@@ -1211,7 +1425,7 @@ const payload: OtCreateRequest = {
       }, 2500);
     },
     error: (err) => {
-      console.error('Error al guardar:', err); // DEBUG
+      console.error('Error al guardar:', err);
       this.loadingSubmit = false;
       this.mostrarError(err?.error?.message || 'Ocurrió un problema inesperado al guardar');
     }

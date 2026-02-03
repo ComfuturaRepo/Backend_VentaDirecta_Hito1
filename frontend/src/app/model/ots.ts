@@ -79,27 +79,25 @@ export interface OtDetailResponse {
 // Request para crear / editar OT (sin cambios, está bien)
 export interface OtCreateRequest {
   idOts?: number;
-  idOtsAnterior?: number | null;  // ✅ Debe estar aquí
-
+  idOtsAnterior?: number | null;
   idCliente: number;
   idArea: number;
   idProyecto: number;
   idFase: number;
   idSite?: number;
   idRegion: number;
-idEstadoOt: number | null;
-  idTipoOt: number; // ✅ AGREGAR ESTE CAMPO
-  idSiteDescripcion?: number; // ← AGREGAR ESTA LÍNEA
+  idEstadoOt: number | null;
+  idTipoOt: number;
+  idSiteDescripcion?: number;
   descripcion?: string;
   fechaApertura?: string;
 
   idJefaturaClienteSolicitante?: number | null;
   idAnalistaClienteSolicitante?: number | null;
-
   idCoordinadorTiCw?: number | null;
   idJefaturaResponsable?: number | null;
   idLiquidador?: number | null;
-  idEjecutante?: number | null;
+  idEjecutante?: number | null; // ✅ CORREGIDO
   idAnalistaContable?: number | null;
 }
 
