@@ -194,7 +194,7 @@ public class OrdenCompraAprobacionServiceImpl
         <p>Ingresa al sistema para revisarla.</p>
         """.formatted(nivel);
 
-        emailService.enviarCorreo(correos, asunto, cuerpo);
+//        emailService.enviarCorreo(correos, asunto, cuerpo);
     }
 
 
