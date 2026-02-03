@@ -999,7 +999,67 @@ public class ExcelImportService {
 
         return dto;
     }
+    // Método para comparar descripciones de forma robusta
+    private boolean compararDescripciones(String descripcionBD, String descripcionExcel) {
+        if (descripcionBD == null || descripcionExcel == null) {
+            return false;
+        }
 
+        // Normalizar ambas cadenas
+        String bdNormalizada = normalizarTexto(descripcionBD);
+        String excelNormalizada = normalizarTexto(descripcionExcel);
+
+        log.debug("Comparación mejorada:");
+        log.debug("  BD (normalizada): '{}' ({} chars)", bdNormalizada, bdNormalizada.length());
+        log.debug("  Excel (normalizada): '{}' ({} chars)", excelNormalizada, excelNormalizada.length());
+
+        // 1. Primero intentar comparación exacta
+        if (bdNormalizada.equals(excelNormalizada)) {
+            log.debug("  ✓ Coincidencia exacta");
+            return true;
+        }
+
+        // 2. Si no coincide, intentar sin case sensitivity
+        if (bdNormalizada.equalsIgnoreCase(excelNormalizada)) {
+            log.debug("  ✓ Coincidencia case-insensitive");
+            return true;
+        }
+
+        // 3. Si aún no coincide, mostrar los códigos de caracteres para debug
+        log.debug("  ✗ No coincide. Análisis de caracteres:");
+
+        // Mostrar códigos ASCII de la BD
+        StringBuilder charsBD = new StringBuilder("  BD ASCII: ");
+        for (int i = 0; i < bdNormalizada.length(); i++) {
+            charsBD.append((int) bdNormalizada.charAt(i)).append(" ");
+        }
+        log.debug(charsBD.toString());
+
+        // Mostrar códigos ASCII del Excel
+        StringBuilder charsExcel = new StringBuilder("  Excel ASCII: ");
+        for (int i = 0; i < excelNormalizada.length(); i++) {
+            charsExcel.append((int) excelNormalizada.charAt(i)).append(" ");
+        }
+        log.debug(charsExcel.toString());
+
+        return false;
+    }
+
+    // Método de normalización común
+    private String normalizarTexto(String texto) {
+        if (texto == null) return "";
+
+        return texto
+                .replace("\u00A0", " ")    // Espacio no-breaking
+                .replace("\u2007", " ")    // Espacio figura
+                .replace("\u202F", " ")    // Espacio angosto
+                .replace("\u3000", " ")    // Espacio ideográfico
+                .replace("\t", " ")        // Tabs
+                .replace("\n", " ")        // New lines
+                .replace("\r", " ")        // Carriage return
+                .replaceAll("\\s+", " ")   // Múltiples espacios por uno
+                .trim();
+    }
     private void validarRegistroCompleto(ExcelImportDTO dto) {
         List<String> errores = new ArrayList<>();
 
@@ -1112,10 +1172,13 @@ public class ExcelImportService {
                             }
                             // === FIN LOGGING COMPARACIÓN ===
 
-                            if (desc.label().trim().equalsIgnoreCase(dto.getSiteDescripcion().trim())) {
-                                descripcionValida = true;
-                                log.debug("✓ ¡COINCIDENCIA ENCONTRADA para código {}!", dto.getSite());
-                                break;
+                            if (desc.label() != null) {
+                                // Método de comparación mejorado
+                                if (compararDescripciones(desc.label(), dto.getSiteDescripcion())) {
+                                    descripcionValida = true;
+                                    log.debug("✓ ¡COINCIDENCIA ENCONTRADA usando comparación mejorada!");
+                                    break;
+                                }
                             }
                         }
                     }
@@ -1406,23 +1469,14 @@ public class ExcelImportService {
                     valor = "";
             }
 
-            // ========== CAMBIO CRÍTICO AQUÍ ==========
-            // Normalización completa que soluciona TODOS los problemas de espacios
-            return valor
-                    .replace("\u00A0", " ")    // Espacios no-breaking Unicode
-                    .replace("\u2007", " ")    // Espacio figura
-                    .replace("\u202F", " ")    // Espacio angosto
-                    .replace("\u3000", " ")    // Espacio ideográfico
-                    .replaceAll("\\s+", " ")   // Múltiples espacios por uno solo
-                    .trim();                   // Eliminar espacios inicio/fin
-            // =========================================
+            // Usar el mismo método de normalización
+            return normalizarTexto(valor);
 
         } catch (Exception e) {
             log.warn("Error al leer celda [{},{}]: {}", row.getRowNum(), columnIndex, e.getMessage());
             return "";
         }
     }
-
     private Integer getNumericCellValue(Row row, int columnIndex) {
         if (columnIndex < 0) return null;
 
