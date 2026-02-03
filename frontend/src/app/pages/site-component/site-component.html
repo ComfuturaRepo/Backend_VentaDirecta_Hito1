@@ -16,7 +16,7 @@
         </div>
 
         <!-- Botón Nuevo Sitio -->
-        <button class="btn btn-primary btn-lg shadow-sm" (click)="openCreateModal()" [disabled]="isLoading">
+        <button class="btn btn-primary btn-lg shadow-sm" (click)="openCreateModal()" [disabled]="isLoading"  *appPermiso="'SITE_MANAGE'">
           <i class="bi bi-plus-circle me-2"></i>
           Nuevo Sitio
         </button>
@@ -176,7 +176,7 @@
               </div>
 
               <div class="site-actions">
-                <button class="btn btn-outline-primary btn-sm"
+                <button class="btn btn-outline-primary btn-sm" *appPermiso="'SITE_MANAGE'"
                         (click)="openEditModal(site)"
                         [disabled]="isLoading">
                   <i class="bi bi-pencil-square me-1"></i>

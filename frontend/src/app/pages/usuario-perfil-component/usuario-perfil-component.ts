@@ -5,6 +5,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { RouterModule } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { ChangePasswordRequestDTO, PerfilResponseDTO, PerfilService, UpdatePerfilRequestDTO } from '../../service/perfil.service';
+import { PermisoDirective } from '../../directive/permiso.directive';
 
 
 @Component({
@@ -12,7 +13,7 @@ import { ChangePasswordRequestDTO, PerfilResponseDTO, PerfilService, UpdatePerfi
   standalone: true,
   imports: [
     CommonModule,
-    FormsModule,
+    FormsModule,PermisoDirective,
     ReactiveFormsModule,
     RouterModule
   ],

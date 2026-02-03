@@ -4,11 +4,12 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { TrabajadorService, Trabajador, PageResponse, Area, Cargo, Empresa } from '../../service/trabajador.service';
+import { PermisoDirective } from '../../directive/permiso.directive';
 
 @Component({
   selector: 'app-trabajador-component',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,PermisoDirective],
   templateUrl: './trabajador-component.html',
   styleUrls: ['./trabajador-component.css']
 })

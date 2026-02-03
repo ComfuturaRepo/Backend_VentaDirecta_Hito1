@@ -11,7 +11,8 @@
           <small class="text-muted">Administra los usuarios del sistema</small>
         </div>
         <div>
-          <button class="btn btn-primary" (click)="openCreateModal()">
+          <button class="btn btn-primary" (click)="openCreateModal()"  *appPermiso="'USUARIO_CREATE'"
+>
             <i class="bi bi-plus-lg me-1"></i>Nuevo Usuario
           </button>
         </div>
@@ -141,13 +142,13 @@
               </td>
               <td>
                 <div class="btn-group btn-group-sm">
-                  <button class="btn btn-outline-primary"
+                  <button class="btn btn-outline-primary"  *appPermiso="'USUARIO_EDIT'"
                           [title]="'Editar'"
                           (click)="openEditModal(usuario)">
                     <i class="bi bi-pencil"></i>
                   </button>
                   <button class="btn"
-                          [ngClass]="usuario.activo ? 'btn-outline-warning' : 'btn-outline-success'"
+                          [ngClass]="usuario.activo ? 'btn-outline-warning' : 'btn-outline-success'"  *appPermiso="'USUARIO_TOGGLE'"
                           [title]="usuario.activo ? 'Desactivar' : 'Activar'"
                           (click)="toggleActivo(usuario)">
                     <i *ngIf="usuario.activo" class="bi bi-toggle-off"></i>

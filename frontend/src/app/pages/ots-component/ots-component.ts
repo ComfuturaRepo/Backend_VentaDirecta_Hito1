@@ -12,6 +12,7 @@ import { OtListDto } from '../../model/ots';
 import { Observable, finalize } from 'rxjs';
 import { PaginationComponent } from '../../component/pagination.component/pagination.component';
 import { PageResponse } from '../../model/page.interface';
+import { PermisoDirective } from '../../directive/permiso.directive';
 
 @Component({
   selector: 'app-ots',
@@ -20,7 +21,9 @@ import { PageResponse } from '../../model/page.interface';
     CommonModule,
     FormsModule,
     NgbDropdownModule,
-    PaginationComponent
+    PaginationComponent,
+    PermisoDirective
+
   ],
   templateUrl: './ots-component.html',
   styleUrls: ['./ots-component.css']

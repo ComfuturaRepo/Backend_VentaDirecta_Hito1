@@ -9,6 +9,7 @@ import { PaginationComponent } from '../../component/pagination.component/pagina
 import {  UsuarioSimple, UsuarioRequest, UsuarioUpdate } from '../../model/usuario';
 import { UsuarioService } from '../../service/usuario.service';
 import { Trabajador } from '../../service/trabajador.service';
+import { PermisoDirective } from '../../directive/permiso.directive';
 
 @Component({
   selector: 'app-usuarios',
@@ -18,7 +19,7 @@ import { Trabajador } from '../../service/trabajador.service';
     FormsModule,
     ReactiveFormsModule,
     RouterModule,
-    PaginationComponent
+    PaginationComponent,PermisoDirective
   ],
   templateUrl: './usuarios-component.html',
   styleUrls: ['./usuarios-component.css']
