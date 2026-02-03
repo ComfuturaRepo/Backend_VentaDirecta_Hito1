@@ -1069,17 +1069,81 @@ public class ExcelImportService {
                 } else {
                     // Obtener descripciones para este código
                     List<DropdownDTO> descripciones = dropdownService.getDescripcionesBySiteCodigo(dto.getSite());
+
+                    // === LOGGING DE DEBUG - AGREGADO ===
+                    log.debug("\n=== DEBUG VALIDACIÓN SITE - Fila {} ===", dto.getFilaExcel());
+                    log.debug("Código Site desde Excel: '{}'", dto.getSite());
+                    log.debug("Descripción desde Excel: '{}'", dto.getSiteDescripcion());
+                    log.debug("Longitud descripción Excel: {} caracteres", dto.getSiteDescripcion().length());
+                    log.debug("Número de descripciones encontradas en BD: {}", descripciones.size());
+                    log.debug("Descripciones disponibles en BD para código '{}':", dto.getSite());
+
+                    // Mostrar cada descripción con detalles
+                    for (int i = 0; i < descripciones.size(); i++) {
+                        DropdownDTO desc = descripciones.get(i);
+                        String label = desc.label() != null ? desc.label() : "null";
+                        String adicional = desc.adicional() != null ? desc.adicional() : "null";
+                        log.debug("  [{}/{}] ID: {}, Label: '{}' ({} chars), Adicional: '{}'",
+                                i+1, descripciones.size(), desc.id(), label, label.length(), adicional);
+                    }
+                    // === FIN LOGGING ===
+
                     boolean descripcionValida = false;
 
                     for (DropdownDTO desc : descripciones) {
-                        if (desc.label() != null && desc.label().trim().equalsIgnoreCase(dto.getSiteDescripcion().trim())) {
-                            descripcionValida = true;
-                            break;
+                        if (desc.label() != null) {
+                            // === LOGGING DETALLADO DE COMPARACIÓN ===
+                            String labelBD = desc.label();
+                            String labelExcel = dto.getSiteDescripcion();
+
+                            log.debug("Comparando descripción:");
+                            log.debug("  - BD:      '{}' ({} chars)", labelBD, labelBD.length());
+                            log.debug("  - Excel:   '{}' ({} chars)", labelExcel, labelExcel.length());
+                            log.debug("  - Trim BD: '{}'", labelBD.trim());
+                            log.debug("  - Trim Excel: '{}'", labelExcel.trim());
+                            log.debug("  - equalsIgnoreCase?: {}",
+                                    labelBD.trim().equalsIgnoreCase(labelExcel.trim()));
+
+                            // Verificar caracteres especiales
+                            if (!labelBD.equals(labelBD.trim()) || !labelExcel.equals(labelExcel.trim())) {
+                                log.debug("  ¡ADVERTENCIA! Hay espacios extras:");
+                                log.debug("  - BD tiene espacios?: {}", !labelBD.equals(labelBD.trim()));
+                                log.debug("  - Excel tiene espacios?: {}", !labelExcel.equals(labelExcel.trim()));
+                            }
+                            // === FIN LOGGING COMPARACIÓN ===
+
+                            if (desc.label().trim().equalsIgnoreCase(dto.getSiteDescripcion().trim())) {
+                                descripcionValida = true;
+                                log.debug("✓ ¡COINCIDENCIA ENCONTRADA para código {}!", dto.getSite());
+                                break;
+                            }
                         }
                     }
 
                     if (!descripcionValida) {
-                        errores.add("Descripción '" + dto.getSiteDescripcion() + "' no es válida para el código " + dto.getSite());
+                        // Construir mensaje de error más informativo
+                        StringBuilder opciones = new StringBuilder();
+                        for (DropdownDTO desc : descripciones) {
+                            if (desc.label() != null) {
+                                opciones.append("'").append(desc.label()).append("', ");
+                            }
+                        }
+
+                        String opcionesStr = opciones.length() > 0 ?
+                                opciones.substring(0, opciones.length() - 2) : "Ninguna descripción disponible";
+
+                        // Mensaje con más detalles para debugging
+                        String mensajeError = String.format(
+                                "Descripción '%s' no es válida para el código %s. " +
+                                        "Longitud Excel: %d chars. Opciones disponibles en BD: %s",
+                                dto.getSiteDescripcion(),
+                                dto.getSite(),
+                                dto.getSiteDescripcion().length(),
+                                opcionesStr
+                        );
+
+                        errores.add(mensajeError);
+                        log.warn("❌ Validación fallida - {}", mensajeError);
                     }
                 }
             }
@@ -1115,7 +1179,6 @@ public class ExcelImportService {
             log.warn("Validación fallida fila {}: {}", dto.getFilaExcel(), dto.getMensajeError());
         }
     }
-
     private void validarCampoExistente(String valor, List<DropdownDTO> listaValida,
                                        String nombreCampo, List<String> errores) {
         validarCampoExistente(valor, listaValida, nombreCampo, errores, true);
