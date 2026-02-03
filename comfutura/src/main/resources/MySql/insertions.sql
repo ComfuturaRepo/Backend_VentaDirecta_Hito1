@@ -1087,32 +1087,108 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'CONSULTOR EXTERNO'));-- 15. Usuarios (ejemplos)
 
+INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id_empresa, id_area, id_cargo,
+                        puede_ser_liquidador, puede_ser_ejecutante, puede_ser_analista_contable,
+                        puede_ser_jefatura_responsable, puede_ser_coordinador_ti_cw)
+VALUES (
+           'COMFUTURA',                -- nombres (empresa como nombre)
+           '',                         -- apellidos (vacío)
+           '00000000',                 -- dni genérico
+           NULL,                       -- celular
+           'info@comfutura.com',       -- correo
+           (SELECT id_empresa FROM empresa WHERE nombre = 'COMFUTURA'),  -- id empresa COMFUTURA
+           (SELECT id_area FROM area WHERE nombre = 'GERENCIA GENERAL'), -- área
+           (SELECT id_cargo FROM cargo WHERE nombre = 'EJECUTANTE'),     -- cargo especial
+           0,  -- no es liquidador
+           1,  -- SÍ es ejecutante (IMPORTANTE)
+           0,  -- no es analista contable
+           0,  -- no es jefatura responsable
+           0   -- no es coordinador TI CW
+       );
+SET SQL_SAFE_UPDATES = 0;
 
--- Actualizar Coordinadores TiCw
-UPDATE trabajador
-SET puede_ser_coordinador_ti_cw = true
-WHERE dni IN ('17635270', '41589951', '6912965');
+-- Ejecutar todos tus UPDATEs aquí
+UPDATE trabajador SET puede_ser_coordinador_ti_cw = 1
+WHERE CONCAT(nombres, ' ', apellidos) IN (
+                                          'JHON DENNIS SANCHEZ ALTAMIRANO',
+                                          'CROSBY BRICEÑO MARAVI',
+                                          'ISAAC ROMULO MELENDREZ FERNANDEZ',
+                                          'ALVARO RODRIGO FLORES SAAVEDRA'
+    );
 
--- Actualizar Jefaturas Responsable
-UPDATE trabajador
-SET puede_ser_jefatura_responsable = true
-WHERE dni IN ('48010945', '77684556', '44373982', '6912965', '74306365', '9627529', '45609714', '41026425', '72901624');
+UPDATE trabajador SET puede_ser_jefatura_responsable = 1
+WHERE CONCAT(nombres, ' ', apellidos) IN (
+                                          'JOSE CARLOS GONZALEZ MUEDAS',
+                                          'KELLY TATIANA CLEMENTE MARTINEZ',
+                                          'MICHAEL BENYI GRIMALDOS JULCA',
+                                          'ISAAC ROMULO MELENDREZ FERNANDEZ',
+                                          'LUIS FERNANDO ÑIQUEN GOMEZ',
+                                          'ERICK MAXIMO GUERRERO ESPINOZA',
+                                          'FRANKLIN MERINO MONDRAGÓN',
+                                          'PEDRO RUDY COLQUE ZATAN',
+                                          'ROBER JULIAN VILLARREAL MARCELO'
+    );
 
--- Actualizar Liquidadores
-UPDATE trabajador
-SET puede_ser_liquidador = true
-WHERE dni IN ('70568410', '46196532');
+UPDATE trabajador SET puede_ser_liquidador = 1
+WHERE CONCAT(nombres, ' ', apellidos) IN (
+                                          'AIDA LILIANA REYNA CANDELA',
+                                          'LOURDES MIRYAM MONTALVAN QUISPE'
+    );
 
--- Actualizar Ejecutantes
-UPDATE trabajador
-SET puede_ser_ejecutante = true
-WHERE id_empresa = (SELECT id_empresa FROM empresa WHERE nombre = 'COMFUTURA');
+UPDATE trabajador SET puede_ser_ejecutante = 1
+WHERE id_empresa = (SELECT id_empresa FROM empresa WHERE nombre = 'COMFUTURA')
+  AND CONCAT(nombres, ' ', apellidos) IN (
+                                          'OLIVER ANTONIO MASIAS LAGOS',
+                                          'SILVIA ARACELLI NEIRA MATTA',
+                                          'ALVARO RODRIGO FLORES SAAVEDRA',
+                                          'LEONARDO MELGAREJO ALCALA',
+                                          'JOSUE MANUEL RAUL OTERO LOJE',
+                                          'WENDY FABIOLA ABARCA MENDIETA'
+    );
 
--- Actualizar Analistas Contable
-UPDATE trabajador
-SET puede_ser_analista_contable = true
-WHERE id_area = (SELECT id_area FROM area WHERE nombre = 'CONTABILIDAD');
+UPDATE trabajador SET puede_ser_analista_contable = 1
+WHERE id_area = (SELECT id_area FROM area WHERE nombre = 'CONTABILIDAD')
+  AND CONCAT(nombres, ' ', apellidos) IN (
+                                          'ELIZABETH MENDEZ NAVARRO',
+                                          'MARIELA NIEVA ARELLANO',
+                                          'ALEXIS MAXIMO GONZALEZ TERRAZOS',
+                                          'JUAN RAMON AGUIRRE RONDINEL'
+    );
 
+-- Reactivar safe mode al final
+SET SQL_SAFE_UPDATES = 1;
+INSERT INTO trabajador (
+    nombres,
+    apellidos,
+    dni,
+    celular,
+    correo_corporativo,
+    id_empresa,
+    id_area,
+    id_cargo,
+    puede_ser_liquidador,
+    puede_ser_ejecutante,
+    puede_ser_analista_contable,
+    puede_ser_jefatura_responsable,
+    puede_ser_coordinador_ti_cw,
+    activo
+)
+VALUES (
+           'CONTABILIDAD',                            -- nombres
+           'DEPARTAMENTO',                            -- apellidos
+           '00000001',                                -- DNI genérico
+           NULL,                                      -- celular
+           'contabilidad@comfutura.com',              -- correo
+           (SELECT id_empresa FROM empresa WHERE nombre = 'COMFUTURA'),  -- empresa COMFUTURA
+           (SELECT id_area FROM area WHERE nombre = 'CONTABILIDAD'),     -- área CONTABILIDAD
+           (SELECT id_cargo FROM cargo WHERE nombre = 'CONTADORA'),       -- cargo
+           0,  -- NO es liquidador
+           0,  -- NO es ejecutante
+           1,  -- SÍ es analista contable (IMPORTANTE)
+           0,  -- NO es jefatura responsable
+           0,  -- NO es coordinador TI CW
+           1   -- Activo
+       );
 
 INSERT INTO usuario (username, password, id_trabajador, id_nivel) VALUES
 -- Wendy Fabiola Abarca Mendieta
