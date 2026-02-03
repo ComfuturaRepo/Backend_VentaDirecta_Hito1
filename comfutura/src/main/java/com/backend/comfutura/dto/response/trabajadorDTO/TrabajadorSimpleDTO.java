@@ -20,4 +20,10 @@ public class TrabajadorSimpleDTO {
     public String getNombreCompleto() {
         return nombres + " " + apellidos;
     }
+    // Campos nuevos (opcional, dependiendo si los quieres mostrar en listas)
+    private Boolean puedeSerLiquidador;
+    private Boolean puedeSerEjecutante;
+    private Boolean puedeSerAnalistaContable;
+    private Boolean puedeSerJefaturaResponsable;
+    private Boolean puedeSerCoordinadorTiCw;
 }

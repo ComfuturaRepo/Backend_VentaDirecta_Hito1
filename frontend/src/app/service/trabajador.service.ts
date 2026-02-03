@@ -5,24 +5,6 @@ import { catchError, map } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { environment } from '../../environment';
 
-export interface Trabajador {
-  idTrabajador: number;
-  nombres: string;
-  apellidos: string;
-  dni: string;
-  celular: string;
-  correoCorporativo: string;
-  empresaId?: number;
-  empresaNombre?: string;
-  areaId: number;
-  areaNombre: string;
-  cargoId: number;
-  cargoNombre: string;
-  cargoNivel?: string; // Faltaba este campo
-  activo: boolean;
-  fechaCreacion: string;
-  fechaModificacion?: string; // Faltaba este campo
-}
 export interface TrabajadorStats {
   totalTrabajadores: number;
   trabajadoresActivos: number;
@@ -42,6 +24,51 @@ export interface TrabajadorRequest {
   activo?: boolean;
 }
 
+export interface Trabajador {
+  idTrabajador: number;
+  nombres: string;
+  apellidos: string;
+  dni: string;
+  celular: string;
+  correoCorporativo: string;
+  empresaId?: number;
+  empresaNombre?: string;
+  areaId: number;
+  areaNombre: string;
+  cargoId: number;
+  cargoNombre: string;
+  cargoNivel?: string;
+  activo: boolean;
+  fechaCreacion: string;
+  fechaModificacion?: string;
+
+  // Campos nuevos
+  puedeSerLiquidador: boolean;
+  puedeSerEjecutante: boolean;
+  puedeSerAnalistaContable: boolean;
+  puedeSerJefaturaResponsable: boolean;
+  puedeSerCoordinadorTiCw: boolean;
+}
+
+export interface TrabajadorRequest {
+  nombres: string;
+  apellidos: string;
+  dni: string;
+  celular: string;
+  correoCorporativo: string;
+  areaId: number;
+  cargoId: number;
+  empresaId?: number;
+  activo?: boolean;
+
+  // Campos nuevos en request
+  puedeSerLiquidador?: boolean;
+  puedeSerEjecutante?: boolean;
+  puedeSerAnalistaContable?: boolean;
+  puedeSerJefaturaResponsable?: boolean;
+  puedeSerCoordinadorTiCw?: boolean;
+}
+
 export interface TrabajadorUpdate {
   nombres: string;
   apellidos: string;
@@ -51,6 +78,13 @@ export interface TrabajadorUpdate {
   areaId: number;
   cargoId: number;
   empresaId?: number;
+
+  // Campos nuevos en update
+  puedeSerLiquidador?: boolean;
+  puedeSerEjecutante?: boolean;
+  puedeSerAnalistaContable?: boolean;
+  puedeSerJefaturaResponsable?: boolean;
+  puedeSerCoordinadorTiCw?: boolean;
 }
 
 export interface Area {
@@ -277,5 +311,5 @@ getEstadisticas(): Observable<TrabajadorStats> {  // Cambiar 'any' por 'Trabajad
   }
 
 
-  
+
 }

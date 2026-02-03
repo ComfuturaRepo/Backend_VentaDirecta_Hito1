@@ -1,4 +1,4 @@
-import { DropdownItem, DropdownService } from './../../service/dropdown.service';
+import { DropdownItem, DropdownService } from '../../service/dropdown.service';
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -59,18 +59,25 @@ empresas: DropdownItem[] = [];
   modalTitle: string = '';
   modalMode: 'create' | 'edit' = 'create';
 
-  // Formulario
-  trabajadorForm: any = {
-    idTrabajador: null,
-    nombres: '',
-    apellidos: '',
-    dni: '',
-    celular: '',
-    correoCorporativo: '',
-    areaId: null,
-    cargoId: null,
-    empresaId: null,
-    activo: true
+ // En la propiedad trabajadorForm
+trabajadorForm: any = {
+  idTrabajador: null,
+  nombres: '',
+  apellidos: '',
+  dni: '',
+  celular: '',
+  correoCorporativo: '',
+  areaId: null,
+  cargoId: null,
+  empresaId: null,
+  activo: true,
+
+  // Campos nuevos con valor por defecto false
+  puedeSerLiquidador: false,
+  puedeSerEjecutante: false,
+  puedeSerAnalistaContable: false,
+  puedeSerJefaturaResponsable: false,
+  puedeSerCoordinadorTiCw: false
   };
 
   // Validación
@@ -192,43 +199,55 @@ loadDropdowns(): void {
     this.showModal = true;
   }
 
-  // Abrir modal para editar
-  openEditModal(trabajador: Trabajador): void {
-    this.modalMode = 'edit';
-    this.modalTitle = 'Editar Trabajador';
+ // En openEditModal()
+openEditModal(trabajador: Trabajador): void {
+  this.modalMode = 'edit';
+  this.modalTitle = 'Editar Trabajador';
 
-    this.trabajadorForm = {
-      idTrabajador: trabajador.idTrabajador,
-      nombres: trabajador.nombres,
-      apellidos: trabajador.apellidos,
-      dni: trabajador.dni,
-      celular: trabajador.celular,
-      correoCorporativo: trabajador.correoCorporativo,
-      areaId: trabajador.areaId,
-      cargoId: trabajador.cargoId,
-      empresaId: trabajador.empresaId,
-      activo: trabajador.activo
-    };
+  this.trabajadorForm = {
+    idTrabajador: trabajador.idTrabajador,
+    nombres: trabajador.nombres,
+    apellidos: trabajador.apellidos,
+    dni: trabajador.dni,
+    celular: trabajador.celular,
+    correoCorporativo: trabajador.correoCorporativo,
+    areaId: trabajador.areaId,
+    cargoId: trabajador.cargoId,
+    empresaId: trabajador.empresaId,
+    activo: trabajador.activo,
+    puedeSerLiquidador: trabajador.puedeSerLiquidador || false,
+    puedeSerEjecutante: trabajador.puedeSerEjecutante || false,
+    puedeSerAnalistaContable: trabajador.puedeSerAnalistaContable || false,
+    puedeSerJefaturaResponsable: trabajador.puedeSerJefaturaResponsable || false,
+    puedeSerCoordinadorTiCw: trabajador.puedeSerCoordinadorTiCw || false
+  };
 
-    this.showModal = true;
-  }
+  this.showModal = true;
+}
 
-  // Resetear formulario
-  resetForm(): void {
-    this.trabajadorForm = {
-      idTrabajador: null,
-      nombres: '',
-      apellidos: '',
-      dni: '',
-      celular: '',
-      correoCorporativo: '',
-      areaId: null,
-      cargoId: null,
-      empresaId: null,
-      activo: true
-    };
-    this.formErrors = {};
-  }
+
+// En el método resetForm()
+resetForm(): void {
+  this.trabajadorForm = {
+    idTrabajador: null,
+    nombres: '',
+    apellidos: '',
+    dni: '',
+    celular: '',
+    correoCorporativo: '',
+    areaId: null,
+    cargoId: null,
+    empresaId: null,
+    activo: true,
+    puedeSerLiquidador: false,
+    puedeSerEjecutante: false,
+    puedeSerAnalistaContable: false,
+    puedeSerJefaturaResponsable: false,
+    puedeSerCoordinadorTiCw: false
+  };
+  this.formErrors = {};
+}
+
 
   // Validar formulario
   validateForm(): boolean {
@@ -271,70 +290,81 @@ loadDropdowns(): void {
     return Object.keys(this.formErrors).length === 0;
   }
 
-  // Guardar trabajador (crear/editar)
-  saveTrabajador(): void {
-    if (!this.validateForm()) {
-      return;
-    }
-
-    this.isSubmitting = true;
-
-    if (this.modalMode === 'create') {
-      const trabajadorRequest = {
-        nombres: this.trabajadorForm.nombres.trim(),
-        apellidos: this.trabajadorForm.apellidos.trim(),
-        dni: this.trabajadorForm.dni.trim(),
-        celular: this.trabajadorForm.celular.trim(),
-        correoCorporativo: this.trabajadorForm.correoCorporativo.trim(),
-        areaId: this.trabajadorForm.areaId,
-        cargoId: this.trabajadorForm.cargoId,
-        empresaId: this.trabajadorForm.empresaId || undefined,
-        activo: this.trabajadorForm.activo
-      };
-
-      this.trabajadorService.createTrabajador(trabajadorRequest).subscribe({
-        next: (response) => {
-          this.trabajadorService.showSuccess('Trabajador creado exitosamente');
-          this.closeModal();
-          this.loadTrabajadores();
-        },
-        error: (error) => {
-          console.error('Error al crear trabajador:', error);
-          this.isSubmitting = false;
-        },
-        complete: () => {
-          this.isSubmitting = false;
-        }
-      });
-
-    } else {
-      const trabajadorUpdate = {
-        nombres: this.trabajadorForm.nombres.trim(),
-        apellidos: this.trabajadorForm.apellidos.trim(),
-        dni: this.trabajadorForm.dni.trim(),
-        celular: this.trabajadorForm.celular.trim(),
-        correoCorporativo: this.trabajadorForm.correoCorporativo.trim(),
-        areaId: this.trabajadorForm.areaId,
-        cargoId: this.trabajadorForm.cargoId,
-        empresaId: this.trabajadorForm.empresaId || undefined
-      };
-
-      this.trabajadorService.updateTrabajador(this.trabajadorForm.idTrabajador, trabajadorUpdate).subscribe({
-        next: (response) => {
-          this.trabajadorService.showSuccess('Trabajador actualizado exitosamente');
-          this.closeModal();
-          this.loadTrabajadores();
-        },
-        error: (error) => {
-          console.error('Error al actualizar trabajador:', error);
-          this.isSubmitting = false;
-        },
-        complete: () => {
-          this.isSubmitting = false;
-        }
-      });
-    }
+// En saveTrabajador() - COMPLETAR EL MÉTODO
+saveTrabajador(): void {
+  if (!this.validateForm()) {
+    return;
   }
+
+  this.isSubmitting = true;
+
+  if (this.modalMode === 'create') {
+    const trabajadorRequest = {
+      nombres: this.trabajadorForm.nombres.trim(),
+      apellidos: this.trabajadorForm.apellidos.trim(),
+      dni: this.trabajadorForm.dni.trim(),
+      celular: this.trabajadorForm.celular.trim(),
+      correoCorporativo: this.trabajadorForm.correoCorporativo.trim(),
+      areaId: this.trabajadorForm.areaId,
+      cargoId: this.trabajadorForm.cargoId,
+      empresaId: this.trabajadorForm.empresaId || undefined,
+      activo: this.trabajadorForm.activo,
+      puedeSerLiquidador: this.trabajadorForm.puedeSerLiquidador,
+      puedeSerEjecutante: this.trabajadorForm.puedeSerEjecutante,
+      puedeSerAnalistaContable: this.trabajadorForm.puedeSerAnalistaContable,
+      puedeSerJefaturaResponsable: this.trabajadorForm.puedeSerJefaturaResponsable,
+      puedeSerCoordinadorTiCw: this.trabajadorForm.puedeSerCoordinadorTiCw
+    };
+
+    // FALTABA ESTA LLAMADA HTTP PARA CREAR
+    this.trabajadorService.createTrabajador(trabajadorRequest).subscribe({
+      next: (response) => {
+        this.trabajadorService.showSuccess('Trabajador creado exitosamente');
+        this.closeModal();
+        this.loadTrabajadores();
+      },
+      error: (error) => {
+        console.error('Error al crear trabajador:', error);
+        this.isSubmitting = false;
+      },
+      complete: () => {
+        this.isSubmitting = false;
+      }
+    });
+
+  } else {
+    const trabajadorUpdate = {
+      nombres: this.trabajadorForm.nombres.trim(),
+      apellidos: this.trabajadorForm.apellidos.trim(),
+      dni: this.trabajadorForm.dni.trim(),
+      celular: this.trabajadorForm.celular.trim(),
+      correoCorporativo: this.trabajadorForm.correoCorporativo.trim(),
+      areaId: this.trabajadorForm.areaId,
+      cargoId: this.trabajadorForm.cargoId,
+      empresaId: this.trabajadorForm.empresaId || undefined,
+      puedeSerLiquidador: this.trabajadorForm.puedeSerLiquidador,
+      puedeSerEjecutante: this.trabajadorForm.puedeSerEjecutante,
+      puedeSerAnalistaContable: this.trabajadorForm.puedeSerAnalistaContable,
+      puedeSerJefaturaResponsable: this.trabajadorForm.puedeSerJefaturaResponsable,
+      puedeSerCoordinadorTiCw: this.trabajadorForm.puedeSerCoordinadorTiCw
+    };
+
+    this.trabajadorService.updateTrabajador(this.trabajadorForm.idTrabajador, trabajadorUpdate).subscribe({
+      next: (response) => {
+        this.trabajadorService.showSuccess('Trabajador actualizado exitosamente');
+        this.closeModal();
+        this.loadTrabajadores();
+      },
+      error: (error) => {
+        console.error('Error al actualizar trabajador:', error);
+        this.isSubmitting = false;
+      },
+      complete: () => {
+        this.isSubmitting = false;
+      }
+    });
+  }
+}
 
   // Cambiar estado activo/inactivo
   toggleActivo(trabajador: Trabajador): void {
@@ -383,28 +413,42 @@ loadDropdowns(): void {
   }
 
   // Ver detalles del trabajador
-  verDetalles(trabajador: Trabajador): void {
-    Swal.fire({
-      title: 'Detalles del Trabajador',
-      html: `
-        <div class="text-start">
-          <p><strong>ID:</strong> ${trabajador.idTrabajador}</p>
-          <p><strong>Nombre:</strong> ${trabajador.nombres} ${trabajador.apellidos}</p>
-          <p><strong>DNI:</strong> ${trabajador.dni || 'No especificado'}</p>
-          <p><strong>Celular:</strong> ${trabajador.celular || 'No especificado'}</p>
-          <p><strong>Correo:</strong> ${trabajador.correoCorporativo || 'No especificado'}</p>
-          <p><strong>Área:</strong> ${trabajador.areaNombre || 'No especificado'}</p>
-          <p><strong>Cargo:</strong> ${trabajador.cargoNombre || 'No especificado'}</p>
-          <p><strong>Empresa:</strong> ${trabajador.empresaNombre || 'No asignada'}</p>
-          <p><strong>Estado:</strong> <span class="badge ${trabajador.activo ? 'bg-success' : 'bg-danger'}">${trabajador.activo ? 'Activo' : 'Inactivo'}</span></p>
-          <p><strong>Fecha Creación:</strong> ${this.formatFecha(trabajador.fechaCreacion)}</p>
+
+// En verDetalles() - actualizar el HTML del modal:
+verDetalles(trabajador: Trabajador): void {
+  Swal.fire({
+    title: 'Detalles del Trabajador',
+    html: `
+      <div class="text-start">
+        <p><strong>ID:</strong> ${trabajador.idTrabajador}</p>
+        <p><strong>Nombre:</strong> ${trabajador.nombres} ${trabajador.apellidos}</p>
+        <p><strong>DNI:</strong> ${trabajador.dni || 'No especificado'}</p>
+        <p><strong>Celular:</strong> ${trabajador.celular || 'No especificado'}</p>
+        <p><strong>Correo:</strong> ${trabajador.correoCorporativo || 'No especificado'}</p>
+        <p><strong>Área:</strong> ${trabajador.areaNombre || 'No especificado'}</p>
+        <p><strong>Cargo:</strong> ${trabajador.cargoNombre || 'No especificado'}</p>
+        <p><strong>Empresa:</strong> ${trabajador.empresaNombre || 'No asignada'}</p>
+        <p><strong>Estado:</strong> <span class="badge ${trabajador.activo ? 'bg-success' : 'bg-danger'}">${trabajador.activo ? 'Activo' : 'Inactivo'}</span></p>
+
+        <!-- Campos nuevos -->
+        <hr>
+        <p><strong>Roles Adicionales:</strong></p>
+        <div class="d-flex flex-wrap gap-2">
+          <span class="badge ${trabajador.puedeSerLiquidador ? 'bg-primary' : 'bg-secondary'}">Liquidador</span>
+          <span class="badge ${trabajador.puedeSerEjecutante ? 'bg-info' : 'bg-secondary'}">Ejecutante</span>
+          <span class="badge ${trabajador.puedeSerAnalistaContable ? 'bg-warning' : 'bg-secondary'}">Analista Contable</span>
+          <span class="badge ${trabajador.puedeSerJefaturaResponsable ? 'bg-success' : 'bg-secondary'}">Jefatura Responsable</span>
+          <span class="badge ${trabajador.puedeSerCoordinadorTiCw ? 'bg-dark' : 'bg-secondary'}">Coordinador TI/CW</span>
         </div>
-      `,
-      icon: 'info',
-      confirmButtonText: 'Cerrar',
-      width: '600px'
-    });
-  }
+
+        <p class="mt-3"><strong>Fecha Creación:</strong> ${this.formatFecha(trabajador.fechaCreacion)}</p>
+      </div>
+    `,
+    icon: 'info',
+    confirmButtonText: 'Cerrar',
+    width: '600px'
+  });
+}
 
   // Formatear fecha
   formatFecha(fecha: string): string {
