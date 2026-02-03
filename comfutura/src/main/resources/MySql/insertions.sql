@@ -1907,6 +1907,6 @@ INSERT INTO aprobador (id_trabajador, id_cliente, id_area, nivel, activo) VALUES
                                                                               (28, 14, 4, 3, 1),  -- SOLUCIONES TEC, CW
                                                                               (28, 17, 6, 3, 1);  -- ENTEL PERU, PEXT
 INSERT INTO tipo_ot (codigo, descripcion, activo) VALUES
-                                                      ('Operativa',  'operaciones de trabajo', 1),
-                                                      ('Administrativa',  'administracion del trabajo', 1);
+                                                      ('Operativa',  'Operativa', 1),
+                                                      ('Administrativa',  'Administrativa', 1);
 

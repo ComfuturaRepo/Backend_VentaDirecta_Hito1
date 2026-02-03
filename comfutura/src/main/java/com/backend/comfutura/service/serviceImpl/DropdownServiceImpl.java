@@ -344,6 +344,13 @@ public class DropdownServiceImpl implements DropdownService {
     }
 
 
+
+
+
+
+
+
+
     @Override
     public List<DropdownDTO> getCoordinadoresTiCw() {
         return trabajadorRepository
@@ -352,7 +359,7 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
                         // CAMBIO AQUÍ: Nombres primero, luego apellidos
-                        t.getNombres() + " " + t.getApellidos()
+                        t.getApellidos() + " " + t.getNombres()
                 ))
                 .collect(Collectors.toList());
     }
@@ -365,7 +372,7 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
                         // CAMBIO AQUÍ: Nombres primero, luego apellidos
-                        t.getNombres() + " " + t.getApellidos()
+                        t.getApellidos() + " " + t.getNombres()
                 ))
                 .collect(Collectors.toList());
     }
@@ -379,7 +386,7 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
                         // CAMBIO AQUÍ: Nombres primero, luego apellidos
-                        t.getNombres() + " " + t.getApellidos()
+                        t.getApellidos() + " " + t.getNombres()
                 ))
                 .collect(Collectors.toList());
     }
@@ -392,7 +399,7 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
                         // CAMBIO AQUÍ: Nombres primero, luego apellidos
-                        t.getNombres() + " " + t.getApellidos()
+                        t.getApellidos() + " " + t.getNombres()
                 ))
                 .collect(Collectors.toList());
     }
@@ -405,7 +412,7 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
                         // CAMBIO AQUÍ: Nombres primero, luego apellidos
-                        t.getNombres() + " " + t.getApellidos()
+                        t.getApellidos() + " " + t.getNombres()
                 ))
                 .collect(Collectors.toList());
     }
