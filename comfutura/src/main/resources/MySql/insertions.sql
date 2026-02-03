@@ -1088,6 +1088,31 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'CONSULTOR EXTERNO'));-- 15. Usuarios (ejemplos)
 
 
+-- Actualizar Coordinadores TiCw
+UPDATE trabajador
+SET puede_ser_coordinador_ti_cw = true
+WHERE dni IN ('17635270', '41589951', '6912965');
+
+-- Actualizar Jefaturas Responsable
+UPDATE trabajador
+SET puede_ser_jefatura_responsable = true
+WHERE dni IN ('48010945', '77684556', '44373982', '6912965', '74306365', '9627529', '45609714', '41026425', '72901624');
+
+-- Actualizar Liquidadores
+UPDATE trabajador
+SET puede_ser_liquidador = true
+WHERE dni IN ('70568410', '46196532');
+
+-- Actualizar Ejecutantes
+UPDATE trabajador
+SET puede_ser_ejecutante = true
+WHERE id_empresa = (SELECT id_empresa FROM empresa WHERE nombre = 'COMFUTURA');
+
+-- Actualizar Analistas Contable
+UPDATE trabajador
+SET puede_ser_analista_contable = true
+WHERE id_area = (SELECT id_area FROM area WHERE nombre = 'CONTABILIDAD');
+
 
 INSERT INTO usuario (username, password, id_trabajador, id_nivel) VALUES
 -- Wendy Fabiola Abarca Mendieta
