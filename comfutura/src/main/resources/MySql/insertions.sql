@@ -1141,6 +1141,7 @@ WHERE id_empresa = (SELECT id_empresa FROM empresa WHERE nombre = 'COMFUTURA')
                                           'OLIVER ANTONIO MASIAS LAGOS',
                                           'SILVIA ARACELLI NEIRA MATTA',
                                           'ALVARO RODRIGO FLORES SAAVEDRA',
+                                          'LOURDES MIRYAM MONTALVAN QUISPE',
                                           'LEONARDO MELGAREJO ALCALA',
                                           'JOSUE MANUEL RAUL OTERO LOJE',
                                           'WENDY FABIOLA ABARCA MENDIETA'
@@ -1154,7 +1155,10 @@ WHERE id_area = (SELECT id_area FROM area WHERE nombre = 'CONTABILIDAD')
                                           'ALEXIS MAXIMO GONZALEZ TERRAZOS',
                                           'JUAN RAMON AGUIRRE RONDINEL'
     );
-
+UPDATE trabajador SET puede_ser_jefatura_responsable = 1
+WHERE CONCAT(nombres, ' ', apellidos) IN (
+    'JOSE MICHAEL BENAVIDES ROMERO'
+    );
 -- Reactivar safe mode al final
 SET SQL_SAFE_UPDATES = 1;
 INSERT INTO trabajador (

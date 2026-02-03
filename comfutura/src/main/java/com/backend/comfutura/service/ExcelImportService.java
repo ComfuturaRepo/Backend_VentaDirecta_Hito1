@@ -1320,23 +1320,40 @@ public class ExcelImportService {
         if (cell == null) return null;
 
         try {
+            String valor = "";
             switch (cell.getCellType()) {
                 case STRING:
-                    return cell.getStringCellValue().trim();
+                    valor = cell.getStringCellValue();
+                    break;
                 case NUMERIC:
                     if (DateUtil.isCellDateFormatted(cell)) {
                         Date date = cell.getDateCellValue();
                         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-                        return date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().format(formatter);
+                        valor = date.toInstant().atZone(ZoneId.systemDefault()).toLocalDate().format(formatter);
+                    } else {
+                        double numValue = cell.getNumericCellValue();
+                        if (numValue == Math.floor(numValue)) {
+                            valor = String.valueOf((int) numValue);
+                        } else {
+                            valor = String.valueOf(numValue);
+                        }
                     }
-                    double numValue = cell.getNumericCellValue();
-                    if (numValue == Math.floor(numValue)) {
-                        return String.valueOf((int) numValue);
-                    }
-                    return String.valueOf(numValue);
+                    break;
                 default:
-                    return "";
+                    valor = "";
             }
+
+            // ========== CAMBIO CRÍTICO AQUÍ ==========
+            // Normalización completa que soluciona TODOS los problemas de espacios
+            return valor
+                    .replace("\u00A0", " ")    // Espacios no-breaking Unicode
+                    .replace("\u2007", " ")    // Espacio figura
+                    .replace("\u202F", " ")    // Espacio angosto
+                    .replace("\u3000", " ")    // Espacio ideográfico
+                    .replaceAll("\\s+", " ")   // Múltiples espacios por uno solo
+                    .trim();                   // Eliminar espacios inicio/fin
+            // =========================================
+
         } catch (Exception e) {
             log.warn("Error al leer celda [{},{}]: {}", row.getRowNum(), columnIndex, e.getMessage());
             return "";
