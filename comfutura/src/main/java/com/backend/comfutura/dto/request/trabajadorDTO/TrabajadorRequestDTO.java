@@ -33,4 +33,12 @@ public class TrabajadorRequestDTO {
     private Integer empresaId;
 
     private Boolean activo = true;
+
+
+    // Campos nuevos
+    private Boolean puedeSerLiquidador = false;
+    private Boolean puedeSerEjecutante = false;
+    private Boolean puedeSerAnalistaContable = false;
+    private Boolean puedeSerJefaturaResponsable = false;
+    private Boolean puedeSerCoordinadorTiCw = false;
 }

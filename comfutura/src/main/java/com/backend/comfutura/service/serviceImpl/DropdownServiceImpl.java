@@ -344,11 +344,10 @@ public class DropdownServiceImpl implements DropdownService {
     }
 
 
-
     @Override
     public List<DropdownDTO> getCoordinadoresTiCw() {
         return trabajadorRepository
-                .findActivosConCargoCoordinador()
+                .findAllByActivoTrueAndPuedeSerCoordinadorTiCwTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
@@ -357,11 +356,10 @@ public class DropdownServiceImpl implements DropdownService {
                 .collect(Collectors.toList());
     }
 
-    //CAMBIADO POR TODO
     @Override
     public List<DropdownDTO> getJefaturasResponsable() {
         return trabajadorRepository
-                .findAllByActivoTrueOrderByApellidosAsc()
+                .findAllByActivoTrueAndPuedeSerJefaturaResponsableTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
@@ -369,11 +367,11 @@ public class DropdownServiceImpl implements DropdownService {
                 ))
                 .collect(Collectors.toList());
     }
-    //CAMBIADO POR TODO
+
     @Override
     public List<DropdownDTO> getLiquidador() {
         return trabajadorRepository
-                .findAllByActivoTrueOrderByApellidosAsc()
+                .findAllByActivoTrueAndPuedeSerLiquidadorTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
@@ -385,7 +383,7 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getEjecutantes() {
         return trabajadorRepository
-                .findAllByActivoTrueOrderByApellidosAsc()
+                .findAllByActivoTrueAndPuedeSerEjecutanteTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
@@ -397,7 +395,7 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getAnalistasContable() {
         return trabajadorRepository
-                .findActivosConCargoContabilidad()
+                .findAllByActivoTrueAndPuedeSerAnalistaContableTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),

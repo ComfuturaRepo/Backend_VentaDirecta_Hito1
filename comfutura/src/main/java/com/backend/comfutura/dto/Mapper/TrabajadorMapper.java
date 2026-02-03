@@ -31,6 +31,13 @@ public class TrabajadorMapper {
         dto.setActivo(trabajador.getActivo());
         dto.setFechaCreacion(trabajador.getFechaCreacion());
 
+        // Nuevos campos
+        dto.setPuedeSerLiquidador(trabajador.getPuedeSerLiquidador());
+        dto.setPuedeSerEjecutante(trabajador.getPuedeSerEjecutante());
+        dto.setPuedeSerAnalistaContable(trabajador.getPuedeSerAnalistaContable());
+        dto.setPuedeSerJefaturaResponsable(trabajador.getPuedeSerJefaturaResponsable());
+        dto.setPuedeSerCoordinadorTiCw(trabajador.getPuedeSerCoordinadorTiCw());
+
         // Empresa
         if (trabajador.getEmpresa() != null) {
             dto.setEmpresaNombre(trabajador.getEmpresa().getNombre());
@@ -62,6 +69,13 @@ public class TrabajadorMapper {
         dto.setCorreoCorporativo(trabajador.getCorreoCorporativo());
         dto.setActivo(trabajador.getActivo());
         dto.setFechaCreacion(trabajador.getFechaCreacion());
+
+        // Nuevos campos
+        dto.setPuedeSerLiquidador(trabajador.getPuedeSerLiquidador());
+        dto.setPuedeSerEjecutante(trabajador.getPuedeSerEjecutante());
+        dto.setPuedeSerAnalistaContable(trabajador.getPuedeSerAnalistaContable());
+        dto.setPuedeSerJefaturaResponsable(trabajador.getPuedeSerJefaturaResponsable());
+        dto.setPuedeSerCoordinadorTiCw(trabajador.getPuedeSerCoordinadorTiCw());
 
         // Empresa
         if (trabajador.getEmpresa() != null) {
@@ -97,6 +111,13 @@ public class TrabajadorMapper {
         trabajador.setCorreoCorporativo(dto.getCorreoCorporativo());
         trabajador.setActivo(dto.getActivo() != null ? dto.getActivo() : true);
 
+        // Nuevos campos - con manejo de null para usar valores por defecto
+        trabajador.setPuedeSerLiquidador(dto.getPuedeSerLiquidador() != null ? dto.getPuedeSerLiquidador() : false);
+        trabajador.setPuedeSerEjecutante(dto.getPuedeSerEjecutante() != null ? dto.getPuedeSerEjecutante() : false);
+        trabajador.setPuedeSerAnalistaContable(dto.getPuedeSerAnalistaContable() != null ? dto.getPuedeSerAnalistaContable() : false);
+        trabajador.setPuedeSerJefaturaResponsable(dto.getPuedeSerJefaturaResponsable() != null ? dto.getPuedeSerJefaturaResponsable() : false);
+        trabajador.setPuedeSerCoordinadorTiCw(dto.getPuedeSerCoordinadorTiCw() != null ? dto.getPuedeSerCoordinadorTiCw() : false);
+
         return trabajador;
     }
 
@@ -104,11 +125,46 @@ public class TrabajadorMapper {
     public void updateEntity(TrabajadorUpdateDTO dto, Trabajador trabajador) {
         if (dto == null || trabajador == null) return;
 
-        trabajador.setNombres(dto.getNombres());
-        trabajador.setApellidos(dto.getApellidos());
-        trabajador.setDni(dto.getDni());
-        trabajador.setCelular(dto.getCelular());
-        trabajador.setCorreoCorporativo(dto.getCorreoCorporativo());
+        if (dto.getNombres() != null) {
+            trabajador.setNombres(dto.getNombres());
+        }
+
+        if (dto.getApellidos() != null) {
+            trabajador.setApellidos(dto.getApellidos());
+        }
+
+        if (dto.getDni() != null) {
+            trabajador.setDni(dto.getDni());
+        }
+
+        if (dto.getCelular() != null) {
+            trabajador.setCelular(dto.getCelular());
+        }
+
+        if (dto.getCorreoCorporativo() != null) {
+            trabajador.setCorreoCorporativo(dto.getCorreoCorporativo());
+        }
+
+        // Actualizar nuevos campos solo si se envían en el DTO
+        if (dto.getPuedeSerLiquidador() != null) {
+            trabajador.setPuedeSerLiquidador(dto.getPuedeSerLiquidador());
+        }
+
+        if (dto.getPuedeSerEjecutante() != null) {
+            trabajador.setPuedeSerEjecutante(dto.getPuedeSerEjecutante());
+        }
+
+        if (dto.getPuedeSerAnalistaContable() != null) {
+            trabajador.setPuedeSerAnalistaContable(dto.getPuedeSerAnalistaContable());
+        }
+
+        if (dto.getPuedeSerJefaturaResponsable() != null) {
+            trabajador.setPuedeSerJefaturaResponsable(dto.getPuedeSerJefaturaResponsable());
+        }
+
+        if (dto.getPuedeSerCoordinadorTiCw() != null) {
+            trabajador.setPuedeSerCoordinadorTiCw(dto.getPuedeSerCoordinadorTiCw());
+        }
     }
 
     // Helper para mensajes

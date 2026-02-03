@@ -448,6 +448,15 @@ INSERT INTO proyecto (nombre) VALUES
                                   ('REUBICACION'),
                                   ('OVERLAP'),
                                   ('RANCO'),
+                                  ('RANCO FDD'),
+                                  ('APT 2025'),
+                                  ('D2C'),
+                                  ('SUMINISTRO DE SOPORTES'),
+
+                                  ('EXPEDIENTE ELECTRICO'),
+                                  ('OVERLAP'),
+
+
                                   ('Autonomia'),
                                   ('ROLL OUT'),
                                   ('ARELLANO'),
@@ -759,6 +768,12 @@ INSERT INTO jefatura_cliente_solicitante (descripcion) VALUES
                                                            ('ERNESTO PAITAN'),
                                                            ('RICARDO BAZAN'),
                                                            ('OMAR EZCURRA'),
+                                                           ('JAVIER SARAVIA'),
+
+                                                           ('MIGUEL ROJAS'),
+                                                           ('ERICK JAPAY'),
+
+
                                                            ('JUAN PEÑA'),
                                                            ('PAOLA'),
                                                            ('IGOR ANYOSA'),
@@ -773,6 +788,13 @@ INSERT INTO analista_cliente_solicitante (descripcion) VALUES
                                                            ('DEMETRIO VEGA'),
                                                            ('DEMETRIO'),
                                                            ('DEIBER'),
+
+                                                           ('ANGGIE SAMAME'),
+                                                           ('ANTHONY BARRETO'),
+                                                           ('WILMER VERGARAY'),
+                                                           ('JHORDAN'),
+                                                           ('ERICK JAPAY'),
+
                                                            ('JOSE ARROYO'),
                                                            ('ERNESTO PAITAN'),
                                                            ('VLINDA'),
@@ -1064,6 +1086,9 @@ INSERT INTO trabajador (nombres, apellidos, dni, celular, correo_corporativo, id
                                                                                                                   (SELECT id_empresa FROM empresa WHERE nombre = 'AMERICA MOVIL PERU S.A.C.'),
                                                                                                                   (SELECT id_area FROM area WHERE nombre = 'ENERGIA'),
                                                                                                                   (SELECT id_cargo FROM cargo WHERE nombre = 'CONSULTOR EXTERNO'));-- 15. Usuarios (ejemplos)
+
+
+
 INSERT INTO usuario (username, password, id_trabajador, id_nivel) VALUES
 -- Wendy Fabiola Abarca Mendieta
 ('w.abarca@sudcomgroup.com', '123456',

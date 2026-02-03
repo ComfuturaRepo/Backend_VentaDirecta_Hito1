@@ -95,6 +95,13 @@ CREATE TABLE trabajador (
                             CONSTRAINT fk_trabajador_cargo
                                 FOREIGN KEY (id_cargo) REFERENCES cargo(id_cargo)
 );
+ALTER TABLE trabajador
+    ADD COLUMN puede_ser_liquidador TINYINT(1) DEFAULT 0,
+ADD COLUMN puede_ser_ejecutante TINYINT(1) DEFAULT 0,
+ADD COLUMN puede_ser_analista_contable TINYINT(1) DEFAULT 0,
+ADD COLUMN puede_ser_jefatura_responsable TINYINT(1) DEFAULT 0,
+ADD COLUMN puede_ser_coordinador_ti_cw TINYINT(1) DEFAULT 0;
+
 
 CREATE TABLE trabajador_cliente (
                                     id_trabajador INT NOT NULL,

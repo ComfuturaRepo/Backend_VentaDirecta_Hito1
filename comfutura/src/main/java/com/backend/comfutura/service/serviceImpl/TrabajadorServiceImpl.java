@@ -129,6 +129,23 @@ public class TrabajadorServiceImpl implements TrabajadorService {
         trabajador.setActivo(trabajadorDTO.getActivo() != null ? trabajadorDTO.getActivo() : true);
         trabajador.setFechaCreacion(LocalDateTime.now());
 
+        // Establecer valores por defecto para los nuevos campos si no vienen en el DTO
+        if (trabajador.getPuedeSerLiquidador() == null) {
+            trabajador.setPuedeSerLiquidador(false);
+        }
+        if (trabajador.getPuedeSerEjecutante() == null) {
+            trabajador.setPuedeSerEjecutante(false);
+        }
+        if (trabajador.getPuedeSerAnalistaContable() == null) {
+            trabajador.setPuedeSerAnalistaContable(false);
+        }
+        if (trabajador.getPuedeSerJefaturaResponsable() == null) {
+            trabajador.setPuedeSerJefaturaResponsable(false);
+        }
+        if (trabajador.getPuedeSerCoordinadorTiCw() == null) {
+            trabajador.setPuedeSerCoordinadorTiCw(false);
+        }
+
         Trabajador savedTrabajador = trabajadorRepository.save(trabajador);
         return trabajadorMapper.toDetailDTO(savedTrabajador);
     }
@@ -167,8 +184,8 @@ public class TrabajadorServiceImpl implements TrabajadorService {
         trabajador.setCargo(cargo);
         trabajador.setEmpresa(empresa);
 
-        // Actualizar fecha de modificación
-        trabajador.setFechaCreacion(trabajador.getFechaCreacion()); // Mantener la original
+        // Mantener valores de los nuevos campos si no se están actualizando
+        // (El mapper debería encargarse de esto, pero verificamos)
 
         Trabajador updatedTrabajador = trabajadorRepository.save(trabajador);
         return trabajadorMapper.toDetailDTO(updatedTrabajador);

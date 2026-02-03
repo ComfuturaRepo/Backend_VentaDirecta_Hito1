@@ -66,23 +66,18 @@ public interface TrabajadorRepository extends JpaRepository<Trabajador, Integer>
     // Consultas específicas para roles en OT
     // ────────────────────────────────────────────────
 
-    // Jefatura Responsable → cargos que contengan "jefe" o "jefa"
-    @Query("""
-        SELECT t FROM Trabajador t
-        WHERE t.activo = true
-          AND (LOWER(t.cargo.nombre) LIKE '%jefe%' OR LOWER(t.cargo.nombre) LIKE '%jefa%')
-        ORDER BY t.apellidos, t.nombres
-        """)
-    List<Trabajador> findActivosConCargoJefe();
 
-    // Liquidador → solo cargos específicos
-    @Query("""
-        SELECT t FROM Trabajador t
-        WHERE t.activo = true
-          AND LOWER(t.cargo.nombre) IN ('jefe de cierre', 'jefe de cierre y liquidaciones')
-        ORDER BY t.apellidos, t.nombres
-        """)
-    List<Trabajador> findJefesDeCierre();
+
+    // Métodos nuevos para filtrar por los campos booleanos
+    List<Trabajador> findAllByActivoTrueAndPuedeSerCoordinadorTiCwTrueOrderByApellidosAsc();
+
+    List<Trabajador> findAllByActivoTrueAndPuedeSerJefaturaResponsableTrueOrderByApellidosAsc();
+
+    List<Trabajador> findAllByActivoTrueAndPuedeSerLiquidadorTrueOrderByApellidosAsc();
+
+    List<Trabajador> findAllByActivoTrueAndPuedeSerEjecutanteTrueOrderByApellidosAsc();
+
+    List<Trabajador> findAllByActivoTrueAndPuedeSerAnalistaContableTrueOrderByApellidosAsc();
 
     // Analista Contable → cargos con "contabilidad"
     @Query("""

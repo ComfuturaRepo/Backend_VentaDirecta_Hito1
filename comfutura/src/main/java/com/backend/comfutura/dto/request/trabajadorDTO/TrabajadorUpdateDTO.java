@@ -31,4 +31,11 @@ public class TrabajadorUpdateDTO {
     private Integer cargoId;
 
     private Integer empresaId;
+
+    // Campos nuevos
+    private Boolean puedeSerLiquidador;
+    private Boolean puedeSerEjecutante;
+    private Boolean puedeSerAnalistaContable;
+    private Boolean puedeSerJefaturaResponsable;
+    private Boolean puedeSerCoordinadorTiCw;
 }
