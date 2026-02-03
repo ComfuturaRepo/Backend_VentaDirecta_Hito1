@@ -4,7 +4,8 @@
     <h1 class="h3 mb-0 text-gray-800">
       <i class="fas fa-users-cog me-2"></i>Gestión de Trabajadores
     </h1>
-    <button class="btn btn-primary" (click)="openCreateModal()" [disabled]="isLoadingDropdowns">
+    <button class="btn btn-primary" (click)="openCreateModal()" [disabled]="isLoadingDropdowns"      *appPermiso="'TRABAJADOR_MANAGE'"
+>
       <i class="fas fa-user-plus me-2"></i>Nuevo Trabajador
     </button>
   </div>
@@ -193,12 +194,12 @@
 
                     <button class="btn btn-outline-primary"
                             [title]="trabajador.activo ? 'Desactivar' : 'Activar'"
-                            (click)="toggleActivo(trabajador)">
+                            (click)="toggleActivo(trabajador)"   *appPermiso="'TRABAJADOR_MANAGE'">
                       <i class="fas" [class.fa-toggle-on]="trabajador.activo" [class.fa-toggle-off]="!trabajador.activo"></i>
                     </button>
 
                     <button class="btn btn-outline-warning"
-                            title="Editar"
+                            title="Editar"   *appPermiso="'TRABAJADOR_MANAGE'"
                             (click)="openEditModal(trabajador)">
                       <i class="fas fa-edit"></i>
                     </button>

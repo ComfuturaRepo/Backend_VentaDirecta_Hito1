@@ -9,11 +9,12 @@ import { Site, SiteRequest, SiteDescripcionRequest } from '../../model/site.inte
 import { SiteService } from '../../service/site.service';
 import { DropdownItem, DropdownService } from '../../service/dropdown.service';
 import { NgselectDropdownComponent } from '../../component/ngselect-dropdown-component/ngselect-dropdown-component';
+import { PermisoDirective } from '../../directive/permiso.directive';
 
 @Component({
   selector: 'app-site',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, NgselectDropdownComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent, NgselectDropdownComponent,PermisoDirective],
   templateUrl: './site-component.html',
   styleUrls: ['./site-component.css']
 })

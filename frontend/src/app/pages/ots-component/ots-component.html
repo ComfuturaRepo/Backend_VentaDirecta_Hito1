@@ -94,7 +94,7 @@
             </button>
 
             <!-- Botón de nueva OT -->
-            <button class="btn btn-primary btn-lg" (click)="openCreateModal()">
+            <button class="btn btn-primary btn-lg" (click)="openCreateModal()"  *appPermiso="'DASHBOARD_VIEW'">
               <i class="bi bi-plus-lg me-2"></i>Nueva OT
             </button>
           </div>
@@ -422,6 +422,7 @@
                       <i class="bi bi-eye"></i>
                     </button>
                     <button class="btn btn-action btn-sm me-1"
+ *appPermiso="'OT_EDIT'"
                             (click)="openEditModal(ot)"
                             title="Editar"
                             data-bs-toggle="tooltip">

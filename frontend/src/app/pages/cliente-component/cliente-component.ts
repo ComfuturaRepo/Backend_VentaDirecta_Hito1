@@ -8,6 +8,7 @@ import { PaginationComponent } from '../../component/pagination.component/pagina
 import { Cliente, ClienteCreateUpdateDTO, ClienteService, PageResponseDTO } from '../../service/cliente.service';
 import { DropdownItem, DropdownService } from '../../service/dropdown.service';
 import { AreaService, AreaCreateUpdateDTO } from '../../service/area.service';
+import { PermisoDirective } from '../../directive/permiso.directive';
 
 interface Notification {
   type: 'success' | 'error' | 'warning' | 'info';
@@ -22,7 +23,7 @@ interface Notification {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-    RouterModule,
+    RouterModule,PermisoDirective,
     PaginationComponent,
     NgbAlertModule
   ],

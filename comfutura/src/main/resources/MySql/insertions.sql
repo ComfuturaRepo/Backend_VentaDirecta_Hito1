@@ -611,11 +611,11 @@ INSERT INTO site_descripcion (id_site, descripcion) VALUES
 ((SELECT id_site FROM site WHERE codigo_sitio = 'TL4021'), 'NAT_URB_FLEMING'),
 ((SELECT id_site FROM site WHERE codigo_sitio = 'TJ5160'), 'NAT_ALMAGRO'),
 ((SELECT id_site FROM site WHERE codigo_sitio = 'TA2227'), 'NAT_PAMPAC'),
-((SELECT id_site FROM site WHERE codigo_sitio = 'TP2538'), 'NAT_COI_U_PIURA  N'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TP2538'), 'NAT_COI_U_PIURA'),
 ((SELECT id_site FROM site WHERE codigo_sitio = 'TP0038'), 'NAT_COI_ENTRADA_PRINCIPAL'),
 ((SELECT id_site FROM site WHERE codigo_sitio = 'TP0074'), 'NAT_COI_IE_IGNACIO_MERINO'),
 ((SELECT id_site FROM site WHERE codigo_sitio = 'TPS417'), 'NAT_COI_JOSE_OLAYA'),
-((SELECT id_site FROM site WHERE codigo_sitio = 'TL5977'), 'NAT_COI_1108    N'),
+((SELECT id_site FROM site WHERE codigo_sitio = 'TL5977'), 'NAT_COI_1108'),
 ((SELECT id_site FROM site WHERE codigo_sitio = 'TL5573'), 'NAT_COI_SAN_JOSE_OBRERO'),
 ((SELECT id_site FROM site WHERE codigo_sitio = 'TL5999'), 'NAT_COI_EX_COSOME'),
 ((SELECT id_site FROM site WHERE codigo_sitio = 'TL5928'), 'NAT_COI_JUAN_TOMIS_S'),
@@ -1534,8 +1534,7 @@ INSERT INTO permiso (codigo, nombre, descripcion) VALUES
 ('USUARIO_VIEW', 'Ver Usuarios', 'Permite ver la lista de usuarios'),
 ('USUARIO_CREATE', 'Crear Usuarios', 'Permite crear nuevos usuarios'),
 ('USUARIO_EDIT', 'Editar Usuarios', 'Permite editar usuarios existentes'),
-('USUARIO_DELETE', 'Eliminar Usuarios', 'Permite eliminar usuarios'),
-('USUARIO_ADMIN', 'Administrar Usuarios', 'Permiso completo de administración de usuarios'),
+('USUARIO_TOGGLE', 'desactivar Usuarios', 'Permite desactivar usuarios'),
 
 -- Permisos de Gestión de Permisos
 ('PERMISO_ADMIN', 'Administrar Permisos', 'Permite gestionar permisos del sistema'),
