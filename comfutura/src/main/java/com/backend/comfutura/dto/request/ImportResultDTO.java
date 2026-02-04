@@ -14,7 +14,8 @@ public class ImportResultDTO {
     private Integer fallidos = 0;
     private boolean exito;
     private String mensaje;
-
+    private String mensajeResumen;
+    private List<String> erroresDetallados = new ArrayList<>();
     // Estadísticas detalladas
     private Integer erroresValidacion = 0;
     private Integer erroresPersistencia = 0;
@@ -58,23 +59,45 @@ public class ImportResultDTO {
         this.registrosConError.add(registro);
         incrementarFallidos();
     }
-
     public void generarMensajeResumen() {
+        if (fallidos == 0 && erroresValidacion == 0) {
+            this.mensajeResumen = String.format(
+                    "✅ IMPORTACIÓN COMPLETADA: %d registros procesados exitosamente",
+                    exitosos
+            );
+        } else {
+            StringBuilder sb = new StringBuilder();
+            sb.append("⚠️ IMPORTACIÓN CON ERRORES\n\n");
+            sb.append(String.format("Exitosos: %d\n", exitosos));
+            sb.append(String.format("Fallidos: %d\n", fallidos));
+
+            if (erroresValidacion > 0) {
+                sb.append(String.format("Errores de validación: %d\n", erroresValidacion));
+            }
+            if (erroresPersistencia > 0) {
+                sb.append(String.format("Errores de persistencia: %d\n", erroresPersistencia));
+            }
+
+            this.mensajeResumen = sb.toString();
+        }
+    }
+
+    // Método para agregar errores detallados
+    public void agregarErrorDetallado(int fila, String error) {
+        erroresDetallados.add("Fila " + fila + ": " + error);
+    }
+
+    // Método para obtener errores como texto
+    public String getErroresComoTexto() {
+        if (erroresDetallados.isEmpty()) {
+            return "No hay errores detallados.";
+        }
+
         StringBuilder sb = new StringBuilder();
-        sb.append("Proceso completado: ");
-        sb.append(exitosos).append(" éxitos, ");
-        sb.append(fallidos).append(" fallidos");
-
-        if (erroresValidacion > 0) {
-            sb.append(", ").append(erroresValidacion).append(" errores de validación");
+        sb.append("ERRORES DETALLADOS:\n\n");
+        for (String error : erroresDetallados) {
+            sb.append(error).append("\n");
         }
-        if (erroresPersistencia > 0) {
-            sb.append(", ").append(erroresPersistencia).append(" errores de persistencia");
-        }
-        if (warnings > 0) {
-            sb.append(", ").append(warnings).append(" advertencias");
-        }
-
-        this.mensaje = sb.toString();
+        return sb.toString();
     }
 }
