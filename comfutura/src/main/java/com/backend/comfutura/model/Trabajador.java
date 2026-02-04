@@ -1,10 +1,12 @@
 package com.backend.comfutura.model;
 
+import com.backend.comfutura.model.ssoma.*;
 import jakarta.persistence.*;
 import lombok.*;
 import org.hibernate.annotations.CreationTimestamp;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Entity
 @Table(name = "trabajador")
@@ -57,4 +59,34 @@ public class Trabajador {
 
     @Column(name = "puede_ser_coordinador_ti_cw")
     private Boolean puedeSerCoordinadorTiCw = false;
+
+
+    // Relación con Firma
+    @ManyToOne
+    @JoinColumn(name = "id_firma")
+    private Firma firma;
+
+    // Agrega estas relaciones para SST
+
+
+    @OneToMany(mappedBy = "trabajador")
+    private List<ATSParticipante> atsParticipaciones;
+
+    @OneToMany(mappedBy = "capacitador")
+    private List<Capacitacion> capacitacionesDictadas;
+
+    @OneToMany(mappedBy = "trabajador")
+    private List<CapacitacionAsistente> capacitacionesAsistidas;
+
+    @OneToMany(mappedBy = "inspector")
+    private List<InspeccionEPP> inspeccionesEPPRealizadas;
+
+    @OneToMany(mappedBy = "trabajador")
+    private List<InspeccionEPPDetalle> inspeccionesEPPDetalles;
+
+    @OneToMany(mappedBy = "supervisor")
+    private List<InspeccionHerramienta> inspeccionesHerramientas;
+
+    @OneToMany(mappedBy = "trabajador")
+    private List<PETARAutorizado> petarAutorizaciones;
 }

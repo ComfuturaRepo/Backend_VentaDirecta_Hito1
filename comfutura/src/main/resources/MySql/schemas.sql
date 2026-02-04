@@ -101,7 +101,11 @@ ADD COLUMN puede_ser_ejecutante TINYINT(1) DEFAULT 0,
 ADD COLUMN puede_ser_analista_contable TINYINT(1) DEFAULT 0,
 ADD COLUMN puede_ser_jefatura_responsable TINYINT(1) DEFAULT 0,
 ADD COLUMN puede_ser_coordinador_ti_cw TINYINT(1) DEFAULT 0;
-
+-- Agrega la columna id_firma a la tabla trabajador
+ALTER TABLE trabajador
+    ADD COLUMN id_firma INT NULL,
+ADD CONSTRAINT fk_trabajador_firma
+    FOREIGN KEY (id_firma) REFERENCES firma(id_firma);
 
 CREATE TABLE trabajador_cliente (
                                     id_trabajador INT NOT NULL,

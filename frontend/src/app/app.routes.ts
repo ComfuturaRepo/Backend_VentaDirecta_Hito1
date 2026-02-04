@@ -10,12 +10,13 @@ import { GestionCargosSolicitantesComponent } from './pages/gestion-cargos-solic
 import { authGuard } from './auth/auth.guard';
 import { UsuariosComponent } from './pages/usuarios-component/usuarios-component';
 import { UsuarioPerfilComponent } from './pages/usuario-perfil-component/usuario-perfil-component';
-import { TrabajadorComponent } from './pages/trabajador-component/trabajador-component';
 import { LayoutComponent } from './component/layaout-component/layaout-component';
 import { ClienteComponent } from './pages/cliente-component/cliente-component';
 import { DashboardComponente } from './pages/dashboard-componente/dashboard-componente';
 import { permisoGuard } from './auth/permiso.guard';
 import { GestionPermisosComponent } from './pages/gestion-permisos.component.ts/gestion-permisos.component.ts';
+import { TrabajadorComponent } from './pages/trabajador-component/trabajador-component';
+import { SSTATSComponent } from './pages/sst-ats.component/sst-ats.component';
 
 
 export const routes: Routes = [
@@ -82,6 +83,12 @@ export const routes: Routes = [
         canActivate: [permisoGuard],
         data: { permisos: ['TRABAJADOR_VIEW'] }
       },
+      {
+    path: 'sst-ats',
+    component: SSTATSComponent,
+    canActivate: [permisoGuard],
+  //  data: { permisos: ['SST_VIEW'] }
+  },
       {
         path: 'cliente',
         component: ClienteComponent,

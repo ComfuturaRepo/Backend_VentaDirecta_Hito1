@@ -1,0 +1,100 @@
+<div class="card shadow-sm">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <h5 class="mb-0">
+      <i class="bi bi-list-ul me-2"></i>Lista de ATS
+      <span class="badge bg-primary ms-2">{{totalItems}}</span>
+    </h5>
+    <div class="d-flex align-items-center gap-2">
+      <small class="text-muted d-none d-md-block">
+        Mostrando {{getShowingFrom()}} - {{getShowingTo()}} de {{totalItems}} registros
+      </small>
+    </div>
+  </div>
+
+  <div class="card-body p-0">
+    <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th width="60">#</th>
+            <th>Fecha</th>
+            <th>Empresa</th>
+            <th>Lugar de Trabajo</th>
+            <th>Trabajo</th>
+            <th>Participantes</th>
+            <th width="150">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngIf="isLoading">
+            <td colspan="7" class="text-center py-5">
+              <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Cargando...</span>
+              </div>
+              <p class="mt-2 text-muted">Cargando ATS...</p>
+            </td>
+          </tr>
+
+          <tr *ngFor="let ats of atsList; let i = index" class="align-middle">
+            <td class="fw-bold text-primary">{{getShowingFrom() + i}}</td>
+            <td>
+              <div>{{ats.fecha | date:'dd/MM/yyyy'}}</div>
+              <small class="text-muted">{{ats.hora}}</small>
+            </td>
+            <td>
+              <strong>{{ats.empresa}}</strong>
+            </td>
+            <td>{{ats.lugarTrabajo}}</td>
+            <td>
+              <span class="badge bg-info bg-opacity-10 text-info border border-info">
+                {{ats.trabajo}}
+              </span>
+            </td>
+            <td>
+              <span class="badge bg-primary rounded-pill">
+                {{ats.cantidadParticipantes}} <i class="bi bi-people ms-1"></i>
+              </span>
+            </td>
+            <td>
+              <div class="btn-group btn-group-sm" role="group">
+                <button class="btn btn-outline-primary" (click)="viewDetails.emit(ats.idATS)" title="Ver detalle">
+                  <i class="bi bi-eye"></i>
+                </button>
+                <button class="btn btn-outline-success" title="Generar PDF">
+                  <i class="bi bi-file-pdf"></i>
+                </button>
+                <button class="btn btn-outline-info" title="Imprimir">
+                  <i class="bi bi-printer"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+
+          <tr *ngIf="!isLoading && atsList.length === 0">
+            <td colspan="7" class="text-center py-5">
+              <i class="bi bi-inbox display-6 text-muted mb-3"></i>
+              <p class="text-muted">No se encontraron registros de ATS</p>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Paginación -->
+  <div class="card-footer border-top" *ngIf="totalPages > 1">
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="totalItems"
+      [totalPages]="totalPages"
+      [pageSize]="pageSize"
+      [isLoading]="isLoading"
+      [showInfo]="false"
+      [showSizeSelector]="false"
+      [showJumpToPage]="true"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+      (refresh)="onRefresh()">
+    </app-pagination>
+  </div>
+</div>

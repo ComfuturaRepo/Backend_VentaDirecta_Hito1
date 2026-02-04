@@ -1,0 +1,833 @@
+<div class="sst-complete-form">
+  <!-- Progress Steps -->
+  <div class="steps-container mb-5">
+    <div class="steps">
+      <div *ngFor="let step of [1,2,3,4,5]"
+           class="step"
+           [class.active]="currentStep === step"
+           [class.completed]="currentStep > step"
+           (click)="goToStep(step)">
+        <div class="step-number">{{step}}</div>
+        <div class="step-label">
+          <span *ngIf="step === 1">ATS</span>
+          <span *ngIf="step === 2">Capacitación</span>
+          <span *ngIf="step === 3">Inspección EPP</span>
+          <span *ngIf="step === 4">Herramientas</span>
+          <span *ngIf="step === 5">PETAR</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Datos Generales -->
+  <div class="general-data mb-4">
+    <div class="card border-0 shadow-sm">
+      <div class="card-header bg-light">
+        <h6 class="mb-0"><i class="bi bi-info-circle me-2"></i>Datos Generales</h6>
+      </div>
+      <div class="card-body">
+        <div class="row g-3">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Empresa *</label>
+            <input type="text" class="form-control"
+                   [(ngModel)]="formData.empresa"
+                   name="empresa"
+                   placeholder="Nombre de la empresa"
+                   required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Lugar de Trabajo *</label>
+            <input type="text" class="form-control"
+                   [(ngModel)]="formData.lugarTrabajo"
+                   name="lugarTrabajo"
+                   placeholder="Ubicación específica"
+                   required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Fecha *</label>
+            <input type="date" class="form-control"
+                   [(ngModel)]="formData.fecha"
+                   name="fecha"
+                   required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Hora *</label>
+            <input type="time" class="form-control"
+                   [(ngModel)]="formData.hora"
+                   name="hora"
+                   required>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Número de Registro</label>
+            <input type="text" class="form-control"
+                   placeholder="Se generará automáticamente"
+                   disabled>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 1: ATS -->
+  <div *ngIf="currentStep === 1" class="step-content">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-primary text-white">
+        <h5 class="mb-0"><i class="bi bi-shield me-2"></i>HOJA 1: Análisis de Trabajo Seguro (ATS)</h5>
+      </div>
+      <div class="card-body">
+
+        <!-- Trabajo a Realizar -->
+        <div class="mb-4">
+          <label class="form-label fw-semibold">Trabajo a Realizar *</label>
+          <app-ngselect-dropdown
+            [items]="trabajosDropdown"
+            [placeholder]="'Seleccione el trabajo'"
+            [multiple]="false"
+            [required]="true"
+            (selectionChange)="onTrabajoSelected($event)">
+          </app-ngselect-dropdown>
+        </div>
+
+        <!-- Participantes -->
+        <div class="card mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-people me-2"></i>Relación del Personal</h6>
+          </div>
+          <div class="card-body">
+            <div class="row g-3 mb-3">
+              <div class="col-md-6">
+                <label class="form-label">Trabajador</label>
+                <app-ngselect-dropdown
+                  [items]="trabajadoresDropdown"
+                  [placeholder]="'Buscar trabajador...'"
+                  (selectionChange)="onTrabajadorSelected($event, 'participante')">
+                </app-ngselect-dropdown>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Rol</label>
+                <app-ngselect-dropdown
+                  [items]="rolesDropdown"
+                  [placeholder]="'Seleccionar rol...'"
+                  (selectionChange)="onRolSelected($event)">
+                </app-ngselect-dropdown>
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-primary w-100" (click)="addParticipante()">
+                  <i class="bi bi-plus-lg"></i> Agregar
+                </button>
+              </div>
+            </div>
+
+            <!-- Lista de participantes -->
+            <div class="table-responsive" *ngIf="formData.ats.participantes.length > 0">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Trabajador</th>
+                    <th>Rol</th>
+                    <th width="80">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let p of formData.ats.participantes; let i = index">
+                    <td>{{i + 1}}</td>
+                    <td>{{getTrabajadorNombre(p.idTrabajador)}}</td>
+                    <td>{{getRolNombre(p.idRol)}}</td>
+                    <td>
+                      <button type="button" class="btn btn-sm btn-outline-danger"
+                              (click)="removeParticipante(i)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- Identificación de Riesgos -->
+        <div class="card mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-exclamation-triangle me-2"></i>Identificación de Riesgos</h6>
+          </div>
+          <div class="card-body">
+            <div class="row g-3 mb-3">
+              <div class="col-md-3">
+                <label class="form-label">Secuencia de Tareas</label>
+                <app-ngselect-dropdown
+                  [items]="tareasDropdown"
+                  [placeholder]="'Seleccionar tarea...'"
+                  (selectionChange)="onTareaSelected($event)">
+                </app-ngselect-dropdown>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Peligro</label>
+                <app-ngselect-dropdown
+                  [items]="peligrosDropdown"
+                  [placeholder]="'Seleccionar peligro...'"
+                  (selectionChange)="onPeligroSelected($event)">
+                </app-ngselect-dropdown>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Riesgo y Consecuencias</label>
+                <app-ngselect-dropdown
+                  [items]="riesgosDropdown"
+                  [placeholder]="'Seleccionar riesgo...'"
+                  (selectionChange)="onRiesgoSelected($event)">
+                </app-ngselect-dropdown>
+              </div>
+              <div class="col-md-3">
+                <label class="form-label">Medidas de Control</label>
+                <app-ngselect-dropdown
+                  [items]="medidasControlDropdown"
+                  [placeholder]="'Seleccionar medida...'"
+                  (selectionChange)="onMedidaSelected($event)">
+                </app-ngselect-dropdown>
+              </div>
+            </div>
+
+            <div class="text-center mb-3">
+              <button type="button" class="btn btn-primary" (click)="addRiesgo()">
+                <i class="bi bi-plus-circle me-1"></i>Agregar Riesgo Identificado
+              </button>
+            </div>
+
+            <!-- Lista de riesgos identificados -->
+            <div class="table-responsive" *ngIf="formData.ats.riesgos.length > 0">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Tarea</th>
+                    <th>Peligro</th>
+                    <th>Riesgo</th>
+                    <th>Medida de Control</th>
+                    <th width="80">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let r of formData.ats.riesgos; let i = index">
+                    <td>{{getTareaNombre(r.idTarea)}}</td>
+                    <td>{{getPeligroNombre(r.idPeligro)}}</td>
+                    <td>{{getRiesgoNombre(r.idRiesgo)}}</td>
+                    <td>{{getMedidaNombre(r.idMedida)}}</td>
+                    <td>
+                      <button type="button" class="btn btn-sm btn-outline-danger"
+                              (click)="removeRiesgo(i)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+        <!-- EPP Requerido -->
+        <div class="card mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-shield-check me-2"></i>Equipos de Protección Personal (EPP)</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold mb-3">EPP Requerido para el Trabajo</label>
+                <div class="row">
+                  <div class="col-md-6 mb-2" *ngFor="let epp of epps">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox"
+                             [id]="'epp-' + epp.idEPP"
+                             [checked]="formData.ats.eppIds.includes(epp.idEPP)"
+                             (change)="toggleEPP(epp.idEPP)">
+                      <label class="form-check-label" [for]="'epp-' + epp.idEPP">
+                        {{epp.nombre}}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <label class="form-label fw-semibold mb-3">Tipos de Trabajo de Alto Riesgo</label>
+                <div class="row">
+                  <div class="col-md-6 mb-2" *ngFor="let tipo of tiposRiesgo">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox"
+                             [id]="'tipo-' + tipo.id"
+                             [checked]="formData.ats.tipoRiesgoIds.includes(tipo.id)"
+                             (change)="toggleTipoRiesgo(tipo.id)">
+                      <label class="form-check-label" [for]="'tipo-' + tipo.id">
+                        {{tipo.nombre}}
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 2: Capacitación -->
+  <div *ngIf="currentStep === 2" class="step-content">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-success text-white">
+        <h5 class="mb-0"><i class="bi bi-megaphone me-2"></i>HOJA 2: Capacitación / Charla Diaria</h5>
+      </div>
+      <div class="card-body">
+
+        <!-- Datos de la charla -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Tema de la Charla *</label>
+            <input type="text" class="form-control"
+                   [(ngModel)]="formData.capacitacion.tema"
+                   placeholder="Tema de charla de 5 minutos"
+                   required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Fecha *</label>
+            <input type="date" class="form-control"
+                   [(ngModel)]="formData.capacitacion.fecha"
+                   required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label fw-semibold">Hora *</label>
+            <input type="time" class="form-control"
+                   [(ngModel)]="formData.capacitacion.hora"
+                   required>
+          </div>
+          <div class="col-md-6">
+            <label class="form-label fw-semibold">Capacitador *</label>
+            <app-ngselect-dropdown
+              [items]="trabajadoresDropdown"
+              [placeholder]="'Seleccionar capacitador...'"
+              [multiple]="false"
+              [required]="true"
+              (selectionChange)="onTrabajadorSelected($event, 'capacitador')">
+            </app-ngselect-dropdown>
+          </div>
+        </div>
+
+        <!-- Asistentes -->
+        <div class="card">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-person-lines-fill me-2"></i>Lista de Asistentes</h6>
+          </div>
+          <div class="card-body">
+            <div class="row g-3 mb-3">
+              <div class="col-md-8">
+                <label class="form-label">Trabajador</label>
+                <app-ngselect-dropdown
+                  [items]="trabajadoresDropdown"
+                  [placeholder]="'Buscar trabajador...'"
+                  (selectionChange)="onTrabajadorSelected($event, 'asistente')">
+                </app-ngselect-dropdown>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label">Observaciones (Opcional)</label>
+                <input type="text" class="form-control"
+                       [(ngModel)]="newAsistente.observaciones"
+                       placeholder="Observaciones">
+              </div>
+              <div class="col-md-12 text-end">
+                <button type="button" class="btn btn-success" (click)="addAsistente()">
+                  <i class="bi bi-person-plus me-1"></i>Agregar Asistente
+                </button>
+              </div>
+            </div>
+
+            <!-- Lista de asistentes -->
+            <div class="table-responsive" *ngIf="formData.capacitacion.asistentes.length > 0">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>#</th>
+                    <th>Trabajador</th>
+                    <th>DNI</th>
+                    <th>Área/Cargo</th>
+                    <th>Observaciones</th>
+                    <th width="80">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let a of formData.capacitacion.asistentes; let i = index">
+                    <td>{{i + 1}}</td>
+                    <td>{{getTrabajadorNombre(a.idTrabajador)}}</td>
+                    <td>{{getTrabajadorDNI(a.idTrabajador)}}</td>
+                    <td>{{getTrabajadorCargo(a.idTrabajador)}}</td>
+                    <td>{{a.observaciones}}</td>
+                    <td>
+                      <button type="button" class="btn btn-sm btn-outline-danger"
+                              (click)="removeAsistente(i)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 3: Inspección EPP -->
+  <div *ngIf="currentStep === 3" class="step-content">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-warning text-dark">
+        <h5 class="mb-0"><i class="bi bi-shield-check me-2"></i>HOJA 3: Inspección de EPP</h5>
+      </div>
+      <div class="card-body">
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Tipo de Inspección</label>
+            <select class="form-select" disabled>
+              <option selected>Planificada</option>
+              <option>No Planificada</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Inspector *</label>
+            <app-ngselect-dropdown
+              [items]="trabajadoresDropdown"
+              [placeholder]="'Seleccionar inspector...'"
+              [multiple]="false"
+              [required]="true"
+              (selectionChange)="onTrabajadorSelected($event, 'inspector')">
+            </app-ngselect-dropdown>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Fecha de Inspección *</label>
+            <input type="date" class="form-control"
+                   value="{{formData.fecha}}"
+                   disabled>
+          </div>
+        </div>
+
+        <!-- Detalles de inspección EPP -->
+        <div class="card">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-clipboard-check me-2"></i>Verificación de EPP por Trabajador</h6>
+          </div>
+          <div class="card-body">
+            <div class="row g-3 mb-3">
+              <div class="col-md-5">
+                <label class="form-label">Trabajador</label>
+                <app-ngselect-dropdown
+                  [items]="trabajadoresDropdown"
+                  [placeholder]="'Seleccionar trabajador...'"
+                  (selectionChange)="onTrabajadorSelected($event, 'eppTrabajador')">
+                </app-ngselect-dropdown>
+              </div>
+              <div class="col-md-5">
+                <label class="form-label">EPP Verificado</label>
+                <app-ngselect-dropdown
+                  [items]="eppsDropdown"
+                  [placeholder]="'Seleccionar EPP...'"
+                  (selectionChange)="onEPPItemSelected($event)">
+                </app-ngselect-dropdown>
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-warning w-100" (click)="addEPPDetalle()">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Lista de verificaciones -->
+            <div class="table-responsive" *ngIf="formData.inspeccionEPP.detalles.length > 0">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Trabajador</th>
+                    <th>EPP</th>
+                    <th>Cumple</th>
+                    <th>Observación</th>
+                    <th width="80">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let d of formData.inspeccionEPP.detalles; let i = index">
+                    <td>{{getTrabajadorNombre(d.idTrabajador)}}</td>
+                    <td>{{getEPPNombre(d.idEPP)}}</td>
+                    <td>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox"
+                               [(ngModel)]="d.cumple"
+                               role="switch">
+                        <label class="form-check-label">{{d.cumple ? 'Sí' : 'No'}}</label>
+                      </div>
+                    </td>
+                    <td>
+                      <input type="text" class="form-control form-control-sm"
+                             [(ngModel)]="d.observacion"
+                             placeholder="Observación">
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-sm btn-outline-danger"
+                              (click)="removeEPPDetalle(i)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <!-- Acción correctiva -->
+            <div class="mt-4">
+              <label class="form-label fw-semibold">Acción Correctiva Recomendada</label>
+              <textarea class="form-control" rows="3"
+                        placeholder="Describa las acciones correctivas necesarias..."></textarea>
+            </div>
+
+            <!-- Responsables -->
+            <div class="row mt-4">
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Responsable de Inspección</label>
+                <input type="text" class="form-control"
+                       value="{{getTrabajadorNombre(formData.inspeccionEPP.idInspector)}}"
+                       disabled>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label fw-semibold">Supervisor Operativo para Seguimiento</label>
+                <app-ngselect-dropdown
+                  [items]="trabajadoresDropdown"
+                  [placeholder]="'Seleccionar supervisor...'"
+                  (selectionChange)="onTrabajadorSelected($event, 'supervisor')">
+                </app-ngselect-dropdown>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 4: Inspección Herramientas -->
+  <div *ngIf="currentStep === 4" class="step-content">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-info text-white">
+        <h5 class="mb-0"><i class="bi bi-tools me-2"></i>HOJA 4: Inspección de Herramientas Manuales</h5>
+      </div>
+      <div class="card-body">
+
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Supervisor Operativo *</label>
+            <app-ngselect-dropdown
+              [items]="trabajadoresDropdown"
+              [placeholder]="'Seleccionar supervisor...'"
+              [multiple]="false"
+              [required]="true"
+              (selectionChange)="onTrabajadorSelected($event, 'supervisor')">
+            </app-ngselect-dropdown>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Fecha de Inspección *</label>
+            <input type="date" class="form-control"
+                   value="{{formData.fecha}}"
+                   disabled>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label fw-semibold">Número de Registro</label>
+            <input type="text" class="form-control"
+                   placeholder="Correlativo"
+                   disabled>
+          </div>
+        </div>
+
+        <!-- Lista de herramientas -->
+        <div class="card mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-tool me-2"></i>Herramientas a Inspeccionar</h6>
+          </div>
+          <div class="card-body">
+            <div class="row g-3 mb-3">
+              <div class="col-md-8">
+                <label class="form-label">Herramienta</label>
+                <app-ngselect-dropdown
+                  [items]="herramientasDropdown"
+                  [placeholder]="'Seleccionar herramienta...'"
+                  (selectionChange)="onHerramientaSelected($event)">
+                </app-ngselect-dropdown>
+              </div>
+              <div class="col-md-2 d-flex align-items-end">
+                <button type="button" class="btn btn-info w-100" (click)="addHerramientaDetalle()">
+                  <i class="bi bi-plus-lg"></i>
+                </button>
+              </div>
+            </div>
+
+            <!-- Lista de herramientas -->
+            <div class="table-responsive" *ngIf="formData.inspeccionHerramienta.detalles.length > 0">
+              <table class="table table-sm table-hover">
+                <thead>
+                  <tr>
+                    <th>Herramienta</th>
+                    <th>Foto</th>
+                    <th>Preguntas de Verificación</th>
+                    <th>Cumple</th>
+                    <th>Observaciones</th>
+                    <th width="80">Acciones</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let h of formData.inspeccionHerramienta.detalles; let i = index">
+                    <td>{{getHerramientaNombre(h.idHerramienta)}}</td>
+                    <td>
+                      <div class="d-flex flex-column">
+                        <input type="file" class="form-control form-control-sm"
+                               (change)="onFotoSeleccionada($event, i)"
+                               accept="image/*">
+                        <small *ngIf="h.fotoUrl" class="text-success mt-1">
+                          <i class="bi bi-check-circle"></i> Foto cargada
+                        </small>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="small">
+                        <div *ngFor="let pregunta of preguntasHerramientas" class="form-check">
+                          <input class="form-check-input" type="checkbox">
+                          <label class="form-check-label">{{pregunta.texto}}</label>
+                        </div>
+                      </div>
+                    </td>
+                    <td>
+                      <div class="form-check form-switch">
+                        <input class="form-check-input" type="checkbox"
+                               [(ngModel)]="h.cumple"
+                               role="switch">
+                        <label class="form-check-label">{{h.cumple ? 'Sí' : 'No'}}</label>
+                      </div>
+                    </td>
+                    <td>
+                      <input type="text" class="form-control form-control-sm"
+                             [(ngModel)]="h.observacion"
+                             placeholder="Observaciones">
+                    </td>
+                    <td>
+                      <button type="button" class="btn btn-sm btn-outline-danger"
+                              (click)="removeHerramientaDetalle(i)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Step 5: PETAR -->
+  <div *ngIf="currentStep === 5" class="step-content">
+    <div class="card border-0 shadow-sm mb-4">
+      <div class="card-header bg-danger text-white">
+        <h5 class="mb-0"><i class="bi bi-exclamation-octagon me-2"></i>HOJA 5: PETAR - Permisos para Trabajos de Alto Riesgo</h5>
+      </div>
+      <div class="card-body">
+
+        <!-- Evaluación de Ambiente -->
+        <div class="card mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0">Evaluación de Ambiente de Trabajo</h6>
+          </div>
+          <div class="card-body">
+            <div class="row g-3">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-semibold">¿Requiere evaluación de ambiente de trabajo?</label>
+                <div class="btn-group w-100" role="group">
+                  <button type="button" class="btn btn-outline-primary"
+                          [class.active]="getPETARRespuesta(1) === true"
+                          (click)="addPETARRespuesta(1, true)">
+                    Sí
+                  </button>
+                  <button type="button" class="btn btn-outline-primary"
+                          [class.active]="getPETARRespuesta(1) === false"
+                          (click)="addPETARRespuesta(1, false)">
+                    No
+                  </button>
+                </div>
+              </div>
+
+              <!-- Evaluaciones específicas -->
+              <div class="col-md-12">
+                <div class="row">
+                  <div class="col-md-4" *ngFor="let pregunta of preguntasPETARFijas.slice(1, 7)">
+                    <div class="mb-3">
+                      <label class="form-label">{{pregunta.texto}}</label>
+                      <select class="form-select"
+                              (change)="addPETARRespuesta(pregunta.id, $event.target.value === 'true')">
+                        <option value="">Seleccionar</option>
+                        <option value="true">Sí</option>
+                        <option value="false">No</option>
+                        <option value="null">Ninguna de las anteriores</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Apertura en Línea de Equipos -->
+        <div class="card mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0">Apertura en Línea de Equipos</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6" *ngFor="let pregunta of preguntasPETAR.slice(0, 6)">
+                <div class="mb-3">
+                  <label class="form-label">{{pregunta.texto}}</label>
+                  <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-outline-secondary"
+                            [class.active]="getPETARRespuesta(pregunta.idPregunta) === true"
+                            (click)="addPETARRespuesta(pregunta.idPregunta, true)">
+                      Sí
+                    </button>
+                    <button type="button" class="btn btn-outline-secondary"
+                            [class.active]="getPETARRespuesta(pregunta.idPregunta) === false"
+                            (click)="addPETARRespuesta(pregunta.idPregunta, false)">
+                      No
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Documentación y Verificación -->
+        <div class="card mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0">Documentación y Verificación</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6" *ngFor="let pregunta of preguntasPETARFijas.slice(6)">
+                <div class="mb-3">
+                  <label class="form-label">{{pregunta.texto}}</label>
+                  <div class="btn-group w-100" role="group">
+                    <button type="button" class="btn btn-outline-success"
+                            [class.active]="getPETARRespuesta(pregunta.id) === true"
+                            (click)="addPETARRespuesta(pregunta.id, true)">
+                      Sí
+                    </button>
+                    <button type="button" class="btn btn-outline-success"
+                            [class.active]="getPETARRespuesta(pregunta.id) === false"
+                            (click)="addPETARRespuesta(pregunta.id, false)">
+                      No
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Trabajadores Autorizados -->
+        <div class="card mb-4">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-person-check me-2"></i>Trabajadores Autorizados</h6>
+          </div>
+          <div class="card-body">
+            <div class="mb-3">
+              <label class="form-label fw-semibold">Seleccionar Trabajadores Autorizados</label>
+              <app-ngselect-dropdown
+                [items]="trabajadoresDropdown"
+                [placeholder]="'Buscar trabajadores...'"
+                [multiple]="true"
+                (selectionChange)="onTrabajadorAutorizadoSelected($event)">
+              </app-ngselect-dropdown>
+            </div>
+
+            <!-- Lista de trabajadores autorizados -->
+            <div *ngIf="formData.petar.trabajadoresAutorizadosIds.length > 0" class="mt-3">
+              <h6 class="fw-semibold">Lista de Trabajadores Autorizados:</h6>
+              <div class="d-flex flex-wrap gap-2">
+                <span *ngFor="let id of formData.petar.trabajadoresAutorizadosIds"
+                      class="badge bg-success">
+                  {{getTrabajadorNombre(id)}}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Firmas y Responsables -->
+        <div class="card">
+          <div class="card-header bg-light">
+            <h6 class="mb-0"><i class="bi bi-pen me-2"></i>Conformidad y Firmas</h6>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Supervisor de Trabajo</label>
+                <input type="text" class="form-control"
+                       value="{{getSupervisorTrabajo()}}"
+                       disabled>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Responsable del Lugar</label>
+                <input type="text" class="form-control"
+                       value="{{getResponsableLugar()}}"
+                       disabled>
+              </div>
+              <div class="col-md-4">
+                <label class="form-label fw-semibold">Supervisor SST (SOMA)</label>
+                <input type="text" class="form-control"
+                       value="{{getSupervisorSST()}}"
+                       disabled>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Navegación -->
+  <div class="navigation-buttons">
+    <div class="d-flex justify-content-between">
+      <button type="button" class="btn btn-secondary"
+              (click)="prevStep()"
+              [disabled]="currentStep === 1">
+        <i class="bi bi-arrow-left me-1"></i>Anterior
+      </button>
+
+      <div *ngIf="currentStep < totalSteps">
+        <button type="button" class="btn btn-primary" (click)="nextStep()">
+          Siguiente <i class="bi bi-arrow-right ms-1"></i>
+        </button>
+      </div>
+
+      <div *ngIf="currentStep === totalSteps">
+        <button type="button" class="btn btn-success"
+                (click)="onSubmit()"
+                [disabled]="isLoading">
+          <span *ngIf="isLoading" class="spinner-border spinner-border-sm me-1"></span>
+          {{isLoading ? 'Guardando...' : 'Completar Formulario SST'}}
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>

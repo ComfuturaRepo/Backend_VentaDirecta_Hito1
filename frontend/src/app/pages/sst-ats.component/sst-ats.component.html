@@ -1,0 +1,277 @@
+<div class="container-fluid py-4" [class.modal-open]="showDetailModal || showCreateForm || showCompleteForm">
+  <!-- Header -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card header-card">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center">
+            <div class="header-title">
+              <div class="d-flex align-items-center">
+                <div class="header-icon">
+                  <i class="bi bi-shield-check"></i>
+                </div>
+                <div>
+                  <h1 class="h3 mb-1 text-primary">Sistema SST - ATS</h1>
+                  <p class="text-muted mb-0">Gestión de Análisis de Trabajo Seguro</p>
+                </div>
+              </div>
+            </div>
+            <div class="header-actions">
+              <div class="btn-group-vertical btn-group-lg" role="group">
+                <button class="btn btn-primary-gradient" (click)="onShowCreateForm()">
+                  <i class="bi bi-plus-circle me-2"></i>
+                  <span>Nuevo ATS</span>
+                </button>
+                <button class="btn btn-success-gradient mt-2" (click)="onShowSSTCompleteForm()">
+                  <i class="bi bi-file-text me-2"></i>
+                  <span>Formulario SST Completo</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Barra de búsqueda -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <app-search-bar
+        [placeholder]="'Buscar por empresa, lugar de trabajo...'"
+        (search)="onSearch($event)">
+      </app-search-bar>
+    </div>
+  </div>
+
+  <!-- Estadísticas Rápidas -->
+  <div class="row mb-4">
+    <div class="col-md-3 mb-3">
+      <div class="card stat-card">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="stat-icon bg-primary">
+              <i class="bi bi-file-text"></i>
+            </div>
+            <div class="ms-3">
+              <h6 class="mb-1">Total ATS</h6>
+              <h3 class="mb-0">{{totalItems}}</h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card stat-card">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="stat-icon bg-success">
+              <i class="bi bi-people"></i>
+            </div>
+            <div class="ms-3">
+              <h6 class="mb-1">Participantes</h6>
+              <h3 class="mb-0">
+<h3 class="mb-0">{{totalParticipantes}}</h3>              </h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card stat-card">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="stat-icon bg-warning">
+              <i class="bi bi-exclamation-triangle"></i>
+            </div>
+            <div class="ms-3">
+              <h6 class="mb-1">Activo Hoy</h6>
+              <h3 class="mb-0">
+                {{getATSHoy()}}
+              </h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-3 mb-3">
+      <div class="card stat-card">
+        <div class="card-body">
+          <div class="d-flex align-items-center">
+            <div class="stat-icon bg-info">
+              <i class="bi bi-check-circle"></i>
+            </div>
+            <div class="ms-3">
+              <h6 class="mb-1">Completados</h6>
+              <h3 class="mb-0">
+                {{atsList.length}}
+              </h3>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Lista de ATS -->
+  <div class="row">
+    <div class="col-12">
+      <app-ats-list
+        [atsList]="atsList"
+        [currentPage]="currentPage"
+        [pageSize]="pageSize"
+        [totalItems]="totalItems"
+        [totalPages]="totalPages"
+        [isLoading]="isLoading"
+        [searchTerm]="searchTerm"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
+        (viewDetails)="onViewDetails($event)"
+        (refreshList)="onRefreshList()"
+        (search)="onSearch($event)">
+      </app-ats-list>
+    </div>
+  </div>
+
+  <!-- Modal Detalle ATS -->
+  <div class="modal-overlay" *ngIf="showDetailModal || showCreateForm || showCompleteForm"
+       (click)="onCloseAllModals()">
+  </div>
+
+
+
+  <!-- Modal Crear ATS -->
+  <div *ngIf="showCreateForm" class="modal-container">
+    <div class="modal-content modal-lg">
+      <div class="modal-header modal-header-primary">
+        <div class="modal-title-wrapper">
+          <div class="modal-icon">
+            <i class="bi bi-plus-circle"></i>
+          </div>
+          <div>
+            <h5 class="modal-title mb-0">Nuevo ATS</h5>
+            <p class="modal-subtitle mb-0">Complete los datos del análisis de trabajo seguro</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" (click)="onCloseCreateForm()"></button>
+      </div>
+
+    </div>
+  </div>
+<app-sst-complete-form
+  [formData]="sstForm"
+  [trabajos]="trabajos"
+  [trabajadores]="trabajadores"
+  [epps]="epps"
+  [tiposRiesgo]="tiposRiesgo"
+  [tareas]="tareas"
+  [peligros]="peligros"
+  [riesgos]="riesgos"
+  [medidasControl]="medidasControl"
+  [preguntasPETAR]="preguntasPETAR"
+  [herramientas]="herramientas"
+  [isLoading]="isCreatingComplete"
+  (save)="onCreateSSTCompleteForm($event)"
+  (cancel)="onCloseCompleteForm()">
+</app-sst-complete-form>
+  <!-- Modal Formulario SST Completo -->
+  <div *ngIf="showCompleteForm" class="modal-container">
+    <div class="modal-content modal-xl">
+      <div class="modal-header modal-header-success">
+        <div class="modal-title-wrapper">
+          <div class="modal-icon">
+            <i class="bi bi-file-text"></i>
+          </div>
+          <div>
+            <h5 class="modal-title mb-0">Formulario SST Completo</h5>
+            <p class="modal-subtitle mb-0">Gestión completa de 5 hojas de seguridad</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" (click)="onCloseCompleteForm()"></button>
+      </div>
+
+      <div class="modal-body">
+        <div class="modal-body-content">
+          <div class="sst-complete-info">
+            <div class="row">
+              <div class="col-md-8">
+                <h6 class="fw-semibold mb-3">Secciones del Formulario</h6>
+                <div class="list-group list-group-flush">
+                  <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                      <div>
+                        <i class="bi bi-shield text-primary me-2"></i>
+                        <span class="fw-medium">1. ATS - Análisis de Trabajo Seguro</span>
+                        <p class="text-muted small mb-0 mt-1">Identificación de peligros y riesgos</p>
+                      </div>
+                      <span class="badge bg-primary">Obligatorio</span>
+                    </div>
+                  </div>
+                  <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                      <div>
+                        <i class="bi bi-megaphone text-success me-2"></i>
+                        <span class="fw-medium">2. Capacitación / Charla Diaria</span>
+                        <p class="text-muted small mb-0 mt-1">Registro de charlas de seguridad</p>
+                      </div>
+                      <span class="badge bg-success">Recomendado</span>
+                    </div>
+                  </div>
+                  <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                      <div>
+                        <i class="bi bi-shield-check text-warning me-2"></i>
+                        <span class="fw-medium">3. Inspección EPP</span>
+                        <p class="text-muted small mb-0 mt-1">Verificación de equipos de protección</p>
+                      </div>
+                      <span class="badge bg-warning text-dark">Obligatorio</span>
+                    </div>
+                  </div>
+                  <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                      <div>
+                        <i class="bi bi-tools text-info me-2"></i>
+                        <span class="fw-medium">4. Inspección Herramientas</span>
+                        <p class="text-muted small mb-0 mt-1">Verificación de herramientas y equipos</p>
+                      </div>
+                      <span class="badge bg-info">Recomendado</span>
+                    </div>
+                  </div>
+                  <div class="list-group-item">
+                    <div class="d-flex w-100 justify-content-between align-items-center">
+                      <div>
+                        <i class="bi bi-exclamation-octagon text-danger me-2"></i>
+                        <span class="fw-medium">5. PETAR - Permisos Especiales</span>
+                        <p class="text-muted small mb-0 mt-1">Trabajos de alto riesgo</p>
+                      </div>
+                      <span class="badge bg-danger">Obligatorio</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="card border-0 bg-light">
+                  <div class="card-body">
+                    <h6 class="fw-semibold mb-3">Beneficios</h6>
+                    <ul class="list-unstyled mb-0">
+                      <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Completa integración</li>
+                      <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Datos sincronizados</li>
+                      <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Ahorro de tiempo</li>
+                      <li class="mb-2"><i class="bi bi-check-circle text-success me-2"></i>Reportes automáticos</li>
+                    </ul>
+                    <div class="mt-4">
+                      <button class="btn btn-success w-100" (click)="startSSTForm()">
+                        <i class="bi bi-play-circle me-2"></i>
+                        Iniciar Formulario
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

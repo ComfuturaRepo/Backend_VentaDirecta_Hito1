@@ -1,0 +1,22 @@
+<div class="card shadow-sm">
+  <div class="card-body">
+    <div class="input-group">
+      <span class="input-group-text">
+        <i class="bi bi-search"></i>
+      </span>
+      <input
+        type="text"
+        class="form-control"
+        [placeholder]="placeholder"
+        [(ngModel)]="searchTerm"
+        (keyup.enter)="onSearch()"
+        (keyup)="onKeyUp($event)">
+      <button class="btn btn-outline-primary" (click)="onSearch()">
+        {{buttonText}}
+      </button>
+      <button *ngIf="showClearButton && searchTerm" class="btn btn-outline-secondary" (click)="onClear()">
+        Limpiar
+      </button>
+    </div>
+  </div>
+</div>

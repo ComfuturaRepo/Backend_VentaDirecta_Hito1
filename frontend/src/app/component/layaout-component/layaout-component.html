@@ -98,6 +98,16 @@
           </a>
         </li>
 
+         <!-- SSOMA -->
+        <li >
+          <a routerLink="/sst-ats" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-cart-check-fill"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">SSOMA</span>
+          </a>
+        </li>
+
         <!-- Separador para administración -->
         <li class="menu-divider" *ngIf="!isCollapsed">
           <span class="divider-label">Administración</span>
