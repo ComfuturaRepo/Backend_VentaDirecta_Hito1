@@ -68,7 +68,7 @@ export const routes: Routes = [
         path: 'usuarios',
         component: UsuariosComponent,
         canActivate: [permisoGuard],
-        data: { permisos: ['USUARIO_ADMIN'] }
+        data: { permisos: ['USUARIO_VIEW'] }
       },
       {
         path: 'perfil',
