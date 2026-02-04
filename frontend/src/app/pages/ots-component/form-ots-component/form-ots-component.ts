@@ -29,7 +29,7 @@ export class FormOtsComponent implements OnInit, OnDestroy {
   private route = inject(ActivatedRoute);
   private cdr = inject(ChangeDetectorRef);
 private lastClienteId: number | null = null;
-
+private clienteTimeout: any;
   @Input() otId: number | null = null;
   @Input() isViewMode: boolean = false;
   @Input() mode: 'create' | 'edit' = 'create';
@@ -103,6 +103,18 @@ ngOnInit(): void {
   console.log('FormOtsComponent inicializando...');
 
   this.isEditMode = this.mode === 'edit';
+// ✅ PRIMERO crear el formulario VACÍO
+  this.crearFormularioBase();
+
+  // ✅ DEBUG: Ver qué valor llega al formControl
+  setTimeout(() => {
+    this.form.get('idCliente')?.valueChanges.subscribe(value => {
+      console.log('DEBUG - idCliente valueChanges:', value);
+      console.log('DEBUG - Tipo:', typeof value);
+      console.log('DEBUG - Es objeto?:', typeof value === 'object');
+    });
+  }, 1000);
+  // ✅ PRIMERO crear el formulario VACÍO
   this.crearFormularioBase();
 
   // Obtener usuario actual
@@ -110,33 +122,42 @@ ngOnInit(): void {
   this.usernameLogueado = user?.username || 'Usuario';
   this.trabajadorIdLogueado = user?.idTrabajador ?? null;
 
-  // ✅ CORREGIDO: Cargar primero los catálogos, luego los datos
-  if (this.isEditMode && this.otId) {
-    this.cargarCatalogosYDespuesDatos(this.otId);
-  } else if (this.mode === 'edit' && this.otData) {
-    // Cargar catálogos primero
-    this.cargarTodosLosCatalogos().then(() => {
+  // ✅ Cargar catálogos siempre primero
+  this.loading = true;
+
+  this.cargarTodosLosCatalogos().then(() => {
+    if (this.isEditMode && this.otId) {
+      // Modo edición con ID
+      this.cargarDatosOT(this.otId);
+    } else if (this.isEditMode && this.otData) {
+      // Modo edición con datos ya cargados
       this.patchFormValues(this.otData);
       const clienteId = this.form.get('idCliente')?.value;
       if (clienteId) {
         this.cargarAreasPorCliente(clienteId);
       }
-    });
-  } else {
-    this.cargarDropdownsParaCreacion();
-  }
+      this.loading = false;
+    } else {
+      // Modo creación
+      this.loading = false;
+    }
 
-  // Si es modo vista, deshabilitar formulario
-  if (this.isViewMode) {
+    // Si es modo vista, deshabilitar formulario
+    if (this.isViewMode) {
+      setTimeout(() => {
+        this.form.disable();
+      }, 100);
+    }
+
+    // Ejecutar validación inicial después de un breve delay
     setTimeout(() => {
-      this.form.disable();
+      this.actualizarValidacionOtAnterior();
     }, 100);
-  }
-
-  // Ejecutar validación inicial después de un breve delay
-  setTimeout(() => {
-    this.actualizarValidacionOtAnterior();
-  }, 100);
+  }).catch(error => {
+    console.error('Error al cargar catálogos:', error);
+    this.loading = false;
+    this.mostrarError('No se pudieron cargar los catálogos necesarios');
+  });
 }
 
 // ✅ NUEVO MÉTODO: Cargar catálogos y luego datos
@@ -230,38 +251,198 @@ private cargarDatosOT(otId: number): void {
 }
 
 private patchFormValues(data: any): void {
-  if (!data) return;
-
-  console.log('Patching form values para edición:', data);
-  console.log('Cliente ID:', data.idCliente);
-  console.log('Área ID:', data.idArea);
-
-  // ✅ Primero establecer el cliente y cargar áreas
-  if (data.idCliente) {
-    // Establecer cliente primero
-    this.form.get('idCliente')?.setValue(data.idCliente, { emitEvent: false });
-    this.selectedClienteId = data.idCliente;
-    this.lastClienteId = data.idCliente;
-
-    // Cargar áreas para este cliente
-    this.cargarAreasPorCliente(data.idCliente).then(() => {
-      // Una vez cargadas las áreas, establecer el área seleccionada
-      setTimeout(() => {
-        this.form.get('idArea')?.setValue(data.idArea, { emitEvent: false });
-        this.selectedAreaId = data.idArea;
-        this.form.get('idArea')?.enable();
-
-        // Establecer el resto de valores
-        this.establecerRestoValores(data);
-      }, 100);
-    });
-  } else {
-    this.establecerRestoValores(data);
+  if (!data) {
+    console.warn('patchFormValues: Sin datos para patchar');
+    return;
   }
 
-  this.cdr.detectChanges();
-}
+  console.log('=== PATCH FORM VALUES ===');
+  console.log('Datos recibidos:', data);
+  console.log('Cliente ID en datos:', data.idCliente);
+  console.log('Tipo de cliente ID:', typeof data.idCliente);
+  console.log('Área ID en datos:', data.idArea);
+  console.log('Tipo de área ID:', typeof data.idArea);
 
+  // ✅ DESHABILITAR TEMPORALMENTE valueChanges para evitar ciclos
+  const clienteControl = this.form.get('idCliente');
+  const areaControl = this.form.get('idArea');
+
+  // Guardar valores actuales para restaurar después si es necesario
+  const originalClienteValue = clienteControl?.value;
+  const originalAreaValue = areaControl?.value;
+
+  // ✅ Convertir valores a números para asegurar consistencia
+  const clienteId = data.idCliente ? Number(data.idCliente) : null;
+  const areaId = data.idArea ? Number(data.idArea) : null;
+  const proyectoId = data.idProyecto ? Number(data.idProyecto) : null;
+  const faseId = data.idFase ? Number(data.idFase) : null;
+  const siteId = data.idSite ? Number(data.idSite) : null;
+  const siteDescId = data.idSiteDescripcion ? Number(data.idSiteDescripcion) : null;
+  const tipoOtId = data.idTipoOt ? Number(data.idTipoOt) : null;
+  const regionId = data.idRegion ? Number(data.idRegion) : null;
+  const jefaturaClienteId = data.idJefaturaClienteSolicitante ? Number(data.idJefaturaClienteSolicitante) : null;
+  const analistaClienteId = data.idAnalistaClienteSolicitante ? Number(data.idAnalistaClienteSolicitante) : null;
+  const coordinadorId = data.idCoordinadorTiCw ? Number(data.idCoordinadorTiCw) : null;
+  const jefaturaRespId = data.idJefaturaResponsable ? Number(data.idJefaturaResponsable) : null;
+  const liquidadorId = data.idLiquidador ? Number(data.idLiquidador) : null;
+  const ejecutanteId = data.idEjecutante ? Number(data.idEjecutante) : null;
+  const analistaContableId = data.idAnalistaContable ? Number(data.idAnalistaContable) : null;
+  const estadoOtId = data.idEstadoOt ? Number(data.idEstadoOt) : null;
+  const otAnteriorId = data.idOtsAnterior ? Number(data.idOtsAnterior) : null;
+
+  console.log('Valores convertidos a números:');
+  console.log('- Cliente ID:', clienteId);
+  console.log('- Área ID:', areaId);
+  console.log('- Proyecto ID:', proyectoId);
+  console.log('- Site ID:', siteId);
+
+  // ✅ Parchar valores SIN emitir eventos para evitar ciclos
+  this.form.patchValue({
+    idOts: data.idOts || null,
+    idCliente: clienteId, // ✅ Solo el ID numérico
+    idArea: areaId, // ✅ Solo el ID numérico
+    idProyecto: proyectoId,
+    idFase: faseId,
+    idSite: siteId,
+    idSiteDescripcion: siteDescId,
+    idTipoOt: tipoOtId,
+    idRegion: regionId,
+    descripcion: data.descripcion || '',
+    fechaApertura: data.fechaApertura || new Date().toISOString().split('T')[0],
+    idOtsAnterior: otAnteriorId,
+    idJefaturaClienteSolicitante: jefaturaClienteId,
+    idAnalistaClienteSolicitante: analistaClienteId,
+    idCoordinadorTiCw: coordinadorId,
+    idJefaturaResponsable: jefaturaRespId,
+    idLiquidador: liquidadorId,
+    idEjecutante: ejecutanteId,
+    idAnalistaContable: analistaContableId,
+    idEstadoOt: estadoOtId
+  }, { emitEvent: false });
+
+  // ✅ Establecer variables seleccionadas MANUALMENTE
+  this.selectedClienteId = clienteId;
+  this.selectedAreaId = areaId;
+  this.selectedProyectoId = proyectoId;
+  this.selectedFaseId = faseId;
+  this.selectedSiteId = siteId;
+  this.selectedRegionId = regionId;
+  this.selectedTipoOtId = tipoOtId;
+  this.selectedSiteDescripcionId = siteDescId;
+  this.selectedJefaturaClienteId = jefaturaClienteId;
+  this.selectedAnalistaClienteId = analistaClienteId;
+  this.selectedCoordinadorTiCwId = coordinadorId;
+  this.selectedJefaturaResponsableId = jefaturaRespId;
+  this.selectedLiquidadorId = liquidadorId;
+  this.selectedEjecutanteId = ejecutanteId;
+  this.selectedAnalistaContableId = analistaContableId;
+  this.selectedEstadoOTId = estadoOtId;
+
+  // ✅ Establecer lastClienteId ANTES de cargar áreas
+  this.lastClienteId = clienteId;
+
+  console.log('Variables seleccionadas establecidas');
+  console.log('lastClienteId:', this.lastClienteId);
+
+  // ✅ Configurar descripción del site si hay site
+  if (siteId && this.sites.length > 0) {
+    const site = this.sites.find(s => s.id === siteId);
+    if (site) {
+      this.selectedSiteCodigo = site.adicional || site.label || 'SIN CÓDIGO';
+      console.log('Código del site establecido:', this.selectedSiteCodigo);
+
+      // Cargar descripciones si hay código válido
+      if (this.selectedSiteCodigo &&
+          this.selectedSiteCodigo !== 'SIN CÓDIGO' &&
+          this.selectedSiteCodigo !== '-') {
+        this.cargarDescripcionesPorSiteCodigo(this.selectedSiteCodigo).then(() => {
+          // Si había una descripción seleccionada, restaurarla
+          if (siteDescId) {
+            const existe = this.siteDescripciones.some(d => d.id === siteDescId);
+            if (existe) {
+              this.form.get('idSiteDescripcion')?.setValue(siteDescId, { emitEvent: false });
+            }
+          }
+        });
+      }
+    }
+  }
+
+  // ✅ Cargar áreas SI hay cliente
+  if (clienteId) {
+    console.log('=== PROGRAMANDO CARGA DE ÁREAS ===');
+    console.log('Cliente ID para cargar áreas:', clienteId);
+
+    // Primero, limpiar áreas existentes
+    this.areas = [];
+    this.form.get('idArea')?.disable();
+    this.form.get('idArea')?.setValue(null, { emitEvent: false });
+
+    // Usar setTimeout para asegurar que el formulario ya está actualizado
+    setTimeout(() => {
+      console.log('Iniciando carga de áreas para cliente:', clienteId);
+
+      this.cargarAreasPorCliente(clienteId).then(() => {
+        console.log('Áreas cargadas exitosamente');
+        console.log('Áreas disponibles:', this.areas);
+        console.log('Área ID que debería seleccionarse:', areaId);
+
+        // Habilitar el campo de área
+        this.form.get('idArea')?.enable();
+        console.log('Campo área habilitado');
+
+        // Restaurar el valor del área solo si existe en las áreas cargadas
+        if (areaId && this.areas.length > 0) {
+          const areaExists = this.areas.some(a => a.id === areaId);
+          console.log('¿El área existe en las cargadas?', areaExists);
+
+          if (areaExists) {
+            this.form.get('idArea')?.setValue(areaId, { emitEvent: false });
+            console.log('Área seleccionada restaurada:', areaId);
+          } else {
+            console.warn('El área ID', areaId, 'no existe en las áreas cargadas');
+            this.form.get('idArea')?.setValue(null, { emitEvent: false });
+          }
+        } else {
+          console.log('No hay área ID para restaurar o no hay áreas cargadas');
+        }
+
+        this.cdr.detectChanges();
+      }).catch(error => {
+        console.error('Error al cargar áreas:', error);
+        this.areas = [];
+        this.form.get('idArea')?.disable();
+        this.cdr.detectChanges();
+      });
+    }, 200); // Aumentar delay para asegurar estabilidad
+  } else {
+    console.log('No hay cliente ID, no se cargarán áreas');
+    this.areas = [];
+    this.form.get('idArea')?.disable();
+    this.form.get('idArea')?.setValue(null, { emitEvent: false });
+  }
+
+  // ✅ Habilitar/deshabilitar descripción según modo
+  if (this.isEditMode) {
+    this.form.get('descripcion')?.enable();
+    console.log('Descripción habilitada (modo edición)');
+  } else {
+    this.form.get('descripcion')?.disable();
+    console.log('Descripción deshabilitada (modo creación)');
+  }
+
+  // ✅ Forzar actualización de validación OT anterior
+  setTimeout(() => {
+    this.actualizarValidacionOtAnterior();
+  }, 300);
+
+  // ✅ Forzar detección de cambios
+  this.cdr.detectChanges();
+
+  console.log('=== PATCH FORM VALUES COMPLETADO ===');
+  console.log('Estado final del formulario:', this.form.value);
+  console.log('Formulario válido:', this.form.valid);
+}
 private establecerRestoValores(data: any): void {
   // Establecer el resto de valores
   this.form.patchValue({
@@ -307,17 +488,21 @@ private establecerRestoValores(data: any): void {
   }
 }
 
-  ngOnDestroy(): void {
-    this.subscriptions.forEach(sub => sub.unsubscribe());
+ ngOnDestroy(): void {
+  this.subscriptions.forEach(sub => sub.unsubscribe());
+
+  // Limpiar cualquier timeout pendiente
+  if (this.clienteTimeout) {
+    clearTimeout(this.clienteTimeout);
   }
+}
 
   // ============================================
   // MÉTODOS DE INICIALIZACIÓN
   // ============================================
 private crearFormularioBase(): void {
-  const hoy = new Date().toISOString().split('T')[0];
+  const hoy = this.isEditMode ? '' : new Date().toISOString().split('T')[0];
 
-  // Inicializar lastClienteId
   this.lastClienteId = null;
 
   this.form = this.fb.group({
@@ -332,14 +517,11 @@ private crearFormularioBase(): void {
     descripcion: ['', [Validators.required, Validators.minLength(10)]],
     fechaApertura: [hoy, [Validators.required, this.fechaAperturaValidator]],
     idSiteDescripcion: [null],
-
     idOtsAnterior: [null, [
       Validators.min(1),
       Validators.max(2147483647),
       Validators.pattern('^[0-9]*$')
     ]],
-
-    // Responsables (todos requeridos)
     idJefaturaClienteSolicitante: [null, Validators.required],
     idAnalistaClienteSolicitante: [null, Validators.required],
     idCoordinadorTiCw: [null, Validators.required],
@@ -354,27 +536,189 @@ private crearFormularioBase(): void {
   this.form.get('idArea')?.disable();
   this.setupSiteValidation();
 
-  // Si no es edición, deshabilitar descripción (se genera automática)
   if (!this.isEditMode) {
     this.form.get('descripcion')?.disable();
   }
 
-  // En modo edición, el estado OT es requerido
   if (this.isEditMode) {
     this.form.get('idEstadoOt')?.setValidators(Validators.required);
     this.form.get('idEstadoOt')?.updateValueAndValidity();
   }
 
-  // Escuchar cambios en la fecha de apertura para actualizar validaciones
+  // ✅ SUSCRIPCIONES SIMPLIFICADAS - EVITA CICLOS
+  this.configurarSuscripcionesSeguras();
+}
+
+private configurarSuscripcionesSeguras(): void {
+  console.log('Configurando suscripciones seguras...');
+
+  // 1. Suscripción para fecha de apertura
   this.form.get('fechaApertura')?.valueChanges.subscribe(() => {
+    console.log('Fecha de apertura cambiada');
     this.actualizarValidacionOtAnterior();
   });
 
-  // ✅ ESCUCHAR CAMBIOS DEL FORMULARIO PARA ACTUALIZAR VARIABLES
-  this.form.valueChanges.subscribe(values => {
-    console.log('Form values changed:', values); // Para debug
+  // 2. ✅ SUSCRIPCIÓN PARA CLIENTE - Con manejo completo de tipos
+  this.form.get('idCliente')?.valueChanges.subscribe(clienteValue => {
+    console.log('FORM - idCliente valueChanges recibido:', clienteValue);
+    console.log('FORM - Tipo de dato:', typeof clienteValue);
 
-    // Actualizar variables seleccionadas
+    // ✅ Extraer el ID correctamente sin importar el tipo
+    let clienteId: number | null = null;
+
+    try {
+      if (clienteValue === null || clienteValue === undefined || clienteValue === '') {
+        clienteId = null;
+      } else if (typeof clienteValue === 'object' && clienteValue !== null) {
+        // Es un objeto - extraer el ID
+        if (clienteValue.id !== undefined) {
+          clienteId = Number(clienteValue.id);
+          console.log('FORM - Es objeto, ID extraído:', clienteId);
+        } else {
+          console.warn('FORM - Objeto sin propiedad id:', clienteValue);
+          clienteId = null;
+        }
+      } else if (typeof clienteValue === 'number') {
+        // Ya es un número
+        clienteId = clienteValue;
+        console.log('FORM - Ya es número:', clienteId);
+      } else if (typeof clienteValue === 'string') {
+        // Es un string, intentar convertir a número
+        const parsed = parseInt(clienteValue, 10);
+        if (!isNaN(parsed)) {
+          clienteId = parsed;
+          console.log('FORM - String convertido a número:', clienteId);
+        } else {
+          console.warn('FORM - String no convertible a número:', clienteValue);
+          clienteId = null;
+        }
+      } else {
+        console.warn('FORM - Tipo inesperado:', typeof clienteValue, clienteValue);
+        clienteId = null;
+      }
+    } catch (error) {
+      console.error('FORM - Error al procesar clienteValue:', error);
+      clienteId = null;
+    }
+
+    console.log('FORM - Cliente ID final a usar:', clienteId);
+
+    // ✅ Verificar si el cliente cambió realmente
+    if (clienteId && clienteId !== this.lastClienteId) {
+      console.log('FORM - Cliente cambiado, cargando áreas para ID:', clienteId);
+      this.lastClienteId = clienteId;
+
+      // Deshabilitar y limpiar área
+      this.form.get('idArea')?.disable();
+      this.form.get('idArea')?.setValue(null, { emitEvent: false });
+      this.areas = [];
+
+      // Cargar áreas con manejo de errores
+      this.cargarAreasPorCliente(clienteId).then(() => {
+        console.log('FORM - Áreas cargadas para cliente', clienteId);
+        this.form.get('idArea')?.enable();
+        this.cdr.detectChanges();
+      }).catch(error => {
+        console.error('FORM - Error al cargar áreas:', error);
+        this.areas = [];
+        this.form.get('idArea')?.disable();
+        this.cdr.detectChanges();
+      });
+    } else if (!clienteId && this.lastClienteId !== null) {
+      console.log('FORM - Cliente deseleccionado');
+      this.lastClienteId = null;
+      this.areas = [];
+      this.form.get('idArea')?.disable();
+      this.form.get('idArea')?.setValue(null, { emitEvent: false });
+    } else if (clienteId === this.lastClienteId) {
+      console.log('FORM - Mismo cliente, no hacer nada');
+    }
+
+    // Actualizar variable seleccionada
+    this.selectedClienteId = clienteId;
+
+    // Actualizar descripción si no es edición
+    if (!this.isEditMode && !this.isViewMode) {
+      this.actualizarDescripcion();
+    }
+  });
+
+  // 3. ✅ SUSCRIPCIÓN PARA SITE
+  this.form.get('idSite')?.valueChanges.subscribe(siteValue => {
+    console.log('FORM - Site cambiado:', siteValue);
+
+    let siteId: number | null = null;
+
+    if (siteValue === null || siteValue === undefined || siteValue === '') {
+      siteId = null;
+      this.selectedSiteId = null;
+      this.selectedSiteCodigo = null;
+      this.siteDescripciones = [];
+      this.form.get('idSiteDescripcion')?.setValue(null, { emitEvent: false });
+    } else if (typeof siteValue === 'object' && siteValue !== null) {
+      siteId = Number(siteValue.id) || null;
+      this.selectedSiteId = siteId;
+
+      // Obtener código del site
+      const site = this.sites.find(s => s.id === siteId);
+      if (site) {
+        this.selectedSiteCodigo = site.adicional || site.label || 'SIN CÓDIGO';
+        console.log('FORM - Código del site:', this.selectedSiteCodigo);
+
+        // Cargar descripciones si hay código válido
+        if (this.selectedSiteCodigo &&
+            this.selectedSiteCodigo !== 'SIN CÓDIGO' &&
+            this.selectedSiteCodigo !== '-') {
+          this.cargarDescripcionesPorSiteCodigo(this.selectedSiteCodigo);
+        } else {
+          this.siteDescripciones = [];
+        }
+      }
+    } else if (typeof siteValue === 'number') {
+      siteId = siteValue;
+      this.selectedSiteId = siteId;
+
+      // Buscar el site por ID para obtener código
+      const site = this.sites.find(s => s.id === siteId);
+      if (site) {
+        this.selectedSiteCodigo = site.adicional || site.label || 'SIN CÓDIGO';
+        if (this.selectedSiteCodigo &&
+            this.selectedSiteCodigo !== 'SIN CÓDIGO' &&
+            this.selectedSiteCodigo !== '-') {
+          this.cargarDescripcionesPorSiteCodigo(this.selectedSiteCodigo);
+        }
+      }
+    }
+
+    this.actualizarDescripcion();
+    this.cdr.detectChanges();
+  });
+
+  // 4. ✅ SUSCRIPCIÓN PARA SITE DESCRIPCIÓN
+  this.form.get('idSiteDescripcion')?.valueChanges.subscribe(descValue => {
+    console.log('FORM - Site descripción cambiada:', descValue);
+
+    let descId: number | null = null;
+
+    if (descValue === null || descValue === undefined || descValue === '') {
+      descId = null;
+    } else if (typeof descValue === 'object' && descValue !== null) {
+      descId = Number(descValue.id) || null;
+    } else if (typeof descValue === 'number') {
+      descId = descValue;
+    }
+
+    this.selectedSiteDescripcionId = descId;
+
+    // Actualizar descripción automática
+    if (!this.isEditMode && !this.isViewMode) {
+      this.actualizarDescripcion();
+    }
+  });
+
+  // 5. ✅ SUSCRIPCIÓN GENERAL PARA ACTUALIZAR VARIABLES (sin lógica de negocio)
+  this.form.valueChanges.subscribe(values => {
+    // Solo actualizar variables, no ejecutar lógica
     this.selectedClienteId = values.idCliente;
     this.selectedAreaId = values.idArea;
     this.selectedProyectoId = values.idProyecto;
@@ -383,8 +727,6 @@ private crearFormularioBase(): void {
     this.selectedRegionId = values.idRegion;
     this.selectedTipoOtId = values.idTipoOt;
     this.selectedSiteDescripcionId = values.idSiteDescripcion;
-
-    // Actualizar responsables
     this.selectedJefaturaClienteId = values.idJefaturaClienteSolicitante;
     this.selectedAnalistaClienteId = values.idAnalistaClienteSolicitante;
     this.selectedCoordinadorTiCwId = values.idCoordinadorTiCw;
@@ -394,82 +736,17 @@ private crearFormularioBase(): void {
     this.selectedAnalistaContableId = values.idAnalistaContable;
     this.selectedEstadoOTId = values.idEstadoOt;
 
-    // ✅ Si cambia el cliente, cargar áreas
-    if (values.idCliente && values.idCliente !== this.lastClienteId) {
-      console.log('Cliente cambiado, cargando áreas para cliente ID:', values.idCliente);
-      this.lastClienteId = values.idCliente;
-      this.cargarAreasPorCliente(values.idCliente);
-    }
-
-    // Si se deselecciona cliente, limpiar áreas
-    if (!values.idCliente && this.lastClienteId !== null) {
-      console.log('Cliente deseleccionado, limpiando áreas');
-      this.lastClienteId = null;
-      this.areas = [];
-      this.form.get('idArea')?.disable();
-      this.form.get('idArea')?.setValue(null);
-    }
-
-    // Actualizar descripción automáticamente en modo creación
-    if (!this.isEditMode && !this.isViewMode) {
-      this.actualizarDescripcion();
-    }
+    console.log('FORM - Variables actualizadas');
   });
 
-  // Escuchar cambios específicos para Site
-  this.form.get('idSite')?.valueChanges.subscribe(siteId => {
-    console.log('Site cambiado, ID:', siteId);
-
-    if (siteId && this.sites.length > 0) {
-      const site = this.sites.find(s => s.id === siteId);
-      if (site) {
-        this.selectedSiteCodigo = site.adicional || site.label || 'SIN CÓDIGO';
-        console.log('Código del site seleccionado:', this.selectedSiteCodigo);
-
-        // Cargar descripciones si el site tiene código
-        if (this.selectedSiteCodigo &&
-            this.selectedSiteCodigo !== 'SIN CÓDIGO' &&
-            this.selectedSiteCodigo !== '-') {
-          this.cargarDescripcionesPorSiteCodigo(this.selectedSiteCodigo);
-        } else {
-          console.log('Site sin código válido, limpiando descripciones');
-          this.siteDescripciones = [];
-          this.form.get('idSiteDescripcion')?.setValue(null);
-        }
-      }
-    } else {
-      console.log('Site deseleccionado');
-      this.selectedSiteCodigo = null;
-      this.siteDescripciones = [];
-      this.form.get('idSiteDescripcion')?.setValue(null);
-    }
-
-    this.cdr.detectChanges();
-  });
-
-  // Escuchar cambios en la descripción del site
-  this.form.get('idSiteDescripcion')?.valueChanges.subscribe(descId => {
-    console.log('Descripción de site cambiada, ID:', descId);
-    this.selectedSiteDescripcionId = descId;
-    this.actualizarDescripcion();
-  });
-
-  // Validar que la descripción no sea nula/vacía cuando el formulario se envía
-  this.form.statusChanges.subscribe(status => {
-    console.log('Estado del formulario:', status);
-    if (status === 'VALID') {
-      const descripcion = this.form.get('descripcion')?.value;
-      if (!descripcion || descripcion.trim().length < 10) {
-        this.form.get('descripcion')?.setErrors({ minlength: true });
-      }
-    }
-  });
-
-  // Forzar primera actualización
+  // 6. ✅ DEBUG: Agregar suscripción para ver estado completo del formulario
   setTimeout(() => {
-    this.cdr.detectChanges();
-  }, 100);
+    console.log('FORM - Estado inicial del formulario:', this.form.value);
+    console.log('FORM - Validez:', this.form.valid);
+    console.log('FORM - Cliente control:', this.form.get('idCliente')?.value);
+  }, 1500);
 }
+
 // ============================================
 // MÉTODO PARA VALIDACIÓN CONDICIONAL
 // ============================================
@@ -752,27 +1029,35 @@ private cargarAreasPorCliente(idCliente: number): Promise<void> {
 
     // Limpiar áreas anteriores
     this.areas = [];
-    this.form.get('idArea')?.setValue(null);
+    this.form.get('idArea')?.setValue(null, { emitEvent: false });
     this.form.get('idArea')?.disable();
 
     const areasSub = this.dropdownService.getAreasByCliente(idCliente).pipe(
-      catchError(() => {
-        console.error('Error al cargar áreas');
+      catchError((error) => {
+        console.error('Error al cargar áreas:', error);
         return of([]);
       })
-    ).subscribe(areas => {
-      console.log('Áreas cargadas:', areas);
-      this.areas = areas || [];
+    ).subscribe({
+      next: (areas) => {
+        console.log('Áreas cargadas:', areas);
+        this.areas = areas || [];
 
-      if (this.areas.length > 0) {
-        this.form.get('idArea')?.enable();
-        console.log('Área habilitada');
-      } else {
-        console.log('No se encontraron áreas para este cliente');
+        if (this.areas.length > 0) {
+          this.form.get('idArea')?.enable();
+          console.log('Área habilitada');
+        } else {
+          console.log('No se encontraron áreas para este cliente');
+        }
+
+        this.cdr.detectChanges();
+        resolve();
+      },
+      error: (error) => {
+        console.error('Error en suscripción de áreas:', error);
+        this.areas = [];
+        this.cdr.detectChanges();
+        resolve();
       }
-
-      this.cdr.detectChanges();
-      resolve();
     });
 
     this.subscriptions.push(areasSub);
@@ -786,20 +1071,13 @@ private cargarAreasPorCliente(idCliente: number): Promise<void> {
 onClienteChange(event: any): void {
   console.log('Cliente cambiado desde dropdown:', event);
 
-  if (event) {
-    // El valor ya se establece automáticamente por formControlName
-    this.lastClienteId = event.id;
-    this.cargarAreasPorCliente(event.id);
-  } else {
-    // Cliente deseleccionado
-    this.lastClienteId = null;
-    this.areas = [];
-    this.selectedAreaId = null;
-    this.form.get('idArea')?.setValue(null);
-    this.form.get('idArea')?.disable();
-  }
+  // El valor ya se establece automáticamente por formControlName
+  // No necesitas establecerlo manualmente aquí
 
-  this.actualizarDescripcion();
+  if (event) {
+    this.lastClienteId = event.id;
+    // El valueChanges del formulario ya manejará la carga de áreas
+  }
 }
   onAreaChange(event: any): void {
     this.selectedAreaId = event?.id || null;
