@@ -16,6 +16,7 @@ import { ClienteComponent } from './pages/cliente-component/cliente-component';
 import { DashboardComponente } from './pages/dashboard-componente/dashboard-componente';
 import { permisoGuard } from './auth/permiso.guard';
 import { GestionPermisosComponent } from './pages/gestion-permisos.component.ts/gestion-permisos.component.ts';
+import { ProyectoListComponent } from './pages/proyecto-list.component/proyecto-list.component';
 
 
 export const routes: Routes = [
@@ -87,6 +88,12 @@ export const routes: Routes = [
         component: ClienteComponent,
         canActivate: [permisoGuard],
         data: { permisos: ['CLIENTE_VIEW'] }
+      },
+       {
+        path: 'proyecto',
+        component: ProyectoListComponent,
+        canActivate: [permisoGuard],
+        //data: { permisos: ['CLIENTE_VIEW'] }
       },
       // Ruta para manejar falta de permisos
       {

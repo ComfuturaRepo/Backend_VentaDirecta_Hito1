@@ -1,0 +1,245 @@
+<div class="container-fluid py-4">
+  <!-- Encabezado -->
+  <div class="row mb-4">
+    <div class="col-md-8">
+      <h1 class="h2 text-primary">
+        <i class="bi bi-kanban me-2"></i>Gestión de Proyectos
+      </h1>
+      <p class="text-muted">Administra y organiza todos los proyectos del sistema</p>
+    </div>
+    <div class="col-md-4 text-end">
+      <button class="btn btn-primary" (click)="abrirModalCrear()">
+        <i class="bi bi-plus-circle me-1"></i>Nuevo Proyecto
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros -->
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-4">
+          <div class="input-group">
+            <span class="input-group-text"><i class="bi bi-search"></i></span>
+            <input type="text" class="form-control" placeholder="Buscar por nombre..."
+                   [(ngModel)]="filtroNombre" (keyup.enter)="aplicarFiltros()">
+            <button class="btn btn-outline-secondary" type="button" (click)="limpiarBusqueda()">
+              <i class="bi bi-x"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="col-md-3">
+          <select class="form-select" [(ngModel)]="filtroEstado" (change)="aplicarFiltros()">
+            <option value="">Todos los estados</option>
+            <option value="true">Activos</option>
+            <option value="false">Inactivos</option>
+          </select>
+        </div>
+
+        <div class="col-md-2">
+          <select class="form-select" [(ngModel)]="itemsPorPagina" (change)="cambiarItemsPorPagina()">
+            <option value="5">5 por página</option>
+            <option value="10">10 por página</option>
+            <option value="20">20 por página</option>
+            <option value="50">50 por página</option>
+          </select>
+        </div>
+
+        <div class="col-md-3">
+          <div class="form-check form-switch">
+            <input class="form-check-input" type="checkbox" id="mostrarTodos"
+                   [(ngModel)]="mostrarTodos" (change)="aplicarFiltros()">
+            <label class="form-check-label" for="mostrarTodos">
+              Mostrar todos (incluyendo inactivos)
+            </label>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Proyectos -->
+  <div class="card shadow">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead class="table-light">
+            <tr>
+              <th style="width: 60px;">ID</th>
+              <th>
+                <a href="javascript:void(0)" (click)="ordenarPor('nombre')" class="text-decoration-none">
+                  Nombre del Proyecto
+                  <i class="bi bi-arrow-down-up ms-1" *ngIf="campoOrden !== 'nombre'"></i>
+                  <i class="bi bi-arrow-up" *ngIf="campoOrden === 'nombre' && direccionOrden === 'asc'"></i>
+                  <i class="bi bi-arrow-down" *ngIf="campoOrden === 'nombre' && direccionOrden === 'desc'"></i>
+                </a>
+              </th>
+              <th style="width: 120px;">Estado</th>
+              <th style="width: 200px;" class="text-end">Acciones</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let proyecto of proyectos">
+              <td class="text-muted">#{{ proyecto.idProyecto }}</td>
+              <td>
+                <div class="d-flex align-items-center">
+                  <div class="project-icon me-3">
+                    <i class="bi bi-kanban-fill text-primary"></i>
+                  </div>
+                  <div>
+                    <h6 class="mb-0">{{ proyecto.nombre }}</h6>
+                    <small class="text-muted">ID: {{ proyecto.idProyecto }}</small>
+                  </div>
+                </div>
+              </td>
+              <td>
+                <span class="badge" [ngClass]="proyecto.activo ? 'bg-success' : 'bg-danger'">
+                  <i class="bi me-1" [class.bi-check-circle]="proyecto.activo" [class.bi-x-circle]="!proyecto.activo"></i>
+                  {{ proyecto.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+              </td>
+              <td class="text-end">
+                <div class="btn-group" role="group">
+                  <button class="btn btn-sm btn-outline-info" (click)="verDetalles(proyecto)"
+                          title="Ver detalles">
+                    <i class="bi bi-eye"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-warning" (click)="abrirModalEditar(proyecto)"
+                          title="Editar">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm"
+                          [ngClass]="proyecto.activo ? 'btn-outline-danger' : 'btn-outline-success'"
+                          (click)="toggleEstado(proyecto)"
+                          [title]="proyecto.activo ? 'Desactivar' : 'Activar'">
+                    <i class="bi" [class.bi-toggle-off]="!proyecto.activo" [class.bi-toggle-on]="proyecto.activo"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <tr *ngIf="proyectos.length === 0">
+              <td colspan="4" class="text-center py-5">
+                <div class="text-muted">
+                  <i class="bi bi-inbox display-6 d-block mb-3"></i>
+                  <h5>No se encontraron proyectos</h5>
+                  <p *ngIf="cargando">Cargando proyectos...</p>
+                  <p *ngIf="!cargando">No hay proyectos registrados. ¡Crea el primero!</p>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Paginación -->
+      <div class="card-footer bg-white border-top">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="mb-0 text-muted">
+              Mostrando {{ (paginaActual * itemsPorPagina) + 1 }} -
+              {{ Math.min((paginaActual + 1) * itemsPorPagina, totalElementos) }}
+              de {{ totalElementos }} proyectos
+            </p>
+          </div>
+          <div class="col-md-6">
+            <nav aria-label="Paginación" class="float-md-end">
+              <ul class="pagination pagination-sm justify-content-center mb-0">
+                <li class="page-item" [class.disabled]="paginaActual === 0">
+                  <a class="page-link" href="javascript:void(0)" (click)="irPagina(0)" aria-label="Primera">
+                    <i class="bi bi-chevron-double-left"></i>
+                  </a>
+                </li>
+                <li class="page-item" [class.disabled]="paginaActual === 0">
+                  <a class="page-link" href="javascript:void(0)" (click)="irPagina(paginaActual - 1)" aria-label="Anterior">
+                    <i class="bi bi-chevron-left"></i>
+                  </a>
+                </li>
+
+                <li class="page-item" *ngFor="let pagina of paginasVisibles"
+                    [class.active]="pagina === paginaActual">
+                  <a class="page-link" href="javascript:void(0)" (click)="irPagina(pagina)">
+                    {{ pagina + 1 }}
+                  </a>
+                </li>
+
+                <li class="page-item" [class.disabled]="paginaActual === totalPaginas - 1">
+                  <a class="page-link" href="javascript:void(0)" (click)="irPagina(paginaActual + 1)" aria-label="Siguiente">
+                    <i class="bi bi-chevron-right"></i>
+                  </a>
+                </li>
+                <li class="page-item" [class.disabled]="paginaActual === totalPaginas - 1">
+                  <a class="page-link" href="javascript:void(0)" (click)="irPagina(totalPaginas - 1)" aria-label="Última">
+                    <i class="bi bi-chevron-double-right"></i>
+                  </a>
+                </li>
+              </ul>
+            </nav>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" *ngIf="cargando">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Crear/Editar -->
+<div class="modal fade" id="proyectoModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi me-2" [class.bi-plus-circle]="!proyectoEditando" [class.bi-pencil]="proyectoEditando"></i>
+          {{ proyectoEditando ? 'Editar Proyecto' : 'Nuevo Proyecto' }}
+        </h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <form [formGroup]="proyectoForm" (ngSubmit)="guardarProyecto()">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="nombre" class="form-label">Nombre del Proyecto *</label>
+            <input type="text" class="form-control" id="nombre" formControlName="nombre"
+                   [class.is-invalid]="proyectoForm.get('nombre')?.invalid && proyectoForm.get('nombre')?.touched"
+                   placeholder="Ingrese el nombre del proyecto">
+            <div class="invalid-feedback" *ngIf="proyectoForm.get('nombre')?.errors?.['required']">
+              El nombre es requerido
+            </div>
+            <div class="invalid-feedback" *ngIf="proyectoForm.get('nombre')?.errors?.['minlength']">
+              El nombre debe tener al menos 3 caracteres
+            </div>
+          </div>
+
+          <div class="mb-3" *ngIf="proyectoEditando">
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" id="activo" formControlName="activo">
+              <label class="form-check-label" for="activo">
+                Proyecto Activo
+              </label>
+            </div>
+            <small class="text-muted">Desactivar un proyecto ocultará sus datos en algunos reportes</small>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="submit" class="btn btn-primary" [disabled]="proyectoForm.invalid || guardando">
+            <span *ngIf="guardando">
+              <span class="spinner-border spinner-border-sm me-1" role="status" aria-hidden="true"></span>
+              Guardando...
+            </span>
+            <span *ngIf="!guardando">
+              <i class="bi bi-check-circle me-1"></i>
+              {{ proyectoEditando ? 'Actualizar' : 'Crear' }}
+            </span>
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
