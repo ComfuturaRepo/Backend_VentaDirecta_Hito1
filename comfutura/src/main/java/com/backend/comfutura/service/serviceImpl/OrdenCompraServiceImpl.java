@@ -40,6 +40,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     public OrdenCompraResponseDTO guardar(Integer idOc, OrdenCompraRequestDTO dto) {
 
         OrdenCompra oc;
+        boolean esNueva = (idOc == null);
 
         if (idOc != null) {
             oc = ordenCompraRepository.findById(idOc)
@@ -50,11 +51,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
         }
 
         // Relaciones
-        if (dto.getIdEstadoOc() != null) {
-            EstadoOc estadoOC = estadoOCRepository.findById(dto.getIdEstadoOc())
-                    .orElseThrow(() -> new RuntimeException("Estado OC no existe"));
-            oc.setEstadoOC(estadoOC);
-        }
+
 
         if (dto.getIdProveedor() != null) {
             Proveedor proveedor = proveedorRepository.findById(dto.getIdProveedor())
@@ -67,6 +64,12 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
                     .orElseThrow(() -> new RuntimeException("OT no existe"));
             oc.setOts(ots);
         }
+        if (esNueva) {
+            EstadoOc pendiente = estadoOCRepository.findById(1)
+                    .orElseThrow(() -> new RuntimeException("Estado PENDIENTE no existe"));
+            oc.setEstadoOC(pendiente);
+        }
+
 
         // Campos simples
         oc.setFormaPago(dto.getFormaPago());
@@ -74,7 +77,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
         oc.setObservacion(dto.getObservacion());
 
         // Guardar primero para Cascade
-        oc = ordenCompraRepository.save(oc);
+        oc = ordenCompraRepository.save(oc);//2
         final OrdenCompra ocFinal = oc;
 
         // Detalles
@@ -96,7 +99,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
             }).collect(Collectors.toList());
 
             oc.getDetalles().addAll(detalles);
-            ordenCompraRepository.save(oc);
+            ordenCompraRepository.save(oc);//3
         }
 
         // Totales
@@ -111,7 +114,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
         oc.setIgvTotal(igvTotal);
         oc.setTotal(subtotalOc.add(igvTotal));
 
-        OrdenCompra guardado = ordenCompraRepository.save(oc);
+        OrdenCompra guardado = ordenCompraRepository.save(oc);//3
         ordenCompraAprobacionService.inicializarAprobaciones(guardado);
 
         return mapToResponseCompleto(guardado);

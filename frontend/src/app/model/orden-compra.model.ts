@@ -2,16 +2,12 @@
 export interface OcDetalleRequest {
   idMaestro: number;
   cantidad: number;
-  precioUnitario: number;
-  subtotal: number;
-  igv: number;
-  total: number;
-  tipo?: string; // cadena libre, se asigna según el código del maestro
+  precioUnitario: number; // cadena libre, se asigna según el código del maestro
 }
 
 // Detalle para response (cuando recibes OC del backend)
 export interface OcDetalleResponse {
-  idDetalle?: number;
+idOcDetalle?: number;
   idProducto?: number;
   productoNombre?: string;
   cantidad?: number;
@@ -30,10 +26,7 @@ export interface OrdenCompraRequest {
   idOts: number;
   idProveedor: number;
   formaPago: string;
-  subtotal: number;
   igvPorcentaje: number;
-  igvTotal: number;
-  total: number;
   fechaOc: string;
   observacion?: string;
   detalles: OcDetalleRequest[];
@@ -50,8 +43,8 @@ export interface OrdenCompraResponse {
   idOts: number;
   otsDescripcion: string;
   ot: string;
-  clienteNombre: string;
-  clienteRuc: string;
+
+
   idProveedor: number;
   proveedorNombre: string;
   proveedorRuc: string;

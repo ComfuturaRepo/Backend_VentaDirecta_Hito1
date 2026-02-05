@@ -28,7 +28,7 @@ public class OrdenCompra {
     @JoinColumn(name = "id_estado_oc", nullable = false)
     private EstadoOc estadoOC;
 
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_proveedor")
     private Proveedor proveedor;
 

@@ -1,0 +1,12 @@
+.modal-content {
+  border-radius: 14px;
+}
+
+.form-label {
+  font-weight: 500;
+}
+
+.table td,
+.table th {
+  vertical-align: middle;
+}

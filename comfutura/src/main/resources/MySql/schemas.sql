@@ -408,7 +408,7 @@ CREATE TABLE orden_compra_aprobacion (
                                          aprobado_por VARCHAR(150),
 
 
-                                         fecha_inicio DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                                         fecha_inicio DATETIME NULL DEFAULT CURRENT_TIMESTAMP,
                                          fecha_fin DATETIME NULL,
 
                                          CONSTRAINT fk_aprobacion_oc

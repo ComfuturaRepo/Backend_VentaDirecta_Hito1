@@ -6,12 +6,12 @@ import { OrdenCompraService } from '../../service/orden-compra.service';
 import { FormOrdenCompraComponent } from './form-orden-compra-component/form-orden-compra-component';
 import { PaginationComponent } from '../../component/pagination.component/pagination.component';
 import { OcDetalleResponse, OrdenCompraResponse, PageOrdenCompra } from '../../model/orden-compra.model';
-import { OrdenCompraAprobacionesComponent } from './form-aprovacion-component/orden-compra-aprobaciones.component';
+import { OrdenCompraAprobacionesComponent } from './form-aprovacion-component/orden-compra-aprobaciones-component';
 
 @Component({
   selector: 'app-orden-compra-component',
   standalone: true,
-  imports: [CommonModule, FormsModule, FormOrdenCompraComponent, PaginationComponent, OrdenCompraAprobacionesComponent ],
+  imports: [CommonModule, FormsModule, FormOrdenCompraComponent, PaginationComponent, OrdenCompraAprobacionesComponent  ],
 
   templateUrl: './orden-compra-component.html',
   styleUrls: ['./orden-compra-component.css']
@@ -121,4 +121,28 @@ cambiarPageSize(size: number): void {
 
 // 🔹 Tipo seleccionado (si el form lo pide)
 tipoSeleccionado: string | null = null;
+getEstadoColor(estado: string): string {
+  switch (estado) {
+    case 'APROBADA':
+      return '#4caf50'; // verde
+    case 'RECHAZADA':
+      return '#f44336'; // rojo
+    case 'EN PROCESO':
+      return '#ff9800'; // amarillo
+    case 'PENDIENTE':
+      return '#2196f3'; // azul
+    case 'ANULADA':
+      return '#9e9e9e'; // gris
+    case 'ATENDIDA':
+      return '#3f51b5'; // azul oscuro
+    case 'CERRADA':
+      return '#607d8b'; // gris azulado
+    default:
+      return '#000000'; // negro (solo si algo falla)
+  }
 }
+
+
+}
+
+

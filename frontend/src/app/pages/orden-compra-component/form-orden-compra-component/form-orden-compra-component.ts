@@ -25,11 +25,13 @@ export class FormOrdenCompraComponent implements OnInit, OnChanges {
   isLoading = true;
   isSubmitting = false;
 
-  maestros: { id: number; label: string; codigo: string }[] = [];
+ maestros: { id: number; label: string }[] = [];
+
   proveedores: DropdownItem[] = [];
   ots: DropdownItem[] = [];
 
-  materiales: DropdownItem[] = [];
+
+maestroMap = new Map<number, { codigo: string; descripcion: string }>();
 
   constructor(private ordenService: OrdenCompraService, private dropdownService: DropdownService) {}
 
@@ -45,6 +47,8 @@ cargarMateriales(): void {
     { id: 3, label: 'Servicio X', tipo: 'SERVICIO' },
     { id: 4, label: 'Servicio Y', tipo: 'SERVICIO' }
   ];
+console.log('MAESTROS →', this.maestros);
+console.log('DETALLES →', this.form.detalles);
 
  
 }
@@ -53,111 +57,103 @@ cargarMateriales(): void {
     if ((changes['ocToEdit'] || changes['isEdit']) && !this.isLoading) this.aplicarValoresEdicion();
   }
 
-  private cargarDropdowns(): void {
-    this.isLoading = true;
-    this.dropdownService.loadOrdenCompraDropdowns().subscribe({
-      next: (data) => {
-        this.ots = data.ots;
-        this.maestros = data.maestros.map(m => ({ id: m.id, label: m.label, codigo: (m as any).codigo ?? 'C' }));
-        this.proveedores = data.proveedores;
-        this.isLoading = false;
-        this.aplicarValoresEdicion();
-      },
-      error: () => {
-        Swal.fire('Error', 'No se pudieron cargar los catálogos', 'error');
-        this.isLoading = false;
-      }
-    });
-  }
+private cargarDropdowns(): void {
+  this.isLoading = true;
 
-  private aplicarValoresEdicion(): void {
-    if (this.isEdit && this.ocToEdit) {
-      this.form = {
-        idEstadoOc: this.ocToEdit.idEstadoOc ?? 1,
-        idOts: this.ocToEdit.idOts ?? 0,
-        idProveedor: this.ocToEdit.idProveedor ?? 0,
-        formaPago: this.ocToEdit.formaPago ?? '',
-        subtotal: this.ocToEdit.subtotal ?? 0,
-        igvPorcentaje: this.ocToEdit.igvPorcentaje ?? 0,
-        igvTotal: this.ocToEdit.igvTotal ?? 0,
-        total: this.ocToEdit.total ?? 0,
-        fechaOc: this.ocToEdit.fechaOc ?? new Date().toISOString(),
-        observacion: this.ocToEdit.observacion || '',
-        detalles: this.ocToEdit.detalles?.map(d => this.mapDetalle(d)) ?? [],
-        aplicarIgv: true
-      };
-    } else {
-      this.form = this.getDefaultForm();
+  this.dropdownService.loadOrdenCompraDropdowns().subscribe({
+    next: (data) => {
+      this.ots = data.ots;
+      this.proveedores = data.proveedores;
+
+      // limpiar
+      this.maestroMap.clear();
+
+      // construir combo + map
+      this.maestros = data.maestros.map((m: any) => {
+        this.maestroMap.set(m.id, {
+          codigo: m.codigo,
+          descripcion: m.descripcion
+        });
+
+        return {
+          id: m.id,
+          label: `${m.codigo} - ${m.descripcion}`
+        };
+      });
+
+      this.isLoading = false;
+      this.aplicarValoresEdicion();
+    },
+    error: () => {
+      Swal.fire('Error', 'No se pudieron cargar los catálogos', 'error');
+      this.isLoading = false;
     }
+  });
+}
+
+getMaestroTexto(idMaestro: number): string {
+  const m = this.maestroMap.get(idMaestro);
+  return m ? `${m.codigo} - ${m.descripcion}` : '-';
+}
+
+
+private aplicarValoresEdicion(): void {
+  if (!this.isEdit || !this.ocToEdit || this.maestros.length === 0) {
+    return;
   }
 
-  private mapDetalle(d: OcDetalleRequest | any): OcDetalleRequest {
-    const cantidad = d.cantidad ?? 0;
-    const precio = d.precioUnitario ?? 0;
-    const subtotal = cantidad * precio;
-    const igv = subtotal * 0.18;
-    const total = subtotal + igv;
-    return {
-      idMaestro: d.idProducto ?? 0,
-      cantidad,
-      precioUnitario: precio,
-      subtotal,
-      igv,
-      total,
-      tipo: d.codigo?.startsWith('S') ? 'SERVICIO' : 'MATERIAL'
-    };
-  }
+  this.form = {
+    idEstadoOc: this.ocToEdit.idEstadoOc,
+    idOts: this.ocToEdit.idOts,
+    idProveedor: this.ocToEdit.idProveedor,
+    formaPago: this.ocToEdit.formaPago ?? '',
+    igvPorcentaje: this.ocToEdit.igvPorcentaje ?? 18,
+    fechaOc: this.ocToEdit.fechaOc,
+    observacion: this.ocToEdit.observacion ?? '',
+    aplicarIgv: true,
+    detalles: this.ocToEdit.detalles.map(d => ({
+      idMaestro: d.idMaestro!,   // 🔑 ahora sí existe en maestros
+      cantidad: d.cantidad!,
+      precioUnitario: d.precioUnitario!
+    }))
+  };
+}
 
-  private getDefaultForm(): OrdenCompraRequest {
-    return {
-      idEstadoOc: 1,
-      idOts: 0,
-      idProveedor: 0,
-      formaPago: '',
-      subtotal: 0,
-      igvPorcentaje: 0,
-      igvTotal: 0,
-      total: 0,
-      fechaOc: new Date().toISOString(),
-      observacion: '',
-      detalles: [],
-      aplicarIgv: true
-    };
-  }
 
-  agregarDetalle(): void {
-    this.form.detalles.push({ idMaestro: 0, cantidad: 1, precioUnitario: 0, subtotal: 0, igv: 0, total: 0, tipo: '' });
-  }
 
+ 
+
+ private getDefaultForm(): OrdenCompraRequest {
+  return {
+    idEstadoOc: 1,
+    idOts: 0,
+    idProveedor: 0,
+    formaPago: '',
+    igvPorcentaje: 18,
+    fechaOc: new Date().toISOString(),
+    observacion: '',
+    detalles: [],
+    aplicarIgv: true
+  };
+}
+
+
+agregarDetalle(): void {
+  this.form.detalles.push({
+    idMaestro: 0,
+    cantidad: 1,
+    precioUnitario: 0
+  });
+}
   eliminarDetalle(index: number): void {
     this.form.detalles.splice(index, 1);
-    this.calcularTotales();
+
   }
 
-  calcularTotalDetalle(d: OcDetalleRequest): void {
-    d.total = (d.cantidad || 0) * (d.precioUnitario || 0);
-    this.calcularTotales();
-  }
+
 
   
-calcularTotales(): void {
-  const subtotal = this.form.detalles.reduce(
-    (sum, d) => sum + ((d.cantidad || 0) * (d.precioUnitario || 0)),
-    0
-  );
 
-  this.form.subtotal = +subtotal.toFixed(2);
-
-  if (this.form.aplicarIgv === true) {
-    this.form.igvPorcentaje = 18; // 🔴 ESTO ES LO QUE FALTABA
-    this.form.igvTotal = +(this.form.subtotal * 0.18).toFixed(2);
-  } else {
-    this.form.igvPorcentaje = 0;
-    this.form.igvTotal = 0;
-  }
-
-  this.form.total = +(this.form.subtotal + this.form.igvTotal).toFixed(2);
-}
 
 formasPago: { id: string; label: string }[] = [
   { id: 'CONTADO', label: 'Contado' },
