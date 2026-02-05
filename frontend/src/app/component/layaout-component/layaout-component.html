@@ -134,7 +134,7 @@
         </li>
 
          <!-- Trabajadores -->
-        <li >
+        <li *appPermiso="'PROYECTO_VIEW'">
           <a routerLink="/proyecto" routerLinkActive="active" (click)="closeMobile()">
             <div class="menu-icon-wrapper">
               <i class="bi bi-person-badge-fill"></i>

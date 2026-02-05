@@ -106,7 +106,7 @@
 
 
       <!-- Botón Nuevo Site -->
-      <button
+      <button  *appPermiso="'SITE_MANAGE'"
         class="btn btn-primary btn-new-site"
         (click)="openCreateModal()"
         [disabled]="isTableLoading"
@@ -300,14 +300,14 @@
             </td>
             <td>
               <div class="action-buttons">
-                <button
+                <button *appPermiso="'SITE_MANAGE'"
                   class="btn btn-sm btn-outline-primary btn-action"
                   (click)="openEditModal(site)"
                   [title]="'Editar sitio'"
                 >
                   <i class="bi bi-pencil"></i>
                 </button>
-                <button
+                <button *appPermiso="'SITE_MANAGE'"
                   class="btn btn-sm btn-outline-warning btn-action"
                   (click)="toggleActivo(site)"
                   [title]="site.activo ? 'Desactivar' : 'Activar'"

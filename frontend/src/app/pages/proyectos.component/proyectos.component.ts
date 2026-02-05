@@ -1,28 +1,34 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { Component, OnInit } from '@angular/core';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import Swal from 'sweetalert2';
 import { ProyectoResponse } from '../../model/proyecto.model';
 import { ProyectoService } from '../../service/proyecto.service';
-import bootstrap from '../../../main.server';
+import { CommonModule } from '@angular/common';
+import { PaginationComponent } from '../../component/pagination.component/pagination.component';
+import { PermisoDirective } from '../../directive/permiso.directive';
 
 @Component({
   selector: 'app-proyectos',
   templateUrl: './proyectos.component.html',
-  styleUrls: ['./proyectos.component.css']
+  styleUrls: ['./proyectos.component.css'],
+  standalone: true,
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    PaginationComponent,PermisoDirective
+  ]
 })
 export class ProyectosComponent implements OnInit {
-  @ViewChild('proyectoModal') modalElement!: ElementRef;
-
   // Datos
   proyectos: ProyectoResponse[] = [];
-  proyectoEditando: ProyectoResponse | null = null;
+  proyectoSeleccionado: ProyectoResponse | null = null;
 
   // Paginación
   paginaActual: number = 0;
   itemsPorPagina: number = 10;
   totalElementos: number = 0;
   totalPaginas: number = 0;
-  paginasVisibles: number[] = [];
 
   // Filtros
   filtroNombre: string = '';
@@ -33,11 +39,12 @@ export class ProyectosComponent implements OnInit {
 
   // Estados
   cargando: boolean = false;
-  guardando: boolean = false;
+  modalCrearVisible: boolean = false;
+  modalDetalleVisible: boolean = false;
+  modalEditarVisible: boolean = false;
 
   // Formulario
   proyectoForm: FormGroup;
-  modal: any;
 
   constructor(
     private proyectoService: ProyectoService,
@@ -51,10 +58,6 @@ export class ProyectosComponent implements OnInit {
 
   ngOnInit(): void {
     this.cargarProyectos();
-  }
-
-  ngAfterViewInit(): void {
-    this.modal = new bootstrap.NgbModal(this.modalElement.nativeElement);
   }
 
   // ============ CARGAR DATOS ============
@@ -74,7 +77,6 @@ export class ProyectosComponent implements OnInit {
         this.proyectos = response.content;
         this.totalElementos = response.totalItems;
         this.totalPaginas = response.totalPages;
-        this.calcularPaginasVisibles();
         this.cargando = false;
       },
       error: (error) => {
@@ -85,116 +87,142 @@ export class ProyectosComponent implements OnInit {
     });
   }
 
-  // ============ FILTROS Y BÚSQUEDA ============
+  // ============ PAGINACIÓN ============
+  cambiarPagina(pagina: number): void {
+    this.paginaActual = pagina;
+    this.cargarProyectos();
+  }
+
+  cambiarItemsPorPagina(tamano: number): void {
+    this.itemsPorPagina = tamano;
+    this.paginaActual = 0;
+    this.cargarProyectos();
+  }
+
+  // ============ FILTROS ============
   aplicarFiltros(): void {
     this.paginaActual = 0;
     this.cargarProyectos();
   }
 
-  limpiarBusqueda(): void {
+  limpiarFiltros(): void {
     this.filtroNombre = '';
     this.filtroEstado = '';
     this.mostrarTodos = false;
-    this.aplicarFiltros();
-  }
-
-  ordenarPor(campo: string): void {
-    if (this.campoOrden === campo) {
-      this.direccionOrden = this.direccionOrden === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.campoOrden = campo;
-      this.direccionOrden = 'asc';
-    }
-    this.cargarProyectos();
-  }
-
-  cambiarItemsPorPagina(): void {
     this.paginaActual = 0;
     this.cargarProyectos();
   }
 
-  // ============ PAGINACIÓN ============
-  calcularPaginasVisibles(): void {
-    const paginas = [];
-    const maxPaginasVisibles = 5;
-
-    let inicio = Math.max(0, this.paginaActual - Math.floor(maxPaginasVisibles / 2));
-    let fin = Math.min(this.totalPaginas, inicio + maxPaginasVisibles);
-
-    if (fin - inicio < maxPaginasVisibles) {
-      inicio = Math.max(0, fin - maxPaginasVisibles);
-    }
-
-    for (let i = inicio; i < fin; i++) {
-      paginas.push(i);
-    }
-
-    this.paginasVisibles = paginas;
+  cambiarOrden(): void {
+    this.cargarProyectos();
   }
 
-  irPagina(pagina: number): void {
-    if (pagina >= 0 && pagina < this.totalPaginas && pagina !== this.paginaActual) {
-      this.paginaActual = pagina;
-      this.cargarProyectos();
-    }
+  toggleDireccionOrden(): void {
+    this.direccionOrden = this.direccionOrden === 'asc' ? 'desc' : 'asc';
+    this.cargarProyectos();
   }
 
-  // ============ CRUD OPERACIONES ============
+  // ============ MODALES ============
   abrirModalCrear(): void {
-    this.proyectoEditando = null;
     this.proyectoForm.reset({
       nombre: '',
       activo: true
     });
-    this.modal.show();
+    this.modalCrearVisible = true;
+  }
+
+  cerrarModalCrear(): void {
+    this.modalCrearVisible = false;
+  }
+
+  abrirModalDetalle(proyecto: ProyectoResponse): void {
+    this.proyectoSeleccionado = proyecto;
+    this.modalDetalleVisible = true;
+  }
+
+  cerrarModalDetalle(): void {
+    this.proyectoSeleccionado = null;
+    this.modalDetalleVisible = false;
   }
 
   abrirModalEditar(proyecto: ProyectoResponse): void {
-    this.proyectoEditando = proyecto;
+    this.proyectoSeleccionado = proyecto;
     this.proyectoForm.patchValue({
       nombre: proyecto.nombre,
       activo: proyecto.activo
     });
-    this.modal.show();
+    this.modalEditarVisible = true;
   }
 
-  guardarProyecto(): void {
+  cerrarModalEditar(): void {
+    this.proyectoSeleccionado = null;
+    this.modalEditarVisible = false;
+  }
+
+  // ============ CRUD ============
+  crearProyecto(): void {
     if (this.proyectoForm.invalid) {
       this.marcarCamposComoTocados();
       return;
     }
 
-    this.guardando = true;
     const datos = this.proyectoForm.value;
 
-    const operacion = this.proyectoEditando
-      ? this.proyectoService.editarProyecto(this.proyectoEditando.idProyecto, datos)
-      : this.proyectoService.crearProyecto(datos);
-
-    operacion.subscribe({
+    this.proyectoService.crearProyecto(datos).subscribe({
       next: (response) => {
-        this.guardando = false;
-        this.modal.hide();
+        this.cerrarModalCrear();
 
         Swal.fire({
           icon: 'success',
-          title: this.proyectoEditando ? '¡Proyecto actualizado!' : '¡Proyecto creado!',
-          text: `El proyecto "${response.nombre}" ha sido ${this.proyectoEditando ? 'actualizado' : 'creado'} exitosamente`,
-          timer: 2000,
+          title: '¡Proyecto creado!',
+          text: `El proyecto "${response.nombre}" ha sido creado exitosamente`,
+          timer: 2500,
           showConfirmButton: false
         });
 
         this.cargarProyectos();
       },
       error: (error) => {
-        this.guardando = false;
-        console.error('Error guardando proyecto:', error);
+        console.error('Error creando proyecto:', error);
 
         Swal.fire({
           icon: 'error',
           title: 'Error',
-          text: error.error?.message || 'No se pudo guardar el proyecto. Intente nuevamente.',
-          confirmButtonColor: '#3085d6'
+          text: error.error?.message || 'No se pudo crear el proyecto. Intente nuevamente.'
+        });
+      }
+    });
+  }
+
+  editarProyecto(): void {
+    if (this.proyectoForm.invalid || !this.proyectoSeleccionado) {
+      this.marcarCamposComoTocados();
+      return;
+    }
+
+    const datos = this.proyectoForm.value;
+
+    this.proyectoService.editarProyecto(this.proyectoSeleccionado.idProyecto, datos).subscribe({
+      next: (response) => {
+        this.cerrarModalEditar();
+
+        Swal.fire({
+          icon: 'success',
+          title: '¡Proyecto actualizado!',
+          text: `El proyecto "${response.nombre}" ha sido actualizado exitosamente`,
+          timer: 2500,
+          showConfirmButton: false
+        });
+
+        this.cargarProyectos();
+      },
+      error: (error) => {
+        console.error('Error editando proyecto:', error);
+
+        Swal.fire({
+          icon: 'error',
+          title: 'Error',
+          text: error.error?.message || 'No se pudo actualizar el proyecto. Intente nuevamente.'
         });
       }
     });
@@ -210,13 +238,10 @@ export class ProyectosComponent implements OnInit {
     Swal.fire({
       title: titulo,
       text: texto,
-      icon: 'warning',
+      icon: 'question',
       showCancelButton: true,
-      confirmButtonColor: '#3085d6',
-      cancelButtonColor: '#d33',
       confirmButtonText: `Sí, ${accion}`,
-      cancelButtonText: 'Cancelar',
-      reverseButtons: true
+      cancelButtonText: 'Cancelar'
     }).then((result) => {
       if (result.isConfirmed) {
         this.proyectoService.toggleProyecto(proyecto.idProyecto).subscribe({
@@ -239,26 +264,6 @@ export class ProyectosComponent implements OnInit {
     });
   }
 
-  verDetalles(proyecto: ProyectoResponse): void {
-    Swal.fire({
-      title: proyecto.nombre,
-      html: `
-        <div class="text-start">
-          <p><strong>ID:</strong> ${proyecto.idProyecto}</p>
-          <p><strong>Estado:</strong>
-            <span class="badge ${proyecto.activo ? 'bg-success' : 'bg-danger'}">
-              ${proyecto.activo ? 'Activo' : 'Inactivo'}
-            </span>
-          </p>
-          <p><strong>Fecha de creación:</strong> ${new Date().toLocaleDateString()}</p>
-        </div>
-      `,
-      icon: 'info',
-      confirmButtonColor: '#3085d6',
-      confirmButtonText: 'Cerrar'
-    });
-  }
-
   // ============ UTILIDADES ============
   marcarCamposComoTocados(): void {
     Object.keys(this.proyectoForm.controls).forEach(key => {
@@ -271,12 +276,11 @@ export class ProyectosComponent implements OnInit {
     Swal.fire({
       icon: 'error',
       title: 'Error',
-      text: mensaje,
-      confirmButtonColor: '#3085d6'
+      text: mensaje
     });
   }
 
-  // ============ GETTERS PARA TEMPLATE ============
+  // ============ GETTERS ============
   get nombreInvalido(): boolean {
     const control = this.proyectoForm.get('nombre');
     return control ? control.invalid && control.touched : false;

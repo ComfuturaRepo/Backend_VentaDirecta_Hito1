@@ -14,7 +14,7 @@ import { PermisoDirective } from '../../directive/permiso.directive';
 @Component({
   selector: 'app-site',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent],
+  imports: [CommonModule, FormsModule, PaginationComponent,PermisoDirective],
   templateUrl: './site-component.html',
   styleUrls: ['./site-component.css']
 })
