@@ -1,15 +1,18 @@
 package com.backend.comfutura.controller;
 
 import com.backend.comfutura.dto.Page.PageResponseDTO;
+import com.backend.comfutura.dto.Page.sitePage.SiteFilterDTO;
 import com.backend.comfutura.dto.request.SiteRequestDTO;
 import com.backend.comfutura.dto.response.SiteDTO;
 import com.backend.comfutura.service.SiteService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
 
 @RestController
 @RequestMapping("/api/site")
@@ -20,11 +23,42 @@ public class SiteController {
 
     // CREAR NUEVO SITE
     @PostMapping
-    public ResponseEntity<SiteDTO> crear(@RequestBody SiteRequestDTO request) {
+    public ResponseEntity<SiteDTO> crear(@Valid @RequestBody SiteRequestDTO request) {
         return ResponseEntity.ok(service.guardar(request));
     }
 
-    // LISTAR SITES
+    // LISTAR SITES CON FILTROS COMPLETOS
+    @GetMapping("/filtrar")
+    public ResponseEntity<PageResponseDTO<SiteDTO>> filtrar(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo,
+            @RequestParam(required = false) String codigoSitio,
+            @RequestParam(required = false) String descripcion,
+            @RequestParam(required = false) String direccion,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "codigoSitio") String sort,
+            @RequestParam(defaultValue = "asc") String direction) {
+
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc")
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
+
+        // Construir filtros
+        SiteFilterDTO filtros = new SiteFilterDTO();
+        filtros.setSearch(search);
+        filtros.setActivo(activo);
+        filtros.setCodigoSitio(codigoSitio);
+        filtros.setDescripcion(descripcion);
+        filtros.setDireccion(direccion);
+
+        PageResponseDTO<SiteDTO> response = service.listarConFiltros(filtros, pageable);
+        return ResponseEntity.ok(response);
+    }
+
+    // LISTAR SITES (compatibilidad con endpoint anterior)
     @GetMapping
     public ResponseEntity<PageResponseDTO<SiteDTO>> listar(
             @RequestParam(defaultValue = "0") int page,
@@ -39,17 +73,14 @@ public class SiteController {
 
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
 
-        PageResponseDTO<SiteDTO> response;
-        if (activos != null && activos) {
-            response = service.listarActivos(pageable);
-        } else {
-            response = service.listar(pageable);
-        }
+        SiteFilterDTO filtros = new SiteFilterDTO();
+        filtros.setActivo(activos); // Usar el mismo parámetro para compatibilidad
 
+        PageResponseDTO<SiteDTO> response = service.listarConFiltros(filtros, pageable);
         return ResponseEntity.ok(response);
     }
 
-    // BUSCAR SITES
+    // BUSCAR SITES (búsqueda general)
     @GetMapping("/buscar")
     public ResponseEntity<PageResponseDTO<SiteDTO>> buscar(
             @RequestParam String search,
@@ -70,7 +101,8 @@ public class SiteController {
 
     // ACTUALIZAR SITE COMPLETO
     @PutMapping("/{id}")
-    public ResponseEntity<SiteDTO> actualizar(@PathVariable Integer id, @RequestBody SiteRequestDTO request) {
+    public ResponseEntity<SiteDTO> actualizar(@PathVariable Integer id,
+                                              @Valid @RequestBody SiteRequestDTO request) {
         SiteDTO actualizado = service.actualizar(id, request);
         return ResponseEntity.ok(actualizado);
     }
