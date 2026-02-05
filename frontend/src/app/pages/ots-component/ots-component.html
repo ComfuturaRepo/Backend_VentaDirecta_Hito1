@@ -434,9 +434,9 @@
                               data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-three-dots-vertical"></i>
                       </button>
-                      <ul class="dropdown-menu dropdown-menu-end">
+                      <ul class="dropdown-menu dropdown-menu-end" >
                         <li>
-                          <button class="dropdown-item" (click)="toggleEstado(ot)">
+                          <button class="dropdown-item" (click)="toggleEstado(ot)"  *appPermiso="'OT_TOGGLE'" >
                             <i class="bi me-2" [ngClass]="ot.activo ? 'bi-toggle-on' : 'bi-toggle-off'"></i>
                             {{ot.activo ? 'Desactivar' : 'Activar'}}
                           </button>
