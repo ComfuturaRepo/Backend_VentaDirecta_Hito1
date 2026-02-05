@@ -4,8 +4,8 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { ProyectoResponse } from '../model/proyecto.model';
-import { PageResponse } from './trabajador.service';
 import { environment } from '../../environment';
+import { PageResponse } from '../model/page.interface';
 
 @Injectable({
   providedIn: 'root'

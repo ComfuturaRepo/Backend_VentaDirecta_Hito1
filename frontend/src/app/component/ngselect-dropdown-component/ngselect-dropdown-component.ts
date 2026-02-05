@@ -8,7 +8,7 @@ export interface DropdownItem {
   id: number;
   label?: string;
   adicional?: string;
-  estado?: boolean;
+  estado?: boolean | null;  // ← CAMBIA ESTO
 }
 
 @Component({
