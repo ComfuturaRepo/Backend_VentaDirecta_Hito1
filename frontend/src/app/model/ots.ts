@@ -45,6 +45,7 @@ export interface OtDetailResponse {
 
   idSite?: number | null;
   siteNombre?: string | null;
+  siteDescripcionNombre?: string | null;
 
   idRegion?: number | null;
   regionNombre?: string | null;
