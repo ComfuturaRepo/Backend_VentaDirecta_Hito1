@@ -108,8 +108,9 @@
                   </div>
                   <div class="info-item">
                     <span class="info-label">Site</span>
-                    <span class="info-value">{{ ot.siteNombre || '—' }}</span>
-                  </div>
+<span class="info-value">
+  {{ (ot.siteNombre ?? '') + ' ' + (ot.siteDescripcionNombre ?? '') || '—' }}
+</span>                  </div>
                   <div class="info-item">
                     <span class="info-label">Región</span>
                     <span class="info-value">{{ ot.regionNombre || '—' }}</span>
