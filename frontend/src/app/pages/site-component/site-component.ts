@@ -4,8 +4,8 @@ import { FormsModule } from '@angular/forms';
 import { Subscription, debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import Swal from 'sweetalert2';
 import { PaginationComponent } from '../../component/pagination.component/pagination.component';
-import { DEFAULT_PAGINATION_CONFIG, PageResponse } from '../../model/page.interface';
-import { Site, SiteRequest, SiteDescripcionRequest } from '../../model/site.interface';
+import { PageResponse } from '../../model/page.interface';
+import { Site, SiteRequest, SiteDescripcionRequest, SiteFilter } from '../../model/site.interface';
 import { SiteService } from '../../service/site.service';
 import { DropdownItem, DropdownService } from '../../service/dropdown.service';
 import { NgselectDropdownComponent } from '../../component/ngselect-dropdown-component/ngselect-dropdown-component';
@@ -14,7 +14,7 @@ import { PermisoDirective } from '../../directive/permiso.directive';
 @Component({
   selector: 'app-site',
   standalone: true,
-  imports: [CommonModule, FormsModule, PaginationComponent, NgselectDropdownComponent,PermisoDirective],
+  imports: [CommonModule, FormsModule, PaginationComponent],
   templateUrl: './site-component.html',
   styleUrls: ['./site-component.css']
 })
@@ -35,12 +35,24 @@ export class SiteComponent implements OnInit, OnDestroy {
     size: 'md' as const
   };
 
-  // Filtro con debounce
+  // Cambiado a array de objetos
+  descripcionesTemporal: { value: string }[] = [{ value: '' }];
+
+  // Filtros avanzados
+  filters: SiteFilter = {
+    search: '',
+    activo: null,
+    codigoSitio: '',
+    descripcion: '',
+    direccion: ''
+  };
+
+  // Filtro con debounce para búsqueda general
   searchTerm: string = '';
   private searchSubject = new Subject<string>();
   private searchSubscription?: Subscription;
 
-  // Estado del filtro activo
+  // Estado del filtro activo (para compatibilidad)
   filterActivos?: boolean;
 
   // Formulario modal
@@ -48,7 +60,6 @@ export class SiteComponent implements OnInit, OnDestroy {
   isEditMode = false;
   currentSite: Site = { codigoSitio: '', descripciones: [] };
   formSubmitted = false;
-  descripcionesTemporal: string[] = [''];
 
   // Dropdown para sitios compuestos
   siteOptions: DropdownItem[] = [];
@@ -65,38 +76,21 @@ export class SiteComponent implements OnInit, OnDestroy {
   totalElements = 0;
   totalPages = 0;
 
+  // Control de filtros avanzados
+  showAdvancedFilters = false;
+  appliedFiltersCount = 0;
+
   constructor(
     private siteService: SiteService,
     private dropdownService: DropdownService
-  ) {
-    // Configuración específica para este componente
-    this.paginationConfig.pageSizes = [10, 25, 50, 100];
-    this.paginationConfig.showInfo = true;
-    this.paginationConfig.showSizeSelector = true;
-    this.paginationConfig.showNavigation = true;
-    this.paginationConfig.showJumpToPage = true;
-    this.paginationConfig.showPageNumbers = true;
-    this.paginationConfig.align = 'center';
-    this.paginationConfig.size = 'md';
-  }
+  ) { }
 
   ngOnInit(): void {
     this.setupSearchDebounce();
     this.loadSites();
     this.loadSiteOptions();
   }
-isFormValid(): boolean {
-  if (!this.formSubmitted) {
-    return true;
-  }
 
-  // Verificar que haya al menos una descripción válida
-  const hasValidDescription = this.descripcionesTemporal.some(
-    desc => desc && desc.trim() !== ''
-  );
-
-  return hasValidDescription;
-}
   ngOnDestroy(): void {
     this.searchSubscription?.unsubscribe();
   }
@@ -108,20 +102,46 @@ isFormValid(): boolean {
         distinctUntilChanged()
       )
       .subscribe((searchTerm) => {
-        if (searchTerm.trim() === '') {
-          this.clearSearch();
-        } else {
-          this.performSearch();
-        }
+        this.searchTerm = searchTerm;
+        this.filters.search = searchTerm;
+        this.updateAppliedFiltersCount();
+        this.loadSitesWithCurrentFilters();
       });
   }
 
-  onSearchInput(): void {
-    this.searchSubject.next(this.searchTerm);
+  loadSitesWithCurrentFilters(page: number = 0): void {
+    this.isTableLoading = true;
+    this.errorMessage = '';
+
+    // Si no hay filtros activos, cargar todos
+    if (!this.hasActiveFilters()) {
+      this.loadSites(page);
+      return;
+    }
+
+    this.siteService.filtrar(
+      this.filters,
+      page,
+      this.pageSize,
+      'codigoSitio',
+      'asc'
+    ).subscribe({
+      next: (response: PageResponse<Site>) => {
+        this.handleSuccessResponse(response, page);
+      },
+      error: (err) => {
+        this.handleError(err, 'Error al filtrar los sitios');
+      }
+    });
   }
 
-  // Método principal para cargar sites
-  loadSites(page: number = this.currentPage, useFilter: boolean = true): void {
+  // Método para verificar si hay filtros activos
+  hasActiveFilters(): boolean {
+    return this.appliedFiltersCount > 0;
+  }
+
+  // Método de compatibilidad (mantenido)
+  loadSites(page: number = this.currentPage): void {
     this.isTableLoading = true;
     this.errorMessage = '';
 
@@ -130,7 +150,7 @@ isFormValid(): boolean {
       this.pageSize,
       'codigoSitio',
       'asc',
-      useFilter ? this.filterActivos : undefined
+      this.filterActivos
     ).subscribe({
       next: (response: PageResponse<Site>) => {
         this.handleSuccessResponse(response, page);
@@ -153,45 +173,63 @@ isFormValid(): boolean {
     });
   }
 
-  // Realizar búsqueda por texto
-  performSearch(): void {
-    if (!this.searchTerm.trim()) {
-      this.loadSites(0, false);
-      return;
-    }
-
-    this.isTableLoading = true;
-    this.siteService.buscar(this.searchTerm, this.currentPage, this.pageSize)
-      .subscribe({
-        next: (response: PageResponse<Site>) => {
-          this.handleSuccessResponse(response, this.currentPage);
-        },
-        error: (err) => {
-          this.handleError(err, 'Error en la búsqueda');
-        }
-      });
+  // Métodos para filtros
+  onSearchInput(): void {
+    this.searchSubject.next(this.searchTerm);
   }
 
-  // Limpiar búsqueda
-  clearSearch(): void {
+  applyFilters(): void {
+    this.currentPage = 0; // Siempre ir a la primera página
+    this.loadSitesWithCurrentFilters();
+  }
+
+  clearFilters(): void {
+    this.filters = {
+      search: '',
+      activo: null,
+      codigoSitio: '',
+      descripcion: '',
+      direccion: ''
+    };
     this.searchTerm = '';
+    this.filterActivos = undefined;
+    this.appliedFiltersCount = 0;
     this.currentPage = 0;
-    this.loadSites(0, true);
+    this.loadSites();
   }
 
-  // Cambiar filtro de activos
+  updateAppliedFiltersCount(): void {
+    let count = 0;
+
+    // Solo contar filtros que tengan valor (no vacío o null)
+    if (this.filters.search && this.filters.search.trim() !== '') count++;
+    if (this.filters.activo !== null && this.filters.activo !== undefined) count++;
+    if (this.filters.codigoSitio && this.filters.codigoSitio.trim() !== '') count++;
+    if (this.filters.descripcion && this.filters.descripcion.trim() !== '') count++;
+    if (this.filters.direccion && this.filters.direccion.trim() !== '') count++;
+
+    this.appliedFiltersCount = count;
+  }
+
+  toggleAdvancedFilters(): void {
+    this.showAdvancedFilters = !this.showAdvancedFilters;
+  }
+
+  // Método de compatibilidad para filtro de activos
   changeFilterActivos(filter?: boolean): void {
     this.filterActivos = filter;
+    this.filters.activo = filter;
+    this.updateAppliedFiltersCount();
     this.currentPage = 0;
-    this.loadSites(0, true);
+    this.loadSitesWithCurrentFilters();
   }
 
   // Métodos auxiliares para la vista
-  getFilterButtonClass(filterValue?: boolean, currentFilter?: boolean): string {
+  getFilterButtonClass(filterValue?: boolean): string {
     if (filterValue === undefined) {
-      return currentFilter === undefined ? 'btn-primary' : 'btn-outline-primary';
+      return this.filters.activo === undefined ? 'btn-primary' : 'btn-outline-primary';
     } else {
-      return currentFilter === filterValue
+      return this.filters.activo === filterValue
         ? (filterValue ? 'btn-success' : 'btn-secondary')
         : (filterValue ? 'btn-outline-success' : 'btn-outline-secondary');
     }
@@ -210,7 +248,7 @@ isFormValid(): boolean {
       codigoSitio: '',
       descripciones: []
     };
-    this.descripcionesTemporal = [''];
+    this.descripcionesTemporal = [{ value: '' }];
     this.selectedSiteId = null;
     this.showModal = true;
     this.errorMessage = '';
@@ -227,10 +265,10 @@ isFormValid(): boolean {
       descripciones: [...site.descripciones]
     };
 
-    // Convertir descripciones a array temporal para edición
-    this.descripcionesTemporal = site.descripciones.map(d => d.descripcion);
+    // Convertir descripciones a array temporal para edición (usando objetos)
+    this.descripcionesTemporal = site.descripciones.map(d => ({ value: d.descripcion }));
     if (this.descripcionesTemporal.length === 0) {
-      this.descripcionesTemporal = [''];
+      this.descripcionesTemporal = [{ value: '' }];
     }
 
     this.showModal = true;
@@ -248,7 +286,8 @@ isFormValid(): boolean {
             activo: site.activo ?? true,
             descripciones: [...site.descripciones]
           };
-          this.descripcionesTemporal = site.descripciones.map(d => d.descripcion);
+          // Convertir a array de objetos
+          this.descripcionesTemporal = site.descripciones.map(d => ({ value: d.descripcion }));
           this.showModal = true;
           this.selectedSiteId = null;
         },
@@ -260,14 +299,26 @@ isFormValid(): boolean {
   }
 
   // Métodos para manejar descripciones
+  hasValidDescriptions(): boolean {
+    return this.descripcionesTemporal &&
+           this.descripcionesTemporal.length > 0 &&
+           this.descripcionesTemporal.some(d => d.value && d.value.trim() !== '');
+  }
+
+  showDescriptionsError(): boolean {
+    return this.formSubmitted &&
+           this.descripcionesTemporal &&
+           this.descripcionesTemporal.every(d => !d.value || d.value.trim() === '');
+  }
+
   addDescripcion(): void {
-    this.descripcionesTemporal.push('');
+    this.descripcionesTemporal.push({ value: '' });
   }
 
   removeDescripcion(index: number): void {
     this.descripcionesTemporal.splice(index, 1);
     if (this.descripcionesTemporal.length === 0) {
-      this.descripcionesTemporal.push('');
+      this.descripcionesTemporal.push({ value: '' });
     }
   }
 
@@ -275,28 +326,75 @@ isFormValid(): boolean {
     return index;
   }
 
+ // Por este:
+isFormValid(): boolean {
+  if (!this.formSubmitted) {
+    return true;
+  }
+
+  // Verificar que haya al menos una descripción válida
+  const hasValidDescription = this.descripcionesTemporal.some(
+    desc => desc.value && desc.value.trim() !== ''
+  );
+
+  return hasValidDescription;
+}
+
   saveSite(): void {
     this.formSubmitted = true;
 
-    // Validar que haya al menos una descripción válida
+    // Validaciones locales primero
+    const codigoSitio = (this.currentSite.codigoSitio ?? '').trim();
+
+    if (!codigoSitio) {
+      this.errorMessage = 'El código de sitio es requerido';
+      return;
+    }
+
+    // Extraer valores de los objetos
     const descripcionesValidas = this.descripcionesTemporal
-      .filter(desc => desc.trim() !== '')
-      .map(desc => desc.trim());
+      .filter(item => item.value.trim() !== '')
+      .map(item => item.value.trim());
 
     if (descripcionesValidas.length === 0) {
-      this.errorMessage = 'Debe ingresar al menos una descripción';
+      this.errorMessage = 'Debe ingresar al menos una descripción válida';
       return;
     }
 
-    // Validar códigos de sitio únicos
-    if (this.currentSite.codigoSitio && this.currentSite.codigoSitio.length > 150) {
-      this.errorMessage = 'El código no puede exceder los 150 caracteres';
-      return;
+    // Solo validar código duplicado si es creación (no edición)
+    if (!this.isEditMode) {
+      this.verificarYGuardarSite(codigoSitio, descripcionesValidas);
+    } else {
+      // En edición, guardar directamente (la validación se hace en el backend)
+      this.guardarSiteDirectamente(codigoSitio, descripcionesValidas);
     }
+  }
 
-    // Crear request con descripciones
+  private verificarYGuardarSite(codigoSitio: string, descripcionesValidas: string[]): void {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    // Primero verificar si el código ya existe
+    this.siteService.verificarCodigo(codigoSitio).subscribe({
+      next: (existe: boolean) => {
+        if (existe) {
+          this.errorMessage = `El código de sitio "${codigoSitio}" ya existe. Use otro código.`;
+          this.isLoading = false;
+        } else {
+          // Código no existe, proceder a guardar
+          this.guardarSiteDirectamente(codigoSitio, descripcionesValidas);
+        }
+      },
+      error: (err) => {
+        this.errorMessage = 'Error al verificar el código. Intente nuevamente.';
+        this.isLoading = false;
+      }
+    });
+  }
+
+  private guardarSiteDirectamente(codigoSitio: string, descripcionesValidas: string[]): void {
     const siteRequest: SiteRequest = {
-      codigoSitio: this.currentSite.codigoSitio || undefined,
+      codigoSitio: codigoSitio,
       activo: this.currentSite.activo ?? true,
       descripciones: descripcionesValidas.map(descripcion => ({
         descripcion,
@@ -304,8 +402,38 @@ isFormValid(): boolean {
       }))
     };
 
-    this.isLoading = true;
-    this.errorMessage = '';
+    const id = this.isEditMode ? this.currentSite.idSite : undefined;
+
+    this.siteService.guardar(siteRequest, id).subscribe({
+      next: (savedSite) => {
+        this.handleSaveSuccess(savedSite);
+      },
+      error: (err) => {
+        this.handleSaveError(err);
+      }
+    });
+  }
+
+  private verificarCodigoEnOtroRegistro(): void {
+    this.errorMessage = 'El código de sitio ya existe en otro registro. Use otro código.';
+    this.isLoading = false;
+  }
+
+  private procederConGuardado(descripcionesValidas: string[]): void {
+    if (!this.currentSite.codigoSitio) {
+      this.errorMessage = 'El código de sitio es requerido';
+      this.isLoading = false;
+      return;
+    }
+
+    const siteRequest: SiteRequest = {
+      codigoSitio: this.currentSite.codigoSitio.trim(),
+      activo: this.currentSite.activo ?? true,
+      descripciones: descripcionesValidas.map(descripcion => ({
+        descripcion,
+        activo: true
+      }))
+    };
 
     const id = this.isEditMode ? this.currentSite.idSite : undefined;
 
@@ -324,7 +452,7 @@ isFormValid(): boolean {
     this.formSubmitted = false;
     this.errorMessage = '';
     this.isLoading = false;
-    this.descripcionesTemporal = [''];
+    this.descripcionesTemporal = [{ value: '' }];
     this.selectedSiteId = null;
   }
 
@@ -371,33 +499,31 @@ isFormValid(): boolean {
     });
   }
 
-
-
   // Métodos para paginación
   onPageChange(page: number): void {
     this.currentPage = page;
-    if (this.searchTerm.trim()) {
-      this.performSearch();
+    if (this.hasActiveFilters()) {
+      this.loadSitesWithCurrentFilters(page);
     } else {
-      this.loadSites(page, this.filterActivos !== undefined);
+      this.loadSites(page);
     }
   }
 
   onPageSizeChange(size: number): void {
     this.pageSize = size;
     this.currentPage = 0;
-    if (this.searchTerm.trim()) {
-      this.performSearch();
+    if (this.hasActiveFilters()) {
+      this.loadSitesWithCurrentFilters(0);
     } else {
-      this.loadSites(0, this.filterActivos !== undefined);
+      this.loadSites(0);
     }
   }
 
   onRefresh(): void {
-    if (this.searchTerm.trim()) {
-      this.performSearch();
+    if (this.hasActiveFilters()) {
+      this.loadSitesWithCurrentFilters(this.currentPage);
     } else {
-      this.loadSites(this.currentPage, this.filterActivos !== undefined);
+      this.loadSites(this.currentPage);
     }
   }
 
@@ -428,7 +554,7 @@ isFormValid(): boolean {
 
   private handleSaveSuccess(savedSite: Site): void {
     this.showModal = false;
-    this.descripcionesTemporal = [''];
+    this.descripcionesTemporal = [{ value: '' }];
 
     Swal.fire({
       icon: 'success',
@@ -441,27 +567,37 @@ isFormValid(): boolean {
       timerProgressBar: true
     });
 
-    if (this.searchTerm.trim()) {
-      this.performSearch();
+    if (this.hasActiveFilters()) {
+      this.loadSitesWithCurrentFilters(this.currentPage);
     } else {
-      this.loadSites(this.currentPage, this.filterActivos !== undefined);
+      this.loadSites(this.currentPage);
     }
 
     this.isLoading = false;
   }
 
   private handleSaveError(err: any): void {
-    const errorMessage = err?.error?.message || 'Error al guardar el sitio.';
-    this.errorMessage = errorMessage;
-    console.error('Error guardando sitio:', err);
-    this.isLoading = false;
+    let errorMessage = 'Error al guardar el sitio.';
 
-    Swal.fire({
-      icon: 'error',
-      title: 'Error',
-      text: errorMessage,
-      confirmButtonColor: '#ef4444'
-    });
+    // Extraer mensaje específico si existe
+    if (err?.error?.message) {
+      errorMessage = err.error.message;
+    } else if (err?.message) {
+      errorMessage = err.message;
+    }
+
+    // Solo mostrar SweetAlert para errores graves, no para validaciones
+    if (!errorMessage.includes('código de sitio') && !errorMessage.includes('ya existe')) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error',
+        text: errorMessage,
+        confirmButtonColor: '#ef4444'
+      });
+    }
+
+    this.errorMessage = errorMessage;
+    this.isLoading = false;
   }
 
   private showSuccess(message: string): void {
@@ -526,11 +662,19 @@ isFormValid(): boolean {
     return descripciones[0].descripcion;
   }
 
-  onSiteSelectionChange(event: any): void {
-    if (event) {
-      this.selectedSiteId = event.id;
-    } else {
-      this.selectedSiteId = null;
-    }
+  // Métodos específicos para filtros avanzados
+  getActiveFilterCount(): string {
+    return this.appliedFiltersCount > 0 ? `(${this.appliedFiltersCount})` : '';
+  }
+
+  getFilterSummary(): string {
+    const parts = [];
+    if (this.filters.search) parts.push(`Buscar: "${this.filters.search}"`);
+    if (this.filters.activo !== null) parts.push(this.filters.activo ? 'Activos' : 'Inactivos');
+    if (this.filters.codigoSitio) parts.push(`Código: "${this.filters.codigoSitio}"`);
+    if (this.filters.descripcion) parts.push(`Descripción: "${this.filters.descripcion}"`);
+    if (this.filters.direccion) parts.push(`Dirección: "${this.filters.direccion}"`);
+
+    return parts.length > 0 ? parts.join(' • ') : 'Sin filtros aplicados';
   }
 }
