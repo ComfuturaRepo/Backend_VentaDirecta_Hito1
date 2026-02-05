@@ -113,7 +113,8 @@ export interface Trabajador {
   area: Area;
   cargo: Cargo;
   activo: boolean;
-}export interface PermisoFormData {
+}
+export interface PermisoFormData {
   idPermiso?: number;
   codigo: string;
   nombre: string;

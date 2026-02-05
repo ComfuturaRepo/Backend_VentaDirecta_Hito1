@@ -1,6 +1,9 @@
 package com.backend.comfutura.service.serviceImpl;
+
+import com.backend.comfutura.Exceptions.ValidationException;
 import com.backend.comfutura.dto.Mapper.TrabajadorMapper;
 import com.backend.comfutura.dto.Page.PageResponseDTO;
+import com.backend.comfutura.dto.request.TrabajadorFilterDTO;
 import com.backend.comfutura.dto.request.trabajadorDTO.TrabajadorRequestDTO;
 import com.backend.comfutura.dto.request.trabajadorDTO.TrabajadorUpdateDTO;
 import com.backend.comfutura.dto.response.trabajadorDTO.TrabajadorDetailDTO;
@@ -9,14 +12,21 @@ import com.backend.comfutura.dto.response.trabajadorDTO.TrabajadorStatsDTO;
 import com.backend.comfutura.model.*;
 import com.backend.comfutura.repository.*;
 import com.backend.comfutura.service.TrabajadorService;
+import com.backend.comfutura.service.TrabajadorSpecification;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.StringUtils;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -32,51 +42,103 @@ public class TrabajadorServiceImpl implements TrabajadorService {
     @Transactional(readOnly = true)
     public PageResponseDTO<TrabajadorSimpleDTO> findAllTrabajadores(Pageable pageable) {
         Page<Trabajador> page = trabajadorRepository.findAll(pageable);
-        return toPageResponseDTO2(page.map(trabajadorMapper::toSimpleDTO));
+        return toPageResponseDTO(page.map(trabajadorMapper::toSimpleDTO));
     }
+
     @Override
     @Transactional(readOnly = true)
     public PageResponseDTO<TrabajadorSimpleDTO> findActivos(Pageable pageable) {
-        Page<Trabajador> page = trabajadorRepository.findByActivoTrue(pageable);
-        return toPageResponseDTO2(page.map(trabajadorMapper::toSimpleDTO));
-    }
-
-    @Override
-    @Transactional(readOnly = true)
-    public PageResponseDTO<TrabajadorSimpleDTO> searchTrabajadores(String search, Pageable pageable) {
-        Specification<Trabajador> spec = (root, query, cb) -> {
-            if (search == null || search.trim().isEmpty()) {
-                return cb.conjunction();
-            }
-
-            String pattern = "%" + search.toLowerCase().trim() + "%";
-
-            return cb.or(
-                    cb.like(cb.lower(root.get("nombres")), pattern),
-                    cb.like(cb.lower(root.get("apellidos")), pattern),
-                    cb.like(cb.lower(root.get("dni")), pattern),
-                    cb.like(cb.lower(root.get("email")), pattern)
-            );
-        };
-
-        Page<Trabajador> page = trabajadorRepository.findAll(spec, pageable);
-        return toPageResponseDTO2(page.map(trabajadorMapper::toSimpleDTO));
-    }
-
-
-    @Override
-    @Transactional(readOnly = true)
-    public PageResponseDTO<TrabajadorSimpleDTO> findTrabajadoresActivos(Pageable pageable) {
         Page<Trabajador> page = trabajadorRepository.findByActivoTrue(pageable);
         return toPageResponseDTO(page.map(trabajadorMapper::toSimpleDTO));
     }
 
     @Override
     @Transactional(readOnly = true)
-    public PageResponseDTO<TrabajadorSimpleDTO> searchTrabajadores(String search, Boolean activo,
-                                                                   Integer areaId, Integer cargoId, Integer empresaId, Pageable pageable) {
+    public PageResponseDTO<TrabajadorSimpleDTO> searchTrabajadores(String search, Pageable pageable) {
+        Specification<Trabajador> spec = (root, query, cb) -> {
+            if (!StringUtils.hasText(search)) {
+                return cb.conjunction();
+            }
 
-        Page<Trabajador> page = trabajadorRepository.searchTrabajadores(
+            String pattern = "%" + search.toLowerCase() + "%";
+
+            return cb.or(
+                    cb.like(cb.lower(root.get("nombres")), pattern),
+                    cb.like(cb.lower(root.get("apellidos")), pattern),
+                    cb.like(cb.lower(root.get("dni")), pattern),
+                    cb.like(cb.lower(root.get("correoCorporativo")), pattern)
+            );
+        };
+
+        Page<Trabajador> page = trabajadorRepository.findAll(spec, pageable);
+        return toPageResponseDTO(page.map(trabajadorMapper::toSimpleDTO));
+    }
+
+    @Override
+    @Transactional(readOnly = true)
+    public PageResponseDTO<TrabajadorSimpleDTO> searchTrabajadoresAdvanced(TrabajadorFilterDTO filterDTO) {
+        // Crear Pageable desde el DTO
+        Sort sort = Sort.by(
+                filterDTO.getSortDirection().equalsIgnoreCase("ASC") ?
+                        Sort.Direction.ASC : Sort.Direction.DESC,
+                filterDTO.getSortBy()
+        );
+
+        Pageable pageable = PageRequest.of(
+                filterDTO.getPage(),
+                filterDTO.getSize(),
+                sort
+        );
+
+        // Crear Specification dinámica
+        Specification<Trabajador> spec = TrabajadorSpecification.withDynamicFilters(
+                filterDTO.getSearch(),
+                filterDTO.getActivo(),
+                filterDTO.getAreaIds(),
+                filterDTO.getCargoIds(),
+                filterDTO.getEmpresaIds(),
+                filterDTO.getPuedeSerLiquidador(),
+                filterDTO.getPuedeSerEjecutante(),
+                filterDTO.getPuedeSerAnalistaContable(),
+                filterDTO.getPuedeSerJefaturaResponsable(),
+                filterDTO.getPuedeSerCoordinadorTiCw()
+        );
+
+        Page<Trabajador> page = trabajadorRepository.findAll(spec, pageable);
+
+        // Crear respuesta
+        PageResponseDTO<TrabajadorSimpleDTO> response = toPageResponseDTO(page.map(trabajadorMapper::toSimpleDTO));
+
+        Map<String, Object> filters = new HashMap<>();
+        filters.put("search", filterDTO.getSearch());
+        filters.put("activo", filterDTO.getActivo());
+        filters.put("areaIds", filterDTO.getAreaIds());
+        filters.put("cargoIds", filterDTO.getCargoIds());
+        filters.put("empresaIds", filterDTO.getEmpresaIds());
+        filters.put("puedeSerLiquidador", filterDTO.getPuedeSerLiquidador());
+        filters.put("puedeSerEjecutante", filterDTO.getPuedeSerEjecutante());
+        filters.put("puedeSerAnalistaContable", filterDTO.getPuedeSerAnalistaContable());
+        filters.put("puedeSerJefaturaResponsable", filterDTO.getPuedeSerJefaturaResponsable());
+        filters.put("puedeSerCoordinadorTiCw", filterDTO.getPuedeSerCoordinadorTiCw());
+        filters.put("sortBy", filterDTO.getSortBy());
+        filters.put("sortDirection", filterDTO.getSortDirection());
+
+        response.setFilters(filters);
+
+        return response;
+    }
+
+    // Método alternativo usando la consulta simple del repository
+    @Transactional(readOnly = true)
+    public PageResponseDTO<TrabajadorSimpleDTO> searchTrabajadoresSimple(
+            String search,
+            Boolean activo,
+            Integer areaId,
+            Integer cargoId,
+            Integer empresaId,
+            Pageable pageable) {
+
+        Page<Trabajador> page = trabajadorRepository.searchTrabajadoresSimple(
                 search, activo, areaId, cargoId, empresaId, pageable);
 
         return toPageResponseDTO(page.map(trabajadorMapper::toSimpleDTO));
@@ -99,12 +161,27 @@ public class TrabajadorServiceImpl implements TrabajadorService {
     }
 
     @Override
+    @Transactional(readOnly = true)
+    public TrabajadorDetailDTO findTrabajadorByEmail(String email) {
+        Trabajador trabajador = trabajadorRepository.findByCorreoCorporativo(email)
+                .orElseThrow(() -> new RuntimeException("Trabajador no encontrado con email: " + email));
+        return trabajadorMapper.toDetailDTO(trabajador);
+    }
+
+    @Override
     @Transactional
     public TrabajadorDetailDTO createTrabajador(TrabajadorRequestDTO trabajadorDTO) {
         // Validar que el DNI no exista
         if (trabajadorDTO.getDni() != null && trabajadorRepository.existsByDni(trabajadorDTO.getDni())) {
-            throw new RuntimeException("El DNI ya está registrado");
+            throw new ValidationException("El DNI ya está registrado");
         }
+
+        // Validar que el correo corporativo no exista
+        if (trabajadorDTO.getCorreoCorporativo() != null &&
+                trabajadorRepository.existsByCorreoCorporativo(trabajadorDTO.getCorreoCorporativo())) {
+            throw new ValidationException("El correo corporativo ya está registrado");
+        }
+
 
         // Obtener y validar área
         Area area = areaRepository.findById(trabajadorDTO.getAreaId())
@@ -129,22 +206,12 @@ public class TrabajadorServiceImpl implements TrabajadorService {
         trabajador.setActivo(trabajadorDTO.getActivo() != null ? trabajadorDTO.getActivo() : true);
         trabajador.setFechaCreacion(LocalDateTime.now());
 
-        // Establecer valores por defecto para los nuevos campos si no vienen en el DTO
-        if (trabajador.getPuedeSerLiquidador() == null) {
-            trabajador.setPuedeSerLiquidador(false);
-        }
-        if (trabajador.getPuedeSerEjecutante() == null) {
-            trabajador.setPuedeSerEjecutante(false);
-        }
-        if (trabajador.getPuedeSerAnalistaContable() == null) {
-            trabajador.setPuedeSerAnalistaContable(false);
-        }
-        if (trabajador.getPuedeSerJefaturaResponsable() == null) {
-            trabajador.setPuedeSerJefaturaResponsable(false);
-        }
-        if (trabajador.getPuedeSerCoordinadorTiCw() == null) {
-            trabajador.setPuedeSerCoordinadorTiCw(false);
-        }
+        // Establecer valores por defecto para los nuevos campos
+        if (trabajador.getPuedeSerLiquidador() == null) trabajador.setPuedeSerLiquidador(false);
+        if (trabajador.getPuedeSerEjecutante() == null) trabajador.setPuedeSerEjecutante(false);
+        if (trabajador.getPuedeSerAnalistaContable() == null) trabajador.setPuedeSerAnalistaContable(false);
+        if (trabajador.getPuedeSerJefaturaResponsable() == null) trabajador.setPuedeSerJefaturaResponsable(false);
+        if (trabajador.getPuedeSerCoordinadorTiCw() == null) trabajador.setPuedeSerCoordinadorTiCw(false);
 
         Trabajador savedTrabajador = trabajadorRepository.save(trabajador);
         return trabajadorMapper.toDetailDTO(savedTrabajador);
@@ -163,6 +230,14 @@ public class TrabajadorServiceImpl implements TrabajadorService {
             }
         }
 
+        // Validar que el correo corporativo no esté en uso por otro trabajador
+        if (trabajadorDTO.getCorreoCorporativo() != null &&
+                !trabajadorDTO.getCorreoCorporativo().equals(trabajador.getCorreoCorporativo())) {
+            if (trabajadorRepository.existsByCorreoCorporativoAndIdTrabajadorNot(
+                    trabajadorDTO.getCorreoCorporativo(), id)) {
+                throw new ValidationException("El correo corporativo ya está registrado por otro trabajador");
+            }
+        }
         // Obtener y validar área
         Area area = areaRepository.findById(trabajadorDTO.getAreaId())
                 .orElseThrow(() -> new RuntimeException("Área no encontrada"));
@@ -184,8 +259,8 @@ public class TrabajadorServiceImpl implements TrabajadorService {
         trabajador.setCargo(cargo);
         trabajador.setEmpresa(empresa);
 
-        // Mantener valores de los nuevos campos si no se están actualizando
-        // (El mapper debería encargarse de esto, pero verificamos)
+        // Actualizar fecha de modificación
+        trabajador.setFechaCreacion(LocalDateTime.now());
 
         Trabajador updatedTrabajador = trabajadorRepository.save(trabajador);
         return trabajadorMapper.toDetailDTO(updatedTrabajador);
@@ -237,20 +312,37 @@ public class TrabajadorServiceImpl implements TrabajadorService {
         return trabajadorRepository.countByCargo(cargoId);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public List<TrabajadorSimpleDTO> getTrabajadoresByFilters(
+            String search,
+            Boolean activo,
+            List<Integer> areaIds,
+            List<Integer> cargoIds,
+            List<Boolean> roles) {
+
+        // Crear especificación dinámica usando el helper
+        Specification<Trabajador> spec = TrabajadorSpecification.withDynamicFilters(
+                search,
+                activo,
+                areaIds,
+                cargoIds,
+                null, // empresaIds
+                null, // puedeSerLiquidador
+                null, // puedeSerEjecutante
+                null, // puedeSerAnalistaContable
+                null, // puedeSerJefaturaResponsable
+                null  // puedeSerCoordinadorTiCw
+        );
+
+        List<Trabajador> trabajadores = trabajadorRepository.findAll(spec);
+        return trabajadores.stream()
+                .map(trabajadorMapper::toSimpleDTO)
+                .toList();
+    }
+
     // Helper para convertir Page a PageResponseDTO
     private <T> PageResponseDTO<T> toPageResponseDTO(Page<T> page) {
-        PageResponseDTO<T> response = new PageResponseDTO<>();
-        response.setContent(page.getContent());
-        response.setCurrentPage(page.getNumber());
-        response.setTotalItems(page.getTotalElements());
-        response.setTotalPages(page.getTotalPages());
-        response.setFirst(page.isFirst());
-        response.setLast(page.isLast());
-        response.setPageSize(page.getSize());
-
-        return response;
-    }
-    private <T> PageResponseDTO<T> toPageResponseDTO2(Page<T> page) {
         return new PageResponseDTO<>(
                 page.getContent(),
                 page.getNumber(),

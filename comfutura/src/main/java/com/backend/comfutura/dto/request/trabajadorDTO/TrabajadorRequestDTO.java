@@ -34,7 +34,6 @@ public class TrabajadorRequestDTO {
 
     private Boolean activo = true;
 
-
     // Campos nuevos
     private Boolean puedeSerLiquidador = false;
     private Boolean puedeSerEjecutante = false;

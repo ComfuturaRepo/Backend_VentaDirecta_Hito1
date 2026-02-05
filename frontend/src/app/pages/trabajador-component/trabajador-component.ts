@@ -1,505 +1,808 @@
-import { DropdownItem, DropdownService } from '../../service/dropdown.service';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormControl, AbstractControl, ValidationErrors } from '@angular/forms';
+import { RouterModule } from '@angular/router';
+
+// Componentes personalizados
+
+// Utils
 import Swal from 'sweetalert2';
-import { TrabajadorService, Trabajador, PageResponse, Area, Cargo, Empresa } from '../../service/trabajador.service';
+import { debounceTime, distinctUntilChanged, Subject, takeUntil, forkJoin, firstValueFrom, Observable, map, catchError, of } from 'rxjs';
+import { NgselectDropdownComponent } from '../../component/ngselect-dropdown-component/ngselect-dropdown-component';
+import { PaginationComponent } from '../../component/pagination.component/pagination.component';
+import { TrabajadorDetail, TrabajadorRequest, TrabajadorSimple, TrabajadorStats, TrabajadorUpdate } from '../../model/trabajador.model';
+import { DropdownItem, DropdownService } from '../../service/dropdown.service';
+import { ValidationService } from '../../service/validation.service';
+import { TrabajadorService } from '../../service/trabajador.service';
+import { PageResponse } from '../../model/page.interface';
 import { PermisoDirective } from '../../directive/permiso.directive';
 
 @Component({
-  selector: 'app-trabajador-component',
+  selector: 'app-trabajador',
   standalone: true,
-  imports: [CommonModule, FormsModule,PermisoDirective],
+  imports: [
+    CommonModule,
+    FormsModule,
+    ReactiveFormsModule,
+    RouterModule,
+    NgselectDropdownComponent,
+    PaginationComponent,     PermisoDirective
+
+
+  ],
   templateUrl: './trabajador-component.html',
   styleUrls: ['./trabajador-component.css']
 })
-export class TrabajadorComponent implements OnInit {
+export class TrabajadorComponent implements OnInit, OnDestroy {
+  // Estados del componente
+  isCreating = false;
+  isEditing = false;
+  isLoading = false;
+  isSearching = false;
+  showModal = false;
+  modalTitle = '';
+
   // Datos
-  trabajadores: Trabajador[] = [];
-  pageResponse: PageResponse<Trabajador> = {
-    content: [],
-    currentPage: 0,
-    totalItems: 0,
-    totalPages: 0,
-    first: true,
-    last: true,
-    pageSize: 10
-  };
+  trabajadores: TrabajadorSimple[] = [];
+  selectedTrabajador: TrabajadorDetail | null = null;
+  stats: TrabajadorStats | null = null;
 
-  // Dropdowns
-areas: DropdownItem[] = [];
-cargos: DropdownItem[] = [];
-empresas: DropdownItem[] = [];
+  // Filtros y paginación
+  currentPage = 0;
+  pageSize = 10;
+  totalItems = 0;
+  totalPages = 0;
 
+  // Dropdowns como DropdownItem[]
+  areas: DropdownItem[] = [];
+  cargos: DropdownItem[] = [];
+  empresas: DropdownItem[] = [];
 
-  // Filtros
-  searchTerm: string = '';
-  filtroActivo: boolean | null = null;
-  filtroAreaId: number | null = null;
-  filtroCargoId: number | null = null;
-  filtroEmpresaId: number | null = null;
+  // Roles para filtros
+  rolesOptions = [
+    { id: 1, label: 'Sí', estado: true },
+    { id: 2, label: 'No', estado: false },
+    { id: 3, label: 'Todos' }
+  ];
 
-  // Paginación
-  currentPage: number = 0;
-  pageSize: number = 10;
-  totalPages: number = 0;
-  totalItems: number = 0;
-  pageSizes: number[] = [5, 10, 20, 50];
+  estadoOptions = [
+    { id: 1, label: 'Activo', estado: true },
+    { id: 2, label: 'Inactivo', estado: false },
+    { id: 3, label: 'Todos' }
+  ];
 
-  // Ordenamiento
-  sortBy: string = 'idTrabajador';
-  sortDirection: string = 'asc';
+  // Formularios
+  trabajadorForm: FormGroup;
+  filterForm: FormGroup;
 
-  // Estados
-  isLoading: boolean = false;
-  isLoadingDropdowns: boolean = false;
-  showFilters: boolean = false;
+  // Para búsqueda con debounce
+  private searchSubject: Subject<string>;
+  private destroy$: Subject<void>;
 
-  // Modal
-  showModal: boolean = false;
-  modalTitle: string = '';
-  modalMode: 'create' | 'edit' = 'create';
+  constructor(
+    private fb: FormBuilder,
+    private dropdownService: DropdownService,
+    private trabajadorService: TrabajadorService,
+    private validationService: ValidationService
+  ) {
+    // Inicializar Subjects
+    this.searchSubject = new Subject<string>();
+    this.destroy$ = new Subject<void>();
 
- // En la propiedad trabajadorForm
-trabajadorForm: any = {
-  idTrabajador: null,
-  nombres: '',
-  apellidos: '',
-  dni: '',
-  celular: '',
-  correoCorporativo: '',
-  areaId: null,
-  cargoId: null,
-  empresaId: null,
-  activo: true,
+    // Inicializar arrays vacíos
+    this.trabajadores = [];
+    this.areas = [];
+    this.cargos = [];
+    this.empresas = [];
 
-  // Campos nuevos con valor por defecto false
-  puedeSerLiquidador: false,
-  puedeSerEjecutante: false,
-  puedeSerAnalistaContable: false,
-  puedeSerJefaturaResponsable: false,
-  puedeSerCoordinadorTiCw: false
-  };
+    // Formulario principal
+    this.trabajadorForm = this.fb.group({
+      nombres: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      apellidos: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
+      dni: ['', [
+        Validators.required,
+        this.validationService.dniValidator()
+      ]],
+      celular: ['', [
+        Validators.required,
+        this.validationService.celularValidator()
+      ]],
+      correoCorporativo: ['', [
+        Validators.required,
+        Validators.email,
+        Validators.maxLength(150)
+      ]],
+      areaId: new FormControl<number | null>(null, Validators.required),
+      cargoId: new FormControl<number | null>(null, Validators.required),
+      empresaId: new FormControl<number | null>(null),
+      activo: [true],
+      puedeSerLiquidador: [false],
+      puedeSerEjecutante: [false],
+      puedeSerAnalistaContable: [false],
+      puedeSerJefaturaResponsable: [false],
+      puedeSerCoordinadorTiCw: [false]
+    });
 
-  // Validación
-  formErrors: any = {};
-  isSubmitting: boolean = false;
+    // Formulario de filtros
+    this.filterForm = this.fb.group({
+      search: [''],
+      activo: new FormControl<number | null>(null),
+      areaId: new FormControl<number | null>(null),
+      cargoId: new FormControl<number | null>(null),
+      empresaId: new FormControl<number | null>(null),
+      puedeSerLiquidador: new FormControl<boolean | null>(null),
+      puedeSerEjecutante: new FormControl<boolean | null>(null),
+      puedeSerAnalistaContable: new FormControl<boolean | null>(null),
+      puedeSerJefaturaResponsable: new FormControl<boolean | null>(null),
+      puedeSerCoordinadorTiCw: new FormControl<boolean | null>(null)
+    });
+  }
 
-  constructor(private trabajadorService: TrabajadorService ,private dropdownService:DropdownService) {}
+// Validador async para DNI
+private dniAsyncValidator(control: AbstractControl): Observable<ValidationErrors | null> {
+  if (!control.value || control.invalid) {
+    return of(null);
+  }
+
+  return this.trabajadorService.checkDniExists(control.value).pipe(
+    map(exists => exists ? { dniExists: true } : null),
+    catchError(() => of(null)) // Si hay error, no mostramos validación
+  );
+}
+
+// Validador async para email
+private emailAsyncValidator(control: AbstractControl): Observable<ValidationErrors | null> {
+  if (!control.value || control.invalid) {
+    return of(null);
+  }
+
+  // En modo edición, permitimos el mismo email
+  if (this.isEditing && this.selectedTrabajador &&
+      this.selectedTrabajador.correoCorporativo === control.value) {
+    return of(null);
+  }
+
+  return this.trabajadorService.checkEmailExists(control.value).pipe(
+    map(exists => exists ? { emailExists: true } : null),
+    catchError(() => of(null))
+  );
+}
+
+  // ==============================================
+  // GETTERS PARA FORM CONTROLS
+  // ==============================================
+
+  // Getters para el formulario de FILTROS
+  get searchControl(): FormControl {
+    return this.filterForm.get('search') as FormControl;
+  }
+
+  get activoControl(): FormControl {
+    return this.filterForm.get('activo') as FormControl;
+  }
+
+  get areaIdControl(): FormControl {
+    return this.filterForm.get('areaId') as FormControl;
+  }
+
+  get cargoIdControl(): FormControl {
+    return this.filterForm.get('cargoId') as FormControl;
+  }
+
+  get empresaIdControl(): FormControl {
+    return this.filterForm.get('empresaId') as FormControl;
+  }
+
+  get puedeSerLiquidadorControl(): FormControl {
+    return this.filterForm.get('puedeSerLiquidador') as FormControl;
+  }
+
+  get puedeSerEjecutanteControl(): FormControl {
+    return this.filterForm.get('puedeSerEjecutante') as FormControl;
+  }
+
+  get puedeSerAnalistaContableControl(): FormControl {
+    return this.filterForm.get('puedeSerAnalistaContable') as FormControl;
+  }
+
+  get puedeSerJefaturaResponsableControl(): FormControl {
+    return this.filterForm.get('puedeSerJefaturaResponsable') as FormControl;
+  }
+
+  get puedeSerCoordinadorTiCwControl(): FormControl {
+    return this.filterForm.get('puedeSerCoordinadorTiCw') as FormControl;
+  }
+
+  // Getters para el formulario PRINCIPAL (trabajadorForm)
+  get nombresControl(): FormControl {
+    return this.trabajadorForm.get('nombres') as FormControl;
+  }
+
+  get apellidosControl(): FormControl {
+    return this.trabajadorForm.get('apellidos') as FormControl;
+  }
+
+  get dniControl(): FormControl {
+    return this.trabajadorForm.get('dni') as FormControl;
+  }
+
+  get celularControl(): FormControl {
+    return this.trabajadorForm.get('celular') as FormControl;
+  }
+
+  get correoCorporativoControl(): FormControl {
+    return this.trabajadorForm.get('correoCorporativo') as FormControl;
+  }
+
+  get areaIdTrabajadorControl(): FormControl {
+    return this.trabajadorForm.get('areaId') as FormControl;
+  }
+
+  get cargoIdTrabajadorControl(): FormControl {
+    return this.trabajadorForm.get('cargoId') as FormControl;
+  }
+
+  get empresaIdTrabajadorControl(): FormControl {
+    return this.trabajadorForm.get('empresaId') as FormControl;
+  }
+
+  get activoTrabajadorControl(): FormControl {
+    return this.trabajadorForm.get('activo') as FormControl;
+  }
+
+  get puedeSerLiquidadorTrabajadorControl(): FormControl {
+    return this.trabajadorForm.get('puedeSerLiquidador') as FormControl;
+  }
+
+  get puedeSerEjecutanteTrabajadorControl(): FormControl {
+    return this.trabajadorForm.get('puedeSerEjecutante') as FormControl;
+  }
+
+  get puedeSerAnalistaContableTrabajadorControl(): FormControl {
+    return this.trabajadorForm.get('puedeSerAnalistaContable') as FormControl;
+  }
+
+  get puedeSerJefaturaResponsableTrabajadorControl(): FormControl {
+    return this.trabajadorForm.get('puedeSerJefaturaResponsable') as FormControl;
+  }
+
+  get puedeSerCoordinadorTiCwTrabajadorControl(): FormControl {
+    return this.trabajadorForm.get('puedeSerCoordinadorTiCw') as FormControl;
+  }
 
   ngOnInit(): void {
+    this.loadInitialData();
+    this.setupSearchListener();
+    this.loadStats();
+  }
+
+  ngOnDestroy(): void {
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
+
+  // ================ CARGA INICIAL ================
+  loadInitialData(): void {
     this.loadDropdowns();
     this.loadTrabajadores();
   }
 
-loadDropdowns(): void {
-  this.isLoadingDropdowns = true;
+  loadDropdowns(): void {
+    forkJoin({
+      areas: this.dropdownService.getAreas(),
+      cargos: this.dropdownService.getCargos(),
+      empresas: this.dropdownService.getEmpresas()
+    }).subscribe({
+      next: (results) => {
+        this.areas = results.areas;
+        this.cargos = results.cargos;
+        this.empresas = results.empresas;
+      },
+      error: (error) => this.showError('Error al cargar datos', error)
+    });
+  }
 
-  this.dropdownService.getAreas().subscribe({
-    next: (areas) => {
-      this.areas = areas;
-    }
-  });
+  loadStats(): void {
+    this.trabajadorService.getStats().subscribe({
+      next: (stats) => this.stats = stats,
+      error: (error) => console.error('Error loading stats:', error)
+    });
+  }
 
-  this.dropdownService.getCargos().subscribe({
-    next: (cargos) => {
-      this.cargos = cargos;
-    }
-  });
-
-  this.dropdownService.getEmpresas().subscribe({
-    next: (empresas) => {
-      this.empresas = empresas;
-    },
-    complete: () => {
-      this.isLoadingDropdowns = false;
-    }
-  });
-}
-
-
-  // Cargar trabajadores
+  // ================ CRUD OPERATIONS ================
   loadTrabajadores(): void {
     this.isLoading = true;
+    const filters = this.getFilters();
 
-    const params = {
+    this.trabajadorService.searchAdvanced({
+      ...filters,
       page: this.currentPage,
       size: this.pageSize,
-      sortBy: this.sortBy,
-      direction: this.sortDirection,
-      search: this.searchTerm,
-      activos: this.filtroActivo !== null ? this.filtroActivo : undefined,
-      areaId: this.filtroAreaId || undefined,
-      cargoId: this.filtroCargoId || undefined,
-      empresaId: this.filtroEmpresaId || undefined
-    };
-
-    this.trabajadorService.getTrabajadores(params).subscribe({
-      next: (response) => {
-        this.pageResponse = response;
+      sortBy: 'fechaCreacion',
+      sortDirection: 'desc'
+    }).subscribe({
+      next: (response: PageResponse<TrabajadorSimple>) => {
         this.trabajadores = response.content;
-        this.totalPages = response.totalPages;
         this.totalItems = response.totalItems;
+        this.totalPages = response.totalPages;
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar trabajadores:', error);
+        this.showError('Error al cargar trabajadores', error);
         this.isLoading = false;
       }
     });
   }
 
-  // Cambiar página
-  changePage(page: number): void {
-    if (page >= 0 && page < this.totalPages) {
-      this.currentPage = page;
-      this.loadTrabajadores();
+  openCreateModal(): void {
+    this.isCreating = true;
+    this.isEditing = false;
+    this.modalTitle = 'Nuevo Trabajador';
+    this.selectedTrabajador = null;
+    this.resetForm();
+    this.showModal = true;
+  }
+
+  openEditModal(trabajador: TrabajadorSimple): void {
+    this.isCreating = false;
+    this.isEditing = true;
+    this.modalTitle = 'Editar Trabajador';
+
+    this.trabajadorService.findById(trabajador.idTrabajador).subscribe({
+      next: (detail) => {
+        this.selectedTrabajador = detail;
+        this.populateForm(detail);
+        this.showModal = true;
+      },
+      error: (error) => this.showError('Error al cargar datos del trabajador', error)
+    });
+  }
+
+  closeModal(): void {
+    this.showModal = false;
+    this.isCreating = false;
+    this.isEditing = false;
+    this.selectedTrabajador = null;
+  }
+
+ saveTrabajador(): void {
+  if (this.trabajadorForm.invalid) {
+    this.markFormGroupTouched(this.trabajadorForm);
+    return;
+  }
+
+  // Deshabilitar botones durante validación/guardado
+  this.isLoading = true;
+
+  const formValue = this.trabajadorForm.value;
+
+  // Validar formulario de manera asíncrona
+  this.validateFormAsync().then(isValid => {
+    if (isValid) {
+      if (this.isCreating) {
+        this.createTrabajador(formValue);
+      } else {
+        this.updateTrabajador(formValue);
+      }
+    } else {
+      this.isLoading = false; // Reactivar botones si la validación falla
+    }
+  }).catch(() => {
+    this.isLoading = false;
+  });
+}
+async validateFormAsync(): Promise<boolean> {
+  // Resetear errores previos
+  this.dniControl.setErrors(null);
+  this.correoCorporativoControl.setErrors(null);
+
+  let isValid = true;
+
+  // Validar DNI único solo para creación
+  if (this.isCreating && this.dniControl.valid) {
+    try {
+      const dniExists = await firstValueFrom(
+        this.trabajadorService.checkDniExists(this.dniControl.value)
+      );
+      if (dniExists) {
+        this.dniControl.setErrors({ dniExists: true });
+        this.showWarning('El DNI ya está registrado');
+        isValid = false;
+      }
+    } catch (error) {
+      console.error('Error validando DNI:', error);
+      // No bloquear por error de validación
     }
   }
 
-  // Cambiar tamaño de página
-  changePageSize(size: number): void {
+  // Validar correo único (para creación y edición)
+  if (this.correoCorporativoControl.valid) {
+    try {
+      const emailExists = await firstValueFrom(
+        this.trabajadorService.checkEmailExists(this.correoCorporativoControl.value)
+      );
+
+      const isDifferentEmail = this.isEditing &&
+        this.selectedTrabajador &&
+        this.selectedTrabajador.correoCorporativo !== this.correoCorporativoControl.value;
+
+      if (emailExists && (this.isCreating || isDifferentEmail)) {
+        this.correoCorporativoControl.setErrors({ emailExists: true });
+        this.showWarning('El correo corporativo ya está registrado');
+        isValid = false;
+      }
+    } catch (error) {
+      console.error('Error validando correo:', error);
+      // No bloquear por error de validación
+    }
+  }
+
+  return isValid && this.trabajadorForm.valid;
+}
+createTrabajador(data: TrabajadorRequest): void {
+  this.isLoading = true;
+
+  this.trabajadorService.create(data).subscribe({
+    next: (response) => {
+      this.showSuccess('Trabajador creado exitosamente');
+      this.closeModal();
+      this.loadTrabajadores();
+      this.loadStats();
+      this.isLoading = false;
+    },
+    error: (error) => {
+      // Manejar error específico de duplicados
+      if (error.status === 400 || error.status === 409) {
+        let errorMessage = error.error?.message || 'Error de validación';
+
+        if (errorMessage.toLowerCase().includes('dni')) {
+          this.dniControl.setErrors({ dniExists: true });
+          this.showWarning('El DNI ya está registrado');
+        } else if (errorMessage.toLowerCase().includes('correo') || errorMessage.toLowerCase().includes('email')) {
+          this.correoCorporativoControl.setErrors({ emailExists: true });
+          this.showWarning('El correo ya está registrado');
+        } else {
+          this.showWarning(errorMessage);
+        }
+      } else {
+        this.handleError('Error al crear trabajador', error);
+      }
+      this.isLoading = false;
+    }
+  });
+}
+
+updateTrabajador(data: TrabajadorUpdate): void {
+  if (!this.selectedTrabajador) return;
+
+  this.isLoading = true;
+
+  this.trabajadorService.update(this.selectedTrabajador.idTrabajador, data).subscribe({
+    next: (response) => {
+      this.showSuccess('Trabajador actualizado exitosamente');
+      this.closeModal();
+      this.loadTrabajadores();
+      this.isLoading = false;
+    },
+    error: (error) => {
+      // Manejar error específico de duplicados
+      if (error.status === 400 || error.status === 409) {
+        let errorMessage = error.error?.message || 'Error de validación';
+
+        if (errorMessage.toLowerCase().includes('correo') || errorMessage.toLowerCase().includes('email')) {
+          this.correoCorporativoControl.setErrors({ emailExists: true });
+          this.showWarning('El correo ya está registrado por otro trabajador');
+        } else if (errorMessage.toLowerCase().includes('dni')) {
+          this.dniControl.setErrors({ dniExists: true });
+          this.showWarning('El DNI ya está registrado por otro trabajador');
+        } else {
+          this.showWarning(errorMessage);
+        }
+      } else {
+        this.handleError('Error al actualizar trabajador', error);
+      }
+      this.isLoading = false;
+    }
+  });
+}
+
+  toggleActivo(trabajador: TrabajadorSimple): void {
+    Swal.fire({
+      title: `¿${trabajador.activo ? 'Desactivar' : 'Activar'} trabajador?`,
+      text: `¿Estás seguro de ${trabajador.activo ? 'desactivar' : 'activar'} a ${trabajador.nombres} ${trabajador.apellidos}?`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: `Sí, ${trabajador.activo ? 'desactivar' : 'activar'}`,
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.trabajadorService.toggleActivo(trabajador.idTrabajador).subscribe({
+          next: () => {
+            this.showSuccess(`Trabajador ${trabajador.activo ? 'desactivado' : 'activado'} exitosamente`);
+            this.loadTrabajadores();
+            this.loadStats();
+          },
+          error: (error) => this.showError('Error al cambiar estado', error)
+        });
+      }
+    });
+  }
+
+  deleteTrabajador(trabajador: TrabajadorSimple): void {
+    Swal.fire({
+      title: '¿Eliminar trabajador?',
+      text: `¿Estás seguro de eliminar a ${trabajador.nombres} ${trabajador.apellidos}? Esta acción no se puede deshacer.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#3085d6',
+      cancelButtonColor: '#d33',
+      confirmButtonText: 'Sí, eliminar',
+      cancelButtonText: 'Cancelar'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        this.trabajadorService.toggleActivo(trabajador.idTrabajador).subscribe({
+          next: () => {
+            this.showSuccess('Trabajador eliminado exitosamente');
+            this.loadTrabajadores();
+            this.loadStats();
+          },
+          error: (error) => this.showError('Error al eliminar trabajador', error)
+        });
+      }
+    });
+  }
+
+  // ================ FILTROS Y BÚSQUEDA ================
+  setupSearchListener(): void {
+    this.searchSubject.pipe(
+      debounceTime(500),
+      distinctUntilChanged(),
+      takeUntil(this.destroy$)
+    ).subscribe(() => {
+      this.currentPage = 0;
+      this.loadTrabajadores();
+    });
+
+    this.searchControl.valueChanges
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(value => {
+        this.searchSubject.next(value);
+      });
+  }
+
+  onFilterChange(): void {
+    this.currentPage = 0;
+    this.loadTrabajadores();
+  }
+
+  clearFilters(): void {
+    this.filterForm.reset({
+      search: '',
+      activo: null,
+      areaId: null,
+      cargoId: null,
+      empresaId: null,
+      puedeSerLiquidador: null,
+      puedeSerEjecutante: null,
+      puedeSerAnalistaContable: null,
+      puedeSerJefaturaResponsable: null,
+      puedeSerCoordinadorTiCw: null
+    });
+    this.loadTrabajadores();
+  }
+
+ getFilters(): any {
+  const formValue = this.filterForm.value;
+  const filters: any = {};
+
+  // Para search
+  if (formValue.search && formValue.search.trim() !== '') {
+    filters.search = formValue.search.trim();
+  }
+
+  // Para estado (true/false/null)
+  if (formValue.activo !== null && formValue.activo !== undefined) {
+    filters.activo = formValue.activo === true;
+  }
+
+  // Para IDs (área, cargo, empresa)
+  if (formValue.areaId) {
+    filters.areaIds = [formValue.areaId];
+  }
+
+  if (formValue.cargoId) {
+    filters.cargoIds = [formValue.cargoId];
+  }
+
+  if (formValue.empresaId) {
+    filters.empresaIds = [formValue.empresaId];
+  }
+
+  // Para los roles booleanos (liquidador, ejecutante, etc.)
+  const roleFields = [
+    'puedeSerLiquidador',
+    'puedeSerEjecutante',
+    'puedeSerAnalistaContable',
+    'puedeSerJefaturaResponsable',
+    'puedeSerCoordinadorTiCw'
+  ];
+
+  roleFields.forEach(field => {
+    if (formValue[field] !== null && formValue[field] !== undefined) {
+      // El backend espera un array de booleanos [true] o [false]
+      filters[field] = [formValue[field] === true];
+    }
+  });
+
+  return filters;
+}
+
+  // ================ PAGINACIÓN ================
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    this.loadTrabajadores();
+  }
+
+  onPageSizeChange(size: number): void {
     this.pageSize = size;
     this.currentPage = 0;
     this.loadTrabajadores();
   }
 
-  // Ordenar por columna
-  sort(column: string): void {
-    if (this.sortBy === column) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortBy = column;
-      this.sortDirection = 'asc';
-    }
+  onRefresh(): void {
     this.loadTrabajadores();
+    this.loadStats();
   }
 
-  // Aplicar filtros
-  aplicarFiltros(): void {
-    this.currentPage = 0;
-    this.loadTrabajadores();
+  // ================ HELPERS ================
+  populateForm(trabajador: TrabajadorDetail): void {
+    this.trabajadorForm.patchValue({
+      nombres: trabajador.nombres,
+      apellidos: trabajador.apellidos,
+      dni: trabajador.dni,
+      celular: trabajador.celular,
+      correoCorporativo: trabajador.correoCorporativo,
+      areaId: trabajador.areaId,
+      cargoId: trabajador.cargoId,
+      empresaId: trabajador.empresaId || null,
+      activo: trabajador.activo,
+      puedeSerLiquidador: trabajador.puedeSerLiquidador,
+      puedeSerEjecutante: trabajador.puedeSerEjecutante,
+      puedeSerAnalistaContable: trabajador.puedeSerAnalistaContable,
+      puedeSerJefaturaResponsable: trabajador.puedeSerJefaturaResponsable,
+      puedeSerCoordinadorTiCw: trabajador.puedeSerCoordinadorTiCw
+    });
   }
 
-  // Limpiar filtros
-  limpiarFiltros(): void {
-    this.searchTerm = '';
-    this.filtroActivo = null;
-    this.filtroAreaId = null;
-    this.filtroCargoId = null;
-    this.filtroEmpresaId = null;
-    this.currentPage = 0;
-    this.loadTrabajadores();
+  resetForm(): void {
+    this.trabajadorForm.reset({
+      nombres: '',
+      apellidos: '',
+      dni: '',
+      celular: '',
+      correoCorporativo: '',
+      areaId: null,
+      cargoId: null,
+      empresaId: null,
+      activo: true,
+      puedeSerLiquidador: false,
+      puedeSerEjecutante: false,
+      puedeSerAnalistaContable: false,
+      puedeSerJefaturaResponsable: false,
+      puedeSerCoordinadorTiCw: false
+    });
+
+    // Limpiar errores de validación
+    Object.keys(this.trabajadorForm.controls).forEach(key => {
+      const control = this.trabajadorForm.get(key);
+      control?.setErrors(null);
+    });
   }
 
-  // Abrir modal para crear
-  openCreateModal(): void {
-    this.modalMode = 'create';
-    this.modalTitle = 'Nuevo Trabajador';
-    this.resetForm();
-    this.showModal = true;
-  }
-
- // En openEditModal()
-openEditModal(trabajador: Trabajador): void {
-  this.modalMode = 'edit';
-  this.modalTitle = 'Editar Trabajador';
-
-  this.trabajadorForm = {
-    idTrabajador: trabajador.idTrabajador,
-    nombres: trabajador.nombres,
-    apellidos: trabajador.apellidos,
-    dni: trabajador.dni,
-    celular: trabajador.celular,
-    correoCorporativo: trabajador.correoCorporativo,
-    areaId: trabajador.areaId,
-    cargoId: trabajador.cargoId,
-    empresaId: trabajador.empresaId,
-    activo: trabajador.activo,
-    puedeSerLiquidador: trabajador.puedeSerLiquidador || false,
-    puedeSerEjecutante: trabajador.puedeSerEjecutante || false,
-    puedeSerAnalistaContable: trabajador.puedeSerAnalistaContable || false,
-    puedeSerJefaturaResponsable: trabajador.puedeSerJefaturaResponsable || false,
-    puedeSerCoordinadorTiCw: trabajador.puedeSerCoordinadorTiCw || false
-  };
-
-  this.showModal = true;
-}
-
-
-// En el método resetForm()
-resetForm(): void {
-  this.trabajadorForm = {
-    idTrabajador: null,
-    nombres: '',
-    apellidos: '',
-    dni: '',
-    celular: '',
-    correoCorporativo: '',
-    areaId: null,
-    cargoId: null,
-    empresaId: null,
-    activo: true,
-    puedeSerLiquidador: false,
-    puedeSerEjecutante: false,
-    puedeSerAnalistaContable: false,
-    puedeSerJefaturaResponsable: false,
-    puedeSerCoordinadorTiCw: false
-  };
-  this.formErrors = {};
-}
-
-
-  // Validar formulario
   validateForm(): boolean {
-    this.formErrors = {};
-
-    if (!this.trabajadorForm.nombres?.trim()) {
-      this.formErrors.nombres = 'Los nombres son obligatorios';
-    }
-
-    if (!this.trabajadorForm.apellidos?.trim()) {
-      this.formErrors.apellidos = 'Los apellidos son obligatorios';
-    }
-
-    if (!this.trabajadorForm.dni?.trim()) {
-      this.formErrors.dni = 'El DNI es obligatorio';
-    } else if (!/^\d{8}$/.test(this.trabajadorForm.dni)) {
-      this.formErrors.dni = 'El DNI debe tener 8 dígitos';
-    }
-
-    if (!this.trabajadorForm.celular?.trim()) {
-      this.formErrors.celular = 'El celular es obligatorio';
-    } else if (!/^\d{9}$/.test(this.trabajadorForm.celular)) {
-      this.formErrors.celular = 'El celular debe tener 9 dígitos';
-    }
-
-    if (!this.trabajadorForm.correoCorporativo?.trim()) {
-      this.formErrors.correoCorporativo = 'El correo es obligatorio';
-    } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(this.trabajadorForm.correoCorporativo)) {
-      this.formErrors.correoCorporativo = 'Correo electrónico inválido';
-    }
-
-    if (!this.trabajadorForm.areaId) {
-      this.formErrors.areaId = 'El área es obligatoria';
-    }
-
-    if (!this.trabajadorForm.cargoId) {
-      this.formErrors.cargoId = 'El cargo es obligatorio';
-    }
-
-    return Object.keys(this.formErrors).length === 0;
-  }
-
-// En saveTrabajador() - COMPLETAR EL MÉTODO
-saveTrabajador(): void {
-  if (!this.validateForm()) {
-    return;
-  }
-
-  this.isSubmitting = true;
-
-  if (this.modalMode === 'create') {
-    const trabajadorRequest = {
-      nombres: this.trabajadorForm.nombres.trim(),
-      apellidos: this.trabajadorForm.apellidos.trim(),
-      dni: this.trabajadorForm.dni.trim(),
-      celular: this.trabajadorForm.celular.trim(),
-      correoCorporativo: this.trabajadorForm.correoCorporativo.trim(),
-      areaId: this.trabajadorForm.areaId,
-      cargoId: this.trabajadorForm.cargoId,
-      empresaId: this.trabajadorForm.empresaId || undefined,
-      activo: this.trabajadorForm.activo,
-      puedeSerLiquidador: this.trabajadorForm.puedeSerLiquidador,
-      puedeSerEjecutante: this.trabajadorForm.puedeSerEjecutante,
-      puedeSerAnalistaContable: this.trabajadorForm.puedeSerAnalistaContable,
-      puedeSerJefaturaResponsable: this.trabajadorForm.puedeSerJefaturaResponsable,
-      puedeSerCoordinadorTiCw: this.trabajadorForm.puedeSerCoordinadorTiCw
-    };
-
-    // FALTABA ESTA LLAMADA HTTP PARA CREAR
-    this.trabajadorService.createTrabajador(trabajadorRequest).subscribe({
-      next: (response) => {
-        this.trabajadorService.showSuccess('Trabajador creado exitosamente');
-        this.closeModal();
-        this.loadTrabajadores();
-      },
-      error: (error) => {
-        console.error('Error al crear trabajador:', error);
-        this.isSubmitting = false;
-      },
-      complete: () => {
-        this.isSubmitting = false;
-      }
-    });
-
-  } else {
-    const trabajadorUpdate = {
-      nombres: this.trabajadorForm.nombres.trim(),
-      apellidos: this.trabajadorForm.apellidos.trim(),
-      dni: this.trabajadorForm.dni.trim(),
-      celular: this.trabajadorForm.celular.trim(),
-      correoCorporativo: this.trabajadorForm.correoCorporativo.trim(),
-      areaId: this.trabajadorForm.areaId,
-      cargoId: this.trabajadorForm.cargoId,
-      empresaId: this.trabajadorForm.empresaId || undefined,
-      puedeSerLiquidador: this.trabajadorForm.puedeSerLiquidador,
-      puedeSerEjecutante: this.trabajadorForm.puedeSerEjecutante,
-      puedeSerAnalistaContable: this.trabajadorForm.puedeSerAnalistaContable,
-      puedeSerJefaturaResponsable: this.trabajadorForm.puedeSerJefaturaResponsable,
-      puedeSerCoordinadorTiCw: this.trabajadorForm.puedeSerCoordinadorTiCw
-    };
-
-    this.trabajadorService.updateTrabajador(this.trabajadorForm.idTrabajador, trabajadorUpdate).subscribe({
-      next: (response) => {
-        this.trabajadorService.showSuccess('Trabajador actualizado exitosamente');
-        this.closeModal();
-        this.loadTrabajadores();
-      },
-      error: (error) => {
-        console.error('Error al actualizar trabajador:', error);
-        this.isSubmitting = false;
-      },
-      complete: () => {
-        this.isSubmitting = false;
-      }
-    });
-  }
-}
-
-  // Cambiar estado activo/inactivo
-  toggleActivo(trabajador: Trabajador): void {
-    const action = trabajador.activo ? 'desactivar' : 'activar';
-
-    this.trabajadorService.showConfirm(`¿Estás seguro de ${action} este trabajador?`)
-      .then((result) => {
-        if (result.isConfirmed) {
-          this.trabajadorService.toggleActivo(trabajador.idTrabajador).subscribe({
-            next: (response) => {
-              const message = trabajador.activo ? 'Trabajador desactivado' : 'Trabajador activado';
-              this.trabajadorService.showSuccess(message);
-              this.loadTrabajadores();
-            },
-            error: (error) => {
-              console.error('Error al cambiar estado:', error);
+    // Validar DNI único solo para creación
+    if (this.isCreating) {
+      if (this.dniControl.valid) {
+        this.trabajadorService.checkDniExists(this.dniControl.value).subscribe({
+          next: (exists) => {
+            if (exists) {
+              this.dniControl.setErrors({ dniExists: true });
+              this.showWarning('El DNI ya está registrado');
             }
-          });
+          }
+        });
+      }
+    }
+
+    // Validar correo único
+    if (this.correoCorporativoControl.valid) {
+      this.trabajadorService.checkEmailExists(this.correoCorporativoControl.value).subscribe({
+        next: (exists) => {
+          if (exists && (!this.selectedTrabajador || this.selectedTrabajador.correoCorporativo !== this.correoCorporativoControl.value)) {
+            this.correoCorporativoControl.setErrors({ emailExists: true });
+            this.showWarning('El correo corporativo ya está registrado');
+          }
         }
       });
-  }
-
-  // Buscar por DNI
-  buscarPorDni(): void {
-    if (!this.searchTerm.trim()) return;
-
-    const dni = this.searchTerm.trim();
-    if (!/^\d{8}$/.test(dni)) {
-      Swal.fire('Error', 'Ingrese un DNI válido de 8 dígitos', 'warning');
-      return;
     }
 
-    this.trabajadorService.searchByDni(dni).subscribe({
-      next: (response) => {
-        this.trabajadores = [response];
-        this.totalItems = 1;
-        this.totalPages = 1;
-        this.currentPage = 0;
-      },
-      error: (error) => {
-        this.trabajadores = [];
-        this.totalItems = 0;
-        this.totalPages = 0;
+    return this.trabajadorForm.valid;
+  }
+
+  markFormGroupTouched(formGroup: FormGroup): void {
+    Object.values(formGroup.controls).forEach(control => {
+      control.markAsTouched();
+      if (control instanceof FormGroup) {
+        this.markFormGroupTouched(control);
       }
     });
   }
 
-  // Ver detalles del trabajador
-
-// En verDetalles() - actualizar el HTML del modal:
-verDetalles(trabajador: Trabajador): void {
-  Swal.fire({
-    title: 'Detalles del Trabajador',
-    html: `
-      <div class="text-start">
-        <p><strong>ID:</strong> ${trabajador.idTrabajador}</p>
-        <p><strong>Nombre:</strong> ${trabajador.nombres} ${trabajador.apellidos}</p>
-        <p><strong>DNI:</strong> ${trabajador.dni || 'No especificado'}</p>
-        <p><strong>Celular:</strong> ${trabajador.celular || 'No especificado'}</p>
-        <p><strong>Correo:</strong> ${trabajador.correoCorporativo || 'No especificado'}</p>
-        <p><strong>Área:</strong> ${trabajador.areaNombre || 'No especificado'}</p>
-        <p><strong>Cargo:</strong> ${trabajador.cargoNombre || 'No especificado'}</p>
-        <p><strong>Empresa:</strong> ${trabajador.empresaNombre || 'No asignada'}</p>
-        <p><strong>Estado:</strong> <span class="badge ${trabajador.activo ? 'bg-success' : 'bg-danger'}">${trabajador.activo ? 'Activo' : 'Inactivo'}</span></p>
-
-        <!-- Campos nuevos -->
-        <hr>
-        <p><strong>Roles Adicionales:</strong></p>
-        <div class="d-flex flex-wrap gap-2">
-          <span class="badge ${trabajador.puedeSerLiquidador ? 'bg-primary' : 'bg-secondary'}">Liquidador</span>
-          <span class="badge ${trabajador.puedeSerEjecutante ? 'bg-info' : 'bg-secondary'}">Ejecutante</span>
-          <span class="badge ${trabajador.puedeSerAnalistaContable ? 'bg-warning' : 'bg-secondary'}">Analista Contable</span>
-          <span class="badge ${trabajador.puedeSerJefaturaResponsable ? 'bg-success' : 'bg-secondary'}">Jefatura Responsable</span>
-          <span class="badge ${trabajador.puedeSerCoordinadorTiCw ? 'bg-dark' : 'bg-secondary'}">Coordinador TI/CW</span>
-        </div>
-
-        <p class="mt-3"><strong>Fecha Creación:</strong> ${this.formatFecha(trabajador.fechaCreacion)}</p>
-      </div>
-    `,
-    icon: 'info',
-    confirmButtonText: 'Cerrar',
-    width: '600px'
-  });
-}
-
-  // Formatear fecha
-  formatFecha(fecha: string): string {
-    if (!fecha) return '';
-    const date = new Date(fecha);
-    return date.toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    });
+  // ================ UTILIDADES ================
+  getNombreCompleto(trabajador: TrabajadorSimple): string {
+    return `${trabajador.nombres} ${trabajador.apellidos}`;
   }
 
-  // Cerrar modal
-  closeModal(): void {
-    this.showModal = false;
-    this.resetForm();
-    this.isSubmitting = false;
+  getEstadoBadge(activo: boolean): string {
+    return activo ? 'Activo' : 'Inactivo';
   }
 
-  // Obtener clase de estado
   getEstadoClass(activo: boolean): string {
     return activo ? 'badge bg-success' : 'badge bg-danger';
   }
 
-  // Obtener texto de estado
-  getEstadoText(activo: boolean): string {
-    return activo ? 'Activo' : 'Inactivo';
+  // ================ ALERTAS ================
+  showSuccess(message: string): void {
+    Swal.fire({
+      icon: 'success',
+      title: '¡Éxito!',
+      text: message,
+      timer: 3000,
+      showConfirmButton: false,
+      toast: true,
+      position: 'top-end'
+    });
   }
 
-  // Obtener nombre del área
-  getAreaNombre(trabajador: Trabajador): string {
-    return trabajador.areaNombre || 'N/A';
+  showError(title: string, error: any): void {
+    console.error(title, error);
+    Swal.fire({
+      icon: 'error',
+      title: title,
+      text: error.error?.message || 'Ha ocurrido un error inesperado',
+      confirmButtonText: 'Aceptar'
+    });
   }
 
-  // Obtener nombre del cargo
-  getCargoNombre(trabajador: Trabajador): string {
-    return trabajador.cargoNombre || 'N/A';
+  showWarning(message: string): void {
+    Swal.fire({
+      icon: 'warning',
+      title: 'Advertencia',
+      text: message,
+      confirmButtonText: 'Aceptar'
+    });
   }
 
-  // Obtener nombre de la empresa
-  getEmpresaNombre(trabajador: Trabajador): string {
-    return trabajador.empresaNombre || 'N/A';
-  }
+  handleError(title: string, error: any): void {
+    let errorMessage = 'Ha ocurrido un error inesperado';
 
-  // Obtener iniciales para avatar
-  getIniciales(nombres: string, apellidos: string): string {
-    const primeraLetraNombre = nombres?.charAt(0) || '';
-    const primeraLetraApellido = apellidos?.charAt(0) || '';
-    return (primeraLetraNombre + primeraLetraApellido).toUpperCase();
+    if (error.error) {
+      if (typeof error.error === 'string') {
+        errorMessage = error.error;
+      } else if (error.error.message) {
+        errorMessage = error.error.message;
+      } else if (error.error.errors) {
+        errorMessage = Object.values(error.error.errors).join(', ');
+      }
+    }
+
+    Swal.fire({
+      icon: 'error',
+      title: title,
+      text: errorMessage,
+      confirmButtonText: 'Aceptar'
+    });
   }
 }

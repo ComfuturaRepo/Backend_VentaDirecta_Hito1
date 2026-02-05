@@ -5,8 +5,8 @@ import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import Swal from 'sweetalert2';
 import { environment } from '../../environment';
-import { PageResponse, Trabajador } from './trabajador.service';
 import {  PaginationParams, UsuarioDetail, UsuarioRequest, UsuarioSimple, UsuarioUpdate } from '../model/usuario';
+import { PageResponse } from '../model/page.interface';
 
 
 @Injectable({
