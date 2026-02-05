@@ -16,6 +16,7 @@ import { ClienteComponent } from './pages/cliente-component/cliente-component';
 import { DashboardComponente } from './pages/dashboard-componente/dashboard-componente';
 import { permisoGuard } from './auth/permiso.guard';
 import { GestionPermisosComponent } from './pages/gestion-permisos.component.ts/gestion-permisos.component.ts';
+import { SsomaFormComponent } from './pages/ssoma-form.component/ssoma-form.component';
 
 
 export const routes: Routes = [
@@ -81,6 +82,12 @@ export const routes: Routes = [
         component: TrabajadorComponent,
         canActivate: [permisoGuard],
         data: { permisos: ['TRABAJADOR_VIEW'] }
+      },
+      {
+        path: 'ssoma',
+        component: SsomaFormComponent,
+        canActivate: [permisoGuard],
+       // data: { permisos: ['TRABAJADOR_VIEW'] }
       },
       {
         path: 'cliente',

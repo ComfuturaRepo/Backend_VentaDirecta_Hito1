@@ -68,6 +68,10 @@ CREATE TABLE cliente_area (
 -- =====================================================
 -- 3. TRABAJADORES
 -- =====================================================
+CREATE TABLE firma (
+                       id_firma INT AUTO_INCREMENT PRIMARY KEY,
+                       url VARCHAR(255) NOT NULL
+);
 
 CREATE TABLE trabajador (
                             id_trabajador INT AUTO_INCREMENT PRIMARY KEY,
@@ -78,6 +82,7 @@ CREATE TABLE trabajador (
 
                             celular VARCHAR(15),
                             correo_corporativo VARCHAR(150),
+                            id_firma INT,
 
                             id_empresa INT NULL,
                             id_area INT NOT NULL,
@@ -85,6 +90,7 @@ CREATE TABLE trabajador (
 
                             activo TINYINT(1) DEFAULT 1,
                             fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                            FOREIGN KEY (id_firma) REFERENCES firma(id_firma),
 
                             CONSTRAINT fk_trabajador_empresa
                                 FOREIGN KEY (id_empresa) REFERENCES empresa(id_empresa),

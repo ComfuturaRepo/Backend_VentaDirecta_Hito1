@@ -36,4 +36,20 @@ public interface DropdownService {
     List<DropdownDTO> getOtTipo();
     List<DropdownDTO> getMaestroCodigos();
     List<DropdownDTO> getProveedores();
+    List<DropdownDTO> getTrabajos();
+    List<DropdownDTO> getRolesTrabajo();
+    List<DropdownDTO> getTareas();
+    List<DropdownDTO> getTareasByTrabajo(Integer idTrabajo);
+    List<DropdownDTO> getPeligros();
+    List<DropdownDTO> getRiesgosByPeligro(Integer idPeligro);
+    List<DropdownDTO> getMedidasByRiesgo(Integer idRiesgo);
+    List<DropdownDTO> getEpps();
+    List<DropdownDTO> getTiposRiesgoTrabajo();
+    List<DropdownDTO> getHerramientas();
+    List<DropdownDTO> getPreguntasPetar();
+    List<DropdownDTO> getSupervisoresSST();
+    List<DropdownDTO> getCapacitadores();
+    List<DropdownDTO> getInspectores();
+    List<DropdownDTO> getSupervisoresOperativos();
+    List<DropdownDTO> getTrabajadoresByCargo(String cargo);
 }

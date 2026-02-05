@@ -1,0 +1,774 @@
+<!-- src/app/ssoma/components/ssoma-form/ssoma-form.component.html -->
+<div class="container-fluid py-4">
+  <!-- Encabezado -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-primary text-white border-0">
+      <div class="d-flex justify-content-between align-items-center">
+        <div>
+          <h4 class="mb-1">
+            <i class="bi bi-clipboard-check me-2"></i>
+            Sistema SSOMA - Formulario Integrado
+          </h4>
+          <p class="mb-0 opacity-75">Complete todas las hojas del sistema de seguridad en un solo formulario</p>
+        </div>
+        <span class="badge bg-white text-primary fs-6">
+          5 Hojas Integradas
+        </span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Indicador de progreso -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body py-3">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h6 class="mb-0 text-muted">Progreso del Formulario</h6>
+        <span class="badge bg-primary">{{ getProgressPercentage() }}%</span>
+      </div>
+      <div class="progress" style="height: 6px;">
+        <div class="progress-bar bg-primary" role="progressbar"
+             [style.width]="getProgressWidth()"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabs de navegación -->
+  <div class="card shadow-sm border-0 mb-4">
+    <div class="card-body p-0">
+      <ul class="nav nav-tabs nav-justified" role="tablist">
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" [class.active]="isTabActive('ats')"
+                  (click)="setActiveTab('ats')">
+            <i class="bi bi-shield-check me-1"></i>
+            <span class="d-none d-md-inline">ATS</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" [class.active]="isTabActive('capacitacion')"
+                  (click)="setActiveTab('capacitacion')">
+            <i class="bi bi-mortarboard me-1"></i>
+            <span class="d-none d-md-inline">Capacitación</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" [class.active]="isTabActive('inspeccionEpp')"
+                  (click)="setActiveTab('inspeccionEpp')">
+            <i class="bi bi-person-badge me-1"></i>
+            <span class="d-none d-md-inline">Inspección EPP</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" [class.active]="isTabActive('inspeccionHerramienta')"
+                  (click)="setActiveTab('inspeccionHerramienta')">
+            <i class="bi bi-tools me-1"></i>
+            <span class="d-none d-md-inline">Inspección Herramientas</span>
+          </button>
+        </li>
+        <li class="nav-item" role="presentation">
+          <button class="nav-link" [class.active]="isTabActive('petar')"
+                  (click)="setActiveTab('petar')">
+            <i class="bi bi-file-earmark-lock me-1"></i>
+            <span class="d-none d-md-inline">PETAR</span>
+          </button>
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-3 text-muted">Cargando datos del sistema...</p>
+  </div>
+
+  <!-- Formulario -->
+  <form [formGroup]="ssomaForm" (ngSubmit)="onSubmit()" *ngIf="!loading">
+
+    <!-- ATS Tab -->
+    <div *ngIf="isTabActive('ats')" class="tab-content">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="bi bi-shield-check text-primary me-2"></i>
+            Análisis de Trabajo Seguro (ATS)
+          </h5>
+        </div>
+        <div class="card-body">
+          <!-- Información general -->
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">Fecha <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" formControlName="fecha" [max]="today">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Hora <span class="text-danger">*</span></label>
+              <input type="time" class="form-control" formControlName="hora">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">Empresa <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="empresa">
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Lugar de Trabajo <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="lugarTrabajo"
+                     placeholder="Especifique el lugar del trabajo">
+            </div>
+          </div>
+
+          <!-- Trabajo -->
+          <div class="mb-4">
+            <app-ngselect-dropdown
+              [label]="'Trabajo a Realizar'"
+              [items]="trabajos"
+              [required]="true"
+              formControlName="idTrabajo"
+              (selectionChange)="onTrabajoChange($event?.id)"
+              placeholder="Seleccione un trabajo">
+            </app-ngselect-dropdown>
+          </div>
+
+          <!-- Participantes -->
+          <div class="card border mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-people me-2"></i>
+                Participantes del ATS
+              </h6>
+            </div>
+            <div class="card-body">
+              <div formArrayName="participantes">
+                <div *ngFor="let participante of atsParticipantes.controls; let i = index"
+                     class="row g-3 mb-3">
+                  <div class="col-md-5">
+                    <app-ngselect-dropdown
+                      [label]="'Trabajador'"
+                      [items]="trabajadores"
+                      [required]="true"
+                      [formControl]="getParticipanteControl(i, 'idTrabajador')"
+                      placeholder="Seleccione trabajador">
+                    </app-ngselect-dropdown>
+                  </div>
+                  <div class="col-md-5">
+                    <app-ngselect-dropdown
+                      [label]="'Rol'"
+                      [items]="roles"
+                      [required]="true"
+                      [formControl]="getParticipanteControl(i, 'idRol')"
+                      placeholder="Seleccione rol">
+                    </app-ngselect-dropdown>
+                  </div>
+                  <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger w-100"
+                            (click)="removeAtsParticipante(i)"
+                            [disabled]="atsParticipantes.length === 1">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-primary mt-2"
+                      (click)="addAtsParticipante()">
+                <i class="bi bi-plus-circle me-2"></i>Agregar Participante
+              </button>
+            </div>
+          </div>
+
+          <!-- Riesgos identificados -->
+          <div class="card border mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-exclamation-triangle text-warning me-2"></i>
+                Riesgos Identificados
+              </h6>
+            </div>
+            <div class="card-body">
+              <div formArrayName="riesgos">
+                <div *ngFor="let riesgo of atsRiesgos.controls; let i = index"
+                     class="row g-3 mb-3 border-bottom pb-3">
+                  <div class="col-md-3">
+                    <app-ngselect-dropdown
+                      [label]="'Tarea'"
+                      [items]="tareas"
+                      [required]="true"
+                      [formControl]="getRiesgoControl(i, 'idTarea')"
+                      placeholder="Seleccione tarea">
+                    </app-ngselect-dropdown>
+                  </div>
+                  <div class="col-md-3">
+                    <app-ngselect-dropdown
+                      [label]="'Peligro'"
+                      [items]="peligros"
+                      [required]="true"
+                      [formControl]="getRiesgoControl(i, 'idPeligro')"
+                      (selectionChange)="onPeligroChange(i, $event?.id)"
+                      placeholder="Seleccione peligro">
+                    </app-ngselect-dropdown>
+                  </div>
+                  <div class="col-md-3">
+                    <app-ngselect-dropdown
+                      [label]="'Riesgo'"
+                      [items]="riesgos"
+                      [required]="true"
+                      [formControl]="getRiesgoControl(i, 'idRiesgo')"
+                      (selectionChange)="onRiesgoChange(i, $event?.id)"
+                      placeholder="Seleccione riesgo">
+                    </app-ngselect-dropdown>
+                  </div>
+                  <div class="col-md-2">
+                    <app-ngselect-dropdown
+                      [label]="'Medida'"
+                      [items]="medidasControl"
+                      [required]="true"
+                      [formControl]="getRiesgoControl(i, 'idMedida')"
+                      placeholder="Seleccione medida">
+                    </app-ngselect-dropdown>
+                  </div>
+                  <div class="col-md-1 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger"
+                            (click)="removeAtsRiesgo(i)"
+                            [disabled]="atsRiesgos.length === 1">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-warning mt-2"
+                      (click)="addAtsRiesgo()">
+                <i class="bi bi-plus-circle me-2"></i>Agregar Riesgo
+              </button>
+            </div>
+          </div>
+
+          <!-- EPP Requerido -->
+          <div class="card border mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-person-badge text-success me-2"></i>
+                EPP Requerido
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-check mb-2" *ngFor="let epp of epps">
+                    <input class="form-check-input" type="checkbox"
+                           [value]="epp.id" (change)="toggleEpp(epp.id, $event)"
+                           [id]="'epp-' + epp.id">
+                    <label class="form-check-label" [for]="'epp-' + epp.id">
+                      {{epp.label}}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tipos de Riesgo -->
+          <div class="card border">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-exclamation-octagon text-danger me-2"></i>
+                Tipos de Riesgo
+              </h6>
+            </div>
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-6">
+                  <div class="form-check mb-2" *ngFor="let tipo of tiposRiesgo">
+                    <input class="form-check-input" type="checkbox"
+                           [value]="tipo.id" (change)="toggleTipoRiesgo(tipo.id, $event)"
+                           [id]="'tipo-' + tipo.id">
+                    <label class="form-check-label" [for]="'tipo-' + tipo.id">
+                      {{tipo.label}}
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Capacitación Tab -->
+    <div *ngIf="isTabActive('capacitacion')" class="tab-content">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="bi bi-mortarboard text-info me-2"></i>
+            Capacitación / Charla de 5 Minutos
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">Número de Registro <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="numeroRegistro" readonly>
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Fecha <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" formControlName="fecha" [max]="today">
+            </div>
+            <div class="col-md-3">
+              <label class="form-label">Hora <span class="text-danger">*</span></label>
+              <input type="time" class="form-control" formControlName="hora">
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-8">
+              <label class="form-label">Tema <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="tema">
+            </div>
+            <div class="col-md-4">
+              <app-ngselect-dropdown
+                [label]="'Capacitador'"
+                [items]="capacitadores"
+                [required]="true"
+                formControlName="idCapacitador"
+                placeholder="Seleccione capacitador">
+              </app-ngselect-dropdown>
+            </div>
+          </div>
+
+          <!-- Asistentes -->
+          <div class="card border">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-person-check me-2"></i>
+                Asistentes a la Capacitación
+              </h6>
+            </div>
+            <div class="card-body">
+              <div formArrayName="asistentes">
+                <div *ngFor="let asistente of capacitacionAsistentes.controls; let i = index"
+                     class="row g-3 mb-3">
+                  <div class="col-md-5">
+                    <app-ngselect-dropdown
+                      [label]="'Trabajador'"
+                      [items]="trabajadores"
+                      [required]="true"
+                      [formControl]="getAsistenteControl(i, 'idTrabajador')"
+                      placeholder="Seleccione trabajador">
+                    </app-ngselect-dropdown>
+                  </div>
+                  <div class="col-md-5">
+                    <label class="form-label">Observaciones</label>
+                    <input type="text" class="form-control"
+                           [formControl]="getAsistenteControl(i, 'observaciones')"
+                           placeholder="Observaciones opcionales">
+                  </div>
+                  <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger w-100"
+                            (click)="removeCapacitacionAsistente(i)"
+                            [disabled]="capacitacionAsistentes.length === 1">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-info mt-2"
+                      (click)="addCapacitacionAsistente()">
+                <i class="bi bi-plus-circle me-2"></i>Agregar Asistente
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inspección EPP Tab -->
+    <div *ngIf="isTabActive('inspeccionEpp')" class="tab-content">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="bi bi-person-badge text-warning me-2"></i>
+            Inspección de Equipos de Protección Personal (EPP)
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">Número de Registro <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="numeroRegistro" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fecha de Inspección <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" formControlName="fecha" [max]="today">
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <app-ngselect-dropdown
+              [label]="'Inspector'"
+              [items]="inspectores"
+              [required]="true"
+              formControlName="idInspector"
+              placeholder="Seleccione inspector">
+            </app-ngselect-dropdown>
+          </div>
+
+          <!-- Detalles de inspección -->
+          <div class="card border">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-clipboard-checklist me-2"></i>
+                Detalles de Inspección
+              </h6>
+            </div>
+            <div class="card-body">
+              <div formArrayName="detalles">
+                <div *ngFor="let detalle of inspeccionEppDetalles.controls; let i = index"
+                     class="row g-3 mb-3">
+                  <div class="col-md-4">
+                    <app-ngselect-dropdown
+                      [label]="'Trabajador'"
+                      [items]="trabajadores"
+                      [required]="true"
+                      [formControl]="getEppDetalleControl(i, 'idTrabajador')"
+                      placeholder="Seleccione trabajador">
+                    </app-ngselect-dropdown>
+                  </div>
+                  <div class="col-md-3">
+                    <app-ngselect-dropdown
+                      [label]="'EPP'"
+                      [items]="epps"
+                      [required]="true"
+                      [formControl]="getEppDetalleControl(i, 'idEpp')"
+                      placeholder="Seleccione EPP">
+                    </app-ngselect-dropdown>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Cumple</label>
+                    <select class="form-select" [formControl]="getEppDetalleControl(i, 'cumple')">
+                      <option [value]="true">Sí</option>
+                      <option [value]="false">No</option>
+                    </select>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Observación</label>
+                    <input type="text" class="form-control"
+                           [formControl]="getEppDetalleControl(i, 'observacion')"
+                           placeholder="Observaciones">
+                  </div>
+                  <div class="col-md-1 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger"
+                            (click)="removeInspeccionEppDetalle(i)"
+                            [disabled]="inspeccionEppDetalles.length === 1">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-warning mt-2"
+                      (click)="addInspeccionEppDetalle()">
+                <i class="bi bi-plus-circle me-2"></i>Agregar Detalle
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Inspección Herramientas Tab -->
+    <div *ngIf="isTabActive('inspeccionHerramienta')" class="tab-content">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="bi bi-tools text-danger me-2"></i>
+            Inspección de Herramientas Manuales
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">Número de Registro <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="numeroRegistro" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fecha de Inspección <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" formControlName="fecha" [max]="today">
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <app-ngselect-dropdown
+              [label]="'Supervisor Operativo'"
+              [items]="supervisoresOperativos"
+              [required]="true"
+              formControlName="idSupervisor"
+              placeholder="Seleccione supervisor">
+            </app-ngselect-dropdown>
+          </div>
+
+          <!-- Detalles de herramientas -->
+          <div class="card border">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-wrench me-2"></i>
+                Detalles de Herramientas Inspeccionadas
+              </h6>
+            </div>
+            <div class="card-body">
+              <div formArrayName="detalles">
+                <div *ngFor="let detalle of inspeccionHerramientaDetalles.controls; let i = index"
+                     class="row g-3 mb-3">
+                  <div class="col-md-4">
+                    <app-ngselect-dropdown
+                      [label]="'Herramienta'"
+                      [items]="herramientas"
+                      [required]="true"
+                      [formControl]="getHerramientaDetalleControl(i, 'idHerramienta')"
+                      placeholder="Seleccione herramienta">
+                    </app-ngselect-dropdown>
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Cumple</label>
+                    <select class="form-select" [formControl]="getHerramientaDetalleControl(i, 'cumple')">
+                      <option [value]="true">Sí</option>
+                      <option [value]="false">No</option>
+                    </select>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">URL de Foto</label>
+                    <input type="text" class="form-control"
+                           [formControl]="getHerramientaDetalleControl(i, 'fotoUrl')"
+                           placeholder="URL de la foto">
+                  </div>
+                  <div class="col-md-2">
+                    <label class="form-label">Observación</label>
+                    <input type="text" class="form-control"
+                           [formControl]="getHerramientaDetalleControl(i, 'observacion')"
+                           placeholder="Observaciones">
+                  </div>
+                  <div class="col-md-1 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger"
+                            (click)="removeInspeccionHerramientaDetalle(i)"
+                            [disabled]="inspeccionHerramientaDetalles.length === 1">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-danger mt-2"
+                      (click)="addInspeccionHerramientaDetalle()">
+                <i class="bi bi-plus-circle me-2"></i>Agregar Herramienta
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- PETAR Tab -->
+    <div *ngIf="isTabActive('petar')" class="tab-content">
+      <div class="card shadow-sm border-0">
+        <div class="card-header bg-light">
+          <h5 class="mb-0">
+            <i class="bi bi-file-earmark-lock text-success me-2"></i>
+            Permiso de Trabajo de Alto Riesgo (PETAR)
+          </h5>
+        </div>
+        <div class="card-body">
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label class="form-label">Número de Registro <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" formControlName="numeroRegistro" readonly>
+            </div>
+            <div class="col-md-6">
+              <label class="form-label">Fecha <span class="text-danger">*</span></label>
+              <input type="date" class="form-control" formControlName="fecha" [max]="today">
+            </div>
+          </div>
+
+          <!-- Respuestas PETAR -->
+          <div class="card border mb-4">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-question-circle text-info me-2"></i>
+                Evaluación de Riesgos
+              </h6>
+            </div>
+            <div class="card-body">
+              <div formArrayName="respuestas">
+                <div *ngFor="let respuesta of petarRespuestas.controls; let i = index"
+                     class="row g-3 mb-3">
+                  <div class="col-md-8">
+                    <app-ngselect-dropdown
+                      [label]="'Pregunta'"
+                      [items]="preguntasPetar"
+                      [required]="true"
+                      [formControl]="getRespuestaControl(i, 'idPregunta')"
+                      placeholder="Seleccione pregunta">
+                    </app-ngselect-dropdown>
+                  </div>
+                  <div class="col-md-3">
+                    <label class="form-label">Respuesta</label>
+                    <select class="form-select" [formControl]="getRespuestaControl(i, 'respuesta')">
+                      <option [value]="true">Sí</option>
+                      <option [value]="false">No</option>
+                    </select>
+                  </div>
+                  <div class="col-md-1 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger"
+                            (click)="removePetarRespuesta(i)"
+                            [disabled]="petarRespuestas.length === 1">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-success mt-2"
+                      (click)="addPetarRespuesta()">
+                <i class="bi bi-plus-circle me-2"></i>Agregar Pregunta
+              </button>
+            </div>
+          </div>
+
+          <!-- Trabajadores autorizados -->
+          <div class="card border">
+            <div class="card-header bg-light">
+              <h6 class="mb-0">
+                <i class="bi bi-person-shield text-warning me-2"></i>
+                Trabajadores Autorizados
+              </h6>
+            </div>
+            <div class="card-body">
+              <div formArrayName="trabajadoresAutorizadosIds">
+                <div *ngFor="let trabajadorId of petarTrabajadoresIds.controls; let i = index"
+                     class="row g-3 mb-3">
+                  <div class="col-md-10">
+                    <app-ngselect-dropdown
+                      [label]="'Trabajador Autorizado'"
+                      [items]="trabajadores"
+                      [required]="true"
+                      [formControl]="getTrabajadorControl(i)"
+                      placeholder="Seleccione trabajador">
+                    </app-ngselect-dropdown>
+                  </div>
+                  <div class="col-md-2 d-flex align-items-end">
+                    <button type="button" class="btn btn-outline-danger w-100"
+                            (click)="removePetarTrabajador(i)"
+                            [disabled]="petarTrabajadoresIds.length === 1">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+              <button type="button" class="btn btn-outline-warning mt-2"
+                      (click)="addPetarTrabajador()">
+                <i class="bi bi-plus-circle me-2"></i>Agregar Trabajador
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navegación y botones -->
+    <div class="card shadow-sm border-0 mt-4">
+      <div class="card-body">
+        <div class="d-flex justify-content-between">
+          <button type="button" class="btn btn-outline-secondary" (click)="prevTab()"
+                  [disabled]="activeTab === 'ats'">
+            <i class="bi bi-chevron-left me-2"></i>Anterior
+          </button>
+
+          <div>
+            <button type="button" class="btn btn-outline-danger me-2" (click)="resetForm()">
+              <i class="bi bi-x-circle me-2"></i>Limpiar
+            </button>
+
+            <button *ngIf="activeTab !== 'petar'" type="button" class="btn btn-primary"
+                    (click)="nextTab()">
+              Siguiente <i class="bi bi-chevron-right ms-2"></i>
+            </button>
+
+            <button *ngIf="activeTab === 'petar'" type="submit" class="btn btn-success"
+                    [disabled]="isSubmitting">
+              <span *ngIf="!isSubmitting">
+                <i class="bi bi-check-circle me-2"></i>Crear SSOMA Completo
+              </span>
+              <span *ngIf="isSubmitting">
+                <i class="bi bi-hourglass-split me-2"></i>Creando...
+              </span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- Resumen -->
+  <div class="card shadow-sm border-0 mt-4">
+    <div class="card-header bg-light">
+      <h6 class="mb-0">
+        <i class="bi bi-bar-chart me-2"></i>
+        Resumen del Formulario
+      </h6>
+    </div>
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-2 col-6">
+          <div class="card bg-primary text-white text-center border-0">
+            <div class="card-body p-3">
+              <h6 class="card-title mb-2">ATS</h6>
+              <h4 class="mb-0">{{ atsParticipantes.length }}</h4>
+              <small class="opacity-75">Participantes</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2 col-6">
+          <div class="card bg-info text-white text-center border-0">
+            <div class="card-body p-3">
+              <h6 class="card-title mb-2">Capacitación</h6>
+              <h4 class="mb-0">{{ capacitacionAsistentes.length }}</h4>
+              <small class="opacity-75">Asistentes</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2 col-6">
+          <div class="card bg-warning text-dark text-center border-0">
+            <div class="card-body p-3">
+              <h6 class="card-title mb-2">EPP</h6>
+              <h4 class="mb-0">{{ inspeccionEppDetalles.length }}</h4>
+              <small class="opacity-75">Inspecciones</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2 col-6">
+          <div class="card bg-danger text-white text-center border-0">
+            <div class="card-body p-3">
+              <h6 class="card-title mb-2">Herramientas</h6>
+              <h4 class="mb-0">{{ inspeccionHerramientaDetalles.length }}</h4>
+              <small class="opacity-75">Inspecciones</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2 col-6">
+          <div class="card bg-success text-white text-center border-0">
+            <div class="card-body p-3">
+              <h6 class="card-title mb-2">PETAR</h6>
+              <h4 class="mb-0">{{ petarRespuestas.length }}</h4>
+              <small class="opacity-75">Respuestas</small>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-2 col-6">
+          <div class="card bg-secondary text-white text-center border-0">
+            <div class="card-body p-3">
+              <h6 class="card-title mb-2">Progreso</h6>
+              <h4 class="mb-0">{{ getProgressPercentage() }}%</h4>
+              <small class="opacity-75">Completado</small>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

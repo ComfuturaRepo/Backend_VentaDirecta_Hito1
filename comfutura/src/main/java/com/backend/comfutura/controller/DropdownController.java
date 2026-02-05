@@ -157,6 +157,91 @@ public class DropdownController {
     public ResponseEntity<List<DropdownDTO>> getProveedores() {
         return ResponseEntity.ok(dropdownService.getProveedores());
     }
+    //SSOMA
+    // Agrega estos endpoints a tu DropdownController
+
+    @GetMapping("/ssoma/trabajos")
+    public ResponseEntity<List<DropdownDTO>> getTrabajos() {
+        return ResponseEntity.ok(dropdownService.getTrabajos());
+    }
+
+    @GetMapping("/ssoma/roles-trabajo")
+    public ResponseEntity<List<DropdownDTO>> getRolesTrabajo() {
+        return ResponseEntity.ok(dropdownService.getRolesTrabajo());
+    }
+
+    @GetMapping("/ssoma/tareas")
+    public ResponseEntity<List<DropdownDTO>> getTareas() {
+        return ResponseEntity.ok(dropdownService.getTareas());
+    }
+
+    @GetMapping("/ssoma/tareas/trabajo/{idTrabajo}")
+    public ResponseEntity<List<DropdownDTO>> getTareasByTrabajo(@PathVariable Integer idTrabajo) {
+        return ResponseEntity.ok(dropdownService.getTareasByTrabajo(idTrabajo));
+    }
+
+    @GetMapping("/ssoma/peligros")
+    public ResponseEntity<List<DropdownDTO>> getPeligros() {
+        return ResponseEntity.ok(dropdownService.getPeligros());
+    }
+
+    @GetMapping("/ssoma/riesgos/peligro/{idPeligro}")
+    public ResponseEntity<List<DropdownDTO>> getRiesgosByPeligro(@PathVariable Integer idPeligro) {
+        return ResponseEntity.ok(dropdownService.getRiesgosByPeligro(idPeligro));
+    }
+
+    @GetMapping("/ssoma/medidas/riesgo/{idRiesgo}")
+    public ResponseEntity<List<DropdownDTO>> getMedidasByRiesgo(@PathVariable Integer idRiesgo) {
+        return ResponseEntity.ok(dropdownService.getMedidasByRiesgo(idRiesgo));
+    }
+
+    @GetMapping("/ssoma/epps")
+    public ResponseEntity<List<DropdownDTO>> getEpps() {
+        return ResponseEntity.ok(dropdownService.getEpps());
+    }
+
+    @GetMapping("/ssoma/tipos-riesgo")
+    public ResponseEntity<List<DropdownDTO>> getTiposRiesgoTrabajo() {
+        return ResponseEntity.ok(dropdownService.getTiposRiesgoTrabajo());
+    }
+
+    @GetMapping("/ssoma/herramientas")
+    public ResponseEntity<List<DropdownDTO>> getHerramientas() {
+        return ResponseEntity.ok(dropdownService.getHerramientas());
+    }
+
+    @GetMapping("/ssoma/preguntas-petar")
+    public ResponseEntity<List<DropdownDTO>> getPreguntasPetar() {
+        return ResponseEntity.ok(dropdownService.getPreguntasPetar());
+    }
+
+    @GetMapping("/ssoma/supervisores-sst")
+    public ResponseEntity<List<DropdownDTO>> getSupervisoresSST() {
+        return ResponseEntity.ok(dropdownService.getSupervisoresSST());
+    }
+
+    @GetMapping("/ssoma/capacitadores")
+    public ResponseEntity<List<DropdownDTO>> getCapacitadores() {
+        return ResponseEntity.ok(dropdownService.getCapacitadores());
+    }
+
+    @GetMapping("/ssoma/inspectores")
+    public ResponseEntity<List<DropdownDTO>> getInspectores() {
+        return ResponseEntity.ok(dropdownService.getInspectores());
+    }
+
+    @GetMapping("/ssoma/supervisores-operativos")
+    public ResponseEntity<List<DropdownDTO>> getSupervisoresOperativos() {
+        return ResponseEntity.ok(dropdownService.getSupervisoresOperativos());
+    }
+
+    @GetMapping("/ssoma/trabajadores/cargo/{cargo}")
+    public ResponseEntity<List<DropdownDTO>> getTrabajadoresByCargo(@PathVariable String cargo) {
+        return ResponseEntity.ok(dropdownService.getTrabajadoresByCargo(cargo));
+    }
+
+
+
     // Opcional: endpoint que devuelve TODOS los dropdowns necesarios para el formulario de OT
     @GetMapping("/form-ots")
     public ResponseEntity<?> getAllDropdownsForOtForm() {

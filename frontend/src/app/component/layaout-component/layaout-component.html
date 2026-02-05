@@ -123,6 +123,17 @@
           </a>
         </li>
 
+
+        <!-- Permisos -->
+        <li>
+          <a routerLink="/ssoma" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-shield-check"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Ssoma</span>
+          </a>
+        </li>
+
         <!-- Trabajadores -->
         <li *appPermiso="'TRABAJADOR_VIEW'">
           <a routerLink="/trabajador" routerLinkActive="active" (click)="closeMobile()">

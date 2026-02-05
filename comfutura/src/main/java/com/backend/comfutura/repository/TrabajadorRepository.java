@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -66,19 +67,6 @@ public interface TrabajadorRepository extends JpaRepository<Trabajador, Integer>
     // Consultas específicas para roles en OT
     // ────────────────────────────────────────────────
 
-
-
-    // Métodos nuevos para filtrar por los campos booleanos
-    List<Trabajador> findAllByActivoTrueAndPuedeSerCoordinadorTiCwTrueOrderByApellidosAsc();
-
-    List<Trabajador> findAllByActivoTrueAndPuedeSerJefaturaResponsableTrueOrderByApellidosAsc();
-
-    List<Trabajador> findAllByActivoTrueAndPuedeSerLiquidadorTrueOrderByApellidosAsc();
-
-    List<Trabajador> findAllByActivoTrueAndPuedeSerEjecutanteTrueOrderByApellidosAsc();
-
-    List<Trabajador> findAllByActivoTrueAndPuedeSerAnalistaContableTrueOrderByApellidosAsc();
-
     // Analista Contable → cargos con "contabilidad"
     @Query("""
         SELECT t FROM Trabajador t
@@ -102,4 +90,31 @@ public interface TrabajadorRepository extends JpaRepository<Trabajador, Integer>
     List<Trabajador> findActivosConCargoCoordinador();
 
     Page<Trabajador> findAll(Specification<Trabajador> spec, Pageable pageable);
-}
+
+
+    // Método genérico usando la relación con cargo
+    List<Trabajador> findByActivoTrueAndCargoNombreContainingIgnoreCaseOrderByApellidosAsc(String cargo);
+
+    // Métodos específicos usando el método genérico
+    default List<Trabajador> findAllByActivoTrueAndEsSupervisorSST() {
+        return findByActivoTrueAndCargoNombreContainingIgnoreCaseOrderByApellidosAsc("SST");
+    }
+
+    default List<Trabajador> findAllByActivoTrueAndEsCapacitador() {
+        return findByActivoTrueAndCargoNombreContainingIgnoreCaseOrderByApellidosAsc("CAPACITADOR");
+    }
+
+    default List<Trabajador> findAllByActivoTrueAndEsInspector() {
+        return findByActivoTrueAndCargoNombreContainingIgnoreCaseOrderByApellidosAsc("INSPECTOR");
+    }
+
+    default List<Trabajador> findAllByActivoTrueAndEsSupervisor() {
+        return findByActivoTrueAndCargoNombreContainingIgnoreCaseOrderByApellidosAsc("SUPERVISOR");
+    }
+
+    // Los métodos existentes para otros roles...
+    List<Trabajador> findAllByActivoTrueAndPuedeSerCoordinadorTiCwTrueOrderByApellidosAsc();
+    List<Trabajador> findAllByActivoTrueAndPuedeSerJefaturaResponsableTrueOrderByApellidosAsc();
+    List<Trabajador> findAllByActivoTrueAndPuedeSerLiquidadorTrueOrderByApellidosAsc();
+    List<Trabajador> findAllByActivoTrueAndPuedeSerEjecutanteTrueOrderByApellidosAsc();
+    List<Trabajador> findAllByActivoTrueAndPuedeSerAnalistaContableTrueOrderByApellidosAsc();}

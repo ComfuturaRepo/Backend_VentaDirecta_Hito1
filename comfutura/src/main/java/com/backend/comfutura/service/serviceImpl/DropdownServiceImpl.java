@@ -4,6 +4,7 @@ import com.backend.comfutura.model.Site;
 import com.backend.comfutura.model.SiteDescripcion;
 import com.backend.comfutura.record.DropdownDTO;
 import com.backend.comfutura.repository.*;
+import com.backend.comfutura.repository.ssoma.*;
 import com.backend.comfutura.service.DropdownService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -35,7 +36,16 @@ public class DropdownServiceImpl implements DropdownService {
     private final EstadoOtRepository estadoOtRepository;
     private final SiteDescripcionRepository siteDescripcionRepository;
     private final TipoOtRepository tipoOtRepository;
-
+    private final TrabajoRepository trabajoRepository;
+    private final RolTrabajoRepository rolTrabajoRepository;
+    private final TareaRepository tareaRepository;
+    private final PeligroRepository peligroRepository;
+    private final RiesgoRepository riesgoRepository;
+    private final MedidaControlRepository medidaControlRepository;
+    private final EppRepository eppRepository;
+    private final TipoRiesgoTrabajoRepository tipoRiesgoTrabajoRepository;
+    private final HerramientaRepository herramientaRepository;
+    private final PetarPreguntaRepository petarPreguntaRepository;
     // Nuevos repositorios para los responsables (agrega estos en tu proyecto)
     private final JefaturaClienteSolicitanteRepository jefaturaClienteSolicitanteRepository;
     private final AnalistaClienteSolicitanteRepository analistaClienteSolicitanteRepository;
@@ -413,6 +423,191 @@ public class DropdownServiceImpl implements DropdownService {
                         t.getIdTrabajador(),
                         // CAMBIO AQUÍ: Nombres primero, luego apellidos
                         t.getApellidos() + " " + t.getNombres()
+                ))
+                .collect(Collectors.toList());
+    }
+//SSSOMAAA
+
+    // Métodos SSOMA para dropdowns
+    @Override
+    public List<DropdownDTO> getTrabajos() {
+        return trabajoRepository.findByActivoTrueOrderByNombreAsc()
+                .stream()
+                .map(t -> new DropdownDTO(
+                        t.getIdTrabajo(),
+                        t.getNombre()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getRolesTrabajo() {
+        return rolTrabajoRepository.findByActivoTrueOrderByNombreAsc()
+                .stream()
+                .map(r -> new DropdownDTO(
+                        r.getIdRol(),
+                        r.getNombre()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getTareas() {
+        return tareaRepository.findByActivoTrueOrderByDescripcionAsc()
+                .stream()
+                .map(t -> new DropdownDTO(
+                        t.getIdTarea(),
+                        t.getDescripcion()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getTareasByTrabajo(Integer idTrabajo) {
+        return tareaRepository.findByTrabajoIdTrabajoAndActivoTrueOrderByDescripcionAsc(idTrabajo)
+                .stream()
+                .map(t -> new DropdownDTO(
+                        t.getIdTarea(),
+                        t.getDescripcion()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getPeligros() {
+        return peligroRepository.findByActivoTrueOrderByDescripcionAsc()
+                .stream()
+                .map(p -> new DropdownDTO(
+                        p.getIdPeligro(),
+                        p.getDescripcion()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getRiesgosByPeligro(Integer idPeligro) {
+        return riesgoRepository.findByPeligroIdPeligroAndActivoTrueOrderByDescripcionAsc(idPeligro)
+                .stream()
+                .map(r -> new DropdownDTO(
+                        r.getIdRiesgo(),
+                        r.getDescripcion()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getMedidasByRiesgo(Integer idRiesgo) {
+        return medidaControlRepository.findByRiesgoIdRiesgoAndActivoTrueOrderByDescripcionAsc(idRiesgo)
+                .stream()
+                .map(m -> new DropdownDTO(
+                        m.getIdMedida(),
+                        m.getDescripcion()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getEpps() {
+        return eppRepository.findByActivoTrueOrderByNombreAsc()
+                .stream()
+                .map(e -> new DropdownDTO(
+                        e.getIdEpp(),
+                        e.getNombre()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getTiposRiesgoTrabajo() {
+        return tipoRiesgoTrabajoRepository.findByActivoTrueOrderByNombreAsc()
+                .stream()
+                .map(t -> new DropdownDTO(
+                        t.getId(),
+                        t.getNombre()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getHerramientas() {
+        return herramientaRepository.findByActivoTrueOrderByNombreAsc()
+                .stream()
+                .map(h -> new DropdownDTO(
+                        h.getId(),
+                        h.getNombre()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getPreguntasPetar() {
+        return petarPreguntaRepository.findByActivoTrueOrderByDescripcionAsc()
+                .stream()
+                .map(p -> new DropdownDTO(
+                        p.getId(),
+                        p.getDescripcion()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    // Métodos SSOMA para dropdowns - VERSIÓN CORREGIDA
+
+    @Override
+    public List<DropdownDTO> getSupervisoresSST() {
+        return trabajadorRepository
+                .findAllByActivoTrueAndEsSupervisorSST()  // Método corregido
+                .stream()
+                .map(t -> new DropdownDTO(
+                        t.getIdTrabajador(),
+                        t.getNombres() + " " + t.getApellidos()  // Nombres primero
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getCapacitadores() {
+        return trabajadorRepository
+                .findAllByActivoTrueAndEsCapacitador()  // Método corregido
+                .stream()
+                .map(t -> new DropdownDTO(
+                        t.getIdTrabajador(),
+                        t.getNombres() + " " + t.getApellidos()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getInspectores() {
+        return trabajadorRepository
+                .findAllByActivoTrueAndEsInspector()  // Método corregido
+                .stream()
+                .map(t -> new DropdownDTO(
+                        t.getIdTrabajador(),
+                        t.getNombres() + " " + t.getApellidos()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getSupervisoresOperativos() {
+        return trabajadorRepository
+                .findAllByActivoTrueAndEsSupervisor()  // Método corregido
+                .stream()
+                .map(t -> new DropdownDTO(
+                        t.getIdTrabajador(),
+                        t.getNombres() + " " + t.getApellidos()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getTrabajadoresByCargo(String cargo) {
+        return trabajadorRepository
+                .findByActivoTrueAndCargoNombreContainingIgnoreCaseOrderByApellidosAsc(cargo)  // Método corregido
+                .stream()
+                .map(t -> new DropdownDTO(
+                        t.getIdTrabajador(),
+                        t.getNombres() + " " + t.getApellidos()
                 ))
                 .collect(Collectors.toList());
     }
