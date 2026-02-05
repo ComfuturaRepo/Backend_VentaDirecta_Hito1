@@ -1,0 +1,305 @@
+<div class="container">
+  <!-- Header -->
+  <div class="header">
+    <h1>
+      <i class="bi bi-kanban"></i>
+      Proyectos
+    </h1>
+    <button class="btn btn-primary" (click)="abrirModalCrear()">
+      <i class="bi bi-plus-circle"></i>
+      Nuevo Proyecto
+    </button>
+  </div>
+
+  <!-- Filtros -->
+  <div class="filtros">
+    <div class="filtro-grupo">
+      <div class="input-group">
+        <i class="bi bi-search"></i>
+        <input type="text"
+               [(ngModel)]="filtroNombre"
+               (keyup.enter)="aplicarFiltros()"
+               placeholder="Buscar por nombre...">
+        <button class="btn-clear" (click)="filtroNombre = ''; aplicarFiltros()" *ngIf="filtroNombre">
+          <i class="bi bi-x"></i>
+        </button>
+      </div>
+    </div>
+
+    <div class="filtro-grupo">
+      <select [(ngModel)]="filtroEstado" (change)="aplicarFiltros()">
+        <option value="">Todos los estados</option>
+        <option value="true">Activos</option>
+        <option value="false">Inactivos</option>
+      </select>
+    </div>
+
+    <div class="filtro-grupo">
+      <label class="switch">
+        <input type="checkbox" [(ngModel)]="mostrarTodos" (change)="aplicarFiltros()">
+        <span class="slider"></span>
+        <span>Mostrar todos</span>
+      </label>
+    </div>
+
+    <div class="filtro-grupo">
+      <select [(ngModel)]="campoOrden" (change)="cambiarOrden()">
+        <option value="nombre">Ordenar por: Nombre</option>
+        <option value="idProyecto">Ordenar por: ID</option>
+      </select>
+      <button class="btn-sort" (click)="toggleDireccionOrden()">
+        <i class="bi" [class.bi-arrow-up]="direccionOrden === 'asc'"
+                   [class.bi-arrow-down]="direccionOrden === 'desc'"></i>
+      </button>
+    </div>
+
+    <button class="btn btn-secondary" (click)="limpiarFiltros()">
+      <i class="bi bi-arrow-clockwise"></i>
+      Limpiar
+    </button>
+  </div>
+
+  <!-- Tabla -->
+  <div class="tabla-contenedor">
+    <table class="tabla">
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>NOMBRE</th>
+          <th>ESTADO</th>
+          <th class="text-end">ACCIONES</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let proyecto of proyectos">
+          <td class="text-muted">#{{ proyecto.idProyecto }}</td>
+          <td>
+            <div class="proyecto-info">
+              <div class="proyecto-avatar">
+                {{ proyecto.nombre.charAt(0).toUpperCase() }}
+              </div>
+              <div>
+                <strong>{{ proyecto.nombre }}</strong>
+                <br>
+                <small>ID: {{ proyecto.idProyecto }}</small>
+              </div>
+            </div>
+          </td>
+          <td>
+            <span class="estado" [class.activo]="proyecto.activo">
+              <i class="bi" [class.bi-check-circle]="proyecto.activo"
+                         [class.bi-x-circle]="!proyecto.activo"></i>
+              {{ proyecto.activo ? 'Activo' : 'Inactivo' }}
+            </span>
+          </td>
+          <td class="text-end">
+            <div class="acciones">
+              <button class="btn-accion btn-info" (click)="abrirModalDetalle(proyecto)" title="Ver detalles">
+                <i class="bi bi-eye"></i>
+              </button>
+              <button class="btn-accion btn-warning" (click)="abrirModalEditar(proyecto)" title="Editar"  *appPermiso="'EDITAR_PROYECTO'">
+                <i class="bi bi-pencil"></i>
+              </button>
+              <button class="btn-accion" *appPermiso="'TOGGLE_PROYECTO'"
+                      [class.btn-danger]="proyecto.activo"
+                      [class.btn-success]="!proyecto.activo"
+                      (click)="toggleEstado(proyecto)"
+                      [title]="proyecto.activo ? 'Desactivar' : 'Activar'">
+                <i class="bi" [class.bi-toggle-on]="proyecto.activo"
+                          [class.bi-toggle-off]="!proyecto.activo"></i>
+              </button>
+            </div>
+          </td>
+        </tr>
+
+        <tr *ngIf="proyectos.length === 0 && !cargando">
+          <td colspan="4" class="text-center py-4">
+            <i class="bi bi-folder-x display-6 text-muted mb-3"></i>
+            <h5>No se encontraron proyectos</h5>
+            <p *ngIf="filtroNombre || filtroEstado">
+              Intenta ajustar los filtros
+            </p>
+            <button class="btn btn-primary mt-2" (click)="abrirModalCrear()"  *appPermiso="'PROYECTO_CREATE'">
+              <i class="bi bi-plus-circle"></i>
+              Crear Proyecto
+            </button>
+          </td>
+        </tr>
+
+        <tr *ngIf="cargando">
+          <td colspan="4" class="text-center py-4">
+            <div class="spinner"></div>
+            <p class="mt-2">Cargando proyectos...</p>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Paginación -->
+  <div class="paginacion-contenedor">
+    <app-pagination
+      [currentPage]="paginaActual"
+      [totalItems]="totalElementos"
+      [totalPages]="totalPaginas"
+      [pageSize]="itemsPorPagina"
+      [isLoading]="cargando"
+      [showInfo]="true"
+      [showSizeSelector]="true"
+      [showNavigation]="true"
+      [showPageNumbers]="true"
+      [showJumpToPage]="true"
+      (pageChange)="cambiarPagina($event)"
+      (pageSizeChange)="cambiarItemsPorPagina($event)">
+    </app-pagination>
+  </div>
+</div>
+
+<!-- Modal Crear -->
+<div class="modal" *ngIf="modalCrearVisible">
+  <div class="modal-overlay" (click)="cerrarModalCrear()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>
+        <i class="bi bi-plus-circle"></i>
+        Nuevo Proyecto
+      </h2>
+      <button class="btn-close" (click)="cerrarModalCrear()">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
+    <form [formGroup]="proyectoForm" (ngSubmit)="crearProyecto()">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre del Proyecto *</label>
+          <input type="text" formControlName="nombre" placeholder="Ingrese el nombre">
+          <div class="error" *ngIf="nombreInvalido">
+            <i class="bi bi-exclamation-circle"></i>
+            <span *ngIf="proyectoForm.get('nombre')?.errors?.['required']">
+              El nombre es requerido
+            </span>
+            <span *ngIf="proyectoForm.get('nombre')?.errors?.['minlength']">
+              Mínimo 3 caracteres
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalCrear()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="proyectoForm.invalid">
+          <i class="bi bi-check-circle"></i>
+          Crear
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Modal Detalle -->
+<div class="modal" *ngIf="modalDetalleVisible && proyectoSeleccionado">
+  <div class="modal-overlay" (click)="cerrarModalDetalle()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>
+        <i class="bi bi-info-circle"></i>
+        Detalles del Proyecto
+      </h2>
+      <button class="btn-close" (click)="cerrarModalDetalle()">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <div class="detalle-item">
+        <strong>ID:</strong>
+        <span>#{{ proyectoSeleccionado.idProyecto }}</span>
+      </div>
+      <div class="detalle-item">
+        <strong>Nombre:</strong>
+        <span>{{ proyectoSeleccionado.nombre }}</span>
+      </div>
+      <div class="detalle-item">
+        <strong>Estado:</strong>
+        <span class="estado" [class.activo]="proyectoSeleccionado.activo">
+          <i class="bi" [class.bi-check-circle]="proyectoSeleccionado.activo"
+                     [class.bi-x-circle]="!proyectoSeleccionado.activo"></i>
+          {{ proyectoSeleccionado.activo ? 'Activo' : 'Inactivo' }}
+        </span>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button type="button" class="btn btn-primary" (click)="cerrarModalDetalle()">
+        Cerrar
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal Editar -->
+<div class="modal" *ngIf="modalEditarVisible && proyectoSeleccionado">
+  <div class="modal-overlay" (click)="cerrarModalEditar()"></div>
+  <div class="modal-content">
+    <div class="modal-header">
+      <h2>
+        <i class="bi bi-pencil"></i>
+        Editar Proyecto
+      </h2>
+      <button class="btn-close" (click)="cerrarModalEditar()">
+        <i class="bi bi-x"></i>
+      </button>
+    </div>
+
+    <form [formGroup]="proyectoForm" (ngSubmit)="editarProyecto()">
+      <div class="modal-body">
+        <div class="form-group">
+          <label>Nombre del Proyecto *</label>
+          <input type="text" formControlName="nombre" placeholder="Ingrese el nombre">
+          <div class="error" *ngIf="nombreInvalido">
+            <i class="bi bi-exclamation-circle"></i>
+            <span *ngIf="proyectoForm.get('nombre')?.errors?.['required']">
+              El nombre es requerido
+            </span>
+            <span *ngIf="proyectoForm.get('nombre')?.errors?.['minlength']">
+              Mínimo 3 caracteres
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label class="switch-label">
+            <input type="checkbox" formControlName="activo">
+            <span class="slider"></span>
+            <span>
+              <i class="bi" [class.bi-toggle-on]="proyectoForm.get('activo')?.value"
+                         [class.bi-toggle-off]="!proyectoForm.get('activo')?.value"></i>
+              {{ proyectoForm.get('activo')?.value ? 'Activo' : 'Inactivo' }}
+            </span>
+          </label>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" (click)="cerrarModalEditar()">
+          Cancelar
+        </button>
+        <button type="submit" class="btn btn-primary" [disabled]="proyectoForm.invalid">
+          <i class="bi bi-save"></i>
+          Guardar
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" *ngIf="cargando">
+  <div class="loading-content">
+    <div class="spinner-large"></div>
+    <h3>Cargando...</h3>
+  </div>
+</div>

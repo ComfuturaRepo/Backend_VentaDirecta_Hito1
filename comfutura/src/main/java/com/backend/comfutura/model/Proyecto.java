@@ -16,7 +16,7 @@ public class Proyecto {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Integer idProyecto;
 
-    @Column(nullable = false, length = 150)
+    @Column(nullable = false, length = 150, unique = true) // Agregado unique
     private String nombre;
 
     private Boolean activo = true;

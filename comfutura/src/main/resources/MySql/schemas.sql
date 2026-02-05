@@ -206,7 +206,7 @@ CREATE TABLE maestro_codigo (
 -- =====================================================
 CREATE TABLE proyecto (
                           id_proyecto INT AUTO_INCREMENT PRIMARY KEY,
-                          nombre VARCHAR(150) NOT NULL,
+                          nombre VARCHAR(150) NOT NULL unique,
                           activo TINYINT(1) DEFAULT 1
 );
 CREATE TABLE fase (
