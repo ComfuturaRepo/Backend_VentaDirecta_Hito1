@@ -148,13 +148,25 @@ public class ExcelExportService {
         Row headerRow = sheet.createRow(startRow);
         CellStyle headerStyle = createHeaderStyle(workbook);
 
-        // MODIFICA LOS HEADERS AÑADIENDO DOS COLUMNAS PARA SITE
         String[] headers = {
-                "ID OT", "OT", "OT Anterior", "Descripción", "Fecha Apertura",
-                "Días Asignados", "Fecha Creación", "Activo", "Cliente", "Área",
-                "Proyecto", "Fase", "Site Código", "Site Descripción", "Región",  // <-- CAMBIO AQUÍ
-                "Jefatura Cliente", "Analista Cliente", "Creador", "Coordinador TI/CW",
-                "Jefatura Responsable", "Liquidador", "Ejecutante", "Analista Contable", "Estado"
+                "OT ANTERIOR",           // col 0
+                "OT",                    // col 1
+                "PROYECTO",              // col 2
+                "FASE",                  // col 3
+                "DESCRIPCION",           // col 4
+                "AREA",                  // col 5
+                "NOMBRE DEL SITE",       // col 6 (antes 7)
+                "REGION",                // col 7 (antes 8)
+                "FECHA DE APERTURA",     // col 8 (antes 9)
+                "CLIENTE",               // col 9 (antes 10)
+                "JEFATURA DEL CLIENTE SOLICITANTE",    // col 10 (antes 11)
+                "ANALISTA DEL CLIENTE SOLICITANTE",    // col 11 (antes 12)
+                "COORDINADORES TI/CW/PEXT/ENERGIA",    // col 12 (antes 13)
+                "JEFATURA RESPONSABLE",  // col 13 (antes 14)
+                "LIQUIDADOR",            // col 14 (antes 15)
+                "EJECUTANTE",            // col 15 (antes 16)
+                "ANALISTA CONTABLE",     // col 16 (antes 17)
+                "DIAS ASIGNADOS A LA FECHA"  // col 17 (antes 18)
         };
 
         for (int i = 0; i < headers.length; i++) {
@@ -200,93 +212,82 @@ public class ExcelExportService {
         Row row = sheet.createRow(rowNum);
         CellStyle dataStyle = createDataStyle(workbook);
         CellStyle dateStyle = createDateStyle(workbook);
-        CellStyle dateTimeStyle = createDateTimeStyle(workbook);
+        // Ya no necesitamos dateTimeStyle porque quitamos Fecha Creación
 
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy");
-        DateTimeFormatter datetimeFormatter = DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
 
-        int col = 0;
+        int col = 0; // Iniciamos columna en 0
 
-        // ID OT
-        createCell(row, col++, dto.getIdOts() != null ? dto.getIdOts().toString() : "", dataStyle);
-
-        // OT
-        createCell(row, col++, dto.getOt() != null ? dto.getOt().toString() : "", dataStyle);
-
-        // OT Anterior
+        // 1. OT ANTERIOR (col 0)
         createCell(row, col++, dto.getIdOtsAnterior() != null ? dto.getIdOtsAnterior().toString() : "", dataStyle);
 
-        // Descripción
+        // 2. OT (col 1)
+        createCell(row, col++, dto.getOt() != null ? dto.getOt().toString() : "", dataStyle);
+
+        // 3. PROYECTO (col 2)
+        createCell(row, col++, dto.getProyecto() != null ? dto.getProyecto() : "", dataStyle);
+
+        // 4. FASE (col 3)
+        createCell(row, col++, dto.getFase() != null ? dto.getFase() : "", dataStyle);
+
+        // 5. DESCRIPCION (col 4)
         createCell(row, col++, dto.getDescripcion() != null ? dto.getDescripcion() : "", dataStyle);
 
-        // Fecha Apertura
+        // 6. AREA (col 5)
+        createCell(row, col++, dto.getArea() != null ? dto.getArea() : "", dataStyle);
+
+
+        // 8. NOMBRE DEL SITE (col 7) - Combinar Site Código + Descripción
+        String nombreSite = "";
+        if (dto.getSite() != null && !dto.getSite().isEmpty()) {
+            if (dto.getSiteDescripcion() != null && !dto.getSiteDescripcion().isEmpty()) {
+                nombreSite = dto.getSite() + " - " + dto.getSiteDescripcion();
+            } else {
+                nombreSite = dto.getSite();
+            }
+        }
+        createCell(row, col++, nombreSite, dataStyle);
+
+        // 9. REGION (col 8)
+        createCell(row, col++, dto.getRegion() != null ? dto.getRegion() : "", dataStyle);
+
+        // 10. FECHA DE APERTURA (col 9)
         if (dto.getFechaApertura() != null) {
             createCell(row, col++, dto.getFechaApertura().format(dateFormatter), dateStyle);
         } else {
             createCell(row, col++, "", dataStyle);
         }
 
-        // Días Asignados
-        createCell(row, col++, dto.getDiasAsignados() != null ? dto.getDiasAsignados().toString() : "", dataStyle);
-
-        // Fecha Creación
-        if (dto.getFechaCreacion() != null) {
-            createCell(row, col++, dto.getFechaCreacion().format(datetimeFormatter), dateTimeStyle);
-        } else {
-            createCell(row, col++, "", dataStyle);
-        }
-
-        // Activo
-        createCell(row, col++, dto.getActivo() != null ? dto.getActivo() : "NO", dataStyle);
-
-        // Cliente
+        // 11. CLIENTE (col 10)
         createCell(row, col++, dto.getCliente() != null ? dto.getCliente() : "", dataStyle);
 
-        // Área
-        createCell(row, col++, dto.getArea() != null ? dto.getArea() : "", dataStyle);
-
-        // Proyecto
-        createCell(row, col++, dto.getProyecto() != null ? dto.getProyecto() : "", dataStyle);
-
-        // Fase
-        createCell(row, col++, dto.getFase() != null ? dto.getFase() : "", dataStyle);
-
-        // Site Código (nueva columna)
-        createCell(row, col++, dto.getSite() != null ? dto.getSite() : "", dataStyle);
-
-        // Site Descripción (nueva columna)
-        createCell(row, col++, dto.getSiteDescripcion() != null ? dto.getSiteDescripcion() : "", dataStyle);
-
-        // Región
-        createCell(row, col++, dto.getRegion() != null ? dto.getRegion() : "", dataStyle);
-
-        // Jefatura Cliente
+        // 12. JEFATURA DEL CLIENTE SOLICITANTE (col 11)
         createCell(row, col++, dto.getJefaturaClienteSolicitante() != null ? dto.getJefaturaClienteSolicitante() : "", dataStyle);
 
-        // Analista Cliente
+        // 13. ANALISTA DEL CLIENTE SOLICITANTE (col 12)
         createCell(row, col++, dto.getAnalistaClienteSolicitante() != null ? dto.getAnalistaClienteSolicitante() : "", dataStyle);
 
-        // Creador
-        createCell(row, col++, dto.getCreador() != null ? dto.getCreador() : "", dataStyle);
-
-        // Coordinador TI/CW
+        // 14. COORDINADORES TI/CW/PEXT/ENERGIA (col 13)
         createCell(row, col++, dto.getCoordinadorTiCw() != null ? dto.getCoordinadorTiCw() : "", dataStyle);
 
-        // Jefatura Responsable
+        // 15. JEFATURA RESPONSABLE (col 14)
         createCell(row, col++, dto.getJefaturaResponsable() != null ? dto.getJefaturaResponsable() : "", dataStyle);
 
-        // Liquidador
+        // 16. LIQUIDADOR (col 15)
         createCell(row, col++, dto.getLiquidador() != null ? dto.getLiquidador() : "", dataStyle);
 
-        // Ejecutante
+        // 17. EJECUTANTE (col 16)
         createCell(row, col++, dto.getEjecutante() != null ? dto.getEjecutante() : "", dataStyle);
 
-        // Analista Contable
+        // 18. ANALISTA CONTABLE (col 17)
         createCell(row, col++, dto.getAnalistaContable() != null ? dto.getAnalistaContable() : "", dataStyle);
 
-        // Estado
-        createCell(row, col++, dto.getEstadoOt() != null ? dto.getEstadoOt() : "", dataStyle);
+        // 19. DIAS ASIGNADOS A LA FECHA (col 18)
+        createCell(row, col++, dto.getDiasAsignados() != null ? dto.getDiasAsignados().toString() : "", dataStyle);
+
+        // NOTA: Quitamos: ID OT, Fecha Creación, Activo, Creador, Estado
     }
+
     private void createCell(Row row, int column, String value, CellStyle style) {
         Cell cell = row.createCell(column);
         cell.setCellValue(value);
@@ -318,13 +319,10 @@ public class ExcelExportService {
     }
 
     private ExcelOtExportDTO convertToExcelDto(OtDetailResponse detail) {
-        // Manejo seguro de siteId
         Integer siteId = null;
         try {
-            // Intenta obtener siteId si el método existe
             siteId = detail.getIdSite();
         } catch (Exception e) {
-            // Si no existe el método getSiteId()
             System.err.println("Error: OtDetailResponse no tiene getSiteId()");
         }
 
@@ -335,24 +333,21 @@ public class ExcelExportService {
                 .descripcion(detail.getDescripcion())
                 .fechaApertura(detail.getFechaApertura())
                 .diasAsignados(detail.getDiasAsignados())
-                .fechaCreacion(detail.getFechaCreacion())
-                .activo(detail.getActivo() != null && detail.getActivo() ? "SI" : "NO")
                 .cliente(detail.getClienteRazonSocial())
                 .area(detail.getAreaNombre())
                 .proyecto(detail.getProyectoNombre())
                 .fase(detail.getFaseNombre())
-                .site(siteId != null ? obtenerCodigoSitio(siteId) : "")  // Solo si tenemos siteId
-                .siteDescripcion(siteId != null ? obtenerDescripcionSitio(siteId) : detail.getSiteNombre()) // Usar siteNombre como fallback
+                .site(siteId != null ? obtenerCodigoSitio(siteId) : "")
+                .siteDescripcion(siteId != null ? obtenerDescripcionSitio(siteId) : detail.getSiteNombre())
                 .region(detail.getRegionNombre())
                 .jefaturaClienteSolicitante(detail.getJefaturaClienteSolicitanteNombre())
                 .analistaClienteSolicitante(detail.getAnalistaClienteSolicitanteNombre())
-                .creador(detail.getCreadorNombre())
                 .coordinadorTiCw(detail.getCoordinadorTiCwNombre())
                 .jefaturaResponsable(detail.getJefaturaResponsableNombre())
                 .liquidador(detail.getLiquidadorNombre())
                 .ejecutante(detail.getEjecutanteNombre())
                 .analistaContable(detail.getAnalistaContableNombre())
-                .estadoOt(detail.getEstadoOt())
+                // QUITADOS: fechaCreacion, activo, creador, estadoOt
                 .build();
     }
     private String obtenerCodigoSitio(Integer siteId) {
@@ -390,8 +385,7 @@ public class ExcelExportService {
         }
     }
     private void autoSizeColumns(Sheet sheet) {
-        // Aumenta de 23 a 24 porque ahora tenemos una columna adicional
-        for (int i = 0; i < 24; i++) {  // <-- CAMBIA DE 23 A 24
+        for (int i = 0; i < 18; i++) {  // Ahora 18 columnas (0-17)
             sheet.autoSizeColumn(i);
         }
     }
