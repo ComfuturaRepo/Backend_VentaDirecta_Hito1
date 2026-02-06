@@ -179,22 +179,21 @@
                    <tr *ngFor="let d of form.detalles; let i = index">
 
                                   <!-- MATERIAL -->
-                                                                  <td>
-                                            <select class="form-select"
-                        [(ngModel)]="d.idMaestro"
-                        name="producto{{i}}"
-                        required>
+                                   <td>
+                                    <select class="form-select"
+                                          [(ngModel)]="d.idMaestro"
+                                          name="producto{{i}}">
 
-                  <option [ngValue]="null" disabled>
-                    Seleccione material / servicio
-                  </option>
+                                    <option [ngValue]="null">Seleccione material / servicio</option>
 
-                  <option *ngFor="let mat of maestros"
-                          [ngValue]="mat.id">
-                    {{ mat.label }}
-                  </option>
+                                    <option *ngFor="let m of maestros" [ngValue]="m.id">
+                                      {{ m.label }}
+                                    </option>
 
-                </select>
+                                  </select>
+
+
+
 
 
                                   </td>
@@ -221,8 +220,8 @@
 
                                   <!-- TOTAL -->
                                   <td class="text-end fw-semibold">
-                                    {{ (d.cantidad * d.precioUnitario)
-                                      | currency:'PEN':'symbol':'1.2-2' }}
+                                 {{ ((d.cantidad ?? 0) * (d.precioUnitario ?? 0))
+                                       | currency:'PEN':'symbol':'1.2-2' }}
                                   </td>
 
                                   <!-- ELIMINAR -->

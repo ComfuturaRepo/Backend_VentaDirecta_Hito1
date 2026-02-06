@@ -1,19 +1,20 @@
 // Detalle para request (crear/actualizar OC)
 export interface OcDetalleRequest {
-  idMaestro: number;
-  cantidad: number;
-  precioUnitario: number; // cadena libre, se asigna según el código del maestro
+idMaestro?: number;
+cantidad?: number;
+precioUnitario?: number;
+
 }
 
 // Detalle para response (cuando recibes OC del backend)
 export interface OcDetalleResponse {
 idOcDetalle?: number;
-  idProducto?: number;
-  productoNombre?: string;
+
+
   cantidad?: number;
   precioUnitario?: number;
   total?: number;
-  observacion?: string;
+
   idMaestro?: number;
   codigo?: string;
   descripcion?: string;

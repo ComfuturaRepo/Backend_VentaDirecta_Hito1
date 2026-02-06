@@ -5,12 +5,13 @@ import { OrdenCompraService } from '../../../service/orden-compra.service';
 import { Aprobacion } from '../../../model/aprobacion.model';
 import { OrdenCompraAprobacionService } from '../../../service/aprobacion.service';
 import { HttpClientModule } from '@angular/common/http';
+import { PermisoDirective } from '../../../directive/permiso.directive';
 
 @Component({
   selector: 'app-orden-compra-aprobaciones',
   standalone: true,
   
-  imports: [CommonModule, FormsModule,    HttpClientModule   // 🔥 ESTO ES LO QUE FALTABA
+  imports: [CommonModule, FormsModule,    HttpClientModule ,PermisoDirective
 ],
   templateUrl: './orden-compra-aprobaciones-component.html'
 })

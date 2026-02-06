@@ -5,7 +5,7 @@ import Swal from 'sweetalert2';
 import { OrdenCompraRequest, OrdenCompraResponse, OcDetalleRequest } from '../../../model/orden-compra.model';
 import { OrdenCompraService } from '../../../service/orden-compra.service';
 import { DropdownItem, DropdownService } from '../../../service/dropdown.service';
-
+import { MaestroCodigoService } from '../../../service/maestro-codigo.service';
 @Component({
   selector: 'app-form-orden-compra-component',
   standalone: true,
@@ -26,32 +26,35 @@ export class FormOrdenCompraComponent implements OnInit, OnChanges {
   isSubmitting = false;
 
  maestros: { id: number; label: string }[] = [];
+maestroMap = new Map<number, { codigo: string; descripcion: string }>();
 
   proveedores: DropdownItem[] = [];
   ots: DropdownItem[] = [];
 
 
-maestroMap = new Map<number, { codigo: string; descripcion: string }>();
 
-  constructor(private ordenService: OrdenCompraService, private dropdownService: DropdownService) {}
-
-  ngOnInit(): void {
-    this.cargarDropdowns();
-    this.cargarMateriales();
-  }
-  // Método para cargar materiales
-cargarMateriales(): void {
-  const todosMateriales = [
-    { id: 1, label: 'Material A', tipo: 'MATERIAL' },
-    { id: 2, label: 'Material B', tipo: 'MATERIAL' },
-    { id: 3, label: 'Servicio X', tipo: 'SERVICIO' },
-    { id: 4, label: 'Servicio Y', tipo: 'SERVICIO' }
-  ];
-console.log('MAESTROS →', this.maestros);
-console.log('DETALLES →', this.form.detalles);
-
- 
+  constructor(private ordenService: OrdenCompraService, private dropdownService: DropdownService, private maestroCodigoService: MaestroCodigoService){}
+ngOnInit(): void {
+  this.cargarDropdowns();   // OTs + proveedores
+  this.cargarMaestros();    // 👈 SOLO maestro_codigo
+  this.agregarDetalle();
 }
+
+  // Método para cargar materiales
+cargarMaestros(): void {
+  this.maestroCodigoService.listarParaCombo().subscribe(data => {
+
+    console.log('BACKEND →', data);
+
+    this.maestros = data.map((m: any) => ({
+      id: m.idMaestro || m.id,
+      label: (m.codigo || 'SIN-COD') + ' - ' + (m.descripcion || 'SIN-DESC')
+    }));
+
+    console.log('MAESTROS →', this.maestros);
+  });
+}
+
 
   ngOnChanges(changes: SimpleChanges): void {
     if ((changes['ocToEdit'] || changes['isEdit']) && !this.isLoading) this.aplicarValoresEdicion();
@@ -69,17 +72,10 @@ private cargarDropdowns(): void {
       this.maestroMap.clear();
 
       // construir combo + map
-      this.maestros = data.maestros.map((m: any) => {
-        this.maestroMap.set(m.id, {
-          codigo: m.codigo,
-          descripcion: m.descripcion
-        });
 
-        return {
-          id: m.id,
-          label: `${m.codigo} - ${m.descripcion}`
-        };
-      });
+
+
+
 
       this.isLoading = false;
       this.aplicarValoresEdicion();
@@ -112,12 +108,13 @@ private aplicarValoresEdicion(): void {
     observacion: this.ocToEdit.observacion ?? '',
     aplicarIgv: true,
     detalles: this.ocToEdit.detalles.map(d => ({
-      idMaestro: d.idMaestro!,   // 🔑 ahora sí existe en maestros
-      cantidad: d.cantidad!,
-      precioUnitario: d.precioUnitario!
+      idMaestro: d.idMaestro ?? 0,          // 🔑 CLAVE
+      cantidad: d.cantidad ?? 0,
+      precioUnitario: d.precioUnitario ?? 0
     }))
   };
 }
+
 
 
 
@@ -140,11 +137,14 @@ private aplicarValoresEdicion(): void {
 
 agregarDetalle(): void {
   this.form.detalles.push({
-    idMaestro: 0,
+   
     cantidad: 1,
     precioUnitario: 0
   });
 }
+
+
+
   eliminarDetalle(index: number): void {
     this.form.detalles.splice(index, 1);
 

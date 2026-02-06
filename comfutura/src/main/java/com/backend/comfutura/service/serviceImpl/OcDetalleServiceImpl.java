@@ -133,9 +133,10 @@ public class OcDetalleServiceImpl implements OcDetalleService {
     @Override
     public Page<OcDetalleResponseDTO> listarPorOc(Integer idOc, int page, int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return ocDetalleRepository.findByOrdenCompra_IdOc(idOc, pageable)
-                .map(this::mapToResponse);
+        return ocDetalleRepository.listarPorOcDTO(idOc, pageable);
     }
+
+
 
     /* ==================================================
        MAPPER
