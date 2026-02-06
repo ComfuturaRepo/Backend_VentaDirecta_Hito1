@@ -54,6 +54,15 @@ public class Permiso {
     )
     private Set<Cargo> cargos = new HashSet<>();
 
+    // NUEVO: Relación con trabajadores
+    @ManyToMany
+    @JoinTable(
+            name = "permiso_trabajador",
+            joinColumns = @JoinColumn(name = "id_permiso"),
+            inverseJoinColumns = @JoinColumn(name = "id_trabajador")
+    )
+    private Set<Trabajador> trabajadores = new HashSet<>();
+
     // Constructores
     public Permiso() {}
 

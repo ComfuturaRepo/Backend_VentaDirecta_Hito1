@@ -37,7 +37,8 @@ export class GestionPermisosComponent implements OnInit, OnDestroy {
   niveles: DropdownItem[] = [];
   areas: DropdownItem[] = [];
   cargos: DropdownItem[] = [];
-
+trabajadores: DropdownItem[] = []; // NUEVO: Lista de trabajadores
+trabajadoresSeleccionados: number[] = []; // NUEVO: Trabajadores seleccionados
   // Filtros
   filtroCodigo: string = '';
   filtroNombre: string = '';
@@ -115,8 +116,43 @@ private cargarDatos(): void {
       'codigo',
       'asc'
     ).subscribe({
-      next: (response: PageResponseDTO<PermisoResponseDTO>) => {
-        this.permisos = response.content;
+      next: (response: PageResponseDTO<PermisoTablaDTO>) => {
+        // Convertir PermisoTablaDTO a PermisoResponseDTO manteniendo todas las propiedades requeridas
+        this.permisos = response.content.map((tablaDTO: PermisoTablaDTO) => {
+          return {
+            idPermiso: tablaDTO.idPermiso,
+            codigo: tablaDTO.codigo,
+            nombre: tablaDTO.nombre,
+            descripcion: tablaDTO.descripcion,
+            activo: tablaDTO.activo,
+            niveles: tablaDTO.niveles.map(n => ({
+              idNivel: n.idNivel,
+              codigo: n.codigo,
+              nombre: n.nombre,
+              descripcion: ''
+            })),
+            areas: tablaDTO.areas.map(a => ({
+              idArea: a.idArea,
+              nombre: a.nombre,
+              activo: a.activo
+            })),
+            cargos: tablaDTO.cargos.map(c => ({
+              idCargo: c.idCargo,
+              nombre: c.nombre,
+              idNivel: 0, // Valor temporal o necesitas obtenerlo de otra fuente
+              activo: c.activo,
+              nombreNivel: '' // Opcional si lo necesitas
+            })),
+            trabajadores: tablaDTO.trabajadores ? tablaDTO.trabajadores.map(t => ({
+              idTrabajador: t.idTrabajador,
+              nombres: t.nombres,
+              apellidos: t.apellidos,
+              dni: t.dni,
+              activo: t.activo
+            })) : []
+          };
+        });
+
         this.permisosFiltrados = [...this.permisos];
         this.totalItems = response.totalItems;
         this.totalPages = response.totalPages;
@@ -136,7 +172,14 @@ private cargarDatos(): void {
     })
   );
 }
+getNombreTrabajador(trabajador: any): string {
+  if (!trabajador) return '';
 
+  const nombre = trabajador.nombres ? trabajador.nombres.split(' ')[0] : '';
+  const apellido = trabajador.apellidos ? trabajador.apellidos.split(' ')[0] : '';
+
+  return `${nombre} ${apellido}`.trim();
+}
   private cargarDropdowns(): void {
     this.subscriptions.add(
       this.dropdownService.getNivel().subscribe({
@@ -144,7 +187,12 @@ private cargarDatos(): void {
         error: (error) => console.error('Error cargando niveles:', error)
       })
     );
-
+this.subscriptions.add(
+  this.dropdownService.getTrabajadores().subscribe({
+    next: (trabajadores) => this.trabajadores = trabajadores,
+    error: (error) => console.error('Error cargando trabajadores:', error)
+  })
+);
     this.subscriptions.add(
       this.dropdownService.getAreas().subscribe({
         next: (areas) => this.areas = areas,
@@ -265,7 +313,7 @@ private cargarDatos(): void {
     this.nivelesSeleccionados = [];
     this.areasSeleccionadas = [];
     this.cargosSeleccionados = [];
-
+this.trabajadoresSeleccionados = []; // NUEVO: Limpiar trabajadores
     this.permisoForm.reset({
       codigo: '',
       nombre: '',
@@ -279,7 +327,12 @@ private cargarDatos(): void {
   editarPermiso(permiso: PermisoResponseDTO): void {
     this.modoEdicion = true;
     this.permisoSeleccionado = permiso;
-
+// NUEVO: Cargar trabajadores seleccionados
+if (permiso.trabajadores && permiso.trabajadores.length > 0) {
+  this.trabajadoresSeleccionados = permiso.trabajadores.map(t => t.idTrabajador);
+} else {
+  this.trabajadoresSeleccionados = [];
+}
     // Cargar datos del permiso
     this.permisoForm.patchValue({
       codigo: permiso.codigo,
@@ -301,6 +354,7 @@ private cargarDatos(): void {
     this.permisoSeleccionado = null;
     this.modoEdicion = false;
     this.permisoForm.reset();
+    this.trabajadoresSeleccionados = []; // NUEVO: Limpiar trabajadores al cerrar
   }
 
   // ========== MANEJO DE CHECKBOXES ==========
@@ -322,7 +376,15 @@ private cargarDatos(): void {
       this.areasSeleccionadas.splice(index, 1);
     }
   }
-
+// NUEVO: Manejar selección de trabajadores
+toggleTrabajador(id: number): void {
+  const index = this.trabajadoresSeleccionados.indexOf(id);
+  if (index === -1) {
+    this.trabajadoresSeleccionados.push(id);
+  } else {
+    this.trabajadoresSeleccionados.splice(index, 1);
+  }
+}
   toggleCargo(id: number): void {
     const index = this.cargosSeleccionados.indexOf(id);
     if (index === -1) {
@@ -348,12 +410,13 @@ private cargarDatos(): void {
 
     this.guardando = true;
 
-    const permisoData = {
-      ...this.permisoForm.value,
-      nivelesIds: this.nivelesSeleccionados,
-      areasIds: this.areasSeleccionadas,
-      cargosIds: this.cargosSeleccionados
-    };
+   const permisoData = {
+  ...this.permisoForm.value,
+  nivelesIds: this.nivelesSeleccionados,
+  areasIds: this.areasSeleccionadas,
+  cargosIds: this.cargosSeleccionados,
+  trabajadoresIds: this.trabajadoresSeleccionados // NUEVO
+};
 
     const observable = this.modoEdicion && this.permisoSeleccionado
       ? this.permisoService.actualizarPermiso(this.permisoSeleccionado.idPermiso, permisoData)

@@ -1,10 +1,7 @@
 package com.backend.comfutura.service;
 
 import com.backend.comfutura.dto.Page.PageResponseDTO;
-import com.backend.comfutura.dto.response.permisos.PermisoDTO;
-import com.backend.comfutura.dto.response.permisos.PermisoResponseDTO;
-import com.backend.comfutura.dto.response.permisos.PermisoTablaDTO;
-import com.backend.comfutura.dto.response.permisos.VerificarPermisoDTO;
+import com.backend.comfutura.dto.response.permisos.*;
 
 import java.util.List;
 
@@ -17,18 +14,15 @@ public interface PermisoService {
     PermisoResponseDTO obtenerPermisoPorCodigo(String codigo);
     List<PermisoResponseDTO> listarTodosPermisos();
 
-    // Actualizar el método para usar el nuevo DTO
     PageResponseDTO<PermisoTablaDTO> listarTodosPermisosPaginados(
-            int page,
-            int size,
-            String sortBy,
-            String sortDirection);
+            int page, int size, String sortBy, String sortDirection);
 
-    // Resto de métodos existentes...
     boolean verificarPermisoUsuario(VerificarPermisoDTO verificarPermisoDTO);
+
     List<PermisoResponseDTO> obtenerPermisosPorNivel(Integer idNivel);
     List<PermisoResponseDTO> obtenerPermisosPorArea(Integer idArea);
     List<PermisoResponseDTO> obtenerPermisosPorCargo(Integer idCargo);
-    List<String> obtenerPermisosUsuario(Integer idUsuario);
+    List<PermisoResponseDTO> obtenerPermisosPorTrabajador(Integer idTrabajador); // NUEVO método
 
+    List<String> obtenerPermisosUsuario(Integer idUsuario);
 }

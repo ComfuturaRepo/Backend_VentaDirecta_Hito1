@@ -11,7 +11,7 @@ import { PageResponseDTO } from './cliente.service';
 })
 export class PermisoService {
   private http = inject(HttpClient);
-  private injector = inject(Injector); // Usar Injector para resolver dependencias lazy
+  private injector = inject(Injector);
 
   private API_URL = `${environment.baseUrl}/api/permisos`;
   private readonly PERMISOS_KEY = 'user_permisos';
@@ -40,25 +40,27 @@ export class PermisoService {
   obtenerPermisoPorId(id: number): Observable<PermisoResponseDTO> {
     return this.http.get<PermisoResponseDTO>(`${this.API_URL}/${id}`);
   }
-// permiso.service.ts - Cambia el tipo de retorno
-listarPermisosPaginados(
-  page: number = 0,
-  size: number = 10,
-  sortBy: string = 'codigo',
-  sortDirection: string = 'asc'
-): Observable<PageResponseDTO<PermisoResponseDTO>> { // <-- PermisoResponseDTO
 
-  let params = new HttpParams()
-    .set('page', page.toString())
-    .set('size', size.toString())
-    .set('sortBy', sortBy)
-    .set('sortDirection', sortDirection);
+  // CORRECCIÓN: Cambia el tipo de retorno a PermisoTablaDTO
+  listarPermisosPaginados(
+    page: number = 0,
+    size: number = 10,
+    sortBy: string = 'codigo',
+    sortDirection: string = 'asc'
+  ): Observable<PageResponseDTO<PermisoTablaDTO>> { // <-- PermisoTablaDTO
 
-  return this.http.get<PageResponseDTO<PermisoResponseDTO>>(
-    `${this.API_URL}/paginados`,
-    { params }
-  );
-}
+    let params = new HttpParams()
+      .set('page', page.toString())
+      .set('size', size.toString())
+      .set('sortBy', sortBy)
+      .set('sortDirection', sortDirection);
+
+    return this.http.get<PageResponseDTO<PermisoTablaDTO>>(
+      `${this.API_URL}/paginados`,
+      { params }
+    );
+  }
+
   obtenerPermisoPorCodigo(codigo: string): Observable<PermisoResponseDTO> {
     return this.http.get<PermisoResponseDTO>(`${this.API_URL}/codigo/${codigo}`);
   }
@@ -84,6 +86,11 @@ listarPermisosPaginados(
 
   obtenerPermisosPorCargo(idCargo: number): Observable<PermisoResponseDTO[]> {
     return this.http.get<PermisoResponseDTO[]>(`${this.API_URL}/cargo/${idCargo}`);
+  }
+
+  // NUEVO: Obtener permisos por trabajador
+  obtenerPermisosPorTrabajador(idTrabajador: number): Observable<PermisoResponseDTO[]> {
+    return this.http.get<PermisoResponseDTO[]>(`${this.API_URL}/trabajador/${idTrabajador}`);
   }
 
   // ========== MÉTODOS PARA EL USUARIO ACTUAL ==========
@@ -122,8 +129,6 @@ listarPermisosPaginados(
 
   // Método para obtener AuthService solo cuando sea necesario (lazy)
   private getAuthService(): any {
-    // Usamos el injector para obtener AuthService solo cuando sea necesario
-    // Esto rompe la dependencia circular
     const { AuthService } = require('./auth.service');
     return this.injector.get(AuthService);
   }
