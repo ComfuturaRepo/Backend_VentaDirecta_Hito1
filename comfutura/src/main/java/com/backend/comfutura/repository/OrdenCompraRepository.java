@@ -21,6 +21,14 @@ public interface OrdenCompraRepository extends JpaRepository<OrdenCompra, Intege
     Optional<OrdenCompra> findById(Integer idOc);
 
 
-    
+    @Query("""
+ SELECT oc FROM OrdenCompra oc
+ JOIN oc.proveedor p
+ JOIN oc.ots o
+ WHERE
+   LOWER(p.razonSocial) LIKE LOWER(CONCAT('%', :search, '%'))
+   OR LOWER(o.descripcion) LIKE LOWER(CONCAT('%', :search, '%'))
+""")
+    Page<OrdenCompra> buscar(@Param("search") String search, Pageable pageable);
 }
 
