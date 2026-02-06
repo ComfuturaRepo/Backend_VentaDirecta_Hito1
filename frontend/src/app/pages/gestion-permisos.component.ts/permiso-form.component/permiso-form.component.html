@@ -1,0 +1,389 @@
+<div class="modal-overlay" [class.show]="mostrar" (click)="onCerrar()">
+  <div class="modal-container" [class.show]="mostrar" (click)="$event.stopPropagation()">
+
+    <!-- Header compacto -->
+    <div class="modal-header">
+      <div class="modal-title-group">
+        <div class="modal-icon">
+          <i class="bi bi-shield-check"></i>
+        </div>
+        <div>
+          <h2 class="modal-title">
+            {{modoEdicion ? 'Editar Permiso' : 'Nuevo Permiso'}}
+          </h2>
+          <p class="modal-subtitle">
+            {{modoEdicion ? 'Modificar información del permiso' : 'Crear nuevo permiso'}}
+          </p>
+        </div>
+      </div>
+      <button type="button" class="modal-close" (click)="onCerrar()" [disabled]="guardando">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <!-- Contenido principal con scroll -->
+    <div class="modal-body-scroll">
+      <div class="modal-content">
+        <form [formGroup]="permisoForm" (ngSubmit)="guardarPermiso()" class="modal-form">
+
+          <!-- Información básica - Fijo -->
+          <div class="form-section basic-info">
+            <div class="section-title">
+              <i class="bi bi-info-circle"></i>
+              <h3>Información Básica</h3>
+            </div>
+
+            <div class="form-grid">
+              <!-- Código -->
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-code"></i>
+                  Código <span class="required">*</span>
+                </label>
+                <div class="input-with-icon">
+                  <i class="bi bi-hash input-icon"></i>
+                  <input type="text" class="form-input" formControlName="codigo"
+                         placeholder="Ej: DASHBOARD_VIEW"
+                         [class.invalid]="codigoInvalido">
+                </div>
+                <div *ngIf="codigoInvalido" class="error-msg">
+                  <i class="bi bi-exclamation-circle"></i>
+                  <span *ngIf="permisoForm.get('codigo')?.errors?.['required']">Campo requerido</span>
+                  <span *ngIf="permisoForm.get('codigo')?.errors?.['pattern']">Solo mayúsculas y números</span>
+                </div>
+              </div>
+
+              <!-- Nombre -->
+              <div class="form-group">
+                <label class="form-label">
+                  <i class="bi bi-card-text"></i>
+                  Nombre <span class="required">*</span>
+                </label>
+                <div class="input-with-icon">
+                  <i class="bi bi-fonts input-icon"></i>
+                  <input type="text" class="form-input" formControlName="nombre"
+                         placeholder="Ej: Ver Dashboard"
+                         [class.invalid]="nombreInvalido">
+                </div>
+                <div *ngIf="nombreInvalido" class="error-msg">
+                  <i class="bi bi-exclamation-circle"></i>
+                  <span *ngIf="permisoForm.get('nombre')?.errors?.['required']">Campo requerido</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Descripción -->
+            <div class="form-group">
+              <label class="form-label">
+                <i class="bi bi-text-paragraph"></i>
+                Descripción
+              </label>
+              <div class="textarea-with-icon">
+                <i class="bi bi-chat-left-text textarea-icon"></i>
+                <textarea class="form-textarea" formControlName="descripcion"
+                          rows="2"
+                          placeholder="Descripción breve del permiso..."></textarea>
+              </div>
+            </div>
+
+            <!-- Estado -->
+            <div class="toggle-container">
+              <label class="toggle-switch">
+                <input type="checkbox" class="toggle-input" formControlName="activo">
+                <span class="toggle-slider"></span>
+              </label>
+              <div class="toggle-label">
+                <i class="bi bi-power"></i>
+                <span>Permiso Activo</span>
+                <span class="status-tag" [class.active]="permisoForm.get('activo')?.value">
+                  {{permisoForm.get('activo')?.value ? 'ACTIVO' : 'INACTIVO'}}
+                </span>
+              </div>
+            </div>
+          </div>
+
+     <!-- Asignaciones con tabs y scroll -->
+<div class="form-section assignments-section">
+  <div class="section-header">
+    <div class="section-title">
+      <i class="bi bi-diagram-3"></i>
+      <h3>Asignaciones</h3>
+    </div>
+    <p class="section-desc">
+      Seleccione quiénes tendrán acceso a este permiso
+    </p>
+  </div>
+
+  <!-- Tabs para categorías -->
+  <div class="category-tabs">
+    <button type="button" class="tab-btn"
+            [class.active]="tabActiva === 'niveles'"
+            (click)="cambiarTab('niveles')">
+      <i class="bi bi-layers"></i>
+      <span>Niveles</span>
+      <span class="tab-count">{{nivelesSeleccionados.length}}</span>
+    </button>
+    <button type="button" class="tab-btn"
+            [class.active]="tabActiva === 'areas'"
+            (click)="cambiarTab('areas')">
+      <i class="bi bi-building"></i>
+      <span>Áreas</span>
+      <span class="tab-count">{{areasSeleccionadas.length}}</span>
+    </button>
+    <button type="button" class="tab-btn"
+            [class.active]="tabActiva === 'cargos'"
+            (click)="cambiarTab('cargos')">
+      <i class="bi bi-person-badge"></i>
+      <span>Cargos</span>
+      <span class="tab-count">{{cargosSeleccionados.length}}</span>
+    </button>
+    <button type="button" class="tab-btn"
+            [class.active]="tabActiva === 'trabajadores'"
+            (click)="cambiarTab('trabajadores')">
+      <i class="bi bi-people"></i>
+      <span>Trabajadores</span>
+      <span class="tab-count">{{trabajadoresSeleccionados.length}}</span>
+    </button>
+  </div>
+
+  <!-- Contenedor de tabs con scroll -->
+  <div class="tabs-content">
+
+    <!-- Tab Niveles -->
+    <div class="tab-pane" [class.active]="tabActiva === 'niveles'">
+      <div class="tab-header">
+        <h4>Seleccionar Niveles</h4>
+        <div class="tab-actions">
+          <button type="button" class="action-btn small" (click)="seleccionarTodos('niveles')">
+            <i class="bi bi-check-all"></i> Todos
+          </button>
+          <button type="button" class="action-btn small" (click)="deseleccionarTodos('niveles')">
+            <i class="bi bi-x"></i> Ninguno
+          </button>
+        </div>
+      </div>
+      <div class="search-container">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Buscar nivel..." #nivelSearch
+               (input)="filtrarNiveles(nivelSearch.value)">
+      </div>
+      <div class="items-container">
+        <div *ngFor="let nivel of nivelesFiltrados" class="checkbox-item">
+          <label class="checkbox-label">
+            <input type="checkbox" [value]="nivel.id"
+                   [checked]="nivelesSeleccionados.includes(nivel.id)"
+                   (change)="toggleNivel(nivel.id)">
+            <span class="checkmark"></span>
+            <div class="item-details">
+              <span class="item-name">{{nivel.label}}</span>
+              <small class="item-extra" *ngIf="nivel.adicional">{{nivel.adicional}}</small>
+            </div>
+            <i class="bi bi-check-circle-fill selected" *ngIf="nivelesSeleccionados.includes(nivel.id)"></i>
+          </label>
+        </div>
+        <div *ngIf="nivelesFiltrados.length === 0" class="empty-state">
+          <i class="bi bi-search"></i>
+          <p>No se encontraron niveles</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Áreas -->
+    <div class="tab-pane" [class.active]="tabActiva === 'areas'">
+      <div class="tab-header">
+        <h4>Seleccionar Áreas</h4>
+        <div class="tab-actions">
+          <button type="button" class="action-btn small" (click)="seleccionarTodos('areas')">
+            <i class="bi bi-check-all"></i> Todos
+          </button>
+          <button type="button" class="action-btn small" (click)="deseleccionarTodos('areas')">
+            <i class="bi bi-x"></i> Ninguno
+          </button>
+        </div>
+      </div>
+      <div class="search-container">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Buscar área..." #areaSearch
+               (input)="filtrarAreas(areaSearch.value)">
+      </div>
+      <div class="items-container">
+        <div *ngFor="let area of areasFiltradas" class="checkbox-item">
+          <label class="checkbox-label" [class.disabled]="area.estado === false">
+            <input type="checkbox" [value]="area.id"
+                   [checked]="areasSeleccionadas.includes(area.id)"
+                   (change)="toggleArea(area.id)"
+                   [disabled]="area.estado === false">
+            <span class="checkmark"></span>
+            <div class="item-details">
+              <span class="item-name">{{area.label}}</span>
+              <span *ngIf="area.estado === false" class="badge inactive">Inactivo</span>
+            </div>
+            <i class="bi bi-check-circle-fill selected" *ngIf="areasSeleccionadas.includes(area.id)"></i>
+            <i class="bi bi-slash-circle" *ngIf="area.estado === false"></i>
+          </label>
+        </div>
+        <div *ngIf="areasFiltradas.length === 0" class="empty-state">
+          <i class="bi bi-search"></i>
+          <p>No se encontraron áreas</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Cargos -->
+    <div class="tab-pane" [class.active]="tabActiva === 'cargos'">
+      <div class="tab-header">
+        <h4>Seleccionar Cargos</h4>
+        <div class="tab-actions">
+          <button type="button" class="action-btn small" (click)="seleccionarTodos('cargos')">
+            <i class="bi bi-check-all"></i> Todos
+          </button>
+          <button type="button" class="action-btn small" (click)="deseleccionarTodos('cargos')">
+            <i class="bi bi-x"></i> Ninguno
+          </button>
+        </div>
+      </div>
+      <div class="search-container">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Buscar cargo..." #cargoSearch
+               (input)="filtrarCargos(cargoSearch.value)">
+      </div>
+      <div class="items-container">
+        <div *ngFor="let cargo of cargosFiltrados" class="checkbox-item">
+          <label class="checkbox-label" [class.disabled]="cargo.estado === false">
+            <input type="checkbox" [value]="cargo.id"
+                   [checked]="cargosSeleccionados.includes(cargo.id)"
+                   (change)="toggleCargo(cargo.id)"
+                   [disabled]="cargo.estado === false">
+            <span class="checkmark"></span>
+            <div class="item-details">
+              <span class="item-name">{{cargo.label}}</span>
+              <span *ngIf="cargo.estado === false" class="badge inactive">Inactivo</span>
+            </div>
+            <i class="bi bi-check-circle-fill selected" *ngIf="cargosSeleccionados.includes(cargo.id)"></i>
+            <i class="bi bi-slash-circle" *ngIf="cargo.estado === false"></i>
+          </label>
+        </div>
+        <div *ngIf="cargosFiltrados.length === 0" class="empty-state">
+          <i class="bi bi-search"></i>
+          <p>No se encontraron cargos</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Trabajadores (con scroll) -->
+    <div class="tab-pane" [class.active]="tabActiva === 'trabajadores'">
+      <div class="tab-header">
+        <h4>Seleccionar Trabajadores</h4>
+        <div class="tab-actions">
+          <button type="button" class="action-btn small" (click)="seleccionarTodos('trabajadores')">
+            <i class="bi bi-check-all"></i> Todos
+          </button>
+          <button type="button" class="action-btn small" (click)="deseleccionarTodos('trabajadores')">
+            <i class="bi bi-x"></i> Ninguno
+          </button>
+        </div>
+      </div>
+      <div class="search-container">
+        <i class="bi bi-search"></i>
+        <input type="text" placeholder="Buscar trabajador..." #trabajadorSearch
+               (input)="filtrarTrabajadores(trabajadorSearch.value)">
+      </div>
+      <div class="items-container scrollable-list">
+        <div *ngFor="let trabajador of trabajadoresFiltrados" class="checkbox-item">
+          <label class="checkbox-label" [class.disabled]="trabajador.estado === false">
+            <input type="checkbox" [value]="trabajador.id"
+                   [checked]="trabajadoresSeleccionados.includes(trabajador.id)"
+                   (change)="toggleTrabajador(trabajador.id)"
+                   [disabled]="trabajador.estado === false">
+            <span class="checkmark"></span>
+            <div class="item-details">
+              <span class="item-name">{{trabajador.label}}</span>
+              <small class="item-extra" *ngIf="trabajador.adicional">{{trabajador.adicional}}</small>
+              <span *ngIf="trabajador.estado === false" class="badge inactive">Inactivo</span>
+            </div>
+            <i class="bi bi-check-circle-fill selected" *ngIf="trabajadoresSeleccionados.includes(trabajador.id)"></i>
+            <i class="bi bi-slash-circle" *ngIf="trabajador.estado === false"></i>
+          </label>
+        </div>
+        <div *ngIf="trabajadoresFiltrados.length === 0" class="empty-state">
+          <i class="bi bi-search"></i>
+          <p>No se encontraron trabajadores</p>
+        </div>
+      </div>
+      <div class="list-info">
+        <small><i class="bi bi-info-circle"></i> {{trabajadoresFiltrados.length}} trabajadores encontrados</small>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Resumen compacto -->
+  <div class="summary-box">
+    <div class="summary-header">
+      <i class="bi bi-clipboard-data"></i>
+      <h4>Resumen de Selecciones</h4>
+    </div>
+    <div class="summary-grid">
+      <div class="summary-item">
+        <div class="summary-icon bg-blue">
+          <i class="bi bi-layers"></i>
+        </div>
+        <div class="summary-text">
+          <span>Niveles</span>
+          <strong>{{nivelesSeleccionados.length}}</strong>
+        </div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-icon bg-green">
+          <i class="bi bi-building"></i>
+        </div>
+        <div class="summary-text">
+          <span>Áreas</span>
+          <strong>{{areasSeleccionadas.length}}</strong>
+        </div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-icon bg-orange">
+          <i class="bi bi-person-badge"></i>
+        </div>
+        <div class="summary-text">
+          <span>Cargos</span>
+          <strong>{{cargosSeleccionados.length}}</strong>
+        </div>
+      </div>
+      <div class="summary-item">
+        <div class="summary-icon bg-purple">
+          <i class="bi bi-people"></i>
+        </div>
+        <div class="summary-text">
+          <span>Trabajadores</span>
+          <strong>{{trabajadoresSeleccionados.length}}</strong>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+        </form>
+      </div>
+    </div>
+
+    <!-- Footer fijo -->
+    <div class="modal-footer">
+      <button type="button" class="btn btn-cancel" (click)="onCerrar()" [disabled]="guardando">
+        <i class="bi bi-x-lg"></i> Cancelar
+      </button>
+      <div class="footer-actions">
+        <button type="button" class="btn btn-clear" (click)="limpiarSelecciones()" [disabled]="guardando">
+          <i class="bi bi-arrow-clockwise"></i> Limpiar
+        </button>
+        <button type="submit" class="btn btn-save" [disabled]="permisoForm.invalid || guardando"
+                (click)="guardarPermiso()">
+          <span *ngIf="guardando" class="spinner"></span>
+          <i *ngIf="!guardando" [class.bi-save]="!modoEdicion" [class.bi-pencil]="modoEdicion"></i>
+          {{modoEdicion ? 'Actualizar' : 'Guardar'}}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
