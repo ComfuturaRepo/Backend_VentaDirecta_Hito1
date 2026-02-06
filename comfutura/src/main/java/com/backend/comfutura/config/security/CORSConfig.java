@@ -23,6 +23,7 @@ public class CORSConfig {
                 "http://localhost:4201",
                 "http://localhost:8080",
                 "https://comfutura.up.railway.app",
+                "https://pruebacomfutura.up.railway.app",
                 "http://localhost:*"  // Patrón para cualquier puerto de localhost
         ));
 
