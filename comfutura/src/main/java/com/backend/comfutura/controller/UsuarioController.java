@@ -1,0 +1,116 @@
+package com.backend.comfutura.controller;
+
+import com.backend.comfutura.dto.Page.MessageResponseDTO;
+import com.backend.comfutura.dto.Page.PageResponseDTO;
+import com.backend.comfutura.dto.request.usuarioDTO.UsuarioRequestDTO;
+import com.backend.comfutura.dto.request.usuarioDTO.UsuarioUpdateDTO;
+import com.backend.comfutura.dto.response.usuarioDTO.UsuarioDetailDTO;
+import com.backend.comfutura.dto.response.usuarioDTO.UsuarioSimpleDTO;
+import com.backend.comfutura.service.UsuarioService;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/api/usuarios")
+@RequiredArgsConstructor
+public class UsuarioController {
+
+    private final UsuarioService usuarioService;
+
+    // GET: Listar usuarios con paginación y filtros
+    @GetMapping
+    public ResponseEntity<PageResponseDTO<UsuarioSimpleDTO>> getAllUsuarios(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            @RequestParam(defaultValue = "idUsuario") String sortBy,
+            @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) Boolean activos,
+            @RequestParam(required = false) Integer nivelId,
+            @RequestParam(required = false) String search) {
+
+        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc")
+                ? Sort.Direction.DESC
+                : Sort.Direction.ASC;
+
+        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
+
+        PageResponseDTO<UsuarioSimpleDTO> response;
+
+        if (search != null || nivelId != null || activos != null) {
+            response = usuarioService.searchUsuariosWithFilters(search, activos, nivelId, pageable);
+        } else {
+            response = usuarioService.findAllUsuarios(pageable);
+        }
+
+        return ResponseEntity.ok(response);
+    }
+
+    // GET: Obtener usuario por ID
+    @GetMapping("/{id}")
+    public ResponseEntity<UsuarioDetailDTO> getUsuarioById(@PathVariable Integer id) {
+        try {
+            UsuarioDetailDTO usuario = usuarioService.findUsuarioById(id);
+            return ResponseEntity.ok(usuario);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    // POST: Crear nuevo usuario
+    @PostMapping
+    public ResponseEntity<?> createUsuario(@Valid @RequestBody UsuarioRequestDTO usuarioDTO) {
+        try {
+            UsuarioDetailDTO nuevoUsuario = usuarioService.createUsuario(usuarioDTO);
+            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoUsuario);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponseDTO(e.getMessage(), null));
+        }
+    }
+
+    // PUT: Actualizar usuario parcialmente
+    @PutMapping("/{id}")
+    public ResponseEntity<?> updateUsuario(
+            @PathVariable Integer id,
+            @Valid @RequestBody UsuarioUpdateDTO usuarioDTO) {
+        try {
+            UsuarioDetailDTO usuarioActualizado = usuarioService.updateUsuario(id, usuarioDTO);
+            return ResponseEntity.ok(usuarioActualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponseDTO(e.getMessage(), null));
+        }
+    }
+
+    // PUT: Actualizar todos los datos del usuario
+    @PutMapping("/{id}/completo")
+    public ResponseEntity<?> updateUsuarioCompleto(
+            @PathVariable Integer id,
+            @Valid @RequestBody UsuarioRequestDTO usuarioDTO) {
+        try {
+            UsuarioDetailDTO usuarioActualizado = usuarioService.updateUsuarioCompleto(id, usuarioDTO);
+            return ResponseEntity.ok(usuarioActualizado);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponseDTO(e.getMessage(), null));
+        }
+    }
+
+    // PATCH: Activar/Desactivar usuario
+    @PatchMapping("/{id}/toggle-activo")
+    public ResponseEntity<?> toggleUsuarioActivo(@PathVariable Integer id) {
+        try {
+            UsuarioDetailDTO usuario = usuarioService.toggleUsuarioActivo(id);
+            return ResponseEntity.ok(usuario);
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest()
+                    .body(new MessageResponseDTO(e.getMessage(), null));
+        }
+    }
+}

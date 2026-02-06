@@ -1,4 +1,3 @@
-// src/app/core/services/auth.service.ts
 import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
@@ -13,15 +12,19 @@ export interface LoginRequest {
 
 export interface AuthResponse {
   token: string;
+  usuario: UserJwtDto;  // ✅ Ahora sí viene el usuario
 }
 
 export interface UserJwtDto {
   idUsuario: number;
   idTrabajador: number;
   username: string;
+  empresa: string;
+  cargo: string;
+  area: string;
+  nombreCompleto: string;
   activo: boolean;
-  roles: string[];
-  // Agrega aquí otros campos que vengan en tu JWT (ej: exp, iat, nombre, etc.)
+  nivel: string[];  // ✅ Cambiado de 'roles' a 'nivel'
 }
 
 export interface AuthState {
@@ -37,9 +40,9 @@ export class AuthService {
   private http = inject(HttpClient);
   private platformId = inject(PLATFORM_ID);
 
-    private API_URL = `${environment.baseUrl}/api/auth`;
-
+  private API_URL = `${environment.baseUrl}/api/auth`;
   private readonly TOKEN_KEY = 'auth_token';
+  private readonly USER_KEY = 'auth_user';
 
   private authState = new BehaviorSubject<AuthState>({
     token: null,
@@ -54,87 +57,164 @@ export class AuthService {
   }
 
   /**
-   * Carga el estado inicial desde localStorage (solo en browser)
+   * Carga el estado inicial desde localStorage
    */
   private loadInitialState(): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
     const token = localStorage.getItem(this.TOKEN_KEY);
-    if (!token) return;
+    const userStr = localStorage.getItem(this.USER_KEY);
 
-    const userData = this.decodeToken(token);
-    if (!userData || this.isTokenExpired(token)) {
+    // Si no hay token, limpiar
+    if (!token) {
+      this.clearAuthState();
+      return;
+    }
+
+    // Verificar si el token está expirado
+    if (this.isTokenExpired(token)) {
       this.logout();
       return;
     }
 
-    this.setAuthState(token, userData);
+    // Cargar usuario desde localStorage
+    let user: UserJwtDto | null = null;
+    if (userStr) {
+      try {
+        user = JSON.parse(userStr);
+      } catch (error) {
+        console.error('Error parseando usuario:', error);
+        localStorage.removeItem(this.USER_KEY);
+      }
+    }
+
+    // Si no pudimos cargar el usuario, decodificar del token
+    if (!user) {
+      user = this.decodeToken(token);
+    }
+
+    if (user) {
+      this.authState.next({
+        token,
+        user,
+        isAuthenticated: true
+      });
+    } else {
+      this.logout();
+    }
   }
 
   /**
-   * Inicia sesión y guarda el token
+   * Inicia sesión
    */
   login(credentials: LoginRequest): Observable<AuthResponse> {
+    console.log('🔐 login: Solicitando login para', credentials.username);
+
     return this.http.post<AuthResponse>(`${this.API_URL}/login`, credentials).pipe(
-      tap(response => this.setToken(response.token)),
+      tap(response => {
+        console.log('✅ login: Respuesta exitosa', {
+          hasToken: !!response.token,
+          hasUsuario: !!response.usuario,
+          usuario: response.usuario.username
+        });
+
+        if (!response.token) {
+          throw new Error('No se recibió token del servidor');
+        }
+
+        if (!response.usuario) {
+          console.warn('⚠️ login: El backend no envió usuario, decodificando del token...');
+          const usuario = this.decodeToken(response.token);
+          if (usuario) {
+            this.setToken(response.token, usuario);
+          } else {
+            throw new Error('No se pudo obtener información del usuario');
+          }
+        } else {
+          this.setToken(response.token, response.usuario);
+        }
+      }),
       catchError(this.handleError)
     );
   }
 
   /**
-   * Cierra sesión y limpia todo
+   * Guarda el token y usuario
    */
-  logout(): void {
-    this.clearAuthState();
-  }
-
-  /**
-   * Guarda el token y actualiza el estado
-   */
-  private setToken(token: string): void {
+  private setToken(token: string, usuario: UserJwtDto): void {
     if (!isPlatformBrowser(this.platformId)) return;
 
-    localStorage.setItem(this.TOKEN_KEY, token);
-    const userData = this.decodeToken(token);
-
-    if (userData && !this.isTokenExpired(token)) {
-      this.setAuthState(token, userData);
-    } else {
-      this.clearAuthState();
+    // Validaciones
+    if (!token) {
+      console.error('❌ setToken: token es null/undefined');
+      return;
     }
-  }
 
-  private setAuthState(token: string, user: UserJwtDto): void {
-    this.authState.next({
-      token,
-      user,
-      isAuthenticated: true
-    });
-  }
-
-  private clearAuthState(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      localStorage.removeItem(this.TOKEN_KEY);
+    if (!usuario) {
+      console.error('❌ setToken: usuario es null/undefined');
+      return;
     }
-    this.authState.next({
-      token: null,
-      user: null,
-      isAuthenticated: false
-    });
+
+    try {
+      // Guardar en localStorage
+      localStorage.setItem(this.TOKEN_KEY, token);
+      localStorage.setItem(this.USER_KEY, JSON.stringify(usuario));
+
+      // Actualizar estado
+      this.authState.next({
+        token,
+        user: usuario,
+        isAuthenticated: true
+      });
+
+      console.log('✅ setToken: Datos guardados correctamente', {
+        usuario: usuario.username,
+        nivel: usuario.nivel
+      });
+
+    } catch (error) {
+      console.error('❌ setToken: Error al guardar datos:', error);
+    }
   }
 
   /**
-   * Decodifica el payload del JWT (sin verificar firma, solo lectura)
+   * Decodifica el usuario del token JWT
    */
   private decodeToken(token: string): UserJwtDto | null {
     try {
       const payload = token.split('.')[1];
       const decoded = JSON.parse(atob(payload));
-      // Ajusta según la estructura real de tu JWT
-      // Ejemplos comunes: decoded.sub, decoded.usuario, decoded.data, etc.
-      return decoded.data as UserJwtDto ?? decoded as UserJwtDto ?? null;
-    } catch (e) {
-      console.error('Error al decodificar JWT:', e);
+
+      // El JWT tiene: { data: {...}, nivel: [...], ... }
+      const userData = decoded.data;
+
+      if (!userData) {
+        console.error('❌ decodeToken: No se encontró "data" en el token');
+        return null;
+      }
+
+      // Mapear a UserJwtDto
+      const user: UserJwtDto = {
+        idUsuario: userData.idUsuario,
+        idTrabajador: userData.idTrabajador,
+        username: userData.username,
+        empresa: userData.empresa,
+        cargo: userData.cargo,
+        area: userData.area,
+        nombreCompleto: userData.nombreCompleto,
+        activo: userData.activo,
+        nivel: decoded.nivel || userData.nivel || []  // Tomar nivel de decoded o userData
+      };
+
+      console.log('✅ decodeToken: Usuario extraído del token', {
+        username: user.username,
+        nivel: user.nivel
+      });
+
+      return user;
+
+    } catch (error) {
+      console.error('❌ decodeToken: Error al decodificar token:', error);
       return null;
     }
   }
@@ -153,10 +233,29 @@ export class AuthService {
     }
   }
 
-  // ── Métodos públicos útiles ────────────────────────────────────────
+  /**
+   * Cierra sesión
+   */
+  logout(): void {
+    this.clearAuthState();
+  }
+
+  private clearAuthState(): void {
+    if (isPlatformBrowser(this.platformId)) {
+      localStorage.removeItem(this.TOKEN_KEY);
+      localStorage.removeItem(this.USER_KEY);
+    }
+    this.authState.next({
+      token: null,
+      user: null,
+      isAuthenticated: false
+    });
+  }
+
+  // ── Métodos de utilidad ────────────────────────────────────────
 
   /**
-   * Chequeo SINCRÓNICO (ideal para guards y evitar race conditions en refresh)
+   * Chequeo síncrono de autenticación
    */
   get isAuthenticatedSync(): boolean {
     if (!isPlatformBrowser(this.platformId)) return false;
@@ -172,19 +271,16 @@ export class AuthService {
     return true;
   }
 
+  /**
+   * Obtiene el usuario actual (sin logs excesivos)
+   */
   get currentUser(): UserJwtDto | null {
-    const state = this.authState.value;
-    if (!state.token || this.isTokenExpired(state.token)) {
-      this.logout();
-      return null;
-    }
-    return state.user;
+    return this.authState.value.user;
   }
 
-  get currentTrabajadorId(): number | null {
-    return this.currentUser?.idTrabajador ?? null;
-  }
-
+  /**
+   * Obtiene el token actual
+   */
   get token(): string | null {
     const t = this.authState.value.token;
     if (t && this.isTokenExpired(t)) {
@@ -195,14 +291,59 @@ export class AuthService {
   }
 
   /**
-   * Fuerza recarga del estado (útil después de refresh token o cambios)
+   * Obtiene el ID del trabajador
+   */
+  get currentTrabajadorId(): number | null {
+    return this.currentUser?.idTrabajador ?? null;
+  }
+
+  // ── Métodos para verificar permisos basados en nivel ───────────
+
+  /**
+   * Verifica si el usuario tiene un nivel específico
+   */
+  isNivel(nivel: string): boolean {
+    return this.currentUser?.nivel?.includes(nivel) ?? false;
+  }
+
+  /**
+   * Verifica si el usuario tiene un nivel mínimo requerido
+   * Orden: L1 > L2 > L3 > L4 > L5
+   */
+  isNivelMinimo(nivelRequerido: string): boolean {
+    const orden = ['L1', 'L2', 'L3', 'L4', 'L5'];
+    const userNivel = this.currentUser?.nivel?.[0];
+    if (!userNivel) return false;
+
+    return orden.indexOf(userNivel) <= orden.indexOf(nivelRequerido);
+  }
+
+  /**
+   * Verifica si el usuario pertenece a un área específica
+   */
+  isArea(area: string): boolean {
+    return this.currentUser?.area?.toUpperCase() === area.toUpperCase();
+  }
+
+  /**
+   * Verifica si el usuario tiene un cargo específico
+   */
+  isCargo(texto: string): boolean {
+    return this.currentUser?.cargo
+      ?.toUpperCase()
+      .includes(texto.toUpperCase()) ?? false;
+  }
+
+  /**
+   * Fuerza recarga del estado
    */
   public refreshAuthState(): void {
     this.loadInitialState();
   }
 
-  // ── Manejo de errores ──────────────────────────────────────────────
-
+  /**
+   * Manejo de errores HTTP
+   */
   private handleError(error: HttpErrorResponse): Observable<never> {
     let message = 'Ocurrió un error inesperado';
 
@@ -216,6 +357,23 @@ export class AuthService {
       message = error.error.error;
     }
 
+    console.error('❌ AuthService error:', error);
     return throwError(() => new Error(message));
+  }
+
+  /**
+   * Método para debug (solo usar cuando sea necesario)
+   */
+  public debugAuthState(): void {
+    if (!isPlatformBrowser(this.platformId)) return;
+
+    console.log('🔍 DEBUG Auth State:', {
+      localStorage: {
+        token: localStorage.getItem(this.TOKEN_KEY)?.substring(0, 20) + '...',
+        user: localStorage.getItem(this.USER_KEY)
+      },
+      currentState: this.authState.value,
+      isAuthenticatedSync: this.isAuthenticatedSync
+    });
   }
 }

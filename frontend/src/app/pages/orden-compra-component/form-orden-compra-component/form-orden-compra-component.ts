@@ -1,161 +1,203 @@
-// src/app/pages/orden-compra-component/form-orden-compra-component/form-orden-compra-component.ts
-
 import { Component, EventEmitter, Input, Output, OnInit, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import Swal from 'sweetalert2';
-
-import { OrdenCompraRequest, OrdenCompraResponse } from '../../../model/orden-compra.model';
+import { OrdenCompraRequest, OrdenCompraResponse, OcDetalleRequest } from '../../../model/orden-compra.model';
 import { OrdenCompraService } from '../../../service/orden-compra.service';
 import { DropdownItem, DropdownService } from '../../../service/dropdown.service';
+import { MaestroCodigoService } from '../../../service/maestro-codigo.service';
+import { NgselectDropdownComponent } from '../../../component/ngselect-dropdown-component/ngselect-dropdown-component';
+
 
 @Component({
   selector: 'app-form-orden-compra-component',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,NgselectDropdownComponent],
   templateUrl: './form-orden-compra-component.html',
   styleUrls: ['./form-orden-compra-component.css']
 })
 export class FormOrdenCompraComponent implements OnInit, OnChanges {
-
   @Input() ocToEdit: OrdenCompraResponse | null = null;
-  @Input() isEdit: boolean = false;
+  @Input() isEdit = false;
 
   @ViewChild('formOrden') formOrden!: NgForm;
-
   @Output() onClose = new EventEmitter<void>();
   @Output() onSubmitted = new EventEmitter<boolean>();
 
-  // Dropdowns
-  ots: DropdownItem[] = [];
-  maestros: DropdownItem[] = [];
-  proveedores: DropdownItem[] = [];
-
-  // Estados (estático por ahora – puedes crear endpoint si lo prefieres dinámico)
-  estados: DropdownItem[] = [
-    { id: 1, label: 'PENDIENTE' },
-    { id: 2, label: 'APROBADA' },
-    { id: 3, label: 'EN PROCESO' },
-    { id: 4, label: 'ATENDIDA' },
-    { id: 5, label: 'CERRADA' },
-    { id: 6, label: 'RECHAZADA' },
-    { id: 7, label: 'ANULADA' }
-  ];
-
-  // Form model
   form: OrdenCompraRequest = this.getDefaultForm();
-
   isLoading = true;
   isSubmitting = false;
 
-  constructor(
-    private ordenService: OrdenCompraService,
-    private dropdownService: DropdownService
-  ) {}
+ maestros: { id: number; label: string }[] = [];
+maestroMap = new Map<number, { codigo: string; descripcion: string }>();
 
-  ngOnInit(): void {
-    this.cargarDropdowns();
-  }
+  proveedores: DropdownItem[] = [];
+  ots: DropdownItem[] = [];
 
-  private cargarDropdowns(): void {
-    this.isLoading = true;
 
-    this.dropdownService.loadOrdenCompraDropdowns().subscribe({
-      next: (data) => {
-        this.ots = data.ots;
-        this.maestros = data.maestros;
-        this.proveedores = data.proveedores;
-        this.isLoading = false;
 
-        // Aplicar valores de edición después de cargar los datos
-        this.aplicarValoresEdicion();
-      },
-      error: (err) => {
-        console.error('Error cargando dropdowns', err);
-        Swal.fire('Error', 'No se pudieron cargar los catálogos necesarios', 'error');
-        this.isLoading = false;
-      }
-    });
-  }
+  constructor(private ordenService: OrdenCompraService, private dropdownService: DropdownService, private maestroCodigoService: MaestroCodigoService){}
+ngOnInit(): void {
+  this.cargarDropdowns();   // OTs + proveedores
+  this.cargarMaestros();    // 👈 SOLO maestro_codigo
+  this.agregarDetalle();
+}
+
+  // Método para cargar materiales
+cargarMaestros(): void {
+  this.maestroCodigoService.listarParaCombo().subscribe(data => {
+
+    console.log('BACKEND →', data);
+
+    this.maestros = data.map((m: any) => ({
+      id: m.idMaestro || m.id,
+      label: (m.codigo || 'SIN-COD') + ' - ' + (m.descripcion || 'SIN-DESC')
+    }));
+
+    console.log('MAESTROS →', this.maestros);
+  });
+}
+
 
   ngOnChanges(changes: SimpleChanges): void {
-    // Re-aplicar valores cuando cambie el input de edición (después de cargar dropdowns)
-    if ((changes['ocToEdit'] || changes['isEdit']) && !this.isLoading) {
+    if ((changes['ocToEdit'] || changes['isEdit']) && !this.isLoading) this.aplicarValoresEdicion();
+  }
+
+private cargarDropdowns(): void {
+  this.isLoading = true;
+
+  this.dropdownService.loadOrdenCompraDropdowns().subscribe({
+    next: (data) => {
+      this.ots = data.ots;
+      this.proveedores = data.proveedores;
+
+      // limpiar
+      this.maestroMap.clear();
+
+      // construir combo + map
+
+
+
+
+
+      this.isLoading = false;
       this.aplicarValoresEdicion();
+    },
+    error: () => {
+      Swal.fire('Error', 'No se pudieron cargar los catálogos', 'error');
+      this.isLoading = false;
     }
+  });
+}
+
+getMaestroTexto(idMaestro: number): string {
+  const m = this.maestroMap.get(idMaestro);
+  return m ? `${m.codigo} - ${m.descripcion}` : '-';
+}
+
+
+private aplicarValoresEdicion(): void {
+  if (!this.isEdit || !this.ocToEdit || this.maestros.length === 0) {
+    return;
   }
 
-  private aplicarValoresEdicion(): void {
-    if (this.isEdit && this.ocToEdit) {
-      this.form = {
-        estadoOcId:   this.ocToEdit.estadoOcId   ?? 1,
-        otsId:        this.ocToEdit.otsId        ?? 0,
-        maestroId:    this.ocToEdit.maestroId    ?? 0,
-        proveedorId:  this.ocToEdit.proveedorId  ?? 0,
-        cantidad:     this.ocToEdit.cantidad     ?? 0,
-        costoUnitario: this.ocToEdit.costoUnitario ?? 0,
-        observacion:  this.ocToEdit.observacion  || ''
-      };
-    } else {
-      this.form = this.getDefaultForm();
-    }
+  this.form = {
+    idEstadoOc: this.ocToEdit.idEstadoOc,
+    idOts: this.ocToEdit.idOts,
+    idProveedor: this.ocToEdit.idProveedor,
+    formaPago: this.ocToEdit.formaPago ?? '',
+    igvPorcentaje: this.ocToEdit.igvPorcentaje ?? 18,
+    fechaOc: this.ocToEdit.fechaOc,
+    observacion: this.ocToEdit.observacion ?? '',
+    aplicarIgv: true,
+    detalles: this.ocToEdit.detalles.map(d => ({
+      idMaestro: d.idMaestro ?? 0,          // 🔑 CLAVE
+      cantidad: d.cantidad ?? 0,
+      precioUnitario: d.precioUnitario ?? 0
+    }))
+  };
+}
+
+
+
+
+
+
+ private getDefaultForm(): OrdenCompraRequest {
+  return {
+    idEstadoOc: 1,
+    idOts: 0,
+    idProveedor: 0,
+    formaPago: '',
+    igvPorcentaje: 18,
+    fechaOc: new Date().toISOString(),
+    observacion: '',
+    detalles: [],
+    aplicarIgv: true
+  };
+}
+
+
+agregarDetalle(): void {
+  this.form.detalles.push({
+
+    cantidad: 1,
+    precioUnitario: 0
+  });
+}
+
+
+
+  eliminarDetalle(index: number): void {
+    this.form.detalles.splice(index, 1);
+
   }
 
-  private getDefaultForm(): OrdenCompraRequest {
-    return {
-      estadoOcId: 1,
-      otsId: 0,
-      maestroId: 0,
-      proveedorId: 0,
-      cantidad: 0,
-      costoUnitario: 0,
-      observacion: ''
-    };
-  }
 
+
+
+
+
+formasPago: { id: string; label: string }[] = [
+  { id: 'CONTADO', label: 'Contado' },
+  { id: 'CREDITO', label: 'Crédito' },
+  { id: 'TRANSFERENCIA', label: 'Transferencia' },
+  { id: 'TARJETA', label: 'Tarjeta' }
+];
   guardar(): void {
-    if (this.formOrden.invalid) {
-      this.formOrden.control.markAllAsTouched();
-      Swal.fire('Atención', 'Complete todos los campos requeridos correctamente', 'warning');
-      return;
-    }
-
-    if (this.form.cantidad <= 0 || this.form.costoUnitario <= 0) {
-      Swal.fire('Atención', 'Cantidad y costo unitario deben ser mayores a 0', 'warning');
-      return;
-    }
-
+      console.log('FORM OC →', this.form);
     this.isSubmitting = true;
-
     const observable = this.isEdit && this.ocToEdit?.idOc != null
       ? this.ordenService.actualizar(this.ocToEdit.idOc, this.form)
       : this.ordenService.crear(this.form);
 
     observable.subscribe({
       next: () => {
-        this.mostrarExito(this.isEdit ? 'Orden actualizada correctamente' : 'Orden creada correctamente');
+        Swal.fire({ icon: 'success', title: 'Éxito', text: this.isEdit ? 'Orden actualizada' : 'Orden creada', timer: 1800, showConfirmButton: false });
         this.onSubmitted.emit(true);
         this.cerrar();
       },
       error: (err) => {
-        console.error('Error al guardar orden', err);
-        Swal.fire('Error', err.error?.message || 'No se pudo guardar la orden de compra', 'error');
+        Swal.fire('Error', err.error?.message || 'No se pudo guardar la OC', 'error');
         this.isSubmitting = false;
       }
     });
   }
+estados: { id: number; label: string }[] = [
+  { id: 1, label: 'PENDIENTE' },
+  { id: 2, label: 'APROBADA' },
+  { id: 3, label: 'EN PROCESO' },
+  { id: 4, label: 'ATENDIDA' },
+  { id: 5, label: 'CERRADA' },
+  { id: 6, label: 'RECHAZADA' },
+  { id: 7, label: 'ANULADA' }
+];
 
   cerrar(): void {
     this.onClose.emit();
   }
 
-  private mostrarExito(mensaje: string): void {
-    Swal.fire({
-      icon: 'success',
-      title: 'Éxito',
-      text: mensaje,
-      timer: 1800,
-      showConfirmButton: false
-    });
-  }
+
 }
+
+

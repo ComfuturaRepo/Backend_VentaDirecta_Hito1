@@ -6,9 +6,7 @@
       <i class="bi bi-cart-check me-2"></i>Órdenes de Compra
     </h2>
     <div>
-      <button class="btn btn-success me-2" (click)="abrirModalCrear()">
-        <i class="bi bi-plus-lg me-1"></i>Nueva Orden
-      </button>
+<button class="btn btn-success" (click)="abrirNuevaOrden()">Nueva Orden</button>
       <button class="btn btn-outline-secondary" (click)="cargarOrdenes()">
         <i class="bi bi-arrow-repeat"></i>
       </button>
@@ -22,12 +20,19 @@
         <div class="col-md-6 col-lg-5">
           <div class="input-group">
             <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
-            <input type="text" class="form-control" placeholder="Buscar OT, proveedor, material, estado..."
-                   [(ngModel)]="searchTerm" (input)="onSearchChange()" [disabled]="isLoading">
+           <input type="text"
+       class="form-control"
+       placeholder="Buscar OT, proveedor, estado..."
+       [(ngModel)]="searchTerm"
+       (input)="onSearchChange()">
+
           </div>
         </div>
         <div class="col-md-6 col-lg-7 text-md-end">
-          <small class="text-muted">Mostrando {{filteredOrdenes.length}} de {{ordenes.length}}</small>
+<small class="text-muted" *ngIf="pageData">
+  Mostrando {{ filteredOrdenes.length }}
+  de {{ totalElements }} registros
+</small>
         </div>
       </div>
     </div>
@@ -49,71 +54,250 @@
       <table class="table table-hover table-striped align-middle mb-0">
         <thead class="table-dark">
           <tr>
-            <th>ID</th>
-            <th>OT / Descripción</th>
-            <th>Material</th>
-            <th>Proveedor</th>
-            <th>Estado</th>
-            <th class="text-end">Cant.</th>
-            <th class="text-end">C. Unit.</th>
-            <th class="text-end">Total</th>
-            <th>Fecha</th>
-            <th>Acciones</th>
+              <th>ID</th>
+              <th>OT / Descripción</th>
+              <th>Proveedor</th>
+              <th>Estado</th>
+              <th>formaPago</th>
+              <th>subtotal</th>
+              <th>igv%</th>
+              <th>igvTotal</th>
+              <th>TOTAL</th>
+              <th>Fecha</th>
+              <th>Acciones</th>
           </tr>
         </thead>
         <tbody>
           <tr *ngFor="let oc of filteredOrdenes">
-            <td class="fw-bold">{{oc.idOc}}</td>
-            <td class="text-truncate" style="max-width: 240px;" [title]="oc.otsNombre">{{oc.otsNombre}}</td>
-            <td>{{oc.maestroCodigo}}</td>
-            <td>{{oc.proveedorNombre}}</td>
-            <td>
-              <span class="badge rounded-pill px-3 py-2" [ngClass]="getEstadoClass(oc.estadoOcNombre)">
-                {{oc.estadoOcNombre}}
-              </span>
-            </td>
-            <td class="text-end">{{oc.cantidad | number:'1.0-0'}}</td>
-            <td class="text-end">{{oc.costoUnitario | currency:'PEN ':'symbol':'1.2-2'}}</td>
-            <td class="text-end fw-bold">{{getTotal(oc) | currency:'PEN ':'symbol':'1.2-2'}}</td>
-            <td>{{oc.fechaOc | date:'dd/MM/yyyy HH:mm'}}</td>
-            <td>
-              <div class="btn-group btn-group-sm">
-                <button class="btn btn-outline-info"    (click)="verDetalle(oc)"    title="Ver detalle"><i class="bi bi-eye"></i></button>
-                <button class="btn btn-outline-primary" (click)="editarOrden(oc)"   title="Editar"><i class="bi bi-pencil"></i></button>
-                <button class="btn btn-outline-warning" (click)="toggleEstado(oc)"  title="Cambiar estado"><i class="bi bi-arrow-left-right"></i></button>
-              </div>
-            </td>
-          </tr>
-          <tr *ngIf="filteredOrdenes.length === 0">
-            <td colspan="10" class="text-center py-5 text-muted">
-              No se encontraron órdenes de compra
-            </td>
-          </tr>
+        <!-- ID OC -->
+      <td class="fw-bold">{{oc.idOc}}</td>
+         <!-- OT / Descripción -->
+              <td>{{ oc.ot }}</td> <!-- OT ya viene con "OT-" -->
+
+
+        <!-- Proveedor -->
+      <td>{{ oc.proveedorNombre }}</td> <!-- Nombre del proveedor -->
+           <!-- Estado -->
+                <td>
+          <span class="badge"
+                [ngStyle]="{
+                  'background-color': getEstadoColor(oc.estadoNombre),
+                  'color': '#fff'
+                }">
+            {{ oc.estadoNombre }}
+          </span>
+        </td>
+
+          <!-- forma de pago -->
+          <td>{{oc.formaPago}}</td>
+        <!-- forma de pago -->
+                  <td>{{oc.subtotal}}</td>
+
+                  <!-- igv% -->
+                  <td>{{oc.igvPorcentaje}}</td>
+                      <!-- igv% -->
+                  <td>{{oc.igvTotal}}</td>
+                    <!-- total -->
+                <td>{{oc.total}}</td>
+      <td>{{ oc.fechaOc | date:'dd/MM/yyyy HH:mm' }}</td>
+
+      <td>
+        <div class="btn-group btn-group-sm">
+       <!--   <button class="btn btn-outline-info" (click)="verDetalle(oc)" title="Ver detalle">
+          <i class="bi bi-eye"></i>
+        </button>-->
+
+          <button class="btn btn-outline-primary" (click)="editarOrden(oc)" title="Editar">
+            <i class="bi bi-pencil"></i>
+          </button>
+       <button class="btn btn-outline-warning" (click)="toggleEstado(oc)" title="Cambiar estado">
+            <i class="bi bi-arrow-left-right"></i>
+          </button>
+       <button class="btn btn-outline-info"
+              (click)="verDetalle(oc)"
+              title="Ver detalle">
+        <i class="bi bi-eye"></i>
+      </button>
+
+        </div>
+      </td>
+    </tr>
+
+    <tr *ngIf="filteredOrdenes.length === 0">
+      <td colspan="9" class="text-center py-5 text-muted">
+        No se encontraron órdenes de compra
+      </td>
+    </tr>
         </tbody>
       </table>
     </div>
 
-    <!-- Paginación -->
-    <div class="card-footer bg-white d-flex justify-content-between align-items-center" *ngIf="pageData && totalPages > 1">
-      <div>Página {{currentPage + 1}} de {{totalPages}}</div>
-      <nav>
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item" [class.disabled]="currentPage === 0"><button class="page-link" (click)="irAPagina(0)">Primera</button></li>
-          <li class="page-item" [class.disabled]="currentPage === 0"><button class="page-link" (click)="irAPagina(currentPage-1)">Anterior</button></li>
-          <li class="page-item" [class.disabled]="currentPage === totalPages-1"><button class="page-link" (click)="irAPagina(currentPage+1)">Siguiente</button></li>
-          <li class="page-item" [class.disabled]="currentPage === totalPages-1"><button class="page-link" (click)="irAPagina(totalPages-1)">Última</button></li>
-        </ul>
-      </nav>
-    </div>
+
   </div>
 
-  <!-- Modal Formulario -->
-  <app-form-orden-compra-component
-    *ngIf="showFormModal"
-    [ocToEdit]="selectedOc"
-    [isEdit]="isEditMode"
-    (onClose)="showFormModal = false"
-    (onSubmitted)="onFormSubmitted($event)">
-  </app-form-orden-compra-component>
+
+
+
+<!-- Modal Detalles OC -->
+<div class="modal fade show"
+     tabindex="-1"
+     style="display: block; background: rgba(0,0,0,0.6);"
+     *ngIf="showDetalleModal">
+
+  <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+    <div class="modal-content shadow-lg">
+
+      <!-- HEADER -->
+      <div class="modal-header bg-dark text-white">
+        <div>
+          <h5 class="modal-title mb-0">
+            Orden de Compra #{{ detalleOcSeleccionada?.idOc }}
+          </h5>
+          <small class="opacity-75">
+            {{ detalleOcSeleccionada?.ot }} ·
+            {{ detalleOcSeleccionada?.proveedorNombre }}
+          </small>
+        </div>
+        <button type="button"
+                class="btn-close btn-close-white"
+                (click)="showDetalleModal=false"></button>
+      </div>
+
+      <!-- BODY -->
+      <div class="modal-body">
+
+        <!-- INFO GENERAL -->
+        <div class="row g-3 mb-4">
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <div class="text-muted small">Estado</div>
+              <span class="badge px-3 py-2"
+                 [ngClass]="getEstadoClass(detalleOcSeleccionada?.estadoNombre ?? '')"></span>
+
+
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <div class="text-muted small">Forma de pago</div>
+              <strong>{{ detalleOcSeleccionada?.formaPago }}</strong>
+            </div>
+          </div>
+
+          <div class="col-md-4">
+            <div class="border rounded p-3 h-100">
+              <div class="text-muted small">Fecha</div>
+              <strong>
+                {{ detalleOcSeleccionada?.fechaOc | date:'dd/MM/yyyy HH:mm' }}
+              </strong>
+            </div>
+          </div>
+        </div>
+
+        <!-- TABLA DETALLES -->
+        <div class="table-responsive mb-4">
+          <table class="table table-sm table-hover align-middle">
+            <thead class="table-light">
+              <tr>
+                <th>Material / Servicio</th>
+                <th class="text-end">Cantidad</th>
+                <th class="text-end">Precio Unit.</th>
+                <th class="text-end">Subtotal</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let d of detallesOc">
+                <td>
+                  <strong>{{ d.descripcion }}</strong><br>
+                  <small class="text-muted">{{ d.descripcion }}</small>
+                </td>
+                <td class="text-end">{{ d.cantidad }}</td>
+                <td class="text-end">
+                  {{ d.precioUnitario | currency:'PEN':'symbol':'1.2-2' }}
+                </td>
+                <td class="text-end">
+                  {{ d.total | currency:'PEN':'symbol':'1.2-2' }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- TOTALES -->
+        <div class="row justify-content-end mb-4">
+          <div class="col-md-5 col-lg-4">
+            <div class="border rounded p-3">
+              <div class="d-flex justify-content-between">
+                <span>Subtotal</span>
+                <strong>{{ detalleOcSeleccionada?.subtotal | currency:'PEN' }}</strong>
+              </div>
+              <div class="d-flex justify-content-between">
+                <span>IGV ({{ detalleOcSeleccionada?.igvPorcentaje }}%)</span>
+                <strong>{{ detalleOcSeleccionada?.igvTotal | currency:'PEN' }}</strong>
+              </div>
+              <hr>
+              <div class="d-flex justify-content-between fs-5">
+                <span>Total</span>
+                <strong class="text-success">
+                  {{ detalleOcSeleccionada?.total | currency:'PEN' }}
+                </strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TIMELINE DE APROBACIONES -->
+        <div class="mt-4">
+          <h6 class="mb-3">
+            <i class="bi bi-diagram-3 me-1"></i>
+            Flujo de aprobación
+          </h6>
+
+          <app-orden-compra-aprobaciones
+            *ngIf="detalleOcSeleccionada"
+            [idOc]="detalleOcSeleccionada.idOc">
+          </app-orden-compra-aprobaciones>
+        </div>
+
+      </div>
+
+      <!-- FOOTER -->
+      <div class="modal-footer bg-light">
+        <button class="btn btn-secondary"
+                (click)="showDetalleModal=false">
+          Cerrar
+        </button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+  <!-- Modal Formulario-->
+<app-form-orden-compra-component
+  *ngIf="showFormModal"
+  [isEdit]="isEditMode"
+  [ocToEdit]="selectedOc"
+
+  (onClose)="showFormModal = false"
+  (onSubmitted)="onFormSubmitted($event)">
+</app-form-orden-compra-component>
+<!-- Paginación reutilizable -->
+
+<app-pagination
+  [currentPage]="currentPage"
+  [totalItems]="totalElements"
+  [totalPages]="totalPages"
+  [pageSize]="pageSize"
+  [isLoading]="isLoading"
+  (pageChange)="irAPagina($event)"
+  (pageSizeChange)="cambiarPageSize($event)"
+  (refresh)="cargarOrdenes(currentPage)">
+</app-pagination>
+
+
+
 
 </div>

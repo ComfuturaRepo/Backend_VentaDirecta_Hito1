@@ -28,4 +28,7 @@ public class OrdenCompraRequestDTO {
     private String observacion;
 
     private List<OcDetalleRequestDTO> detalles;
+
+    // 🔹 Campo que faltaba
+    private Boolean aplicarIgv;
 }

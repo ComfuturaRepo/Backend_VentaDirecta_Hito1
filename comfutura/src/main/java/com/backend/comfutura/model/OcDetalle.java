@@ -20,14 +20,11 @@ public class OcDetalle {
     @Column(name = "id_oc_detalle")
     private Integer idOcDetalle;
 
-    /* ================= RELACIONES ================= */
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_oc", nullable = false)
     private OrdenCompra ordenCompra;
 
-    /* ================= CAMPOS ================= */
-
+    // 🔑 SOLO EL ID (simple)
     @Column(name = "id_maestro", nullable = false)
     private Integer idMaestro;
 

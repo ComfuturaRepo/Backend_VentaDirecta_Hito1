@@ -5,6 +5,7 @@ import lombok.*;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
 @Entity
@@ -27,13 +28,16 @@ public class OrdenCompra {
     @JoinColumn(name = "id_estado_oc", nullable = false)
     private EstadoOc estadoOC;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_proveedor")
+    private Proveedor proveedor;
+
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "id_ots")
+    private Ots ots;
+
+
     /* ================= CAMPOS ================= */
-
-    @Column(name = "id_ots", nullable = false)
-    private Integer idOts;
-
-    @Column(name = "id_proveedor", nullable = false)
-    private Integer idProveedor;
 
     @Column(name = "forma_pago", length = 50)
     private String formaPago;
@@ -59,7 +63,8 @@ public class OrdenCompra {
     @OneToMany(
             mappedBy = "ordenCompra",
             cascade = CascadeType.ALL,
-            orphanRemoval = true
+            orphanRemoval = true,
+            fetch = FetchType.LAZY
     )
-    private List<OcDetalle> detalles;
+    private List<OcDetalle> detalles = new ArrayList<>();
 }

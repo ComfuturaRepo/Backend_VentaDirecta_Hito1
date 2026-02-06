@@ -2,10 +2,11 @@ package com.backend.comfutura.service.serviceImpl;
 
 import com.backend.comfutura.Exceptions.ResourceNotFoundException;
 import com.backend.comfutura.config.security.CustomUserDetails;
-import com.backend.comfutura.dto.request.OtCreateRequest;
-import com.backend.comfutura.dto.response.OtDetailResponse;
-import com.backend.comfutura.dto.response.OtFullResponse;
-import com.backend.comfutura.dto.response.OtListDto;
+import com.backend.comfutura.dto.Page.PageResponseDTO;
+import com.backend.comfutura.dto.request.otDTO.OtCreateRequest;
+import com.backend.comfutura.dto.response.otDTO.OtDetailResponse;
+import com.backend.comfutura.dto.response.otDTO.OtFullResponse;
+import com.backend.comfutura.dto.response.otDTO.OtListDto;
 import com.backend.comfutura.model.*;
 import com.backend.comfutura.repository.*;
 import com.backend.comfutura.service.OtService;
@@ -19,11 +20,12 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import jakarta.persistence.criteria.Predicate;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static java.util.Optional.ofNullable;
 
@@ -42,11 +44,12 @@ public class OtServiceImpl implements OtService {
     private final JefaturaClienteSolicitanteRepository jefaturaClienteRepository;
     private final AnalistaClienteSolicitanteRepository analistaClienteRepository;
     private final EstadoOtRepository estadoOtRepository;
+    private final TipoOtRepository tipoOtRepository;
+    private final SiteDescripcionRepository siteDescripcionRepository;
 
-    // LISTADO OPTIMIZADO + FILTRO DE TEXTO
     @Override
     @Transactional(readOnly = true)
-    public Page<OtListDto> listarOts(String search, Pageable pageable) {
+    public PageResponseDTO<OtListDto> listarOts(String search, Pageable pageable) {
         Specification<Ots> spec = (root, query, cb) -> {
             if (search == null || search.trim().isEmpty()) {
                 return cb.conjunction();
@@ -65,22 +68,40 @@ public class OtServiceImpl implements OtService {
             );
         };
 
-        return otsRepository.findAll(spec, pageable).map(this::toOtListDto);
+        // Obtener la página de Spring Data
+        Page<Ots> page = otsRepository.findAll(spec, pageable);
+
+        // Convertir a PageResponseDTO
+        List<OtListDto> content = page.getContent().stream()
+                .map(this::toOtListDto)
+                .collect(Collectors.toList());
+
+        return new PageResponseDTO<>(
+                content,
+                page.getNumber(),
+                page.getTotalElements(),
+                page.getTotalPages(),
+                page.isFirst(),
+                page.isLast(),
+                page.getSize()
+        );
     }
 
     private OtListDto toOtListDto(Ots ots) {
         return OtListDto.builder()
-                .idOts(ots.getIdOts())                    // ← agregado
+                .idOts(ots.getIdOts())
                 .ot(ots.getOt())
                 .fechaApertura(ots.getFechaApertura())
                 .estadoOt(ofNullable(ots.getEstadoOt()).map(EstadoOt::getDescripcion).orElse("—"))
-                .regionNombre(ofNullable(ots.getRegion()).map(Region::getNombre).orElse("—"))
-                .siteNombre(ofNullable(ots.getSite()).map(Site::getCodigoSitio).orElse("—"))
-                .faseNombre(ofNullable(ots.getFase()).map(Fase::getNombre).orElse("—"))
-                .descripcion(ots.getDescripcion() != null
-                        ? ots.getDescripcion().substring(0, Math.min(80, ots.getDescripcion().length())) + "..."
-                        : "—")
-                .activo(ots.getActivo())                  // ← agregado
+                .proyecto(ofNullable(ots.getProyecto()).map(Proyecto::getNombre).orElse("—"))
+                .siteNombre(ots.getSiteDisplayText())  // ✅ Usar el método helper
+                .site_descripcion(ots.getSiteDescripcionText())  // ✅ Usar el método helper
+                .cliente(ofNullable(ots.getCliente()).map(Cliente::getRazonSocial).orElse("—"))
+                .cliente_id(ofNullable(ots.getCliente()).map(Cliente::getRuc).orElse("—"))
+                .region(ofNullable(ots.getRegion()).map(Region::getNombre).orElse("—"))
+                .tipoOtCodigo(ofNullable(ots.getTipoOt()).map(TipoOt::getCodigo).orElse("—"))
+                .tipoOtDescripcion(ofNullable(ots.getTipoOt()).map(TipoOt::getDescripcion).orElse("—"))
+                .activo(ots.getActivo())
                 .build();
     }
 
@@ -93,6 +114,7 @@ public class OtServiceImpl implements OtService {
 
         return toOtDetailResponse(ots);
     }
+
 
     private OtDetailResponse toOtDetailResponse(Ots ots) {
         int diasAsignados = 0;
@@ -110,6 +132,11 @@ public class OtServiceImpl implements OtService {
                 .diasAsignados(diasAsignados)
                 .fechaCreacion(ots.getFechaCreacion())
                 .activo(ots.getActivo())
+                .idSiteDescripcion(ofNullable(ots.getSiteDescripcion()).map(SiteDescripcion::getIdSiteDescripcion).orElse(null))
+                .siteDescripcionNombre(ofNullable(ots.getSiteDescripcion()).map(SiteDescripcion::getDescripcion).orElse(null))
+                .idTipoOt(ofNullable(ots.getTipoOt()).map(TipoOt::getIdTipoOt).orElse(null))
+                .tipoOtCodigo(ofNullable(ots.getTipoOt()).map(TipoOt::getCodigo).orElse(null))
+                .tipoOtDescripcion(ofNullable(ots.getTipoOt()).map(TipoOt::getDescripcion).orElse(null))
 
                 .idCliente(ofNullable(ots.getCliente()).map(Cliente::getIdCliente).orElse(null))
                 .clienteRazonSocial(ofNullable(ots.getCliente()).map(Cliente::getRazonSocial).orElse(null))
@@ -157,7 +184,7 @@ public class OtServiceImpl implements OtService {
                 .build();
     }
 
-    // PARA EDICIÓN (solo IDs)
+
     @Override
     @Transactional(readOnly = true)
     public OtFullResponse obtenerParaEdicion(Integer idOts) {
@@ -174,6 +201,7 @@ public class OtServiceImpl implements OtService {
                 .idArea(ofNullable(ots.getArea()).map(Area::getIdArea).orElse(null))
                 .idProyecto(ofNullable(ots.getProyecto()).map(Proyecto::getIdProyecto).orElse(null))
                 .idFase(ofNullable(ots.getFase()).map(Fase::getIdFase).orElse(null))
+                .idTipoOt(ofNullable(ots.getTipoOt()).map(TipoOt::getIdTipoOt).orElse(null))
                 .idSite(ofNullable(ots.getSite()).map(Site::getIdSite).orElse(null))
                 .idRegion(ofNullable(ots.getRegion()).map(Region::getIdRegion).orElse(null))
                 .idJefaturaClienteSolicitante(ofNullable(ots.getJefaturaClienteSolicitante()).map(JefaturaClienteSolicitante::getId).orElse(null))
@@ -184,11 +212,11 @@ public class OtServiceImpl implements OtService {
                 .idLiquidador(ofNullable(ots.getLiquidador()).map(Trabajador::getIdTrabajador).orElse(null))
                 .idEjecutante(ofNullable(ots.getEjecutante()).map(Trabajador::getIdTrabajador).orElse(null))
                 .idAnalistaContable(ofNullable(ots.getAnalistaContable()).map(Trabajador::getIdTrabajador).orElse(null))
+                .idEstadoOt(ots.getEstadoOt().getIdEstadoOt())
                 .activo(ots.getActivo())
                 .fechaCreacion(ots.getFechaCreacion())
                 .build();
     }
-
     // CREAR / ACTUALIZAR
     @Override
     @Transactional
@@ -206,25 +234,63 @@ public class OtServiceImpl implements OtService {
         otsRepository.save(ots);
         return toOtDetailResponse(ots);
     }
+    private boolean esUsuarioFinanzas(CustomUserDetails user, Trabajador trabajador) {
+        return trabajador.getArea() != null
+                && "FINANZAS".equalsIgnoreCase(trabajador.getArea().getNombre());
+    }
 
     private Ots createOt(OtCreateRequest req) {
-        Integer ultima = otsRepository.findTopByOrderByOtDesc()
-                .map(Ots::getOt)
-                .orElse(20250000);
-        Integer nuevoOt = ultima + 1;
 
-        Integer userId = getCurrentTrabajadorId();
-        Trabajador creador = trabajadorRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("Trabajador autenticado no encontrado"));
+        int anioActual = LocalDate.now().getYear();
 
-        EstadoOt estadoPendiente = estadoOtRepository.findByDescripcion("ASIGNACION")
-                .orElseThrow(() -> new ResourceNotFoundException("Estado 'ASIGNACION' no encontrado"));
+        // Usuario autenticado
+        CustomUserDetails user = (CustomUserDetails)
+                SecurityContextHolder.getContext()
+                        .getAuthentication()
+                        .getPrincipal();
+
+        Trabajador creador = trabajadorRepository.findById(user.getIdTrabajador())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Trabajador autenticado no encontrado"));
+
+        boolean esFinanzas = esUsuarioFinanzas(user, creador);
+
+        int nuevoOt;
+
+        if (esFinanzas) {
+
+            int inicio = anioActual * 10000 + 9000; // 20269000
+            int fin    = anioActual * 10000 + 9999; // 20269999
+
+            Integer ultimoOt = otsRepository
+                    .findMaxOtInRange(inicio, fin)
+                    .orElse(null);
+
+            nuevoOt = (ultimoOt == null)
+                    ? inicio + 1      // 20269001
+                    : ultimoOt + 1;
+
+        } else {
+
+            Integer ultimoOt = getUltimoOtCorrelativo();
+
+            nuevoOt = (ultimoOt == null)
+                    ? anioActual * 10000 + 1   // 20260001
+                    : ultimoOt + 1;
+        }
+        TipoOt tipoOt = tipoOtRepository.findById(req.getIdTipoOt())
+                .orElseThrow(() -> new ResourceNotFoundException("Tipo de OT no encontrado con ID: " + req.getIdTipoOt()));
+        EstadoOt estadoPendiente = estadoOtRepository
+                .findByDescripcion("ASIGNACION")
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Estado 'ASIGNACION' no encontrado"));
 
         Ots ots = Ots.builder()
                 .ot(nuevoOt)
                 .idOtsAnterior(req.getIdOtsAnterior())
                 .descripcion(req.getDescripcion())
                 .fechaApertura(req.getFechaApertura())
+                .tipoOt(tipoOt)  // ← Añadido
                 .activo(true)
                 .trabajador(creador)
                 .estadoOt(estadoPendiente)
@@ -234,13 +300,18 @@ public class OtServiceImpl implements OtService {
         return ots;
     }
 
+
+
+
     private void updateOt(Ots ots, OtCreateRequest req) {
         if (req.getDescripcion() != null) ots.setDescripcion(req.getDescripcion());
         if (req.getFechaApertura() != null) ots.setFechaApertura(req.getFechaApertura());
         if (req.getIdOtsAnterior() != null) ots.setIdOtsAnterior(req.getIdOtsAnterior());
-
+        if (req.getIdEstadoOt() != null)
+            ots.setEstadoOt(find(estadoOtRepository, req.getIdEstadoOt(), "EstadoOt"));
         setRelations(ots, req);
     }
+
 
     private void setRelations(Ots ots, OtCreateRequest req) {
         if (req.getIdCliente() != null)
@@ -251,10 +322,19 @@ public class OtServiceImpl implements OtService {
             ots.setProyecto(find(proyectoRepository, req.getIdProyecto(), "Proyecto"));
         if (req.getIdFase() != null)
             ots.setFase(find(faseRepository, req.getIdFase(), "Fase"));
+        if (req.getIdTipoOt() != null)
+            ots.setTipoOt(find(tipoOtRepository, req.getIdTipoOt(), "Tipo OT"));
         if (req.getIdSite() != null)
             ots.setSite(find(siteRepository, req.getIdSite(), "Site"));
         if (req.getIdRegion() != null)
             ots.setRegion(find(regionRepository, req.getIdRegion(), "Región"));
+        if (req.getIdEstadoOt() != null)
+            ots.setEstadoOt(find(estadoOtRepository, req.getIdEstadoOt(), "EstadoOt"));
+
+        // ✅ AGREGAR ESTA LÍNEA para manejar SiteDescripcion
+        if (req.getIdSiteDescripcion() != null) {
+            ots.setSiteDescripcion(find(siteDescripcionRepository, req.getIdSiteDescripcion(), "SiteDescripcion"));
+        }
 
         ots.setJefaturaClienteSolicitante(
                 req.getIdJefaturaClienteSolicitante() != null ?
@@ -270,7 +350,6 @@ public class OtServiceImpl implements OtService {
         ots.setEjecutante(req.getIdEjecutante() != null ? findTrabajador(req.getIdEjecutante()) : null);
         ots.setAnalistaContable(req.getIdAnalistaContable() != null ? findTrabajador(req.getIdAnalistaContable()) : null);
     }
-
     private Trabajador findTrabajador(Integer id) {
         return trabajadorRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Trabajador no encontrado: " + id));
@@ -290,6 +369,54 @@ public class OtServiceImpl implements OtService {
         ot.setActivo(!ot.getActivo());
         otsRepository.save(ot);
     }
+
+    @Override
+    public Integer getUltimoOtCorrelativo() {
+        try {
+            int anioActual = LocalDate.now().getYear();
+
+            // Opción A: Por rango numérico
+            int inicio = anioActual * 10000;       // 20250000
+            int fin    = anioActual * 10000 + 9999; // 20259999
+
+            Optional<Integer> ultimoOt = otsRepository.findMaxOtInRange(inicio, fin);
+
+            if (ultimoOt.isPresent()) {
+                return ultimoOt.get();
+            }
+
+            // Opción B: Por año de fecha (alternativa)
+            Optional<Integer> ultimoPorFecha = otsRepository.findMaxOtByYear(anioActual);
+            if (ultimoPorFecha.isPresent()) {
+                return ultimoPorFecha.get();
+            }
+
+            // Si no hay OTs para el año actual, generar número base
+            Integer nuevoOt = inicio ; // 20250001
+            return nuevoOt;
+
+        } catch (Exception e) {
+
+            // Valor por defecto seguro
+            int anioActual = LocalDate.now().getYear();
+            return (anioActual * 10000) + 1;
+        }
+    }
+
+
+
+    @Override
+    public Integer buscarIdPorOt(Integer ot) {
+        return otsRepository.findByOt(ot)
+                .map(Ots::getIdOts)
+                .orElse(null);
+    }
+
+    @Override
+    public boolean existeOt(Integer ot) {
+        return otsRepository.findByOt(ot).isPresent();
+    }
+
     @Transactional
     public List<OtDetailResponse> saveOtsMasivo(List<OtCreateRequest> requests) {
         List<OtDetailResponse> responses = new ArrayList<>();

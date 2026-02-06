@@ -1,56 +1,76 @@
-// src/app/models/orden-compra.model.ts
+// Detalle para request (crear/actualizar OC)
+export interface OcDetalleRequest {
+idMaestro?: number;
+cantidad?: number;
+precioUnitario?: number;
 
-export interface OrdenCompraRequest {
-  estadoOcId: number;
-  otsId: number;
-  maestroId: number;
-  proveedorId: number;
-  cantidad: number;           // o string si prefieres manejar como string en formulario
-  costoUnitario: number;
-  observacion?: string;
 }
 
-export interface OrdenCompraResponse {
-  idOc: number;
+// Detalle para response (cuando recibes OC del backend)
+export interface OcDetalleResponse {
+idOcDetalle?: number;
 
-  estadoOcId:   number;
-  estadoOcNombre: string;
 
-  otsId:        number;
-  otsNombre:    string;
+  cantidad?: number;
+  precioUnitario?: number;
+  total?: number;
 
-  maestroId:    number;
-  maestroCodigo: string;
+  idMaestro?: number;
+  codigo?: string;
+  descripcion?: string;
+  unidad?: string;
+}
 
-  proveedorId:  number;
-  proveedorNombre: string;
-  // ──────────────────────────────────────────────────────────────────────
-
-  cantidad: number;
-  costoUnitario: number;
+// DTO para crear o actualizar OC (request)
+export interface OrdenCompraRequest {
+  idEstadoOc: number;
+  idOts: number;
+  idProveedor: number;
+  formaPago: string;
+  igvPorcentaje: number;
   fechaOc: string;
   observacion?: string;
+  detalles: OcDetalleRequest[];
+  aplicarIgv: true // 🔹 asegurarte de que está aquí
 
-  total?: number;  // opcional
+
+}
+
+// DTO de respuesta de OC (response)
+export interface OrdenCompraResponse {
+  idOc: number;
+  idEstadoOc: number;
+  estadoNombre: string;
+  idOts: number;
+  otsDescripcion: string;
+  ot: string;
+
+
+  idProveedor: number;
+  proveedorNombre: string;
+  proveedorRuc: string;
+  proveedorDireccion: string;
+  proveedorContacto: string;
+  proveedorBanco: string;
+  formaPago: string;
+  subtotal: number;
+  igvPorcentaje: number;
+  igvTotal: number;
+  total: number;
+  fechaOc: string;
+  observacion?: string;
+  detalles: OcDetalleResponse[];
+}
+
+// Paginación
+export interface PageInfo {
+  size: number;
+  number: number;
+  totalElements: number;
+  totalPages: number;
 }
 
 export interface PageOrdenCompra {
   content: OrdenCompraResponse[];
-  pageable: {
-    sort: { sorted: boolean; unsorted: boolean; empty: boolean };
-    offset: number;
-    pageNumber: number;
-    pageSize: number;
-    paged: boolean;
-    unpaged: boolean;
-  };
-  last: boolean;
-  totalPages: number;
-  totalElements: number;
-  size: number;
-  number: number;
-  sort: { sorted: boolean; unsorted: boolean; empty: boolean };
-  first: boolean;
-  numberOfElements: number;
-  empty: boolean;
+  page: PageInfo;
 }

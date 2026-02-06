@@ -14,4 +14,6 @@ public interface OrdenCompraService {
             String sortBy,
             String direction
     );
+
+    String generarHtml(Integer idOc, Integer idEmpresa);
 }

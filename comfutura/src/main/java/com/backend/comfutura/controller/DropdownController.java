@@ -1,5 +1,6 @@
 package com.backend.comfutura.controller;
 
+import com.backend.comfutura.model.Site;
 import com.backend.comfutura.record.DropdownDTO;
 import com.backend.comfutura.service.DropdownService;
 import lombok.RequiredArgsConstructor;
@@ -33,6 +34,20 @@ public class DropdownController {
     public ResponseEntity<List<DropdownDTO>> getProyectos() {
         return ResponseEntity.ok(dropdownService.getProyectos());
     }
+    @GetMapping("/areas")
+    public ResponseEntity<List<DropdownDTO>> getAreas() {
+        return ResponseEntity.ok(dropdownService.getAreas());
+    }
+
+
+    @GetMapping("/cargos")
+    public ResponseEntity<List<DropdownDTO>> getCargos() {
+        return ResponseEntity.ok(dropdownService.getCargos());
+    }
+    @GetMapping("/empresas")
+    public ResponseEntity<List<DropdownDTO>> getEmpresas() {
+        return ResponseEntity.ok(dropdownService.getEmpresas());
+    }
 
     @GetMapping("/fases")
     public ResponseEntity<List<DropdownDTO>> getFases() {
@@ -44,6 +59,23 @@ public class DropdownController {
         return ResponseEntity.ok(dropdownService.getSites());
     }
 
+    @GetMapping("/DescripcionesBySiteCodigo")
+    public ResponseEntity<List<DropdownDTO>> getDescripcionesBySiteCodigo(@RequestParam(required = false) String siteCodigo) {
+        return ResponseEntity.ok(dropdownService.getDescripcionesBySiteCodigo(siteCodigo));
+    }
+
+    @GetMapping("/SitesConDescripciones")
+    public ResponseEntity<List<DropdownDTO>> getSitesConDescripciones() {
+        return ResponseEntity.ok(dropdownService.getSitesConDescripciones());
+    }
+
+
+
+    @GetMapping("/sitesCompuesto")
+    public ResponseEntity<List<DropdownDTO>> getSiteCompuesto() {
+        return ResponseEntity.ok(dropdownService.getSiteCompuesto());
+    }
+
     @GetMapping("/regiones")
     public ResponseEntity<List<DropdownDTO>> getRegiones() {
         return ResponseEntity.ok(dropdownService.getRegiones());
@@ -52,6 +84,15 @@ public class DropdownController {
     @GetMapping("/ots")
     public ResponseEntity<List<DropdownDTO>> getOtsActivas() {
         return ResponseEntity.ok(dropdownService.getOtsActivas());
+    }
+    @GetMapping("/nivel")
+    public ResponseEntity<List<DropdownDTO>> getnivel() {
+        return ResponseEntity.ok(dropdownService.getNivelesAll());
+    }
+
+    @GetMapping("/tipoOt")
+    public ResponseEntity<List<DropdownDTO>> getTipoOt() {
+        return ResponseEntity.ok(dropdownService.getOtTipo());
     }
 
     // ────────────────────────────────────────────────────────
@@ -83,6 +124,11 @@ public class DropdownController {
         return ResponseEntity.ok(dropdownService.getLiquidador());
     }
 
+    @GetMapping("/estado-ot")
+    public ResponseEntity<List<DropdownDTO>> getEstadoOt() {
+        return ResponseEntity.ok(dropdownService.getEstadosOt());
+    }
+
     @GetMapping("/ejecutantes")
     public ResponseEntity<List<DropdownDTO>> getEjecutantes() {
         return ResponseEntity.ok(dropdownService.getEjecutantes());
@@ -95,6 +141,16 @@ public class DropdownController {
     @GetMapping("/maestro-codigos")
     public ResponseEntity<List<DropdownDTO>> getMaestroCodigos() {
         return ResponseEntity.ok(dropdownService.getMaestroCodigos());
+    }
+
+    @GetMapping("/trabajador")
+    public ResponseEntity<List<DropdownDTO>> getTraabajadores() {
+        return ResponseEntity.ok(dropdownService.getTrabajadores());
+    }
+
+    @GetMapping("/trabajadorSinUsuarioActivo")
+    public ResponseEntity<List<DropdownDTO>> getSinUsuarioActivoTrabajador() {
+        return ResponseEntity.ok(dropdownService.getTrabajadoresSinUsuarioActivo());
     }
 
     @GetMapping("/proveedores")

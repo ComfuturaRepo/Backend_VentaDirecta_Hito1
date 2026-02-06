@@ -6,16 +6,25 @@ import java.util.List;
 public interface DropdownService {
 
     // Métodos existentes
+    List<DropdownDTO> getSiteCompuesto();
     List<DropdownDTO> getClientes();
     List<DropdownDTO> getAreas(); // <-- AGREGAR este método (sin filtro por cliente)
     List<DropdownDTO> getAreasByCliente(Integer idCliente);
     List<DropdownDTO> getProyectos();
     List<DropdownDTO> getFases();
     List<DropdownDTO> getSites();
+    List<DropdownDTO> getSiteDescriptions();
     List<DropdownDTO> getRegiones();
     List<DropdownDTO> getEstadosOt(); // <-- AGREGAR este método
     List<DropdownDTO> getOtsActivas();
-
+    List<DropdownDTO> getCargos();
+    List<DropdownDTO> getEmpresas();
+    List<DropdownDTO> getTrabajadores();
+    List<DropdownDTO> getNivelesAll();
+    List<DropdownDTO> getTrabajadoresSinUsuarioActivo();
+    // Nuevos métodos para Site
+    List<DropdownDTO> getDescripcionesBySiteCodigo(String codigoSite);
+    List<DropdownDTO> getSitesConDescripciones();
     // Nuevos métodos para responsables
     List<DropdownDTO> getJefaturasClienteSolicitante();
     List<DropdownDTO> getAnalistasClienteSolicitante();
@@ -24,7 +33,7 @@ public interface DropdownService {
     List<DropdownDTO> getLiquidador();
     List<DropdownDTO> getEjecutantes();
     List<DropdownDTO> getAnalistasContable();
-
+    List<DropdownDTO> getOtTipo();
     List<DropdownDTO> getMaestroCodigos();
     List<DropdownDTO> getProveedores();
 }

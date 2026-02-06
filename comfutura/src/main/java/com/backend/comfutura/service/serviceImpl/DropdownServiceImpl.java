@@ -1,12 +1,17 @@
 package com.backend.comfutura.service.serviceImpl;
 
+import com.backend.comfutura.model.Site;
+import com.backend.comfutura.model.SiteDescripcion;
 import com.backend.comfutura.record.DropdownDTO;
 import com.backend.comfutura.repository.*;
 import com.backend.comfutura.service.DropdownService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
@@ -24,11 +29,16 @@ public class DropdownServiceImpl implements DropdownService {
     private final TrabajadorRepository trabajadorRepository;
     private final MaestroCodigoRepository maestroCodigoRepository;
     private final ProveedorRepository proveedorRepository;
+    private final CargoRepository cargoRepository;
+    private final EmpresaRepository empresaRepository;
+    private final NivelRepository nivelRepository;
+    private final EstadoOtRepository estadoOtRepository;
+    private final SiteDescripcionRepository siteDescripcionRepository;
+    private final TipoOtRepository tipoOtRepository;
 
     // Nuevos repositorios para los responsables (agrega estos en tu proyecto)
     private final JefaturaClienteSolicitanteRepository jefaturaClienteSolicitanteRepository;
     private final AnalistaClienteSolicitanteRepository analistaClienteSolicitanteRepository;
-    private final EstadoOtRepository estadoOtRepository; // <-- AGREGAR este repositorio
 
     // ────────────────────────────────────────────────────────
     // Métodos existentes (sin cambios)
@@ -45,9 +55,62 @@ public class DropdownServiceImpl implements DropdownService {
     public List<DropdownDTO> getAreas() {
         return areaRepository.findByActivoTrueOrderByNombreAsc()
                 .stream()
-                .map(a -> new DropdownDTO(a.getIdArea(), a.getNombre()))
+                .map(a -> new DropdownDTO(a.getIdArea(), a.getNombre() ,null,a.getActivo()))
                 .collect(Collectors.toList());
     }
+    @Override
+    public List<DropdownDTO> getCargos() {
+        return cargoRepository.findByActivoTrueOrderByNombreAsc()
+                .stream()
+                .map(c -> new DropdownDTO(
+                        c.getIdCargo(),
+                        c.getNombre()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getEmpresas() {
+        return empresaRepository.findByActivoTrueOrderByNombreAsc()
+                .stream()
+                .map(e -> new DropdownDTO(
+                        e.getId(),
+                        e.getNombre()
+                ))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getTrabajadores() {
+        return trabajadorRepository.findByActivoTrueOrderByNombresAsc()
+                .stream()
+                .map(e -> new DropdownDTO(
+                        e.getIdTrabajador(),
+                        e.getNombres() +" "+ e.getApellidos()
+                ))
+                .collect(Collectors.toList());    }
+
+    @Override
+    public List<DropdownDTO> getTrabajadoresSinUsuarioActivo() {
+        return trabajadorRepository.findTrabajadoresActivosSinUsuario()
+                .stream()
+                .map(e -> new DropdownDTO(
+                        e.getIdTrabajador(),
+                        e.getNombres() +" "+ e.getApellidos()
+                ))
+                .collect(Collectors.toList());    }
+
+    @Override
+    public List<DropdownDTO> getNivelesAll() {
+        return nivelRepository.findAll()
+                .stream()
+                .map(e -> new DropdownDTO(
+                        e.getIdNivel(),
+                        e.getCodigo(),
+                        e.getNombre(),
+                        null
+                ))
+                .collect(Collectors.toList());    }
 
     @Override
     public List<DropdownDTO> getEstadosOt() {
@@ -56,6 +119,8 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(e -> new DropdownDTO(e.getIdEstadoOt(), e.getDescripcion()))
                 .collect(Collectors.toList());
     }
+
+
     @Override
     public List<DropdownDTO> getAreasByCliente(Integer idCliente) {
         // Asumiendo que tienes un método en AreaRepository que filtra por cliente
@@ -109,11 +174,138 @@ public class DropdownServiceImpl implements DropdownService {
                 .stream()
                 .map(s -> new DropdownDTO(
                         s.getIdSite(),
-                        s.getCodigoSitio() + " - " + s.getDescripcion()
+                        s.getCodigoSitio()
+                ))
+                .toList();
+    }
+    @Override
+    public List<DropdownDTO> getDescripcionesBySiteCodigo(String codigoSite) {
+
+        boolean sinCodigo =
+                codigoSite == null ||
+                        codigoSite.trim().isEmpty() ||
+                        codigoSite.trim().equals("-") ||
+                        codigoSite.trim().equalsIgnoreCase("SIN CÓDIGO");
+
+        List<SiteDescripcion> lista;
+
+        if (sinCodigo) {
+            lista = siteDescripcionRepository
+                    .findBySiteCodigoSitioIsNullOrSiteCodigoSitioEmpty();
+        } else {
+            lista = siteDescripcionRepository
+                    .findBySiteCodigoSitioIgnoreCaseAndActivoTrue(codigoSite.trim());
+        }
+
+        return lista.stream()
+                .map(desc -> new DropdownDTO(
+                        desc.getIdSiteDescripcion(),
+                        Optional.ofNullable(desc.getDescripcion()).orElse("").trim(),
+                        sinCodigo ? "SIN CÓDIGO" : codigoSite.trim(),
+                        true
                 ))
                 .collect(Collectors.toList());
     }
 
+
+    @Override
+    public List<DropdownDTO> getSitesConDescripciones() {
+        return siteRepository.findByActivoTrueOrderByCodigoSitioAsc()
+                .stream()
+                .map(site -> {
+                    String codigo = (site.getCodigoSitio() != null && !site.getCodigoSitio().trim().isEmpty())
+                            ? site.getCodigoSitio().trim()
+                            : "SIN CÓDIGO";
+
+                    return new DropdownDTO(
+                            site.getIdSite(),  // ID del site, no de la descripción
+                            codigo,
+                            codigo,  // Código como adicional también
+                            site.getActivo()
+                    );
+                })
+                .distinct()  // Para evitar duplicados si hay sites con el mismo código
+                .collect(Collectors.toList());
+    }@Override
+    public List<DropdownDTO> getSiteCompuesto() {
+        return siteRepository.findByActivoTrueOrderByCodigoSitioAsc().stream()
+                .map(site -> {
+                    String codigo = (site.getCodigoSitio() != null && !site.getCodigoSitio().trim().isEmpty())
+                            ? site.getCodigoSitio().trim()
+                            : "SIN CÓDIGO";
+
+                    // Obtener todas las descripciones activas
+                    List<SiteDescripcion> descripcionesActivas = site.getDescripciones().stream()
+                            .filter(desc -> desc.getActivo() != null && desc.getActivo())
+                            .collect(Collectors.toList());
+
+                    List<DropdownDTO> resultados = new ArrayList<>();
+
+                    if (!descripcionesActivas.isEmpty()) {
+                        // Crear un DTO por cada descripción
+                        for (SiteDescripcion desc : descripcionesActivas) {
+                            String descripcionTexto = desc.getDescripcion() != null
+                                    ? desc.getDescripcion().trim()
+                                    : "";
+
+                            if (!descripcionTexto.isEmpty()) {
+                                // Formato: "CÓDIGO - DESCRIPCIÓN"
+                                String label = codigo + " - " + descripcionTexto;
+
+                                resultados.add(new DropdownDTO(
+                                        desc.getIdSiteDescripcion(),  // Usar ID de descripción
+                                        label,
+                                        codigo,                       // Código como adicional
+                                        true
+                                ));
+                            }
+                        }
+                    } else {
+                        // Si no hay descripciones, crear solo el código
+                        resultados.add(new DropdownDTO(
+                                site.getIdSite(),                    // Usar ID del site
+                                codigo,
+                                codigo,
+                                site.getActivo()
+                        ));
+                    }
+
+                    return resultados;
+                })
+                .flatMap(List::stream)  // Aplanar la lista de listas
+                .sorted(Comparator.comparing(DropdownDTO::label, String.CASE_INSENSITIVE_ORDER))
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<DropdownDTO> getSiteDescriptions() {
+
+        return siteDescripcionRepository
+                .findByActivoTrueOrderBySite_CodigoSitioAscDescripcionAsc()
+                .stream()
+                .map(sd -> new DropdownDTO(
+                        sd.getIdSiteDescripcion(),                 // id real
+                        sd.getDescripcion(),                       // label
+                        sd.getSite().getCodigoSitio(),             // adicional
+                        null                                      // estado opcional
+                ))
+                .toList();
+    }
+
+    @Override
+    public List<DropdownDTO> getOtTipo() {
+
+        return tipoOtRepository
+                .findByActivoTrueOrderByCodigoAsc()
+                .stream()
+                .map(sd -> new DropdownDTO(
+                        sd.getIdTipoOt(),                 // id real
+                        sd.getDescripcion(),                       // label
+                        null,             // adicional
+                        null                                      // estado opcional
+                ))
+                .toList();
+    }
 
     @Override
     public List<DropdownDTO> getRegiones() {
@@ -150,13 +342,23 @@ public class DropdownServiceImpl implements DropdownService {
                 .map(r -> new DropdownDTO(r.getId(), r.getDescripcion()))
                 .collect(Collectors.toList());
     }
+
+
+
+
+
+
+
+
+
     @Override
     public List<DropdownDTO> getCoordinadoresTiCw() {
         return trabajadorRepository
-                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("COORDINADOR TI CW")
+                .findAllByActivoTrueAndPuedeSerCoordinadorTiCwTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
+                        // CAMBIO AQUÍ: Nombres primero, luego apellidos
                         t.getApellidos() + " " + t.getNombres()
                 ))
                 .collect(Collectors.toList());
@@ -165,22 +367,25 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getJefaturasResponsable() {
         return trabajadorRepository
-                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("JEFATURA RESPONSABLE")
+                .findAllByActivoTrueAndPuedeSerJefaturaResponsableTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
-                        t.getApellidos() + " " + t.getNombres()
+                        // CAMBIO AQUÍ: Nombres primero, luego apellidos
+                        t.getNombres() + " " + t.getApellidos()
                 ))
                 .collect(Collectors.toList());
     }
 
+
     @Override
     public List<DropdownDTO> getLiquidador() {
         return trabajadorRepository
-                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("LIQUIDADOR")
+                .findAllByActivoTrueAndPuedeSerLiquidadorTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
+                        // CAMBIO AQUÍ: Nombres primero, luego apellidos
                         t.getApellidos() + " " + t.getNombres()
                 ))
                 .collect(Collectors.toList());
@@ -189,10 +394,11 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getEjecutantes() {
         return trabajadorRepository
-                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("EJECUTANTE")
+                .findAllByActivoTrueAndPuedeSerEjecutanteTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
+                        // CAMBIO AQUÍ: Nombres primero, luego apellidos
                         t.getApellidos() + " " + t.getNombres()
                 ))
                 .collect(Collectors.toList());
@@ -201,10 +407,11 @@ public class DropdownServiceImpl implements DropdownService {
     @Override
     public List<DropdownDTO> getAnalistasContable() {
         return trabajadorRepository
-                .findByActivoTrueAndCargo_NombreOrderByApellidosAsc("ANALISTA CONTABLE")
+                .findAllByActivoTrueAndPuedeSerAnalistaContableTrueOrderByApellidosAsc()
                 .stream()
                 .map(t -> new DropdownDTO(
                         t.getIdTrabajador(),
+                        // CAMBIO AQUÍ: Nombres primero, luego apellidos
                         t.getApellidos() + " " + t.getNombres()
                 ))
                 .collect(Collectors.toList());

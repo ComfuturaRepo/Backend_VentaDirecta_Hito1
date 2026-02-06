@@ -1,0 +1,61 @@
+.timeline {
+  position: relative;
+  padding-left: 40px;
+}
+
+.timeline-item {
+  position: relative;
+  margin-bottom: 30px;
+}
+
+.timeline-line {
+  position: absolute;
+  left: 12px;
+  top: 24px;
+  bottom: -30px;
+  width: 2px;
+  background: #dee2e6;
+}
+
+.timeline-dot {
+  position: absolute;
+  left: 4px;
+  top: 8px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 3px solid #fff;
+  z-index: 2;
+}
+
+/* Colores por estado */
+.dot-aprobado {
+  background-color: #198754;
+}
+
+.dot-pendiente {
+  background-color: #ffc107;
+}
+
+.dot-rechazado {
+  background-color: #dc3545;
+}
+
+.dot-bloqueado {
+  background-color: #6c757d;
+}
+
+.timeline-content {
+  margin-left: 40px;
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .timeline {
+    padding-left: 30px;
+  }
+
+  .timeline-content {
+    margin-left: 30px;
+  }
+}

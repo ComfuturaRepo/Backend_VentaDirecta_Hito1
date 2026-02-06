@@ -6,6 +6,7 @@ import { catchError } from 'rxjs/operators';
 
 import { OtCreateRequest, OtDetailResponse, OtListDto, Page } from '../model/ots';
 import { environment } from '../../environment';
+import { PageResponse } from '../model/page.interface';
 
 @Injectable({
   providedIn: 'root'
@@ -35,7 +36,7 @@ export class OtService {
     page: number = 0,
     size: number = 10,
     sort: string = 'ot,desc'
-  ): Observable<Page<OtListDto>> {
+  ): Observable<PageResponse<OtListDto>> {
     let params = new HttpParams()
       .set('page', page.toString())
       .set('size', size.toString())
@@ -45,7 +46,7 @@ export class OtService {
       params = params.set('search', search.trim());
     }
 
-    return this.http.get<Page<OtListDto>>(this.apiUrl, { params }).pipe(
+    return this.http.get<PageResponse<OtListDto>>(this.apiUrl, { params }).pipe(
       catchError(this.handleError)
     );
   }

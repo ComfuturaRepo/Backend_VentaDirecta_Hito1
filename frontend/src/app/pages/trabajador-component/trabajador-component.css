@@ -1,0 +1,415 @@
+/* Estilos específicos para el componente de trabajadores */
+
+/* Avatar circular */
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+/* Estilos para la tabla */
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+  transition: background-color 0.2s ease;
+}
+
+/* Estilos para los badges */
+.badge {
+  font-size: 0.8em;
+  padding: 0.4em 0.8em;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.bg-success {
+  background-color: #198754 !important;
+}
+
+.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.bg-info {
+  background-color: #0dcaf0 !important;
+}
+
+.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000 !important;
+}
+
+.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+.bg-light {
+  background-color: #f8f9fa !important;
+  color: #212529 !important;
+  border: 1px solid #dee2e6 !important;
+}
+
+/* Estilos para los botones de acción */
+.btn-group-sm .btn {
+  padding: 0.25rem 0.5rem;
+  font-size: 0.875rem;
+  border-radius: 0.2rem;
+}
+
+.btn-group-sm .btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+  transition: all 0.2s ease;
+}
+
+/* Estilos para el modal */
+.modal-content {
+  border: none;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.modal-header {
+  border-bottom: 2px solid rgba(255,255,255,0.1);
+}
+
+.modal-footer {
+  border-top: 1px solid #dee2e6;
+  padding: 1rem;
+}
+
+/* Estilos para campos requeridos */
+.required::after {
+  content: " *";
+  color: #dc3545;
+}
+
+/* Estilos para inputs con error */
+.is-invalid {
+  border-color: #dc3545 !important;
+}
+
+.invalid-feedback {
+  display: block;
+  font-size: 0.875em;
+}
+
+/* Estilos para el switch */
+.form-check-input:checked {
+  background-color: #198754;
+  border-color: #198754;
+}
+
+.form-check-input:focus {
+  box-shadow: 0 0 0 0.25rem rgba(25, 135, 84, 0.25);
+}
+
+/* Estilos para paginación */
+.pagination {
+  margin-bottom: 0;
+}
+
+.page-link {
+  color: #495057;
+  border: 1px solid #dee2e6;
+  margin: 0 2px;
+  border-radius: 4px;
+}
+
+.page-link:hover {
+  color: #0d6efd;
+  background-color: #e9ecef;
+  border-color: #dee2e6;
+}
+
+.page-item.active .page-link {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+  color: white;
+}
+
+/* Estilos para íconos */
+.fa-users-cog {
+  color: #0d6efd;
+}
+
+.fa-user-plus {
+  color: white;
+}
+
+.fa-user-edit {
+  color: white;
+}
+
+.fa-eye {
+  color: #0dcaf0;
+}
+
+.fa-edit {
+  color: #ffc107;
+}
+
+.fa-toggle-on {
+  color: #198754;
+}
+
+.fa-toggle-off {
+  color: #dc3545;
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card, .modal-content {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .btn-group {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px;
+  }
+
+  .btn-group-sm .btn {
+    flex: 1;
+    min-width: 40px;
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  .table-responsive {
+    font-size: 0.9rem;
+  }
+
+  .avatar-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+}
+
+/* Estilos para filtros */
+.card-header {
+  background-color: #f8f9fa;
+  border-bottom: 1px solid #e3e6f0;
+}
+
+/* Estilos para el overlay del modal */
+.modal-backdrop {
+  opacity: 0.5;
+}
+
+/* Estilos para inputs con íconos */
+.input-group-text {
+  background-color: #f8f9fa;
+  border: 1px solid #ced4da;
+}
+
+/* Estilos para cards */
+.card {
+  border: 1px solid #e3e6f0;
+  border-radius: 0.35rem;
+}
+
+.card-header {
+  border-radius: 0.35rem 0.35rem 0 0 !important;
+}
+
+/* Estilos para el estado de loading */
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Estilos para SweetAlert personalizado */
+.swal2-popup {
+  border-radius: 10px !important;
+}
+
+.swal2-title {
+  font-size: 1.5rem !important;
+}
+
+.swal2-html-container {
+  font-size: 1rem !important;
+}
+
+/* Estilos para el formulario en SweetAlert */
+.swal2-input {
+  margin: 0.5rem 0 !important;
+}
+
+/* Efecto hover en filas de tabla */
+.table-hover tbody tr {
+  cursor: pointer;
+}
+
+.table-hover tbody tr:hover td {
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Mejoras para formularios en móviles */
+@media (max-width: 576px) {
+  .modal-body .row {
+    gap: 1rem;
+  }
+
+  .modal-body .col-md-6,
+  .modal-body .col-md-4 {
+    width: 100%;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Scrollbar personalizado para tablas */
+.table-responsive::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Transiciones suaves */
+.btn, .form-control, .form-select {
+  transition: all 0.2s ease;
+}
+
+/* Sombra en hover para botones principales */
+.btn-primary:hover {
+  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
+}
+
+/* Estilos para los tooltips */
+[title] {
+  position: relative;
+}
+
+[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  white-space: nowrap;
+  z-index: 1000;
+}
+
+/* Mejoras para la paginación en móviles */
+@media (max-width: 576px) {
+  .pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .page-item {
+    margin: 2px;
+  }
+}
+
+/* Estilos para el botón de búsqueda por DNI */
+.input-group .btn-outline-secondary:hover {
+  background-color: #6c757d;
+  color: white;
+}
+/* Estilos para el componente de trabajadores */
+.avatar-circle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  font-size: 0.9rem;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(0, 123, 255, 0.05);
+}
+
+.badge {
+  font-size: 0.8em;
+  padding: 0.4em 0.8em;
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+.required::after {
+  content: " *";
+  color: #dc3545;
+}
+
+.is-invalid {
+  border-color: #dc3545 !important;
+}
+
+.invalid-feedback {
+  display: block;
+  font-size: 0.875em;
+}
+
+.form-check-input:checked {
+  background-color: #198754;
+  border-color: #198754;
+}
+
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+@media (max-width: 768px) {
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+  }
+
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+
+  .avatar-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+}

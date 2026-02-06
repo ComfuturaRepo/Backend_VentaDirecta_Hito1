@@ -6,18 +6,26 @@ import java.math.BigDecimal;
 
 @Getter
 @Setter
-@Builder
-@AllArgsConstructor
 @NoArgsConstructor
+@AllArgsConstructor
+@Builder
 public class OcDetalleResponseDTO {
 
     private Integer idOcDetalle;
-    private Integer idOc;          // 👈 ESTE CAMPO FALTABA
+
+    // Maestro/Código
     private Integer idMaestro;
+    private String codigo;
+    private String descripcion;
+    private String unidad;
+
+    // Cantidades y precios
     private BigDecimal cantidad;
     private BigDecimal precioUnitario;
     private BigDecimal subtotal;
     private BigDecimal igv;
     private BigDecimal total;
-}
+    private Integer idOc; // ID de la orden de compra asociada
 
+
+}

@@ -1,16 +1,15 @@
 package com.backend.comfutura.controller;
 
-import com.backend.comfutura.dto.request.OtCreateRequest;
-import com.backend.comfutura.dto.response.OtDetailResponse;
-import com.backend.comfutura.dto.response.OtFullResponse;
-import com.backend.comfutura.dto.response.OtListDto;
+import com.backend.comfutura.dto.Page.PageResponseDTO;
+import com.backend.comfutura.dto.request.otDTO.OtCreateRequest;
+import com.backend.comfutura.dto.response.otDTO.OtDetailResponse;
+import com.backend.comfutura.dto.response.otDTO.OtFullResponse;
+import com.backend.comfutura.dto.response.otDTO.OtListDto;
 import com.backend.comfutura.service.OtService;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,11 +20,11 @@ public class OtController {
     private final OtService otService;
 
     @GetMapping
-    public ResponseEntity<Page<OtListDto>> listar(
+    public ResponseEntity<PageResponseDTO<OtListDto>> listar(
             @RequestParam(required = false) String search,
             Pageable pageable) {
-        Page<OtListDto> page = otService.listarOts(search, pageable);
-        return ResponseEntity.ok(page);
+        PageResponseDTO<OtListDto> response = otService.listarOts(search, pageable);
+        return ResponseEntity.ok(response);
     }
 
 

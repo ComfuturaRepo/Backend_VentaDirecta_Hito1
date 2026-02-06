@@ -19,4 +19,6 @@ public class Empresa {
     private String nombre;
 
     private Boolean activo = true;
+    private String ruc;
+    private String direccion;
 }

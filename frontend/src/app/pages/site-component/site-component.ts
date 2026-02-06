@@ -3,53 +3,100 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Subscription, debounceTime, distinctUntilChanged, Subject } from 'rxjs';
 import Swal from 'sweetalert2';
-
-import { Site } from '../../model/site.interface';
+import { PaginationComponent } from '../../component/pagination.component/pagination.component';
+import { DEFAULT_PAGINATION_CONFIG, PageResponse } from '../../model/page.interface';
+import { Site, SiteRequest, SiteDescripcionRequest } from '../../model/site.interface';
 import { SiteService } from '../../service/site.service';
-import { Page } from '../../model/ots';
+import { DropdownItem, DropdownService } from '../../service/dropdown.service';
+import { NgselectDropdownComponent } from '../../component/ngselect-dropdown-component/ngselect-dropdown-component';
+import { PermisoDirective } from '../../directive/permiso.directive';
 
 @Component({
   selector: 'app-site',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule, PaginationComponent, NgselectDropdownComponent,PermisoDirective],
   templateUrl: './site-component.html',
   styleUrls: ['./site-component.css']
 })
 export class SiteComponent implements OnInit, OnDestroy {
   // Datos principales
   sites: Site[] = [];
-  filteredSites: Site[] = [];
-  currentPage = 0;
-  pageSize = 10;
-  totalElements = 0;
-  totalPages = 0;
+
+  // Configuración de paginación
+  paginationConfig = {
+    showInfo: true,
+    showSizeSelector: true,
+    showNavigation: true,
+    showJumpToPage: true,
+    showPageNumbers: true,
+    pageSizes: [10, 25, 50, 100],
+    maxPageNumbers: 5,
+    align: 'center' as const,
+    size: 'md' as const
+  };
 
   // Filtro con debounce
-  searchDescripcion: string = '';
+  searchTerm: string = '';
   private searchSubject = new Subject<string>();
   private searchSubscription?: Subscription;
+
+  // Estado del filtro activo
+  filterActivos?: boolean;
 
   // Formulario modal
   showModal = false;
   isEditMode = false;
-  currentSite: Site = { codigoSitio: '', descripcion: '', activo: true };
+  currentSite: Site = { codigoSitio: '', descripciones: [] };
   formSubmitted = false;
+  descripcionesTemporal: string[] = [''];
+
+  // Dropdown para sitios compuestos
+  siteOptions: DropdownItem[] = [];
+  selectedSiteId: number | null = null;
 
   // Loading y mensajes
   isLoading = false;
   isTableLoading = false;
   errorMessage: string = '';
 
-  // Paginación visible
-  visiblePages: number[] = [];
+  // Paginación
+  currentPage = 0;
+  pageSize = 10;
+  totalElements = 0;
+  totalPages = 0;
 
-  constructor(private siteService: SiteService) {}
+  constructor(
+    private siteService: SiteService,
+    private dropdownService: DropdownService
+  ) {
+    // Configuración específica para este componente
+    this.paginationConfig.pageSizes = [10, 25, 50, 100];
+    this.paginationConfig.showInfo = true;
+    this.paginationConfig.showSizeSelector = true;
+    this.paginationConfig.showNavigation = true;
+    this.paginationConfig.showJumpToPage = true;
+    this.paginationConfig.showPageNumbers = true;
+    this.paginationConfig.align = 'center';
+    this.paginationConfig.size = 'md';
+  }
 
   ngOnInit(): void {
     this.setupSearchDebounce();
     this.loadSites();
+    this.loadSiteOptions();
+  }
+isFormValid(): boolean {
+  if (!this.formSubmitted) {
+    return true;
   }
 
+  // Verificar que haya al menos una descripción válida
+  const hasValidDescription = this.descripcionesTemporal.some(
+    desc => desc && desc.trim() !== ''
+  );
+
+  return hasValidDescription;
+}
   ngOnDestroy(): void {
     this.searchSubscription?.unsubscribe();
   }
@@ -60,85 +107,111 @@ export class SiteComponent implements OnInit, OnDestroy {
         debounceTime(300),
         distinctUntilChanged()
       )
-      .subscribe(() => {
-        this.onSearchChange();
+      .subscribe((searchTerm) => {
+        if (searchTerm.trim() === '') {
+          this.clearSearch();
+        } else {
+          this.performSearch();
+        }
       });
   }
 
   onSearchInput(): void {
-    this.searchSubject.next(this.searchDescripcion);
+    this.searchSubject.next(this.searchTerm);
   }
 
-  loadSites(page: number = this.currentPage): void {
+  // Método principal para cargar sites
+  loadSites(page: number = this.currentPage, useFilter: boolean = true): void {
     this.isTableLoading = true;
     this.errorMessage = '';
 
-    this.siteService.listar(page, this.pageSize).subscribe({
-      next: (response: Page<Site>) => {
-        this.sites = response.content;
-        this.filteredSites = [...this.sites];
-        this.currentPage = response.number;
-        this.totalElements = response.totalElements;
-        this.totalPages = response.totalPages;
-        this.updateVisiblePages();
-        this.isTableLoading = false;
-
-        // Aplicar filtro si hay búsqueda activa
-        if (this.searchDescripcion.trim()) {
-          this.applyFilter();
-        }
+    this.siteService.listar(
+      page,
+      this.pageSize,
+      'codigoSitio',
+      'asc',
+      useFilter ? this.filterActivos : undefined
+    ).subscribe({
+      next: (response: PageResponse<Site>) => {
+        this.handleSuccessResponse(response, page);
       },
       error: (err) => {
-        this.errorMessage = 'Error al cargar los sitios. Por favor, intente nuevamente.';
-        console.error('Error cargando sitios:', err);
-        this.isTableLoading = false;
-        
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudieron cargar los sitios',
-          confirmButtonColor: '#ef4444'
-        });
+        this.handleError(err, 'Error al cargar los sitios');
       }
     });
   }
 
-  applyFilter(): void {
-    const term = this.searchDescripcion.toLowerCase().trim();
-    
-    if (!term) {
-      this.filteredSites = [...this.sites];
+  // Cargar opciones para dropdown de sitios compuestos
+  loadSiteOptions(): void {
+    this.dropdownService.getSiteCompuesto().subscribe({
+      next: (options) => {
+        this.siteOptions = options;
+      },
+      error: (err) => {
+        console.error('Error cargando opciones de sitios:', err);
+      }
+    });
+  }
+
+  // Realizar búsqueda por texto
+  performSearch(): void {
+    if (!this.searchTerm.trim()) {
+      this.loadSites(0, false);
       return;
     }
 
-    this.filteredSites = this.sites.filter(site =>
-      (site.descripcion || '').toLowerCase().includes(term) ||
-      (site.codigoSitio || '').toLowerCase().includes(term) ||
-      (site.idSite?.toString() || '').includes(term)
-    );
+    this.isTableLoading = true;
+    this.siteService.buscar(this.searchTerm, this.currentPage, this.pageSize)
+      .subscribe({
+        next: (response: PageResponse<Site>) => {
+          this.handleSuccessResponse(response, this.currentPage);
+        },
+        error: (err) => {
+          this.handleError(err, 'Error en la búsqueda');
+        }
+      });
   }
 
-  onSearchChange(): void {
-    if (this.searchDescripcion.trim() === '') {
-      this.filteredSites = [...this.sites];
+  // Limpiar búsqueda
+  clearSearch(): void {
+    this.searchTerm = '';
+    this.currentPage = 0;
+    this.loadSites(0, true);
+  }
+
+  // Cambiar filtro de activos
+  changeFilterActivos(filter?: boolean): void {
+    this.filterActivos = filter;
+    this.currentPage = 0;
+    this.loadSites(0, true);
+  }
+
+  // Métodos auxiliares para la vista
+  getFilterButtonClass(filterValue?: boolean, currentFilter?: boolean): string {
+    if (filterValue === undefined) {
+      return currentFilter === undefined ? 'btn-primary' : 'btn-outline-primary';
     } else {
-      this.applyFilter();
+      return currentFilter === filterValue
+        ? (filterValue ? 'btn-success' : 'btn-secondary')
+        : (filterValue ? 'btn-outline-success' : 'btn-outline-secondary');
     }
   }
 
-  clearSearch(): void {
-    this.searchDescripcion = '';
-    this.filteredSites = [...this.sites];
+  getFilterButtonText(filterValue?: boolean): string {
+    if (filterValue === undefined) return 'Todos';
+    return filterValue ? 'Activos' : 'Inactivos';
   }
 
+  // Modal methods
   openCreateModal(): void {
     this.isEditMode = false;
     this.formSubmitted = false;
-    this.currentSite = { 
-      codigoSitio: '', 
-      descripcion: '', 
-      activo: true 
+    this.currentSite = {
+      codigoSitio: '',
+      descripciones: []
     };
+    this.descripcionesTemporal = [''];
+    this.selectedSiteId = null;
     this.showModal = true;
     this.errorMessage = '';
   }
@@ -146,62 +219,102 @@ export class SiteComponent implements OnInit, OnDestroy {
   openEditModal(site: Site): void {
     this.isEditMode = true;
     this.formSubmitted = false;
-    this.currentSite = { ...site };
+
+    this.currentSite = {
+      idSite: site.idSite,
+      codigoSitio: site.codigoSitio || '',
+      activo: site.activo ?? true,
+      descripciones: [...site.descripciones]
+    };
+
+    // Convertir descripciones a array temporal para edición
+    this.descripcionesTemporal = site.descripciones.map(d => d.descripcion);
+    if (this.descripcionesTemporal.length === 0) {
+      this.descripcionesTemporal = [''];
+    }
+
     this.showModal = true;
     this.errorMessage = '';
+  }
+
+  openDuplicateModal(): void {
+    if (this.selectedSiteId) {
+      this.siteService.obtenerPorId(this.selectedSiteId).subscribe({
+        next: (site) => {
+          this.isEditMode = false;
+          this.formSubmitted = false;
+          this.currentSite = {
+            codigoSitio: `${site.codigoSitio}_COPIA`,
+            activo: site.activo ?? true,
+            descripciones: [...site.descripciones]
+          };
+          this.descripcionesTemporal = site.descripciones.map(d => d.descripcion);
+          this.showModal = true;
+          this.selectedSiteId = null;
+        },
+        error: (err) => {
+          this.handleError(err, 'Error al cargar sitio para duplicar');
+        }
+      });
+    }
+  }
+
+  // Métodos para manejar descripciones
+  addDescripcion(): void {
+    this.descripcionesTemporal.push('');
+  }
+
+  removeDescripcion(index: number): void {
+    this.descripcionesTemporal.splice(index, 1);
+    if (this.descripcionesTemporal.length === 0) {
+      this.descripcionesTemporal.push('');
+    }
+  }
+
+  trackByIndex(index: number): number {
+    return index;
   }
 
   saveSite(): void {
     this.formSubmitted = true;
 
-    if (!this.currentSite.codigoSitio.trim()) {
-      this.errorMessage = 'El código de sitio es obligatorio';
+    // Validar que haya al menos una descripción válida
+    const descripcionesValidas = this.descripcionesTemporal
+      .filter(desc => desc.trim() !== '')
+      .map(desc => desc.trim());
+
+    if (descripcionesValidas.length === 0) {
+      this.errorMessage = 'Debe ingresar al menos una descripción';
       return;
     }
 
-    if (this.currentSite.codigoSitio.length > 20) {
-      this.errorMessage = 'El código no puede exceder los 20 caracteres';
+    // Validar códigos de sitio únicos
+    if (this.currentSite.codigoSitio && this.currentSite.codigoSitio.length > 150) {
+      this.errorMessage = 'El código no puede exceder los 150 caracteres';
       return;
     }
 
-    if (this.currentSite.descripcion && this.currentSite.descripcion.length > 150) {
-      this.errorMessage = 'La descripción no puede exceder los 150 caracteres';
-      return;
-    }
+    // Crear request con descripciones
+    const siteRequest: SiteRequest = {
+      codigoSitio: this.currentSite.codigoSitio || undefined,
+      activo: this.currentSite.activo ?? true,
+      descripciones: descripcionesValidas.map(descripcion => ({
+        descripcion,
+        activo: true
+      }))
+    };
 
     this.isLoading = true;
     this.errorMessage = '';
 
-    this.siteService.guardar(this.currentSite).subscribe({
-      next: () => {
-        this.showModal = false;
-        
-        Swal.fire({
-          icon: 'success',
-          title: '¡Guardado exitoso!',
-          text: this.isEditMode 
-            ? 'El sitio ha sido actualizado correctamente.'
-            : 'El nuevo sitio ha sido creado correctamente.',
-          timer: 2000,
-          showConfirmButton: false,
-          timerProgressBar: true
-        });
-        
-        this.loadSites(this.currentPage);
-        this.isLoading = false;
+    const id = this.isEditMode ? this.currentSite.idSite : undefined;
+
+    this.siteService.guardar(siteRequest, id).subscribe({
+      next: (savedSite) => {
+        this.handleSaveSuccess(savedSite);
       },
       error: (err) => {
-        const errorMessage = err?.error?.message || 'Error al guardar el sitio.';
-        this.errorMessage = errorMessage;
-        console.error('Error guardando sitio:', err);
-        this.isLoading = false;
-        
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: errorMessage,
-          confirmButtonColor: '#ef4444'
-        });
+        this.handleSaveError(err);
       }
     });
   }
@@ -210,17 +323,20 @@ export class SiteComponent implements OnInit, OnDestroy {
     this.showModal = false;
     this.formSubmitted = false;
     this.errorMessage = '';
+    this.isLoading = false;
+    this.descripcionesTemporal = [''];
+    this.selectedSiteId = null;
   }
 
   toggleActivo(site: Site): void {
     if (!site.idSite) {
-      this.errorMessage = 'El sitio no tiene un ID válido';
+      this.showError('El sitio no tiene un ID válido');
       return;
     }
 
     const accion = site.activo ? 'desactivar' : 'activar';
     const titulo = site.activo ? 'Desactivar Sitio' : 'Activar Sitio';
-    const texto = site.activo 
+    const texto = site.activo
       ? '¿Está seguro de que desea desactivar este sitio? No estará disponible para nuevas asignaciones.'
       : '¿Está seguro de que desea activar este sitio? Estará disponible para nuevas asignaciones.';
 
@@ -236,78 +352,138 @@ export class SiteComponent implements OnInit, OnDestroy {
     }).then((result) => {
       if (result.isConfirmed) {
         this.isLoading = true;
-        
-        // Aseguramos que idSite es number
-        const siteId = site.idSite as number;
-        
-        this.siteService.toggle(siteId).subscribe({
+
+        this.siteService.toggle(site.idSite!).subscribe({
           next: () => {
-            site.activo = !site.activo;
-            
-            Swal.fire({
-              icon: 'success',
-              title: '¡Estado actualizado!',
-              text: `El sitio ha sido ${accion}do correctamente.`,
-              timer: 1500,
-              showConfirmButton: false
-            });
-            
+            const index = this.sites.findIndex(s => s.idSite === site.idSite);
+            if (index !== -1) {
+              this.sites[index].activo = !this.sites[index].activo;
+            }
+
+            this.showSuccess(`El sitio ha sido ${accion}do correctamente.`);
             this.isLoading = false;
           },
           error: (err) => {
-            const errorMessage = `No se pudo ${accion} el sitio`;
-            this.errorMessage = errorMessage;
-            console.error(`Error ${accion}do sitio:`, err);
-            this.isLoading = false;
-            
-            Swal.fire({
-              icon: 'error',
-              title: 'Error',
-              text: err?.error?.message || errorMessage,
-              confirmButtonColor: '#ef4444'
-            });
+            this.handleError(err, `No se pudo ${accion} el sitio`);
           }
         });
       }
     });
   }
 
-  // Paginación
-  goToPage(page: number): void {
-    if (page >= 0 && page < this.totalPages && page !== this.currentPage) {
-      this.currentPage = page;
-      this.loadSites(page);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+
+
+  // Métodos para paginación
+  onPageChange(page: number): void {
+    this.currentPage = page;
+    if (this.searchTerm.trim()) {
+      this.performSearch();
+    } else {
+      this.loadSites(page, this.filterActivos !== undefined);
     }
   }
 
-  previousPage(): void {
-    if (this.currentPage > 0) {
-      this.goToPage(this.currentPage - 1);
+  onPageSizeChange(size: number): void {
+    this.pageSize = size;
+    this.currentPage = 0;
+    if (this.searchTerm.trim()) {
+      this.performSearch();
+    } else {
+      this.loadSites(0, this.filterActivos !== undefined);
     }
   }
 
-  nextPage(): void {
-    if (this.currentPage < this.totalPages - 1) {
-      this.goToPage(this.currentPage + 1);
+  onRefresh(): void {
+    if (this.searchTerm.trim()) {
+      this.performSearch();
+    } else {
+      this.loadSites(this.currentPage, this.filterActivos !== undefined);
     }
   }
 
-  updateVisiblePages(): void {
-    const maxVisible = 5;
-    const start = Math.max(0, Math.min(
-      this.currentPage - Math.floor(maxVisible / 2),
-      this.totalPages - maxVisible
-    ));
-    const end = Math.min(start + maxVisible, this.totalPages);
-    
-    this.visiblePages = Array.from(
-      { length: end - start }, 
-      (_, i) => start + i
-    );
+  // Métodos auxiliares
+  private handleSuccessResponse(response: PageResponse<Site>, page: number): void {
+    this.sites = response.content;
+    this.currentPage = response.currentPage;
+    this.totalElements = response.totalItems;
+    this.totalPages = response.totalPages;
+    this.pageSize = response.pageSize;
+    this.isTableLoading = false;
   }
 
-  // Métodos auxiliares para la vista
+  private handleError(err: any, defaultMessage: string): void {
+    const errorMessage = err?.error?.message || err?.message || defaultMessage;
+    this.errorMessage = errorMessage;
+    console.error('Error:', err);
+    this.isTableLoading = false;
+    this.isLoading = false;
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: errorMessage,
+      confirmButtonColor: '#ef4444'
+    });
+  }
+
+  private handleSaveSuccess(savedSite: Site): void {
+    this.showModal = false;
+    this.descripcionesTemporal = [''];
+
+    Swal.fire({
+      icon: 'success',
+      title: '¡Guardado exitoso!',
+      text: this.isEditMode
+        ? 'El sitio ha sido actualizado correctamente.'
+        : 'El nuevo sitio ha sido creado correctamente.',
+      timer: 2000,
+      showConfirmButton: false,
+      timerProgressBar: true
+    });
+
+    if (this.searchTerm.trim()) {
+      this.performSearch();
+    } else {
+      this.loadSites(this.currentPage, this.filterActivos !== undefined);
+    }
+
+    this.isLoading = false;
+  }
+
+  private handleSaveError(err: any): void {
+    const errorMessage = err?.error?.message || 'Error al guardar el sitio.';
+    this.errorMessage = errorMessage;
+    console.error('Error guardando sitio:', err);
+    this.isLoading = false;
+
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: errorMessage,
+      confirmButtonColor: '#ef4444'
+    });
+  }
+
+  private showSuccess(message: string): void {
+    Swal.fire({
+      icon: 'success',
+      title: '¡Éxito!',
+      text: message,
+      timer: 1500,
+      showConfirmButton: false
+    });
+  }
+
+  private showError(message: string): void {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: message,
+      confirmButtonColor: '#ef4444'
+    });
+  }
+
+  // Métodos para la vista
   getStatusBadgeClass(activo?: boolean): string {
     return activo ? 'bg-success' : 'bg-secondary';
   }
@@ -320,17 +496,6 @@ export class SiteComponent implements OnInit, OnDestroy {
     return activo ? 'bi-check-circle' : 'bi-x-circle';
   }
 
-  getTotalDisplayed(): number {
-    return this.filteredSites.length;
-  }
-
-  getCurrentRange(): string {
-    const start = this.currentPage * this.pageSize + 1;
-    const end = Math.min((this.currentPage + 1) * this.pageSize, this.totalElements);
-    return `${start}-${end}`;
-  }
-
-  // Métodos para contar sitios activos/inactivos
   getActiveSitesCount(): number {
     return this.sites.filter(s => s.activo === true).length;
   }
@@ -339,10 +504,33 @@ export class SiteComponent implements OnInit, OnDestroy {
     return this.sites.filter(s => s.activo === false).length;
   }
 
-  // Método para manejar el cambio de página desde el input
-  getInputPage(event: Event): number {
-    const input = event.target as HTMLInputElement;
-    const page = parseInt(input.value, 10) - 1;
-    return isNaN(page) ? this.currentPage : Math.max(0, Math.min(page, this.totalPages - 1));
+  getTotalSitesCount(): number {
+    return this.sites.length;
+  }
+
+  getCurrentRange(): string {
+    const start = this.currentPage * this.pageSize + 1;
+    const end = Math.min((this.currentPage + 1) * this.pageSize, this.totalElements);
+    return `${start}-${end}`;
+  }
+
+  // Helper para mostrar descripciones en tarjetas
+  getDescripcionesDisplay(descripciones: SiteDescripcionRequest[]): string {
+    if (!descripciones || descripciones.length === 0) return 'Sin descripciones';
+    return descripciones.map(d => d.descripcion).join(', ');
+  }
+
+  // Helper para mostrar primera descripción
+  getFirstDescripcion(descripciones: SiteDescripcionRequest[]): string {
+    if (!descripciones || descripciones.length === 0) return 'Sin descripción';
+    return descripciones[0].descripcion;
+  }
+
+  onSiteSelectionChange(event: any): void {
+    if (event) {
+      this.selectedSiteId = event.id;
+    } else {
+      this.selectedSiteId = null;
+    }
   }
 }

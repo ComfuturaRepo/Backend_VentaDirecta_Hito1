@@ -1,0 +1,206 @@
+/* Estilos principales */
+.container-fluid {
+  background-color: #f8f9fa;
+}
+
+/* Notificaciones */
+.notifications-container {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  width: 350px;
+  z-index: 9999;
+}
+
+.notifications-container .alert {
+  border: none;
+  border-left: 4px solid;
+  border-radius: 6px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.alert-success {
+  border-left-color: #198754;
+  background-color: #f1f9f5;
+}
+
+.alert-danger {
+  border-left-color: #dc3545;
+  background-color: #fdf2f3;
+}
+
+.alert-warning {
+  border-left-color: #ffc107;
+  background-color: #fffbf0;
+}
+
+.alert-info {
+  border-left-color: #0dcaf0;
+  background-color: #f0f9ff;
+}
+
+/* Tabla */
+.table-hover tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.table thead th {
+  border-top: none;
+  font-weight: 600;
+  color: #495057;
+  background-color: #f8f9fa;
+}
+
+.table td {
+  vertical-align: middle;
+}
+
+/* Badges */
+.badge {
+  font-weight: 500;
+  padding: 0.35em 0.65em;
+}
+
+.badge.bg-success {
+  background-color: #198754 !important;
+}
+
+.badge.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+/* Cards */
+.card {
+  border: none;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+  transition: box-shadow 0.2s;
+}
+
+.card:hover {
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+/* Modal */
+.modal-content {
+  border: none;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.modal-header {
+  border-bottom: 1px solid #e9ecef;
+}
+
+.modal-footer {
+  border-top: 1px solid #e9ecef;
+}
+
+/* Inputs y formularios */
+.form-control:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.1);
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+/* Required label */
+.required::after {
+  content: " *";
+  color: #dc3545;
+}
+
+/* Botones */
+.btn {
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.btn-outline-primary:hover {
+  background-color: #0d6efd;
+  color: white;
+}
+
+/* Paginación */
+.card-footer {
+  background-color: white;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .notifications-container {
+    width: calc(100% - 40px);
+    top: 10px;
+    right: 10px;
+    left: 10px;
+  }
+
+  .table-responsive {
+    font-size: 0.875rem;
+  }
+
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+  }
+
+  .card-header .d-flex {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+}
+
+/* Animaciones */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+
+/* Loading */
+.spinner-border {
+  color: #0d6efd;
+}
+
+/* Áreas seleccionadas */
+.border-primary {
+  border-color: #0d6efd !important;
+  background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Scroll suave */
+.table-container {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+/* Tooltips */
+[title] {
+  position: relative;
+}
+
+[title]:hover::after {
+  content: attr(title);
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #333;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  z-index: 1000;
+  margin-bottom: 0.25rem;
+}
+
+/* Estados deshabilitados */
+:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}

@@ -16,8 +16,23 @@ public interface OtsRepository extends JpaRepository<Ots, Integer>, JpaSpecifica
     Optional<Ots> findByOt(Integer ot);
 
     Page<Ots> findByActivo(Boolean activo, Pageable pageable);
+    @Query("""
+    SELECT MAX(o.ot)
+    FROM Ots o
+    WHERE o.ot BETWEEN :inicio AND :fin
+""")
+    Integer findUltimoOtEntre(@Param("inicio") Integer inicio,
+                              @Param("fin") Integer fin);
 
-    Optional<Ots> findTopByOrderByOtDesc();
+    @Query("""
+    SELECT o FROM Ots o
+    WHERE o.ot BETWEEN :inicio AND :fin
+    ORDER BY o.ot DESC
+""")
+    Optional<Ots> findUltimaOtDelAnio(
+            @Param("inicio") Integer inicio,
+            @Param("fin") Integer fin
+    );
 
     @Query("SELECT o FROM Ots o " +
             "LEFT JOIN FETCH o.cliente " +
@@ -56,4 +71,22 @@ public interface OtsRepository extends JpaRepository<Ots, Integer>, JpaSpecifica
     Optional<Ots> findByOtWithAllRelations(@Param("ot") Integer ot);
 
     List<Ots> findByActivoTrueOrderByOtAsc();
+
+    // Método 1: Usando MAX (más seguro)
+    @Query("SELECT MAX(o.ot) FROM Ots o WHERE o.ot BETWEEN :inicio AND :fin")
+    Optional<Integer> findMaxOtInRange(
+            @Param("inicio") Integer inicio,
+            @Param("fin") Integer fin
+    );
+
+    // Método 2: Alternativa por año
+    @Query("SELECT MAX(o.ot) FROM Ots o WHERE EXTRACT(YEAR FROM o.fechaApertura) = :anio")
+    Optional<Integer> findMaxOtByYear(@Param("anio") Integer anio);
+
+    // Método 3: Para debugging
+    @Query("SELECT o.ot FROM Ots o WHERE o.ot BETWEEN :inicio AND :fin ORDER BY o.ot DESC")
+    List<Integer> findAllOtsInRange(
+            @Param("inicio") Integer inicio,
+            @Param("fin") Integer fin
+    );
 }

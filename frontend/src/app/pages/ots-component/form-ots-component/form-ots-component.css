@@ -1,298 +1,334 @@
-/* Contenedor principal */
+/* Estilos optimizados para formulario en modal - Tema claro con grises */
 .form-ots-container {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: #f8f9fa;
+  height: 100vh;
   display: flex;
   flex-direction: column;
-  min-height: 100vh;
-  background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
-  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-}
-
-/* Header del formulario */
-.form-header {
-  background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
-  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.15);
-  position: relative;
   overflow: hidden;
+  position: relative;
 }
 
-.form-header::before {
-  content: '';
-  position: absolute;
+/* Contenedor principal */
+.form-main-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: #fff;
+  position: relative;
+}
+
+/* Header dentro del contenedor */
+.form-header {
+  flex-shrink: 0;
+  z-index: 10;
+  background: #fff;
+  position: sticky;
   top: 0;
-  right: 0;
-  width: 150px;
-  height: 150px;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 50%;
-  transform: translate(40%, -40%);
+  width: 100%;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.header-top {
+  background: linear-gradient(135deg, #4361ee 0%, #3a56d4 100%);
 }
 
 .header-icon {
-  transition: transform 0.3s ease;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 10px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.header-icon:hover {
-  transform: scale(1.05);
+.header-text h1 {
+  font-weight: 600;
+  letter-spacing: -0.01em;
 }
 
-.user-info {
-  background: rgba(255, 255, 255, 0.15);
-  backdrop-filter: blur(10px);
+/* Indicador de pasos */
+.header-steps {
+  background: #fff;
+  border-bottom: 1px solid #e9ecef;
 }
 
-/* Navegación de pasos */
-.steps-navigation {
-  position: sticky;
-  top: 0;
-  z-index: 100;
-  backdrop-filter: blur(10px);
+.steps-indicator {
+  max-width: 500px;
+  margin: 0 auto;
 }
 
-.step-btn {
+/* Círculos de paso */
+.step-circle {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
   background: #e9ecef;
   color: #6c757d;
-  transition: all 0.3s ease;
-  position: relative;
-  overflow: hidden;
-}
-
-.step-btn:hover:not(.active):not(.completed) {
-  background: #dee2e6;
-  transform: translateY(-1px);
-}
-
-.step-btn.active {
-  background: #0d6efd;
-  color: white;
-  box-shadow: 0 4px 8px rgba(13, 110, 253, 0.3);
-}
-
-.step-btn.completed {
-  background: #198754;
-  color: white;
-}
-
-.step-btn.completed::after {
-  content: '✓';
-  position: absolute;
-  right: 10px;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 0.9em;
-}
-
-.step-divider {
-  color: #adb5bd;
-}
-
-/* Contenido con scroll */
-.form-content-scrollable {
-  flex: 1;
-  overflow-y: auto;
-  max-height: calc(100vh - 200px);
-  padding-bottom: 20px;
-}
-
-/* Estilos para cada paso */
-.step-content {
-  animation-duration: 0.4s;
-}
-
-.step-title {
-  color: #2c3e50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 600;
   position: relative;
+  font-size: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.step-title::after {
-  content: '';
+.step-circle.active {
+  background: #4361ee;
+  color: #fff;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+}
+
+.step-circle.completed {
+  background: #10b981;
+  color: #fff;
+}
+
+.step-check {
   position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 60px;
-  height: 3px;
-  background: #0d6efd;
-  border-radius: 2px;
+  font-size: 14px;
 }
 
-/* Formularios mejorados */
-.form-group {
-  margin-bottom: 1.5rem;
+/* Líneas entre pasos */
+.step-line {
+  flex: 1;
+  max-width: 60px;
+  height: 2px;
+  background: #e9ecef;
+  transition: background 0.3s ease;
 }
 
+.step-line.completed {
+  background: #10b981;
+}
+
+.step-label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6c757d;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Barra de progreso */
+.progress-container .progress {
+  height: 6px;
+  border-radius: 3px;
+  background: #e9ecef;
+}
+
+.progress-container .progress-bar {
+  background: #4361ee;
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+/* Contenido del formulario con scroll */
+.form-content-wrapper {
+  flex: 1;
+  overflow: hidden;
+  position: relative;
+  background: #f8f9fa;
+}
+
+.form-content-scroll {
+  height: 100%;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Personalización del scrollbar */
+.form-content-scroll::-webkit-scrollbar {
+  width: 8px;
+}
+
+.form-content-scroll::-webkit-scrollbar-track {
+  background: #f1f3f5;
+  border-radius: 4px;
+}
+
+.form-content-scroll::-webkit-scrollbar-thumb {
+  background: #ced4da;
+  border-radius: 4px;
+}
+
+.form-content-scroll::-webkit-scrollbar-thumb:hover {
+  background: #adb5bd;
+}
+
+/* Contenido interno */
+.form-content-inner {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  padding: 20px 1rem;
+  padding-bottom: 80px; /* Espacio para el footer */
+}
+
+/* Tarjetas */
+.card {
+  border: 1px solid #e9ecef;
+  border-radius: 12px;
+  background: #fff;
+  transition: box-shadow 0.2s ease;
+}
+
+.card:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  background: #fff;
+  border-bottom: 1px solid #e9ecef;
+  padding: 1rem 1.5rem;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+.card-footer {
+  background: #f8f9fa;
+  border-top: 1px solid #e9ecef;
+  padding: 1rem 1.5rem;
+}
+
+/* Encabezados de tarjetas internas */
+.card .card-header {
+  background: #f8f9fa;
+}
+
+/* Inputs y controles */
+.input-group-text {
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  color: #6c757d;
+}
+
+.form-control {
+  border: 1px solid #dee2e6;
+  background: #fff;
+  color: #495057;
+  transition: all 0.2s ease;
+}
+
+.form-control:focus {
+  border-color: #4361ee;
+  box-shadow: 0 0 0 0.2rem rgba(67, 97, 238, 0.15);
+  background: #fff;
+}
+
+.form-control.is-invalid {
+  border-color: #dc3545;
+  background: #fff;
+}
+
+/* Etiquetas */
 .form-label {
   color: #495057;
   font-weight: 500;
-  margin-bottom: 0.5rem;
 }
 
-.form-control,
-.form-select {
-  border: 1.5px solid #dee2e6;
-  border-radius: 8px;
-  padding: 0.75rem 1rem;
-  font-size: 1rem;
-  transition: all 0.3s ease;
-  background-color: white;
+.text-gray-600 {
+  color: #6c757d !important;
 }
 
-.form-control-lg,
-.form-select-lg {
-  padding: 0.875rem 1rem;
-  font-size: 1.05rem;
+.text-gray-700 {
+  color: #495057 !important;
 }
 
-.form-control:focus,
-.form-select:focus {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.15);
-  outline: none;
+.text-gray-800 {
+  color: #343a40 !important;
 }
 
-.form-control[readonly] {
-  background-color: #f8f9fa;
-  cursor: not-allowed;
+/* Fondo gris claro */
+.bg-gray-50 {
+  background-color: #f8f9fa !important;
 }
 
-/* Botones */
-.btn {
-  border-radius: 8px;
-  font-weight: 500;
-  transition: all 0.3s ease;
-  border-width: 1.5px;
+.bg-gray-100 {
+  background-color: #e9ecef !important;
 }
 
-.btn-lg {
-  padding: 0.75rem 1.5rem;
-  font-size: 1rem;
-}
-
-.btn-primary {
-  background: linear-gradient(135deg, #0d6efd 0%, #0b5ed7 100%);
-  border: none;
-}
-
-.btn-primary:hover {
-  background: linear-gradient(135deg, #0b5ed7 0%, #0a58ca 100%);
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(13, 110, 253, 0.3);
-}
-
-.btn-success {
-  background: linear-gradient(135deg, #198754 0%, #157347 100%);
-  border: none;
-}
-
-.btn-success:hover {
-  background: linear-gradient(135deg, #157347 0%, #13653f 100%);
-  transform: translateY(-1px);
-}
-
-.btn-outline-secondary {
-  border-color: #dee2e6;
+/* Botones personalizados */
+.btn-outline-gray {
   color: #6c757d;
+  border-color: #dee2e6;
+  background: #fff;
 }
 
-.btn-outline-secondary:hover {
+.btn-outline-gray:hover {
+  color: #495057;
   background-color: #f8f9fa;
   border-color: #adb5bd;
 }
 
-/* Tarjetas en resumen */
-.card {
-  border-radius: 12px;
-  transition: transform 0.3s ease, box-shadow 0.3s ease;
+.btn-primary {
+  background: #4361ee;
+  border-color: #4361ee;
+  color: #fff;
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1) !important;
+.btn-primary:hover {
+  background: #3a56d4;
+  border-color: #3a56d4;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
 }
 
-/* Loading overlay */
-.loading-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(255, 255, 255, 0.95);
-  z-index: 1000;
-  backdrop-filter: blur(4px);
+.btn-success {
+  background: #10b981;
+  border-color: #10b981;
 }
 
-/* Badges personalizados */
+.btn-success:hover {
+  background: #0da271;
+  border-color: #0da271;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+/* Badges */
 .badge {
   font-weight: 500;
-  letter-spacing: 0.3px;
+  letter-spacing: 0.02em;
 }
 
-/* Scrollbar personalizado */
-.form-content-scrollable::-webkit-scrollbar {
-  width: 8px;
+/* Alerta de éxito */
+.alert-success {
+  border-left: 4px solid #10b981;
 }
 
-.form-content-scrollable::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
+/* Lista de validación */
+.validation-status {
+  width: 20px;
+  height: 20px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.form-content-scrollable::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 4px;
-}
-
-.form-content-scrollable::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .form-header {
-    padding: 1.5rem !important;
-  }
-  
-  .step-btn {
-    padding: 0.5rem 1rem !important;
-    font-size: 0.9rem;
-  }
-  
-  .step-divider {
-    display: none !important;
-  }
-  
-  .btn-lg {
-    width: 100%;
-    margin-bottom: 0.5rem;
-  }
-  
-  .step-actions .d-flex {
-    flex-direction: column;
-    gap: 1rem;
-  }
-  
-  .step-actions .btn {
-    width: 100%;
-  }
-}
-
-@media (max-width: 576px) {
-  .form-header h3 {
-    font-size: 1.5rem;
-  }
-  
-  .header-icon {
-    width: 50px;
-    height: 50px;
-    padding: 0.75rem !important;
-  }
-  
-  .header-icon i {
-    font-size: 1.5rem !important;
-  }
+/* Footer dentro del contenedor */
+.form-footer {
+  flex-shrink: 0;
+  background: #fff;
+  border-top: 1px solid #e9ecef;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.02);
+  position: sticky;
+  bottom: 0;
+  width: 100%;
+  z-index: 10;
 }
 
 /* Animaciones */
+.step-content {
+  animation-duration: 0.3s;
+  animation-fill-mode: both;
+}
+
 @keyframes fadeIn {
   from {
     opacity: 0;
@@ -305,23 +341,129 @@
 }
 
 .animate__fadeIn {
-  animation: fadeIn 0.4s ease-out;
+  animation-name: fadeIn;
 }
 
-/* Ajustes para selectores */
-select.form-select {
-  appearance: none;
-  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23343a40' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
-  background-repeat: no-repeat;
-  background-position: right 0.75rem center;
-  background-size: 16px 12px;
+/* Estilos para campos con límite */
+.form-control.border-warning {
+  border-color: #ffc107 !important;
+  background: #fffcf5;
 }
 
-/* Campos requeridos inválidos */
-.is-invalid {
+.form-control.border-danger {
   border-color: #dc3545 !important;
+  background: #fff5f5;
+  animation: shake 0.5s;
 }
 
-.is-invalid:focus {
-  box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.15) !important;
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-3px); }
+  20%, 40%, 60%, 80% { transform: translateX(3px); }
+}
+
+/* Utilidades de texto */
+.text-truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .form-content-inner {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  .card-header,
+  .card-body,
+  .card-footer {
+    padding: 1rem;
+  }
+
+  .step-line {
+    max-width: 30px;
+  }
+
+  .step-circle {
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+
+  .form-footer .row {
+    flex-direction: column;
+    gap: 1rem;
+    text-align: center;
+  }
+
+  .status-info {
+    justify-content: center;
+    display: flex;
+  }
+}
+
+@media (max-width: 576px) {
+  .header-top,
+  .header-steps {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  .step-line {
+    max-width: 20px;
+  }
+
+  .btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Asegurar que los dropdowns se adapten */
+app-ngselect-dropdown {
+  display: block;
+  width: 100%;
+}
+
+/* Mejoras de accesibilidad */
+.form-control:focus-visible {
+  outline: 2px solid #4361ee;
+  outline-offset: 2px;
+}
+
+/* Separadores visuales */
+.border-gray-300 {
+  border-color: #dee2e6 !important;
+}
+
+/* Opacidades para estados */
+.opacity-90 {
+  opacity: 0.9;
+}
+
+/* Efectos hover sutiles */
+.card .card-header {
+  transition: background 0.2s ease;
+}
+
+.card:hover .card-header {
+  background: #f8f9fa;
+}
+
+/* Espaciado adicional para contenido largo */
+.step-content {
+  min-height: 300px;
+}
+
+/* Ajuste para modales de Bootstrap */
+.modal-body {
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+/* Si tu modal tiene clase específica, ajusta estas propiedades */
+.modal-dialog-scrollable .modal-body {
+  overflow: hidden;
 }

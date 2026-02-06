@@ -17,9 +17,9 @@ public class SwaggerConfig {
     public OpenAPI customOpenAPI() {
         return new OpenAPI()
                 .info(new Info()
-                                .title("StoreCollection API")
+                                .title("COMFUTURA :#")
                                 .version("1.0")
-                                .description("API REST para StoreCollection - Perú")
+                                .description("API REST para Comfutura - Perú")
                         // .contact(...)   ← puedes agregar si quieres
                         // .license(...)   ← opcional
                 )
