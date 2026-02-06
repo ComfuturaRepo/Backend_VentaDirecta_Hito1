@@ -18,4 +18,6 @@ public class OcDetalleRequestDTO {
     private BigDecimal subtotal;
     private BigDecimal igv;
     private BigDecimal total;
+
+
 }

@@ -34,4 +34,32 @@ export class OrdenCompraService {
     console.error(errorMessage);
     return throwError(() => new Error(errorMessage));
   }
+
+descargarHtml(idOc: number, idEmpresa: number): void {
+    const url = `http://localhost:8080/api/ordenes-compra/${idOc}/descargar-html?idEmpresa=${idEmpresa}`;
+
+  this.http.get(url, {
+    params: { idEmpresa },
+    responseType: 'blob'
+  }).subscribe(blob => {
+
+    const file = new Blob([blob], { type: 'text/html' });
+    const fileURL = URL.createObjectURL(file);
+
+    const a = document.createElement('a');
+    a.href = fileURL;
+    a.download = `orden-compra-${idOc}.html`;
+    a.click();
+
+    URL.revokeObjectURL(fileURL);
+  });
+}
+
+getById(idOc: number): Observable<OrdenCompraResponse> {
+  return this.http
+    .get<OrdenCompraResponse>(`${this.apiUrl}/${idOc}`)
+    .pipe(catchError(this.handleError));
+}
+
+
 }

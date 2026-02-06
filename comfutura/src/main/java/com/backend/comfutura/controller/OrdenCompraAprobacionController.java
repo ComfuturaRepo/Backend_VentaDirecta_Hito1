@@ -17,31 +17,27 @@ public class OrdenCompraAprobacionController {
     @Autowired
     private OrdenCompraAprobacionService service;
 
-    /**
-     * Aprobar / Rechazar una OC por nivel
-     */
-    @PostMapping("/{idOc}/{nivel}")
+    @PostMapping("/{idOc}/aprobar")
     public ResponseEntity<OrdenCompraAprobacionResponse> aprobar(
             @PathVariable Integer idOc,
-            @PathVariable Integer nivel,
-            @RequestParam String estado,
-            @RequestBody OrdenCompraAprobacionRequest request) {
-
+            @RequestBody OrdenCompraAprobacionRequest request
+    ) {
         return ResponseEntity.ok(
-                service.aprobar(idOc, nivel, estado, request)
+                service.aprobar(
+                        idOc,
+                        request.getNivel(),
+                        request.getEstado(),
+                        request
+                )
         );
     }
 
-    /**
-     * Obtener historial de aprobaciones
-     */
     @GetMapping("/{idOc}")
     public ResponseEntity<List<OrdenCompraAprobacionResponse>> historial(
-            @PathVariable Integer idOc) {
-
-        return ResponseEntity.ok(
-                service.obtenerHistorial(idOc)
-        );
+            @PathVariable Integer idOc
+    ) {
+        return ResponseEntity.ok(service.obtenerHistorial(idOc));
     }
-}
 
+
+}

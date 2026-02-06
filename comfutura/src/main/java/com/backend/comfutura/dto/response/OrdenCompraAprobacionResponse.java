@@ -15,5 +15,7 @@ public class OrdenCompraAprobacionResponse {
     private LocalDateTime fechaInicio;
     private LocalDateTime fechaFin;
     private Integer diasEnEstado;
+    private Boolean puedeAprobar;
+
 }
 

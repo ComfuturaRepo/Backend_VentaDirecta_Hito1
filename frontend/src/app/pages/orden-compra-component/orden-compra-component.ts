@@ -6,12 +6,12 @@ import { OrdenCompraService } from '../../service/orden-compra.service';
 import { FormOrdenCompraComponent } from './form-orden-compra-component/form-orden-compra-component';
 import { PaginationComponent } from '../../component/pagination.component/pagination.component';
 import { OcDetalleResponse, OrdenCompraResponse, PageOrdenCompra } from '../../model/orden-compra.model';
-import { OrdenCompraAprobacionesComponent } from './form-aprovacion-component/orden-compra-aprobaciones.component';
+import { OrdenCompraAprobacionesComponent } from './form-aprovacion-component/orden-compra-aprobaciones-component';
 
 @Component({
   selector: 'app-orden-compra-component',
   standalone: true,
-  imports: [CommonModule, FormsModule, FormOrdenCompraComponent, PaginationComponent, OrdenCompraAprobacionesComponent ],
+  imports: [CommonModule, FormsModule, FormOrdenCompraComponent, PaginationComponent, OrdenCompraAprobacionesComponent  ],
 
   templateUrl: './orden-compra-component.html',
   styleUrls: ['./orden-compra-component.css']
@@ -30,7 +30,7 @@ export class OrdenCompraComponent implements OnInit {
   showFormModal = false;
   isEditMode = false;
   selectedOc: OrdenCompraResponse | null = null;
-
+totalElements = 0;
   showDetalleModal = false;
   detalleOcSeleccionada: OrdenCompraResponse | null = null;
   detallesOc: OcDetalleResponse[] = [];
@@ -41,31 +41,45 @@ export class OrdenCompraComponent implements OnInit {
     this.cargarOrdenes();
   }
 
-  cargarOrdenes(page: number = 0): void {
-    this.isLoading = true;
-    this.errorMessage = null;
+ cargarOrdenes(page: number = 0): void {
+  this.isLoading = true;
+  this.errorMessage = null;
 
-    this.ordenCompraService.listar(page, this.pageSize, this.searchTerm).subscribe({
-      next: (data) => {
-        this.pageData = data;
-        this.ordenes = data.content;
-        this.filteredOrdenes = [...this.ordenes];
-        this.currentPage = data.page.number;
-        this.totalPages = data.page.totalPages;
-        this.isLoading = false;
-      },
-      error: () => {
-        this.errorMessage = 'No se pudieron cargar las órdenes';
-        Swal.fire('Error', this.errorMessage, 'error');
-        this.isLoading = false;
-      }
-    });
-  }
+  this.ordenCompraService.listar(page, this.pageSize).subscribe({
+    next: (data) => {
+      this.pageData = data;
+      this.ordenes = data.content ?? [];
+      this.filteredOrdenes = [...this.ordenes]; // base del filtro
+      this.currentPage = data.page.number ?? 0;
+        this.totalElements = data.page.totalElements; // 🔥 ESTA LÍNEA ES LA CLAVE
+
+      this.totalPages = data.page.totalPages ?? 1;
+      this.isLoading = false;
+    },
+    error: () => {
+      this.errorMessage = 'No se pudieron cargar las órdenes';
+      this.isLoading = false;
+    }
+  });
+}
+
 
   onSearchChange(): void {
-    this.currentPage = 0;
-    this.cargarOrdenes(this.currentPage);
+  const term = this.searchTerm.toLowerCase().trim();
+
+  if (!term) {
+    this.filteredOrdenes = [...this.ordenes];
+    return;
   }
+
+  this.filteredOrdenes = this.ordenes.filter(oc =>
+    oc.ot?.toLowerCase().includes(term) ||
+    oc.proveedorNombre?.toLowerCase().includes(term) ||
+    oc.estadoNombre?.toLowerCase().includes(term) ||
+    oc.formaPago?.toLowerCase().includes(term)
+  );
+}
+
 
   irAPagina(pagina: number): void {
     if (pagina >= 0 && pagina < this.totalPages) {
@@ -121,4 +135,28 @@ cambiarPageSize(size: number): void {
 
 // 🔹 Tipo seleccionado (si el form lo pide)
 tipoSeleccionado: string | null = null;
+getEstadoColor(estado: string): string {
+  switch (estado) {
+    case 'APROBADA':
+      return '#4caf50'; // verde
+    case 'RECHAZADA':
+      return '#f44336'; // rojo
+    case 'EN PROCESO':
+      return '#ff9800'; // amarillo
+    case 'PENDIENTE':
+      return '#2196f3'; // azul
+    case 'ANULADA':
+      return '#9e9e9e'; // gris
+    case 'ATENDIDA':
+      return '#3f51b5'; // azul oscuro
+    case 'CERRADA':
+      return '#607d8b'; // gris azulado
+    default:
+      return '#000000'; // negro (solo si algo falla)
+  }
 }
+
+
+}
+
+
