@@ -3,9 +3,9 @@ package com.backend.comfutura.model.ssoma.catalogo;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Data
 @Entity
 @Table(name = "riesgo")
+@Data
 public class Riesgo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,8 +16,9 @@ public class Riesgo {
     @JoinColumn(name = "id_peligro")
     private Peligro peligro;
 
-    @Column(name = "descripcion", length = 200)
+    @Column(name = "descripcion")
     private String descripcion;
-    @Column(name = "activo", nullable = false)
+
+    @Column(name = "activo")
     private Boolean activo = true;
 }

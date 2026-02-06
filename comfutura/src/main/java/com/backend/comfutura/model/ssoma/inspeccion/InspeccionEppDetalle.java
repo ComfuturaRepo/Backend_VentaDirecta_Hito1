@@ -5,9 +5,12 @@ import com.backend.comfutura.model.ssoma.catalogo.Epp;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Data
+import java.time.LocalDateTime;
+
+
 @Entity
 @Table(name = "inspeccion_epp_detalle")
+@Data
 public class InspeccionEppDetalle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -15,20 +18,26 @@ public class InspeccionEppDetalle {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "id_inspeccion")
+    @JoinColumn(name = "id_inspeccion", nullable = false)
     private InspeccionEpp inspeccion;
 
     @ManyToOne
-    @JoinColumn(name = "id_trabajador")
+    @JoinColumn(name = "id_trabajador", nullable = false)
     private Trabajador trabajador;
 
     @ManyToOne
-    @JoinColumn(name = "id_epp")
+    @JoinColumn(name = "id_epp", nullable = false)
     private Epp epp;
 
     @Column(name = "cumple")
     private Boolean cumple;
 
-    @Column(name = "observacion", columnDefinition = "TEXT")
+    @Column(name = "accion_correctiva")
+    private String accionCorrectiva;
+
+    @Column(name = "observacion")
     private String observacion;
+
+    @Column(name = "fecha_inspeccion")
+    private LocalDateTime fechaInspeccion = LocalDateTime.now();
 }

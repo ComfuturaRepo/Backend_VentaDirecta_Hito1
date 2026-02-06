@@ -4,9 +4,12 @@ import com.backend.comfutura.model.ssoma.catalogo.Herramienta;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Data
+import java.time.LocalDateTime;
+
+
 @Entity
 @Table(name = "inspeccion_herramienta_detalle")
+@Data
 public class InspeccionHerramientaDetalle {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,19 +17,16 @@ public class InspeccionHerramientaDetalle {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "id_inspeccion")
+    @JoinColumn(name = "id_inspeccion", nullable = false)
     private InspeccionHerramienta inspeccion;
 
     @ManyToOne
-    @JoinColumn(name = "id_herramienta")
+    @JoinColumn(name = "id_herramienta", nullable = false)
     private Herramienta herramienta;
 
-    @Column(name = "cumple")
-    private Boolean cumple;
-
-    @Column(name = "foto_url", length = 255)
-    private String fotoUrl;
-
-    @Column(name = "observacion", columnDefinition = "TEXT")
+    @Column(name = "observacion")
     private String observacion;
+
+    @Column(name = "fecha_inspeccion")
+    private LocalDateTime fechaInspeccion = LocalDateTime.now();
 }

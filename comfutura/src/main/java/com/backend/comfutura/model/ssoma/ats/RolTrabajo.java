@@ -12,8 +12,9 @@ public class RolTrabajo {
     @Column(name = "id_rol")
     private Integer idRol;
 
-    @Column(name = "nombre", length = 50)
+    @Column(name = "nombre", nullable = false)
     private String nombre;
-    @Column(name = "activo", nullable = false)
+
+    @Column(name = "activo")
     private Boolean activo = true;
 }

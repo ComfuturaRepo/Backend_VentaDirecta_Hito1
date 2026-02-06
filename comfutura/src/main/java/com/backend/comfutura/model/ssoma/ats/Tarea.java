@@ -1,7 +1,6 @@
 package com.backend.comfutura.model.ssoma.ats;
 
 
-import com.backend.comfutura.model.ssoma.catalogo.TipoTrabajo;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -16,10 +15,11 @@ public class Tarea {
 
     @ManyToOne
     @JoinColumn(name = "id_trabajo")
-    private TipoTrabajo trabajo;
+    private Trabajo trabajo;
 
-    @Column(name = "descripcion", length = 200)
+    @Column(name = "descripcion")
     private String descripcion;
-    @Column(name = "activo", nullable = false)
+
+    @Column(name = "activo")
     private Boolean activo = true;
 }

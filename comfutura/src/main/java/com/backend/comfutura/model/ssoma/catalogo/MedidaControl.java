@@ -3,9 +3,9 @@ package com.backend.comfutura.model.ssoma.catalogo;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Data
 @Entity
 @Table(name = "medida_control")
+@Data
 public class MedidaControl {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -16,8 +16,9 @@ public class MedidaControl {
     @JoinColumn(name = "id_riesgo")
     private Riesgo riesgo;
 
-    @Column(name = "descripcion", length = 200)
+    @Column(name = "descripcion")
     private String descripcion;
-    @Column(name = "activo", nullable = false)
+
+    @Column(name = "activo")
     private Boolean activo = true;
 }

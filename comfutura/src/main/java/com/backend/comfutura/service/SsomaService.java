@@ -1,22 +1,34 @@
 package com.backend.comfutura.service;
 
-import com.backend.comfutura.dto.request.ssomaDTO.SsomaRequest;
-import com.backend.comfutura.dto.response.ssomaDTO.SsomaResponse;
-
+import com.backend.comfutura.dto.request.ssomaDTO.*;
+import com.backend.comfutura.dto.response.ssomaDTO.*;
 import java.util.List;
 
 public interface SsomaService {
+    SsomaCompletoResponse crearSsomaCompleto(SsomaCompletoRequest request);
+    SsomaCompletoResponse obtenerSsomaCompletoPorOts(Integer idOts);
+    // ATS
+    AtsResponse crearAts(AtsRequest request);
+    AtsResponse obtenerAtsPorId(Integer id);
+    List<AtsResponse> listarTodosAts();
 
-    // Método para crear todas las 5 hojas en una transacción
-    SsomaResponse crearCompletoSsoma(SsomaRequest request);
+    // Capacitación
+    CapacitacionResponse crearCapacitacion(CapacitacionRequest request);
+    CapacitacionResponse obtenerCapacitacionPorId(Integer id);
+    List<CapacitacionResponse> listarTodasCapacitaciones();
 
-    // Métodos para listar sin paginación
-    List<Object> listarTodosAts();
-    List<Object> listarTodasCapacitaciones();
-    List<Object> listarTodasInspeccionesEpp();
-    List<Object> listarTodasInspeccionesHerramientas();
-    List<Object> listarTodosPetar();
+    // Inspección EPP
+    InspeccionEppResponse crearInspeccionEpp(InspeccionEppRequest request);
+    InspeccionEppResponse obtenerInspeccionEppPorId(Integer id);
+    List<InspeccionEppResponse> listarTodasInspeccionesEpp();
 
-    // Método para obtener todo el SSOMA por fecha
-    List<Object> obtenerSsomaPorFecha(String fecha);
+    // Inspección Herramientas
+    InspeccionHerramientaResponse crearInspeccionHerramienta(InspeccionHerramientaRequest request);
+    InspeccionHerramientaResponse obtenerInspeccionHerramientaPorId(Integer id);
+    List<InspeccionHerramientaResponse> listarTodasInspeccionesHerramientas();
+
+    // PETAR
+    PetarResponse crearPetar(PetarRequest request);
+    PetarResponse obtenerPetarPorId(Integer id);
+    List<PetarResponse> listarTodosPetar();
 }

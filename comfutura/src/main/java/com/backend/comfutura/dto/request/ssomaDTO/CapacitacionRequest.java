@@ -7,11 +7,12 @@ import java.util.List;
 
 @Data
 public class CapacitacionRequest {
-    private String numeroRegistro;
     private String tema;
-    private LocalDate fecha;
-    private LocalTime hora;
+    private String tipoCharla;
+    private Integer idOts;
     private Integer idCapacitador;
+    private Integer idSupervisorTrabajo;
+    private Integer idResponsableLugar;
+    private Integer idSupervisorSst;
     private List<CapacitacionAsistenteRequest> asistentes;
 }
-

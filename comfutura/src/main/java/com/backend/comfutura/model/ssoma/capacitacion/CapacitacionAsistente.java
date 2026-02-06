@@ -4,9 +4,12 @@ import com.backend.comfutura.model.Trabajador;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Data
+import java.time.LocalDateTime;
+
+
 @Entity
 @Table(name = "capacitacion_asistente")
+@Data
 public class CapacitacionAsistente {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,13 +17,19 @@ public class CapacitacionAsistente {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "id_capacitacion")
+    @JoinColumn(name = "id_capacitacion", nullable = false)
     private Capacitacion capacitacion;
 
     @ManyToOne
-    @JoinColumn(name = "id_trabajador")
+    @JoinColumn(name = "id_trabajador", nullable = false)
     private Trabajador trabajador;
 
-    @Column(name = "observaciones", columnDefinition = "TEXT")
+    @Column(name = "asistio")
+    private Boolean asistio = true;
+
+    @Column(name = "observaciones")
     private String observaciones;
+
+    @Column(name = "fecha_registro")
+    private LocalDateTime fechaRegistro = LocalDateTime.now();
 }

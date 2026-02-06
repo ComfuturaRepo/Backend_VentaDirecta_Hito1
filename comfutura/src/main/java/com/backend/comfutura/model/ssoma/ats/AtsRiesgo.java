@@ -4,9 +4,12 @@ import com.backend.comfutura.model.ssoma.catalogo.*;
 import jakarta.persistence.*;
 import lombok.Data;
 
-@Data
+import java.time.LocalDateTime;
+
+
 @Entity
 @Table(name = "ats_riesgo")
+@Data
 public class AtsRiesgo {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -14,7 +17,7 @@ public class AtsRiesgo {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "id_ats")
+    @JoinColumn(name = "id_ats", nullable = false)
     private Ats ats;
 
     @ManyToOne
@@ -32,4 +35,10 @@ public class AtsRiesgo {
     @ManyToOne
     @JoinColumn(name = "id_medida")
     private MedidaControl medida;
+
+    @Column(name = "observacion")
+    private String observacion;
+
+    @Column(name = "fecha_registro")
+    private LocalDateTime fechaRegistro = LocalDateTime.now();
 }

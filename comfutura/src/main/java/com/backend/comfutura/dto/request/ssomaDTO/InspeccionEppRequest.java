@@ -6,9 +6,12 @@ import java.util.List;
 
 @Data
 public class InspeccionEppRequest {
-    private String numeroRegistro;
-    private LocalDate fecha;
+    private String tipoInspeccion;
+    private String areaTrabajo;
+    private Integer idOts;
     private Integer idInspector;
+    private Integer idSupervisorTrabajo;
+    private Integer idResponsableLugar;
+    private Integer idSupervisorSst;
     private List<InspeccionEppDetalleRequest> detalles;
 }
-

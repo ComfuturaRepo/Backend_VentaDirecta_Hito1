@@ -2,14 +2,12 @@ package com.backend.comfutura.model.ssoma.petar;
 
 import jakarta.persistence.*;
 import lombok.Data;
-
 import java.time.LocalDateTime;
 
-
 @Entity
-@Table(name = "petar_respuesta")
+@Table(name = "petar_documentacion")
 @Data
-public class PetarRespuesta {
+public class PetarDocumentacion {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
@@ -19,18 +17,14 @@ public class PetarRespuesta {
     @JoinColumn(name = "id_petar", nullable = false)
     private Petar petar;
 
-    @ManyToOne
-    @JoinColumn(name = "id_pregunta", nullable = false)
-    private PetarPregunta pregunta;
+    @Column(name = "pregunta")
+    private String pregunta;
 
     @Column(name = "respuesta")
     private Boolean respuesta;
 
     @Column(name = "observacion")
     private String observacion;
-
-    @Column(name = "activo")
-    private Boolean activo = true;
 
     @Column(name = "fecha_registro")
     private LocalDateTime fechaRegistro = LocalDateTime.now();

@@ -1,4 +1,4 @@
-package com.backend.comfutura.model.ssoma.petar;
+package com.backend.comfutura.model.ssoma.inspeccion;
 
 import jakarta.persistence.*;
 import lombok.Data;
@@ -6,28 +6,23 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name = "petar_pregunta")
+@Table(name = "pregunta_herramienta")
 @Data
-public class PetarPregunta {
+public class PreguntaHerramienta {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
     private Integer id;
 
-    @Column(name = "descripcion")
-    private String descripcion;
+    @Column(name = "pregunta", nullable = false)
+    private String pregunta;
 
-    @Enumerated(EnumType.STRING)
-    @Column(name = "tipo")
-    private TipoPregunta tipo = TipoPregunta.GENERAL;
+    @Column(name = "orden")
+    private Integer orden = 0;
 
     @Column(name = "activo")
     private Boolean activo = true;
 
     @Column(name = "fecha_creacion")
     private LocalDateTime fechaCreacion = LocalDateTime.now();
-
-    public enum TipoPregunta {
-        GENERAL, ESPECIFICA
-    }
 }

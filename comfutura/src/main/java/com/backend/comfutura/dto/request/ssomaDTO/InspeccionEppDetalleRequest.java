@@ -8,4 +8,5 @@ public class InspeccionEppDetalleRequest {
     private Integer idEpp;
     private Boolean cumple;
     private String observacion;
+    private String accionCorrectiva;
 }
