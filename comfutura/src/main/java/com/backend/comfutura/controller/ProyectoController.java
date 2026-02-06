@@ -9,6 +9,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -19,13 +20,15 @@ public class ProyectoController {
 
     private final ProyectoService proyectoService;
 
-    // Listar proyectos activos con paginación
+    // Listar proyectos con filtros avanzados
     @GetMapping
     public ResponseEntity<PageResponseDTO<ProyectoResponse>> listarProyectos(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             @RequestParam(defaultValue = "nombre") String sort,
             @RequestParam(defaultValue = "asc") String direction,
+            @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) Boolean activo,
             @RequestParam(required = false) Boolean todos) {
 
         Sort.Direction sortDirection = direction.equalsIgnoreCase("desc")
@@ -35,16 +38,24 @@ public class ProyectoController {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sort));
 
         PageResponseDTO<ProyectoResponse> response;
-        if (todos != null && todos) {
+
+        // Si hay filtros específicos, usar búsqueda avanzada
+        if (nombre != null || activo != null) {
+            response = proyectoService.buscarProyectosAvanzado(nombre, activo, pageable);
+        }
+        // Si se solicita ver todos (incluyendo inactivos)
+        else if (todos != null && todos) {
             response = proyectoService.listarTodos(pageable);
-        } else {
+        }
+        // Por defecto: solo activos
+        else {
             response = proyectoService.listarProyectos(pageable);
         }
 
         return ResponseEntity.ok(response);
     }
 
-    // Buscar proyectos
+    // Buscar proyectos (búsqueda simple - manteniendo compatibilidad)
     @GetMapping("/buscar")
     public ResponseEntity<PageResponseDTO<ProyectoResponse>> buscarProyectos(
             @RequestParam String search,
@@ -66,18 +77,28 @@ public class ProyectoController {
 
     // Crear proyecto
     @PostMapping
-    public ResponseEntity<ProyectoResponse> crearProyecto(@RequestBody Proyecto proyecto) {
-        ProyectoResponse response = proyectoService.crearProyecto(proyecto);
-        return ResponseEntity.ok(response);
+    public ResponseEntity<?> crearProyecto(@RequestBody Proyecto proyecto) {
+        try {
+            ProyectoResponse response = proyectoService.crearProyecto(proyecto);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(e.getMessage());
+        }
     }
 
     // Editar proyecto
     @PutMapping("/{id}")
-    public ResponseEntity<ProyectoResponse> editarProyecto(
+    public ResponseEntity<?> editarProyecto(
             @PathVariable Integer id,
             @RequestBody Proyecto proyectoActualizado) {
-        ProyectoResponse response = proyectoService.editarProyecto(id, proyectoActualizado);
-        return ResponseEntity.ok(response);
+        try {
+            ProyectoResponse response = proyectoService.editarProyecto(id, proyectoActualizado);
+            return ResponseEntity.ok(response);
+        } catch (RuntimeException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT)
+                    .body(e.getMessage());
+        }
     }
 
     // Obtener proyecto por ID

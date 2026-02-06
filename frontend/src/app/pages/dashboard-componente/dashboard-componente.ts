@@ -21,6 +21,8 @@ export class DashboardComponente implements OnInit, AfterViewInit, OnDestroy {
   isLoading = signal(true);
   isRefreshing = signal(false);
   selectedRango = signal('MES');
+  private isComponentActive = true;
+  private autoRefreshInterval: any;
 
   // Computed signals
   estadisticas = computed(() => this.dashboardData()?.generales);
@@ -72,10 +74,15 @@ fechaActualISO: string = new Date().toISOString();
   ngAfterViewInit(): void {
     // Los gráficos se crearán cuando los datos estén listos
   }
-
-  ngOnDestroy(): void {
-    this.destroyCharts();
+ngOnDestroy(): void {
+  // AÑADE ESTAS 3 LÍNEAS AL INICIO del método:
+  this.isComponentActive = false;
+  if (this.autoRefreshInterval) {
+    clearInterval(this.autoRefreshInterval);
   }
+
+  this.destroyCharts(); // Esta línea ya la tenías
+}
 getTotalOts(): number {
   return this.otsPorEstado()
     .reduce((total, item) => total + (item.cantidad ?? 0), 0);
@@ -86,42 +93,55 @@ getTotalOts(): number {
 
     this.dashboardService.getDashboardCached().subscribe({
       next: (data) => {
-        this.dashboardData.set(data);
-        this.isLoading.set(false);
-        this.isRefreshing.set(false);
+  // AÑADE ESTA LÍNEA AL INICIO:
+  if (!this.isComponentActive) return;
 
-        // Crear gráficos después de cargar datos
-        setTimeout(() => {
-          this.createCharts();
-        }, 100);
+  this.dashboardData.set(data);
+  this.isLoading.set(false);
+  this.isRefreshing.set(false);
 
-        // Mostrar notificación de éxito
-        Swal.fire({
-          icon: 'success',
-          title: 'Dashboard actualizado',
-          text: 'Los datos se han cargado correctamente',
-          toast: true,
-          position: 'top-end',
-          showConfirmButton: false,
-          timer: 3000,
-          timerProgressBar: true,
-          background: '#f8f9fa',
-          iconColor: '#28a745'
-        });
-      },
-      error: (error) => {
-        console.error('Error cargando dashboard:', error);
-        this.isLoading.set(false);
-        this.isRefreshing.set(false);
+  setTimeout(() => {
+    // AÑADE ESTA CONDICIÓN:
+    if (this.isComponentActive) {
+      this.createCharts();
+    }
+  }, 100);
 
-        Swal.fire({
-          icon: 'error',
-          title: 'Error',
-          text: 'No se pudo cargar el dashboard. Intente nuevamente.',
-          confirmButtonColor: '#dc3545',
-          background: '#f8f9fa'
-        });
-      }
+  // MODIFICA EL Swal.fire para incluir la condición:
+  if (this.isComponentActive) {
+    Swal.fire({
+      icon: 'success',
+      title: 'Dashboard actualizado',
+      text: 'Los datos se han cargado correctamente',
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true,
+      background: '#f8f9fa',
+      iconColor: '#28a745'
+    });
+  }
+},
+     error: (error) => {
+  // AÑADE ESTA LÍNEA AL INICIO:
+  if (!this.isComponentActive) return;
+
+  console.error('Error cargando dashboard:', error);
+  this.isLoading.set(false);
+  this.isRefreshing.set(false);
+
+  // MODIFICA EL Swal.fire para incluir la condición:
+  if (this.isComponentActive) {
+    Swal.fire({
+      icon: 'error',
+      title: 'Error',
+      text: 'No se pudo cargar el dashboard. Intente nuevamente.',
+      confirmButtonColor: '#dc3545',
+      background: '#f8f9fa'
+    });
+  }
+}
     });
   }
 
@@ -134,15 +154,19 @@ getTotalOts(): number {
     // Recargar datos
     this.loadDashboard();
   }
+aplicarFiltroRango(): void {
+  this.dashboardService.clearCache();
 
-  aplicarFiltroRango(): void {
-    this.dashboardService.clearCache();
+  this.dashboardService.getDashboardByRango(this.selectedRango()).subscribe({
+    next: (data) => {
+      // AÑADE esta condición al inicio:
+      if (!this.isComponentActive) return;
 
-    this.dashboardService.getDashboardByRango(this.selectedRango()).subscribe({
-      next: (data) => {
-        this.dashboardData.set(data);
-        this.createCharts();
+      this.dashboardData.set(data);
+      this.createCharts();
 
+      // MODIFICA el Swal.fire para incluir la condición:
+      if (this.isComponentActive) {
         Swal.fire({
           icon: 'info',
           title: 'Filtro aplicado',
@@ -154,8 +178,14 @@ getTotalOts(): number {
           background: '#f8f9fa',
           iconColor: '#007bff'
         });
-      },
-      error: (error) => {
+      }
+    },
+    error: (error) => {
+      // AÑADE esta condición al inicio:
+      if (!this.isComponentActive) return;
+
+      // MODIFICA el Swal.fire para incluir la condición:
+      if (this.isComponentActive) {
         Swal.fire({
           icon: 'error',
           title: 'Error',
@@ -164,9 +194,9 @@ getTotalOts(): number {
           background: '#f8f9fa'
         });
       }
-    });
-  }
-
+    }
+  });
+}
   aplicarFiltrosAvanzados(): void {
     // Convertir fechas a formato ISO
     const filtro = {
@@ -606,14 +636,12 @@ getTotalOts(): number {
   }
 
   private setupAutoRefresh(): void {
-    // Auto-refresh cada 5 minutos
-    setInterval(() => {
-      if (!document.hidden) {
-        this.refreshDashboard();
-      }
-    }, 5 * 60 * 1000);
-  }
-
+  this.autoRefreshInterval = setInterval(() => {
+    if (!document.hidden && this.isComponentActive) {
+      this.refreshDashboard();
+    }
+  }, 5 * 60 * 1000);
+}
   // Métodos de utilidad
   formatCurrency(value: number): string {
     return this.dashboardService.formatCurrency(value);

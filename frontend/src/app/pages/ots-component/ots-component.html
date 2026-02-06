@@ -94,7 +94,7 @@
             </button>
 
             <!-- Botón de nueva OT -->
-            <button class="btn btn-primary btn-lg" (click)="openCreateModal()"  *appPermiso="'DASHBOARD_VIEW'">
+            <button class="btn btn-primary btn-lg" (click)="openCreateModal()"  *appPermiso="'OT_CREATE'">
               <i class="bi bi-plus-lg me-2"></i>Nueva OT
             </button>
           </div>
@@ -434,9 +434,9 @@
                               data-bs-toggle="dropdown" aria-expanded="false">
                         <i class="bi bi-three-dots-vertical"></i>
                       </button>
-                      <ul class="dropdown-menu dropdown-menu-end">
+                      <ul class="dropdown-menu dropdown-menu-end" >
                         <li>
-                          <button class="dropdown-item" (click)="toggleEstado(ot)">
+                          <button class="dropdown-item" (click)="toggleEstado(ot)"  *appPermiso="'OT_TOGGLE'" >
                             <i class="bi me-2" [ngClass]="ot.activo ? 'bi-toggle-on' : 'bi-toggle-off'"></i>
                             {{ot.activo ? 'Desactivar' : 'Activar'}}
                           </button>

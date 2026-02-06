@@ -1,497 +1,484 @@
-<div class="container-fluid py-4">
-  <!-- Encabezado -->
-  <div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="h3 mb-0 text-gray-800">
-      <i class="fas fa-users-cog me-2"></i>Gestión de Trabajadores
-    </h1>
-    <button class="btn btn-primary" (click)="openCreateModal()" [disabled]="isLoadingDropdowns"      *appPermiso="'TRABAJADOR_MANAGE'"
->
-      <i class="fas fa-user-plus me-2"></i>Nuevo Trabajador
-    </button>
-  </div>
+<div class="container-fluid mt-4">
+  <!-- Header con estadísticas -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <div>
+              <h1 class="h4 mb-0 text-primary">
+                <i class="bi bi-people me-2"></i>Gestión de Trabajadores
+              </h1>
+              <p class="text-muted mb-0">Administra los trabajadores del sistema</p>
+            </div>
+            <div >
+              <button class="btn btn-primary" (click)="openCreateModal()"    *appPermiso="'TRABAJADOR_MANAGE'" >
+                <i class="bi bi-plus-circle me-1"></i>Nuevo Trabajador
+              </button>
+            </div>
+          </div>
 
-  <!-- Loading dropdowns -->
-  <div *ngIf="isLoadingDropdowns" class="alert alert-info mb-4">
-    <i class="fas fa-spinner fa-spin me-2"></i>Cargando datos necesarios...
+          <!-- Estadísticas -->
+          <div class="row" *ngIf="stats">
+            <div class="col-md-4">
+              <div class="card bg-light border-0">
+                <div class="card-body text-center">
+                  <h3 class="fw-bold text-primary">{{ stats.totalTrabajadores }}</h3>
+                  <p class="text-muted mb-0">Total Trabajadores</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-light border-0">
+                <div class="card-body text-center">
+                  <h3 class="fw-bold text-success">{{ stats.trabajadoresActivos }}</h3>
+                  <p class="text-muted mb-0">Activos</p>
+                </div>
+              </div>
+            </div>
+            <div class="col-md-4">
+              <div class="card bg-light border-0">
+                <div class="card-body text-center">
+                  <h3 class="fw-bold text-info">{{ stats.porcentajeActivos }}%</h3>
+                  <p class="text-muted mb-0">Porcentaje Activos</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- Filtros -->
-  <div class="card shadow mb-4">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-      <h6 class="m-0 font-weight-bold text-primary">
-        <i class="fas fa-filter me-2"></i>Filtros de Búsqueda
-      </h6>
-      <button class="btn btn-sm btn-link" (click)="showFilters = !showFilters">
-        <i class="fas" [class.fa-chevron-down]="!showFilters" [class.fa-chevron-up]="showFilters"></i>
-      </button>
-    </div>
-    <div class="card-body" *ngIf="showFilters">
-      <div class="row g-3">
-        <div class="col-md-3">
-          <label class="form-label">Buscar</label>
-          <div class="input-group">
-            <span class="input-group-text"><i class="fas fa-search"></i></span>
-            <input type="text" class="form-control"
-                   [(ngModel)]="searchTerm"
-                   placeholder="Nombre, apellido o DNI...">
-            <button class="btn btn-outline-secondary" type="button" (click)="buscarPorDni()" title="Buscar por DNI">
-              <i class="fas fa-id-card"></i>
-            </button>
-          </div>
-        </div>
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <h5 class="card-title mb-3">
+            <i class="bi bi-funnel me-2"></i>Filtros de Búsqueda
+          </h5>
 
-        <div class="col-md-2">
-          <label class="form-label">Estado</label>
-          <select class="form-select" [(ngModel)]="filtroActivo">
-            <option [ngValue]="null">Todos</option>
-            <option [ngValue]="true">Activos</option>
-            <option [ngValue]="false">Inactivos</option>
-          </select>
-        </div>
+          <form [formGroup]="filterForm" (ngSubmit)="onFilterChange()">
+            <div class="row g-3">
+              <!-- Búsqueda por texto -->
+              <div class="col-md-4">
+                <label for="search" class="form-label">Buscar</label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="search"
+                  [formControl]="searchControl"
+                  placeholder="Nombre, DNI, correo...">
+              </div>
 
-        <div class="col-md-2">
-          <label class="form-label">Área</label>
-          <select class="form-select" [(ngModel)]="filtroAreaId">
-            <option [ngValue]="null">Todas las áreas</option>
-            <option *ngFor="let area of areas" [value]="area.id">
-              {{ area.label }}
-            </option>
-          </select>
-        </div>
+              <!-- Estado -->
+              <div class="col-md-2">
+                <label class="form-label">Estado</label>
+                <app-ngselect-dropdown
+                  [items]="estadoOptions"
+                  [formControl]="activoControl"
+                  placeholder="Todos"
+                  [multiple]="false">
+                </app-ngselect-dropdown>
+              </div>
 
-        <div class="col-md-2">
-          <label class="form-label">Cargo</label>
-          <select class="form-select" [(ngModel)]="filtroCargoId">
-            <option [ngValue]="null">Todos los cargos</option>
-            <option *ngFor="let cargo of cargos" [value]="cargo.id">
-              {{ cargo.label }}
-            </option>
-          </select>
-        </div>
+              <!-- Área -->
+              <div class="col-md-2">
+                <label class="form-label">Área</label>
+                <app-ngselect-dropdown
+                  [items]="areas"
+                  [formControl]="areaIdControl"
+                  placeholder="Todas"
+                  [multiple]="false">
+                </app-ngselect-dropdown>
+              </div>
 
-        <div class="col-md-2">
-          <label class="form-label">Empresa</label>
-          <select class="form-select" [(ngModel)]="filtroEmpresaId">
-            <option [ngValue]="null">Todas las empresas</option>
-            <option *ngFor="let empresa of empresas" [value]="empresa.id">
-              {{ empresa.label }}
-            </option>
-          </select>
-        </div>
+              <!-- Cargo -->
+              <div class="col-md-2">
+                <label class="form-label">Cargo</label>
+                <app-ngselect-dropdown
+                  [items]="cargos"
+                  [formControl]="cargoIdControl"
+                  placeholder="Todos"
+                  [multiple]="false">
+                </app-ngselect-dropdown>
+              </div>
 
-        <div class="col-md-1 d-flex align-items-end">
-          <div class="d-flex gap-2">
-            <button class="btn btn-primary" (click)="aplicarFiltros()" [disabled]="isLoading">
-              <i class="fas fa-search me-1"></i>Buscar
-            </button>
-            <button class="btn btn-outline-secondary" (click)="limpiarFiltros()">
-              <i class="fas fa-eraser"></i>
-            </button>
-          </div>
+              <!-- Empresa -->
+              <div class="col-md-2">
+                <label class="form-label">Empresa</label>
+                <app-ngselect-dropdown
+                  [items]="empresas"
+                  [formControl]="empresaIdControl"
+                  placeholder="Todas"
+                  [multiple]="false">
+                </app-ngselect-dropdown>
+              </div>
+            </div>
+
+            <!-- Roles específicos -->
+            <div class="row g-3 mt-2">
+              <div class="col-md-2">
+                <label class="form-label">Liquidador</label>
+                <app-ngselect-dropdown
+                  [items]="rolesOptions"
+                  [formControl]="puedeSerLiquidadorControl"
+                  placeholder="Todos"
+                  [multiple]="false">
+                </app-ngselect-dropdown>
+              </div>
+
+              <div class="col-md-2">
+                <label class="form-label">Ejecutante</label>
+                <app-ngselect-dropdown
+                  [items]="rolesOptions"
+                  [formControl]="puedeSerEjecutanteControl"
+                  placeholder="Todos"
+                  [multiple]="false">
+                </app-ngselect-dropdown>
+              </div>
+
+              <div class="col-md-2">
+                <label class="form-label">Analista Contable</label>
+                <app-ngselect-dropdown
+                  [items]="rolesOptions"
+                  [formControl]="puedeSerAnalistaContableControl"
+                  placeholder="Todos"
+                  [multiple]="false">
+                </app-ngselect-dropdown>
+              </div>
+
+              <div class="col-md-2">
+                <label class="form-label">Jefatura Responsable</label>
+                <app-ngselect-dropdown
+                  [items]="rolesOptions"
+                  [formControl]="puedeSerJefaturaResponsableControl"
+                  placeholder="Todos"
+                  [multiple]="false">
+                </app-ngselect-dropdown>
+              </div>
+
+              <div class="col-md-2">
+                <label class="form-label">Coordinador TI CW</label>
+                <app-ngselect-dropdown
+                  [items]="rolesOptions"
+                  [formControl]="puedeSerCoordinadorTiCwControl"
+                  placeholder="Todos"
+                  [multiple]="false">
+                </app-ngselect-dropdown>
+              </div>
+
+              <div class="col-md-2 d-flex align-items-end">
+                <div class="d-flex gap-2">
+                  <button type="submit" class="btn btn-primary">
+                    <i class="bi bi-funnel me-1"></i>Filtrar
+                  </button>
+                  <button type="button" class="btn btn-outline-secondary" (click)="clearFilters()">
+                    <i class="bi bi-x-circle me-1"></i>Limpiar
+                  </button>
+                </div>
+              </div>
+            </div>
+          </form>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Tabla de trabajadores -->
-  <div class="card shadow">
-    <div class="card-header py-3 d-flex justify-content-between align-items-center">
-      <h6 class="m-0 font-weight-bold text-primary">Lista de Trabajadores</h6>
-      <span class="badge bg-info">Total: {{ totalItems }}</span>
-    </div>
-
-    <div class="card-body">
-      <!-- Loading -->
-      <div *ngIf="isLoading" class="text-center py-5">
-        <div class="spinner-border text-primary" role="status">
-          <span class="visually-hidden">Cargando...</span>
-        </div>
-        <p class="mt-2">Cargando trabajadores...</p>
-      </div>
-
-      <!-- Tabla -->
-      <div *ngIf="!isLoading">
-        <div class="table-responsive">
-          <table class="table table-hover table-striped">
-            <thead class="table-light">
-              <tr>
-                <th (click)="sort('idTrabajador')" style="cursor: pointer; width: 80px;">
-                  ID
-                  <i *ngIf="sortBy === 'idTrabajador'"
-                     class="fas"
-                     [class.fa-sort-up]="sortDirection === 'asc'"
-                     [class.fa-sort-down]="sortDirection === 'desc'"></i>
-                </th>
-                <th (click)="sort('nombres')" style="cursor: pointer;">
-                  Nombre Completo
-                  <i *ngIf="sortBy === 'nombres'"
-                     class="fas"
-                     [class.fa-sort-up]="sortDirection === 'asc'"
-                     [class.fa-sort-down]="sortDirection === 'desc'"></i>
-                </th>
-                <th (click)="sort('dni')" style="cursor: pointer;">
-                  DNI
-                  <i *ngIf="sortBy === 'dni'"
-                     class="fas"
-                     [class.fa-sort-up]="sortDirection === 'asc'"
-                     [class.fa-sort-down]="sortDirection === 'desc'"></i>
-                </th>
-                <th>Contacto</th>
-                <th>Área</th>
-                <th>Cargo</th>
-                <th>Empresa</th>
-                <th (click)="sort('activo')" style="cursor: pointer;">
-                  Estado
-                  <i *ngIf="sortBy === 'activo'"
-                     class="fas"
-                     [class.fa-sort-up]="sortDirection === 'asc'"
-                     [class.fa-sort-down]="sortDirection === 'desc'"></i>
-                </th>
-                <th class="text-center" style="width: 180px;">Acciones</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let trabajador of trabajadores">
-                <td class="fw-bold">{{ trabajador.idTrabajador }}</td>
-                <td>
-                  <div class="d-flex align-items-center">
-                    <div class="avatar-circle me-3">
-                      {{ getIniciales(trabajador.nombres, trabajador.apellidos) }}
+  <div class="row">
+    <div class="col-12">
+      <div class="card border-0 shadow-sm">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-hover">
+              <thead>
+                <tr>
+                  <th>Nombres</th>
+                  <th>DNI</th>
+                  <th>Correo</th>
+                  <th>Área</th>
+                  <th>Cargo</th>
+                  <th>Empresa</th>
+                  <th>Estado</th>
+                  <th class="text-end">Acciones</th>
+                </tr>
+              </thead>
+              <tbody>
+                <!-- Loading state -->
+                <tr *ngIf="isLoading">
+                  <td colspan="8" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status">
+                      <span class="visually-hidden">Cargando...</span>
                     </div>
-                    <div>
-                      <strong>{{ trabajador.nombres }} {{ trabajador.apellidos }}</strong>
-                      <div class="small text-muted">{{ trabajador.correoCorporativo }}</div>
+                    <p class="mt-2 text-muted">Cargando trabajadores...</p>
+                  </td>
+                </tr>
+
+                <!-- No results -->
+                <tr *ngIf="!isLoading && trabajadores.length === 0">
+                  <td colspan="8" class="text-center py-5">
+                    <i class="bi bi-people display-4 text-muted"></i>
+                    <h5 class="mt-3">No se encontraron trabajadores</h5>
+                    <p class="text-muted">Intenta ajustar los filtros de búsqueda</p>
+                  </td>
+                </tr>
+
+                <!-- Results -->
+                <tr *ngFor="let trabajador of trabajadores">
+                  <td>
+                    <div class="d-flex align-items-center">
+                      <div class="avatar-circle bg-primary text-white me-3">
+                        {{ trabajador.nombres.charAt(0) }}{{ trabajador.apellidos.charAt(0) }}
+                      </div>
+                      <div>
+                        <strong>{{ trabajador.nombres }} {{ trabajador.apellidos }}</strong>
+                        <div class="text-muted small">{{ trabajador.celular }}</div>
+                      </div>
                     </div>
-                  </div>
-                </td>
-                <td>
-                  <span class="badge bg-secondary">{{ trabajador.dni }}</span>
-                </td>
-                <td>
-                  <i class="fas fa-phone me-2 text-success"></i>{{ trabajador.celular }}
-                </td>
-                <td>
-                  <span class="badge bg-info">{{ getAreaNombre(trabajador) }}</span>
-                </td>
-                <td>
-                  <span class="badge bg-warning text-dark">{{ getCargoNombre(trabajador) }}</span>
-                </td>
-                <td>
-                  <span class="badge bg-light text-dark border">{{ getEmpresaNombre(trabajador) }}</span>
-                </td>
-                <td>
-                  <span [class]="getEstadoClass(trabajador.activo)">
-                    {{ getEstadoText(trabajador.activo) }}
-                  </span>
-                </td>
-                <td>
-                  <div class="btn-group btn-group-sm" role="group">
-                    <button class="btn btn-outline-info"
-                            title="Ver detalles"
-                            (click)="verDetalles(trabajador)">
-                      <i class="fas fa-eye"></i>
-                    </button>
-
-                    <button class="btn btn-outline-primary"
-                            [title]="trabajador.activo ? 'Desactivar' : 'Activar'"
-                            (click)="toggleActivo(trabajador)"   *appPermiso="'TRABAJADOR_MANAGE'">
-                      <i class="fas" [class.fa-toggle-on]="trabajador.activo" [class.fa-toggle-off]="!trabajador.activo"></i>
-                    </button>
-
-                    <button class="btn btn-outline-warning"
-                            title="Editar"   *appPermiso="'TRABAJADOR_MANAGE'"
-                            (click)="openEditModal(trabajador)">
-                      <i class="fas fa-edit"></i>
-                    </button>
-                  </div>
-                </td>
-              </tr>
-
-              <tr *ngIf="trabajadores.length === 0 && !isLoading">
-                <td colspan="9" class="text-center py-5">
-                  <div class="text-muted">
-                    <i class="fas fa-user-slash fa-2x mb-3"></i>
-                    <p class="mb-0">No se encontraron trabajadores</p>
-                    <small class="text-muted">Intenta con otros filtros de búsqueda</small>
-                  </div>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- Paginación -->
-        <div class="d-flex justify-content-between align-items-center mt-4">
-          <div class="text-muted">
-            Mostrando {{ trabajadores.length }} de {{ totalItems }} registros
-          </div>
-
-          <div class="d-flex align-items-center gap-3">
-            <div class="d-flex align-items-center">
-              <label class="me-2">Mostrar:</label>
-              <select class="form-select form-select-sm" style="width: auto;"
-                      [(ngModel)]="pageSize"
-                      (change)="changePageSize(pageSize)">
-                <option *ngFor="let size of pageSizes" [value]="size">{{ size }}</option>
-              </select>
-            </div>
-
-            <nav aria-label="Page navigation">
-              <ul class="pagination pagination-sm mb-0">
-                <li class="page-item" [class.disabled]="currentPage === 0">
-                  <button class="page-link" (click)="changePage(currentPage - 1)">
-                    <i class="fas fa-chevron-left"></i>
-                  </button>
-                </li>
-
-                <li class="page-item" *ngFor="let page of [].constructor(totalPages); let i = index"
-                    [class.active]="i === currentPage">
-                  <button class="page-link" (click)="changePage(i)">
-                    {{ i + 1 }}
-                  </button>
-                </li>
-
-                <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
-                  <button class="page-link" (click)="changePage(currentPage + 1)">
-                    <i class="fas fa-chevron-right"></i>
-                  </button>
-                </li>
-              </ul>
-            </nav>
+                  </td>
+                  <td>{{ trabajador.dni }}</td>
+                  <td>{{ trabajador.correoCorporativo }}</td>
+                  <td>{{ trabajador.areaNombre }}</td>
+                  <td>{{ trabajador.cargoNombre }}</td>
+                  <td>{{ trabajador.empresaNombre || '-' }}</td>
+                  <td>
+                    <span [class]="getEstadoClass(trabajador.activo)" class="badge">
+                      {{ getEstadoBadge(trabajador.activo) }}
+                    </span>
+                  </td>
+                  <td class="text-end">
+                    <div class="btn-group btn-group-sm" role="group">
+                      <button *appPermiso="'TRABAJADOR_MANAGE'"
+                        class="btn btn-outline-primary"
+                        (click)="openEditModal(trabajador)">
+                        <i class="bi bi-pencil"></i>
+                      </button>
+                      <button *appPermiso="'TRABAJADOR_MANAGE'"
+                        class="btn btn-outline-warning"
+                        (click)="toggleActivo(trabajador)"
+                        [title]="trabajador.activo ? 'Desactivar' : 'Activar'">
+                        <i [class]="trabajador.activo ? 'bi bi-person-x' : 'bi bi-person-check'"></i>
+                      </button>
+                      <button *appPermiso="'TRABAJADOR_MANAGE'"
+                        class="btn btn-outline-danger"
+                        (click)="deleteTrabajador(trabajador)">
+                        <i class="bi bi-trash"></i>
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>
     </div>
   </div>
+
+  <!-- Paginación -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <app-pagination
+        [currentPage]="currentPage"
+        [totalItems]="totalItems"
+        [totalPages]="totalPages"
+        [pageSize]="pageSize"
+        [isLoading]="isLoading"
+        (pageChange)="onPageChange($event)"
+        (pageSizeChange)="onPageSizeChange($event)"
+        (refresh)="onRefresh()">
+      </app-pagination>
+    </div>
+  </div>
 </div>
 
-<!-- Modal Crear/Editar -->
-<div class="modal fade show" [class.d-block]="showModal" tabindex="-1" role="dialog"
-     [class.show]="showModal" *ngIf="showModal">
-  <div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
+<!-- Modal para crear/editar trabajador -->
+<div class="modal-backdrop fade show" *ngIf="showModal"></div>
+<div class="modal fade show d-block" *ngIf="showModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog modal-lg modal-dialog-centered" role="document">
+    <div class="modal-content border-0 shadow-lg">
+      <!-- Header -->
       <div class="modal-header bg-primary text-white">
         <h5 class="modal-title">
-          <i class="fas" [class.fa-user-plus]="modalMode === 'create'"
-             [class.fa-user-edit]="modalMode === 'edit'"></i>
-          {{ modalTitle }}
+          <i class="bi bi-person me-2"></i>{{ modalTitle }}
         </h5>
-        <button type="button" class="btn-close btn-close-white"
-                (click)="closeModal()" [disabled]="isSubmitting"></button>
+        <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
       </div>
 
-      <div class="modal-body">
-        <form #trabajadorFormRef="ngForm">
+      <!-- Form -->
+      <form [formGroup]="trabajadorForm" (ngSubmit)="saveTrabajador()">
+        <div class="modal-body">
           <div class="row g-3">
-            <!-- Nombres -->
+            <!-- Nombres y Apellidos -->
             <div class="col-md-6">
-              <label class="form-label required">Nombres</label>
-              <input type="text" class="form-control"
-                     [(ngModel)]="trabajadorForm.nombres"
-                     name="nombres"
-                     [class.is-invalid]="formErrors.nombres"
-                     placeholder="Ej: Juan Carlos">
-              <div *ngIf="formErrors.nombres" class="invalid-feedback">
-                {{ formErrors.nombres }}
+              <label for="nombres" class="form-label">Nombres *</label>
+              <input
+                type="text"
+                class="form-control"
+                id="nombres"
+                [formControl]="nombresControl"
+                [class.is-invalid]="nombresControl.invalid && nombresControl.touched">
+              <div class="invalid-feedback" *ngIf="nombresControl.invalid && nombresControl.touched">
+                <div *ngIf="nombresControl.errors?.['required']">Los nombres son obligatorios</div>
+                <div *ngIf="nombresControl.errors?.['minlength']">Mínimo 2 caracteres</div>
+                <div *ngIf="nombresControl.errors?.['maxlength']">Máximo 100 caracteres</div>
               </div>
             </div>
 
-            <!-- Apellidos -->
             <div class="col-md-6">
-              <label class="form-label required">Apellidos</label>
-              <input type="text" class="form-control"
-                     [(ngModel)]="trabajadorForm.apellidos"
-                     name="apellidos"
-                     [class.is-invalid]="formErrors.apellidos"
-                     placeholder="Ej: Pérez García">
-              <div *ngIf="formErrors.apellidos" class="invalid-feedback">
-                {{ formErrors.apellidos }}
+              <label for="apellidos" class="form-label">Apellidos *</label>
+              <input
+                type="text"
+                class="form-control"
+                id="apellidos"
+                [formControl]="apellidosControl"
+                [class.is-invalid]="apellidosControl.invalid && apellidosControl.touched">
+              <div class="invalid-feedback" *ngIf="apellidosControl.invalid && apellidosControl.touched">
+                <div *ngIf="apellidosControl.errors?.['required']">Los apellidos son obligatorios</div>
+                <div *ngIf="apellidosControl.errors?.['minlength']">Mínimo 2 caracteres</div>
+                <div *ngIf="apellidosControl.errors?.['maxlength']">Máximo 100 caracteres</div>
               </div>
             </div>
 
-            <!-- DNI -->
-            <div class="col-md-4">
-              <label class="form-label required">DNI</label>
-              <input type="text" class="form-control"
-                     [(ngModel)]="trabajadorForm.dni"
-                     name="dni"
-                     [class.is-invalid]="formErrors.dni"
-                     placeholder="12345678"
-                     maxlength="8">
-              <div *ngIf="formErrors.dni" class="invalid-feedback">
-                {{ formErrors.dni }}
+            <!-- DNI y Celular -->
+            <div class="col-md-6">
+              <label for="dni" class="form-label">DNI *</label>
+              <input
+                type="text"
+                class="form-control"
+                id="dni"
+                [formControl]="dniControl"
+                maxlength="8"
+                [class.is-invalid]="dniControl.invalid && dniControl.touched">
+              <div class="invalid-feedback" *ngIf="dniControl.invalid && dniControl.touched">
+                <div *ngIf="dniControl.errors?.['required']">El DNI es obligatorio</div>
+                <div *ngIf="dniControl.errors?.['dniFormat']">Debe tener 8 dígitos</div>
+                <div *ngIf="dniControl.errors?.['dniExists']">El DNI ya está registrado</div>
               </div>
-              <small class="form-text text-muted">8 dígitos sin puntos ni espacios</small>
             </div>
 
-            <!-- Celular -->
-            <div class="col-md-4">
-              <label class="form-label required">Celular</label>
-              <input type="text" class="form-control"
-                     [(ngModel)]="trabajadorForm.celular"
-                     name="celular"
-                     [class.is-invalid]="formErrors.celular"
-                     placeholder="987654321"
-                     maxlength="9">
-              <div *ngIf="formErrors.celular" class="invalid-feedback">
-                {{ formErrors.celular }}
+            <div class="col-md-6">
+              <label for="celular" class="form-label">Celular *</label>
+              <input
+                type="text"
+                class="form-control"
+                id="celular"
+                [formControl]="celularControl"
+                maxlength="9"
+                [class.is-invalid]="celularControl.invalid && celularControl.touched">
+              <div class="invalid-feedback" *ngIf="celularControl.invalid && celularControl.touched">
+                <div *ngIf="celularControl.errors?.['required']">El celular es obligatorio</div>
+                <div *ngIf="celularControl.errors?.['celularFormat']">Debe tener 9 dígitos</div>
               </div>
-              <small class="form-text text-muted">9 dígitos</small>
             </div>
 
             <!-- Correo -->
-            <div class="col-md-4">
-              <label class="form-label required">Correo Corporativo</label>
-              <input type="email" class="form-control"
-                     [(ngModel)]="trabajadorForm.correoCorporativo"
-                     name="correoCorporativo"
-                     [class.is-invalid]="formErrors.correoCorporativo"
-                     placeholder="usuario@empresa.com">
-              <div *ngIf="formErrors.correoCorporativo" class="invalid-feedback">
-                {{ formErrors.correoCorporativo }}
+            <div class="col-md-12">
+              <label for="correoCorporativo" class="form-label">Correo Corporativo *</label>
+              <input
+                type="email"
+                class="form-control"
+                id="correoCorporativo"
+                [formControl]="correoCorporativoControl"
+                [class.is-invalid]="correoCorporativoControl.invalid && correoCorporativoControl.touched">
+              <div class="invalid-feedback" *ngIf="correoCorporativoControl.invalid && correoCorporativoControl.touched">
+                <div *ngIf="correoCorporativoControl.errors?.['required']">El correo es obligatorio</div>
+                <div *ngIf="correoCorporativoControl.errors?.['email']">Formato de correo inválido</div>
+                <div *ngIf="correoCorporativoControl.errors?.['maxlength']">Máximo 150 caracteres</div>
+                <div *ngIf="correoCorporativoControl.errors?.['emailExists']">El correo ya está registrado</div>
               </div>
             </div>
 
-            <!-- Área -->
+            <!-- Área, Cargo, Empresa -->
             <div class="col-md-4">
-              <label class="form-label required">Área</label>
-              <select class="form-select"
-                      [(ngModel)]="trabajadorForm.areaId"
-                      name="areaId"
-                      [class.is-invalid]="formErrors.areaId">
-                <option [ngValue]="null" disabled>Seleccione un área</option>
-                <option *ngFor="let area of areas" [value]="area.id">
-                  {{ area.label }}
-                </option>
-              </select>
-              <div *ngIf="formErrors.areaId" class="invalid-feedback">
-                {{ formErrors.areaId }}
-              </div>
+              <label class="form-label">Área *</label>
+              <app-ngselect-dropdown
+                [items]="areas"
+                [formControl]="areaIdTrabajadorControl"
+                placeholder="Seleccione área"
+                [required]="true">
+              </app-ngselect-dropdown>
             </div>
 
-            <!-- Cargo -->
             <div class="col-md-4">
-              <label class="form-label required">Cargo</label>
-              <select class="form-select"
-                      [(ngModel)]="trabajadorForm.cargoId"
-                      name="cargoId"
-                      [class.is-invalid]="formErrors.cargoId">
-                <option [ngValue]="null" disabled>Seleccione un cargo</option>
-                <option *ngFor="let cargo of cargos" [value]="cargo.id">
-                  {{ cargo.label }}
-                </option>
-              </select>
-              <div *ngIf="formErrors.cargoId" class="invalid-feedback">
-                {{ formErrors.cargoId }}
-              </div>
+              <label class="form-label">Cargo *</label>
+              <app-ngselect-dropdown
+                [items]="cargos"
+                [formControl]="cargoIdTrabajadorControl"
+                placeholder="Seleccione cargo"
+                [required]="true">
+              </app-ngselect-dropdown>
             </div>
 
-            <!-- Empresa -->
             <div class="col-md-4">
               <label class="form-label">Empresa</label>
-              <select class="form-select"
-                      [(ngModel)]="trabajadorForm.empresaId"
-                      name="empresaId">
-                <option [ngValue]="null">Sin empresa asignada</option>
-                <option *ngFor="let empresa of empresas" [value]="empresa.id">
-                  {{ empresa.label }}
-                </option>
-              </select>
+              <app-ngselect-dropdown
+                [items]="empresas"
+                [formControl]="empresaIdTrabajadorControl"
+                placeholder="Seleccione empresa">
+              </app-ngselect-dropdown>
             </div>
-<!-- Campos de roles adicionales -->
-<div class="row mt-3">
-  <div class="col-12">
-    <label class="form-label">Roles Adicionales</label>
-    <div class="border rounded p-3">
-      <div class="row g-3">
-        <div class="col-md-4">
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" role="switch"
-                   [(ngModel)]="trabajadorForm.puedeSerLiquidador" name="puedeSerLiquidador">
-            <label class="form-check-label">
-              <span class="badge bg-primary">Liquidador</span>
-            </label>
-          </div>
-        </div>
 
-        <div class="col-md-4">
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" role="switch"
-                   [(ngModel)]="trabajadorForm.puedeSerEjecutante" name="puedeSerEjecutante">
-            <label class="form-check-label">
-              <span class="badge bg-info">Ejecutante</span>
-            </label>
-          </div>
-        </div>
+            <!-- Roles específicos -->
+            <div class="col-md-12">
+              <label class="form-label">Roles del Trabajador</label>
+              <div class="row g-2">
+                <div class="col-md-2">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [formControl]="puedeSerLiquidadorTrabajadorControl" id="liquidador">
+                    <label class="form-check-label" for="liquidador">Liquidador</label>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [formControl]="puedeSerEjecutanteTrabajadorControl" id="ejecutante">
+                    <label class="form-check-label" for="ejecutante">Ejecutante</label>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [formControl]="puedeSerAnalistaContableTrabajadorControl" id="analistaContable">
+                    <label class="form-check-label" for="analistaContable">Analista Contable</label>
+                  </div>
+                </div>
+                <div class="col-md-3">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [formControl]="puedeSerJefaturaResponsableTrabajadorControl" id="jefaturaResponsable">
+                    <label class="form-check-label" for="jefaturaResponsable">Jefatura Responsable</label>
+                  </div>
+                </div>
+                <div class="col-md-2">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [formControl]="puedeSerCoordinadorTiCwTrabajadorControl" id="coordinadorTiCw">
+                    <label class="form-check-label" for="coordinadorTiCw">Coordinador TI CW</label>
+                  </div>
+                </div>
+              </div>
+            </div>
 
-        <div class="col-md-4">
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" role="switch"
-                   [(ngModel)]="trabajadorForm.puedeSerAnalistaContable" name="puedeSerAnalistaContable">
-            <label class="form-check-label">
-              <span class="badge bg-warning text-dark">Analista Contable</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="col-md-4">
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" role="switch"
-                   [(ngModel)]="trabajadorForm.puedeSerJefaturaResponsable" name="puedeSerJefaturaResponsable">
-            <label class="form-check-label">
-              <span class="badge bg-success">Jefatura Responsable</span>
-            </label>
-          </div>
-        </div>
-
-        <div class="col-md-4">
-          <div class="form-check form-switch">
-            <input class="form-check-input" type="checkbox" role="switch"
-                   [(ngModel)]="trabajadorForm.puedeSerCoordinadorTiCw" name="puedeSerCoordinadorTiCw">
-            <label class="form-check-label">
-              <span class="badge bg-dark">Coordinador TI/CW</span>
-            </label>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</div>
-            <!-- Activo (solo para crear) -->
-            <div class="col-md-4" *ngIf="modalMode === 'create'">
-              <label class="form-label">Estado</label>
-              <div class="form-check form-switch">
-                <input class="form-check-input" type="checkbox" role="switch"
-                       [(ngModel)]="trabajadorForm.activo" name="activo">
-                <label class="form-check-label">
-                  {{ trabajadorForm.activo ? 'Activo' : 'Inactivo' }}
-                </label>
+            <!-- Estado -->
+            <div class="col-md-12" *ngIf="isCreating">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" [formControl]="activoTrabajadorControl" id="activo">
+                <label class="form-check-label" for="activo">Activo</label>
               </div>
             </div>
           </div>
-        </form>
-      </div>
+        </div>
 
-      <div class="modal-footer">
-        <button type="button" class="btn btn-secondary"
-                (click)="closeModal()" [disabled]="isSubmitting">
-          <i class="fas fa-times me-1"></i>Cancelar
-        </button>
-        <button type="button" class="btn btn-primary"
-                (click)="saveTrabajador()" [disabled]="isSubmitting">
-          <span *ngIf="!isSubmitting">
-            <i class="fas fa-save me-1"></i>
-            {{ modalMode === 'create' ? 'Crear Trabajador' : 'Guardar Cambios' }}
-          </span>
-          <span *ngIf="isSubmitting">
-            <i class="fas fa-spinner fa-spin me-1"></i>
-            Guardando...
-          </span>
-        </button>
-      </div>
+        <!-- Footer -->
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline-secondary" (click)="closeModal()">
+            <i class="bi bi-x-circle me-1"></i>Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary" [disabled]="trabajadorForm.invalid || isLoading">
+            <i class="bi bi-check-circle me-1"></i>
+            {{ isLoading ? 'Guardando...' : 'Guardar' }}
+          </button>
+        </div>
+      </form>
     </div>
   </div>
 </div>
-
-<!-- Overlay para modal -->
-<div class="modal-backdrop fade show" *ngIf="showModal"></div>

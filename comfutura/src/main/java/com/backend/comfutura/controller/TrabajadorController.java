@@ -1,7 +1,7 @@
 package com.backend.comfutura.controller;
 
-import com.backend.comfutura.dto.Page.MessageResponseDTO;
 import com.backend.comfutura.dto.Page.PageResponseDTO;
+import com.backend.comfutura.dto.request.TrabajadorFilterDTO;
 import com.backend.comfutura.dto.request.trabajadorDTO.TrabajadorRequestDTO;
 import com.backend.comfutura.dto.request.trabajadorDTO.TrabajadorUpdateDTO;
 import com.backend.comfutura.dto.response.trabajadorDTO.TrabajadorDetailDTO;
@@ -10,12 +10,13 @@ import com.backend.comfutura.dto.response.trabajadorDTO.TrabajadorStatsDTO;
 import com.backend.comfutura.service.TrabajadorService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/trabajadores")
@@ -24,131 +25,100 @@ public class TrabajadorController {
 
     private final TrabajadorService trabajadorService;
 
-    // GET: Listar trabajadores con paginación y filtros
+    // GET: Obtener todos los trabajadores (paginado)
     @GetMapping
     public ResponseEntity<PageResponseDTO<TrabajadorSimpleDTO>> getAllTrabajadores(
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size,
-            @RequestParam(defaultValue = "idTrabajador") String sortBy,
-            @RequestParam(defaultValue = "asc") String direction,
-            @RequestParam(required = false) Boolean activos,
-            @RequestParam(required = false) Integer areaId,
-            @RequestParam(required = false) Integer cargoId,
-            @RequestParam(required = false) Integer empresaId,
-            @RequestParam(required = false) String search) {
+            @PageableDefault(size = 10, sort = "fechaCreacion") Pageable pageable) {
+        return ResponseEntity.ok(trabajadorService.findAllTrabajadores(pageable));
+    }
 
-        Sort.Direction sortDirection = direction.equalsIgnoreCase("desc")
-                ? Sort.Direction.DESC
-                : Sort.Direction.ASC;
+    // GET: Buscar trabajadores con filtros avanzados
+    @PostMapping("/search")
+    public ResponseEntity<PageResponseDTO<TrabajadorSimpleDTO>> searchTrabajadores(
+            @RequestBody TrabajadorFilterDTO filterDTO) {
+        return ResponseEntity.ok(trabajadorService.searchTrabajadoresAdvanced(filterDTO));
+    }
 
-        Pageable pageable = PageRequest.of(page, size, Sort.by(sortDirection, sortBy));
-
-        PageResponseDTO<TrabajadorSimpleDTO> response;
-
-        if (search != null || areaId != null || cargoId != null || empresaId != null) {
-            response = trabajadorService.searchTrabajadores(
-                    search, activos, areaId, cargoId, empresaId, pageable);
-        } else if (activos != null && activos) {
-            response = trabajadorService.findTrabajadoresActivos(pageable);
-        } else {
-            response = trabajadorService.findAllTrabajadores(pageable);
-        }
-
-        return ResponseEntity.ok(response);
+    // GET: Buscar por texto
+    @GetMapping("/search")
+    public ResponseEntity<PageResponseDTO<TrabajadorSimpleDTO>> searchTrabajadores(
+            @RequestParam(required = false) String search,
+            @PageableDefault(size = 10) Pageable pageable) {
+        return ResponseEntity.ok(trabajadorService.searchTrabajadores(search, pageable));
     }
 
     // GET: Obtener trabajador por ID
     @GetMapping("/{id}")
     public ResponseEntity<TrabajadorDetailDTO> getTrabajadorById(@PathVariable Integer id) {
+        return ResponseEntity.ok(trabajadorService.findTrabajadorById(id));
+    }
+
+    // GET: Verificar si correo existe
+    @GetMapping("/check-email")
+    public ResponseEntity<Boolean> checkEmailExists(@RequestParam String email) {
         try {
-            TrabajadorDetailDTO trabajador = trabajadorService.findTrabajadorById(id);
-            return ResponseEntity.ok(trabajador);
+            trabajadorService.findTrabajadorByEmail(email);
+            return ResponseEntity.ok(true);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(false);
         }
     }
 
-    // GET: Obtener trabajador por DNI
-    @GetMapping("/buscar/dni")
-    public ResponseEntity<TrabajadorDetailDTO> getTrabajadorByDni(@RequestParam String dni) {
+    // GET: Verificar si DNI existe
+    @GetMapping("/check-dni")
+    public ResponseEntity<Boolean> checkDniExists(@RequestParam String dni) {
         try {
-            TrabajadorDetailDTO trabajador = trabajadorService.findTrabajadorByDni(dni);
-            return ResponseEntity.ok(trabajador);
+            trabajadorService.findTrabajadorByDni(dni);
+            return ResponseEntity.ok(true);
         } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.ok(false);
         }
     }
 
     // POST: Crear nuevo trabajador
     @PostMapping
-    public ResponseEntity<?> createTrabajador(@Valid @RequestBody TrabajadorRequestDTO trabajadorDTO) {
-        try {
-            TrabajadorDetailDTO nuevoTrabajador = trabajadorService.createTrabajador(trabajadorDTO);
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevoTrabajador);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponseDTO(e.getMessage(), null));
-        }
+    public ResponseEntity<TrabajadorDetailDTO> createTrabajador(
+            @Valid @RequestBody TrabajadorRequestDTO trabajadorDTO) {
+        return ResponseEntity.status(HttpStatus.CREATED)
+                .body(trabajadorService.createTrabajador(trabajadorDTO));
     }
 
     // PUT: Actualizar trabajador
     @PutMapping("/{id}")
-    public ResponseEntity<?> updateTrabajador(
+    public ResponseEntity<TrabajadorDetailDTO> updateTrabajador(
             @PathVariable Integer id,
             @Valid @RequestBody TrabajadorUpdateDTO trabajadorDTO) {
-        try {
-            TrabajadorDetailDTO trabajadorActualizado = trabajadorService.updateTrabajador(id, trabajadorDTO);
-            return ResponseEntity.ok(trabajadorActualizado);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponseDTO(e.getMessage(), null));
-        }
+        return ResponseEntity.ok(trabajadorService.updateTrabajador(id, trabajadorDTO));
     }
 
-    // PATCH: Activar/Desactivar trabajador
+    // PATCH: Cambiar estado activo/inactivo
     @PatchMapping("/{id}/toggle-activo")
-    public ResponseEntity<?> toggleTrabajadorActivo(@PathVariable Integer id) {
-        try {
-            TrabajadorDetailDTO trabajador = trabajadorService.toggleTrabajadorActivo(id);
-            return ResponseEntity.ok(trabajador);
-        } catch (RuntimeException e) {
-            return ResponseEntity.badRequest()
-                    .body(new MessageResponseDTO(e.getMessage(), null));
-        }
+    public ResponseEntity<TrabajadorDetailDTO> toggleActivo(@PathVariable Integer id) {
+        return ResponseEntity.ok(trabajadorService.toggleTrabajadorActivo(id));
     }
 
-    // GET: Estadísticas de trabajadores
-    @GetMapping("/estadisticas")
-    public ResponseEntity<TrabajadorStatsDTO> getEstadisticas() {
-        TrabajadorStatsDTO estadisticas = trabajadorService.getTrabajadorStats();
-        return ResponseEntity.ok(estadisticas);
+    // GET: Estadísticas
+    @GetMapping("/stats")
+    public ResponseEntity<TrabajadorStatsDTO> getStats() {
+        return ResponseEntity.ok(trabajadorService.getTrabajadorStats());
     }
 
-    // GET: Contar trabajadores activos por área
-    @GetMapping("/contar/area/{areaId}")
+    // GET: Contar activos por área
+    @GetMapping("/stats/area/{areaId}/activos")
     public ResponseEntity<Long> countActivosByArea(@PathVariable Integer areaId) {
-        long count = trabajadorService.countActivosByArea(areaId);
-        return ResponseEntity.ok(count);
+        return ResponseEntity.ok(trabajadorService.countActivosByArea(areaId));
     }
 
-    // GET: Contar trabajadores por cargo
-    @GetMapping("/contar/cargo/{cargoId}")
-    public ResponseEntity<Long> countByCargo(@PathVariable Integer cargoId) {
-        long count = trabajadorService.countByCargo(cargoId);
-        return ResponseEntity.ok(count);
-    }
+    // GET: Obtener trabajadores por filtros (para selects, combos, etc.)
+    @GetMapping("/filter")
+    public ResponseEntity<List<TrabajadorSimpleDTO>> getTrabajadoresByFilters(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Boolean activo,
+            @RequestParam(required = false) List<Integer> areaIds,
+            @RequestParam(required = false) List<Integer> cargoIds,
+            @RequestParam(required = false) List<Boolean> roles) {
 
-    // GET: Buscar trabajadores por nombre o apellido
-    @GetMapping("/buscar/nombre")
-    public ResponseEntity<PageResponseDTO<TrabajadorSimpleDTO>> buscarPorNombre(
-            @RequestParam String nombre,
-            @RequestParam(defaultValue = "0") int page,
-            @RequestParam(defaultValue = "10") int size) {
-
-        Pageable pageable = PageRequest.of(page, size);
-        PageResponseDTO<TrabajadorSimpleDTO> response =
-                trabajadorService.searchTrabajadores(nombre, null, null, null, null, pageable);
-
-        return ResponseEntity.ok(response);
+        return ResponseEntity.ok(trabajadorService.getTrabajadoresByFilters(
+                search, activo, areaIds, cargoIds, roles));
     }
 }

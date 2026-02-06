@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { Site, SiteRequest } from '../model/site.interface';
+import { Site, SiteRequest, SiteFilter } from '../model/site.interface';
 import { PageResponse } from '../model/page.interface';
 import { environment } from '../../environment';
 
@@ -9,7 +9,7 @@ import { environment } from '../../environment';
   providedIn: 'root'
 })
 export class SiteService {
-  private apiUrl = `${environment.baseUrl}/api/site`; // Cambiado a plural
+  private apiUrl = `${environment.baseUrl}/api/site`;
 
   constructor(private http: HttpClient) {}
 
@@ -32,7 +32,7 @@ export class SiteService {
     }
   }
 
-  // Listar con paginación y filtros
+  // Listar con paginación y filtros BÁSICOS (compatibilidad)
   listar(
     page: number = 0,
     size: number = 10,
@@ -53,14 +53,44 @@ export class SiteService {
     return this.http.get<PageResponse<Site>>(this.apiUrl, { params });
   }
 
-  // Buscar sites con texto
-  buscar(search: string, page: number = 0, size: number = 10): Observable<PageResponse<Site>> {
+  // FILTROS AVANZADOS - Nuevo método
+  filtrar(
+    filters: SiteFilter,
+    page: number = 0,
+    size: number = 10,
+    sort: string = 'codigoSitio',
+    direction: string = 'asc'
+  ): Observable<PageResponse<Site>> {
     let params = new HttpParams()
-      .set('search', search)
       .set('page', page.toString())
-      .set('size', size.toString());
+      .set('size', size.toString())
+      .set('sort', sort)
+      .set('direction', direction);
 
-    return this.http.get<PageResponse<Site>>(`${this.apiUrl}/buscar`, { params });
+    // Agregar filtros si existen
+    if (filters.search) {
+      params = params.set('search', filters.search);
+    }
+    if (filters.activo !== undefined && filters.activo !== null) {
+      params = params.set('activo', filters.activo.toString());
+    }
+    if (filters.codigoSitio) {
+      params = params.set('codigoSitio', filters.codigoSitio);
+    }
+    if (filters.descripcion) {
+      params = params.set('descripcion', filters.descripcion);
+    }
+    if (filters.direccion) {
+      params = params.set('direccion', filters.direccion);
+    }
+
+    return this.http.get<PageResponse<Site>>(`${this.apiUrl}/filtrar`, { params });
+  }
+
+  // Buscar sites con texto (método simplificado)
+  buscar(search: string, page: number = 0, size: number = 10): Observable<PageResponse<Site>> {
+    const filters: SiteFilter = { search };
+    return this.filtrar(filters, page, size);
   }
 
   // Obtener site por ID
@@ -73,10 +103,25 @@ export class SiteService {
     return this.http.post<void>(`${this.apiUrl}/${id}/toggle`, {});
   }
 
-
+  // Eliminar site (soft delete)
+  eliminar(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
+  }
 
   // Verificar si código existe
   verificarCodigo(codigo: string): Observable<boolean> {
     return this.http.get<boolean>(`${this.apiUrl}/verificar-codigo/${codigo}`);
   }
+
+  // Método para limpiar filtros
+  crearFiltrosVacios(): SiteFilter {
+    return {
+      search: '',
+      activo: null,
+      codigoSitio: '',
+      descripcion: '',
+      direccion: ''
+    };
+  }
 }
+

@@ -8,7 +8,6 @@ import { Subscription, debounceTime, distinctUntilChanged } from 'rxjs';
 import { PaginationComponent } from '../../component/pagination.component/pagination.component';
 import {  UsuarioSimple, UsuarioRequest, UsuarioUpdate } from '../../model/usuario';
 import { UsuarioService } from '../../service/usuario.service';
-import { Trabajador } from '../../service/trabajador.service';
 import { PermisoDirective } from '../../directive/permiso.directive';
 
 @Component({

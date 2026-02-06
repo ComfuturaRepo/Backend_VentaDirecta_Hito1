@@ -7,17 +7,23 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
 public interface ProyectoService {
-    // Paginados
+
     PageResponseDTO<ProyectoResponse> listarProyectos(Pageable pageable);
+
     PageResponseDTO<ProyectoResponse> listarTodos(Pageable pageable);
+
     PageResponseDTO<ProyectoResponse> buscarProyectos(String search, Pageable pageable);
 
-    // CRUD
-    ProyectoResponse crearProyecto(Proyecto proyecto);
-    ProyectoResponse editarProyecto(Integer id, Proyecto proyectoActualizado);
-    ProyectoResponse obtenerProyectoPorId(Integer id);
-    ProyectoResponse toggleProyecto(Integer id);
+    // Nuevo método para búsqueda avanzada
+    PageResponseDTO<ProyectoResponse> buscarProyectosAvanzado(String nombre, Boolean activo, Pageable pageable);
 
-    // Para mantener compatibilidad (opcional)
     Page<ProyectoResponse> listarProyectos(int page);
+
+    ProyectoResponse crearProyecto(Proyecto proyecto);
+
+    ProyectoResponse editarProyecto(Integer id, Proyecto proyectoActualizado);
+
+    ProyectoResponse obtenerProyectoPorId(Integer id);
+
+    ProyectoResponse toggleProyecto(Integer id);
 }

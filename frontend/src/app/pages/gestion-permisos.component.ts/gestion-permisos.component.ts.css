@@ -1,121 +1,118 @@
-/* Estilos específicos para el componente de gestión de permisos */
-
-/* Mejoras para la tabla */
-.table th {
+/* gestion-permisos.component.css */
+:host {
+  display: block;
   background-color: #f8f9fa;
+  min-height: 100vh;
+}
+
+/* Spinner animado */
+.spin {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+/* Tabla profesional - diseño empresarial */
+.table {
+  font-size: 0.875rem;
+}
+
+.table thead th {
   font-weight: 600;
-  color: #495057;
-  border-bottom: 2px solid #dee2e6;
+  letter-spacing: 0.5px;
+  padding: 0.75rem 1rem;
+  border-top: none;
 }
 
-.table td {
+.table tbody td {
+  padding: 0.75rem 1rem;
   vertical-align: middle;
-  padding: 0.75rem;
 }
 
-/* Badges personalizados */
+/* Efecto hover suave para la tabla */
+.table-hover tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.table-hover tbody tr:hover {
+  background-color: rgba(13, 110, 253, 0.03);
+}
+
+/* Badges compactos y profesionales */
 .badge {
   font-weight: 500;
-  letter-spacing: 0.3px;
-}
-
-/* Hover en filas de la tabla */
-.table-hover tbody tr:hover {
-  background-color: rgba(13, 110, 253, 0.04);
-}
-
-/* Botones de acciones */
-.btn-group-sm .btn {
+  font-size: 0.7rem;
   padding: 0.25rem 0.5rem;
 }
 
-/* Modal personalizado */
-.modal-content {
-  border: none;
-  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+/* Código de permiso */
+code {
+  font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, monospace;
+  font-size: 0.8rem;
+  font-weight: 600;
 }
 
-.modal-header {
-  border-radius: 0.375rem 0.375rem 0 0;
+/* Botones de acción */
+.btn-group .btn {
+  padding: 0.25rem 0.5rem;
 }
 
-/* Tarjetas de selección */
+/* Inputs y selects */
+.input-group-sm .form-control,
+.form-select-sm {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.5rem;
+}
+
+/* Cards con bordes definidos */
 .card {
-  transition: all 0.2s ease-in-out;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
-}
-
-/* Checkboxes */
-.form-check-input:checked {
-  background-color: #0d6efd;
-  border-color: #0d6efd;
-}
-
-.form-check-input:focus {
-  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
-}
-
-/* Scroll personalizado para áreas de selección */
-.card-body::-webkit-scrollbar {
-  width: 6px;
-}
-
-.card-body::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 3px;
-}
-
-.card-body::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
-}
-
-.card-body::-webkit-scrollbar-thumb:hover {
-  background: #a1a1a1;
+/* Header de cards */
+.card-header {
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
 }
 
 /* Responsive */
 @media (max-width: 768px) {
   .table-responsive {
-    border: 0;
+    margin: 0 -1rem;
   }
 
-  .btn-group {
-    display: flex;
+  .table {
+    font-size: 0.8rem;
   }
 
-  .modal-dialog {
-    margin: 0.5rem;
+  .badge {
+    font-size: 0.65rem;
+    padding: 0.2rem 0.4rem;
+  }
+
+  .btn-group .btn {
+    padding: 0.2rem 0.4rem;
   }
 }
 
-/* Animaciones de carga */
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to { opacity: 1; }
+/* Mejora en focos */
+.form-control:focus,
+.form-select:focus {
+  border-color: #86b7fe;
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.15);
 }
 
-.table tbody tr {
-  animation: fadeIn 0.3s ease-in-out;
+/* Ajuste de padding en containers */
+.container-fluid {
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
 }
 
-/* Estado de carga */
-.spinner-border {
-  width: 1.5rem;
-  height: 1.5rem;
-}
-
-/* Estilos para el código del permiso */
-code {
-  font-family: 'Courier New', monospace;
-  font-size: 0.875em;
-}
-
-/* Mejoras para el modal backdrop */
-.modal-backdrop {
-  opacity: 0.5;
+/* Empty state */
+.display-5 {
+  font-size: 3rem;
 }

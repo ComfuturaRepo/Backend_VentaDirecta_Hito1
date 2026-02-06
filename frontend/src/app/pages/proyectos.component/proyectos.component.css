@@ -1,0 +1,527 @@
+/* Estilos base */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* Header */
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 30px;
+}
+
+.header h1 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 24px;
+  margin: 0;
+}
+
+/* Botones */
+.btn {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.btn-primary {
+  background: #4e54c8;
+  color: white;
+}
+
+.btn-primary:hover {
+  background: #3d43b5;
+}
+
+.btn-secondary {
+  background: #e9ecef;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background: #dee2e6;
+}
+
+/* Filtros */
+.filtros {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+  align-items: center;
+  background: #f8f9fa;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+.filtro-grupo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.input-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.input-group i {
+  position: absolute;
+  left: 12px;
+  color: #6c757d;
+}
+
+.input-group input {
+  padding: 8px 12px 8px 35px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  width: 250px;
+}
+
+.btn-clear {
+  position: absolute;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #6c757d;
+  cursor: pointer;
+  padding: 0;
+}
+
+select {
+  padding: 8px 12px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  background: white;
+  min-width: 150px;
+}
+
+.btn-sort {
+  width: 36px;
+  height: 36px;
+  border: 1px solid #dee2e6;
+  background: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+/* Switch */
+.switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: relative;
+  width: 44px;
+  height: 22px;
+  background: #ccc;
+  border-radius: 34px;
+  transition: .2s;
+}
+
+.slider:before {
+  content: "";
+  position: absolute;
+  height: 16px;
+  width: 16px;
+  left: 3px;
+  bottom: 3px;
+  background: white;
+  border-radius: 50%;
+  transition: .2s;
+}
+
+input:checked + .slider {
+  background: #4e54c8;
+}
+
+input:checked + .slider:before {
+  transform: translateX(22px);
+}
+
+/* Tabla */
+.tabla-contenedor {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.tabla {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tabla th {
+  background: #f8f9fa;
+  padding: 15px;
+  text-align: left;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+}
+
+.tabla td {
+  padding: 15px;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.tabla tbody tr:hover {
+  background: #f8f9fa;
+}
+
+.text-end {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: #6c757d;
+}
+
+/* Proyecto info */
+.proyecto-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.proyecto-avatar {
+  width: 40px;
+  height: 40px;
+  background: linear-gradient(135deg, #4e54c8 0%, #8f94fb 100%);
+  color: white;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+  font-size: 16px;
+}
+
+/* Estado */
+.estado {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.estado.activo {
+  background: rgba(40, 167, 69, 0.1);
+  color: #28a745;
+}
+
+.estado:not(.activo) {
+  background: rgba(220, 53, 69, 0.1);
+  color: #dc3545;
+}
+
+/* Acciones */
+.acciones {
+  display: flex;
+  gap: 8px;
+  justify-content: flex-end;
+}
+
+.btn-accion {
+  width: 32px;
+  height: 32px;
+  border: none;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: white;
+  font-size: 14px;
+}
+
+.btn-info {
+  background: #17a2b8;
+}
+
+.btn-warning {
+  background: #ffc107;
+}
+
+.btn-danger {
+  background: #dc3545;
+}
+
+.btn-success {
+  background: #28a745;
+}
+
+.btn-accion:hover {
+  opacity: 0.9;
+}
+
+/* Spinner */
+.spinner {
+  width: 30px;
+  height: 30px;
+  border: 3px solid #f3f3f3;
+  border-top: 3px solid #4e54c8;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.spinner-large {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #4e54c8;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+/* Modal */
+.modal {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.modal-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.modal-content {
+  position: relative;
+  background: white;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  max-height: 80vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+  animation: modalSlide 0.3s ease;
+}
+
+@keyframes modalSlide {
+  from {
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px;
+  border-bottom: 1px solid #dee2e6;
+}
+
+.modal-header h2 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+}
+
+.btn-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #f8f9fa;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.btn-close:hover {
+  background: #e9ecef;
+}
+
+.modal-body {
+  padding: 20px;
+}
+
+.modal-footer {
+  padding: 20px;
+  border-top: 1px solid #dee2e6;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+/* Formulario */
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.form-group input[type="text"] {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+}
+
+.error {
+  color: #dc3545;
+  font-size: 13px;
+  margin-top: 5px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+
+/* Detalle */
+.detalle-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #f1f3f5;
+}
+
+.detalle-item:last-child {
+  border-bottom: none;
+}
+
+/* Switch en modal */
+.switch-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.9);
+  z-index: 2000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.loading-content {
+  text-align: center;
+}
+
+.loading-content h3 {
+  margin-top: 15px;
+  color: #4e54c8;
+}
+
+/* Paginación contenedor */
+.paginacion-contenedor {
+  margin-top: 20px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .header {
+    flex-direction: column;
+    gap: 15px;
+    align-items: stretch;
+  }
+
+  .filtros {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filtro-grupo {
+    width: 100%;
+  }
+
+  .input-group input {
+    width: 100%;
+  }
+
+  select {
+    flex: 1;
+  }
+
+  .modal-content {
+    width: 95%;
+    margin: 10px;
+  }
+}
+
+/* Scrollbar personalizado */
+.modal-content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}

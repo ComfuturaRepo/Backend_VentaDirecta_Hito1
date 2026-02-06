@@ -1,403 +1,527 @@
-<div class="sites-container bg-light min-vh-100 py-4">
+<div class="site-container">
   <!-- Header Principal -->
-  <div class="container">
-    <div class="page-header mb-4">
-      <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3">
-        <div class="d-flex align-items-center gap-3">
-          <div class="header-icon bg-primary-gradient rounded-3 p-3 shadow-sm">
-            <i class="bi bi-building text-white fs-2"></i>
-          </div>
-          <div>
-            <h1 class="page-title mb-1">Gestión de Sitios</h1>
-            <p class="page-subtitle text-muted mb-0">
-              Administra los sitios disponibles en el sistema
-            </p>
-          </div>
-        </div>
-
-        <!-- Botón Nuevo Sitio -->
-        <button class="btn btn-primary btn-lg shadow-sm" (click)="openCreateModal()" [disabled]="isLoading"  *appPermiso="'SITE_MANAGE'">
-          <i class="bi bi-plus-circle me-2"></i>
-          Nuevo Sitio
-        </button>
+  <div class="site-header">
+    <div class="header-content">
+      <div class="header-left">
+        <h1 class="page-title">
+          <i class="bi bi-buildings me-2"></i>
+          Gestión de Sitios
+        </h1>
+        <p class="page-subtitle">Administre y consulte todos los sitios registrados en el sistema</p>
       </div>
-    </div>
-
-    <!-- Barra de Búsqueda y Filtros -->
-    <div class="search-section mb-4">
-      <div class="row g-3 align-items-center">
-        <!-- Búsqueda -->
-        <div class="col-md-8 col-lg-6">
-          <div class="input-group input-group-lg shadow-sm">
-            <span class="input-group-text bg-white border-end-0">
-              <i class="bi bi-search text-muted"></i>
-            </span>
-            <input
-              type="text"
-              class="form-control border-start-0"
-              placeholder="Buscar por código, descripción..."
-              [(ngModel)]="searchTerm"
-              (input)="onSearchInput()"
-              [disabled]="isLoading"
-            />
-            <button *ngIf="searchTerm"
-                    class="btn btn-outline-secondary"
-                    type="button"
-                    (click)="clearSearch()"
-                    [disabled]="isLoading">
-              <i class="bi bi-x-lg"></i>
-            </button>
+      <div class="header-right">
+        <div class="stats-container">
+          <div class="stat-card">
+            <i class="bi bi-check-circle-fill text-success"></i>
+            <div class="stat-info">
+              <span class="stat-value">{{ getActiveSitesCount() }}</span>
+              <span class="stat-label">Activos</span>
+            </div>
           </div>
-        </div>
-
-        <!-- Filtros de Estado -->
-        <div class="col-md-4 col-lg-6">
-          <div class="filters-card bg-white rounded-3 p-3 shadow-sm">
-            <div class="d-flex justify-content-between align-items-center">
-              <div class="btn-group btn-group-sm" role="group">
-                <button type="button"
-                        class="btn"
-                        [ngClass]="getFilterButtonClass(undefined, filterActivos)"
-                        (click)="changeFilterActivos(undefined)"
-                        [disabled]="isLoading">
-                  {{ getFilterButtonText(undefined) }}
-                </button>
-                <button type="button"
-                        class="btn"
-                        [ngClass]="getFilterButtonClass(true, filterActivos)"
-                        (click)="changeFilterActivos(true)"
-                        [disabled]="isLoading">
-                  {{ getFilterButtonText(true) }}
-                </button>
-                <button type="button"
-                        class="btn"
-                        [ngClass]="getFilterButtonClass(false, filterActivos)"
-                        (click)="changeFilterActivos(false)"
-                        [disabled]="isLoading">
-                  {{ getFilterButtonText(false) }}
-                </button>
-              </div>
-
-              <div class="text-end">
-                <div class="total-count">
-                  <span class="fw-bold">{{ totalElements }}</span>
-                  <span class="text-muted ms-1">sitios</span>
-                </div>
-              </div>
+          <div class="stat-card">
+            <i class="bi bi-x-circle-fill text-secondary"></i>
+            <div class="stat-info">
+              <span class="stat-value">{{ getInactiveSitesCount() }}</span>
+              <span class="stat-label">Inactivos</span>
+            </div>
+          </div>
+          <div class="stat-card">
+            <i class="bi bi-collection-fill text-primary"></i>
+            <div class="stat-info">
+              <span class="stat-value">{{ getTotalSitesCount() }}</span>
+              <span class="stat-label">Total</span>
             </div>
           </div>
         </div>
-
-        <!-- Duplicar Sitio -->
-        <div class="col-md-4 col-lg-6">
-          <div class="duplicate-section bg-white rounded-3 p-3 shadow-sm">
-            <div class="row g-2 align-items-center">
-              <div class="col-md-8">
-                <app-ngselect-dropdown
-                  [items]="siteOptions"
-                  [label]="'Duplicar sitio existente'"
-                  [placeholder]="'Seleccione un sitio para duplicar'"
-                  [loading]="isLoading"
-                  (selectionChange)="onSiteSelectionChange($event)">
-                </app-ngselect-dropdown>
-              </div>
-              <div class="col-md-4">
-                <button class="btn btn-outline-primary w-100"
-                        (click)="openDuplicateModal()"
-                        [disabled]="!selectedSiteId || isLoading">
-                  <i class="bi bi-files me-2"></i>
-                  Duplicar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Mensaje de Error -->
-    <div *ngIf="errorMessage && !showModal"
-         class="alert alert-danger alert-dismissible fade show shadow-sm mb-4"
-         role="alert">
-      <i class="bi bi-exclamation-triangle-fill me-2"></i>
-      {{ errorMessage }}
-      <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
-    </div>
-
-    <!-- Contenido Principal -->
-    <div class="main-content">
-      <!-- Loading de Tabla -->
-      <div *ngIf="isTableLoading && sites.length === 0"
-           class="loading-container text-center py-5">
-        <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status"></div>
-        <p class="mt-3 text-muted">Cargando sitios...</p>
-      </div>
-
-      <!-- Grid de Tarjetas -->
-      <div *ngIf="!isTableLoading || sites.length > 0" class="row g-4">
-        <ng-container *ngFor="let site of sites">
-          <div class="col-md-6 col-lg-4 col-xl-3">
-            <div class="site-card" [class.inactive]="!site.activo">
-              <div class="site-header">
-                <div class="site-icon bg-primary-subtle text-primary">
-                  <i class="bi bi-building"></i>
-                </div>
-                <div class="site-status">
-                  <span class="badge status-badge" [ngClass]="getStatusBadgeClass(site.activo)">
-                    <i class="bi me-1" [ngClass]="getStatusIcon(site.activo)"></i>
-                    {{ getStatusText(site.activo) }}
-                  </span>
-                </div>
-              </div>
-
-              <div class="site-body">
-                <div class="site-id">
-                  <small class="text-muted">ID:</small>
-                  <span class="ms-1 fw-medium">#{{ site.idSite }}</span>
-                </div>
-
-                <h5 class="site-code">{{ site.codigoSitio || 'Sin código' }}</h5>
-
-                <div class="site-description">
-                  <strong>Descripciones:</strong>
-                  <ul class="mb-0 mt-1 ps-3">
-                    <li *ngFor="let desc of site.descripciones" class="small">
-                      {{ desc.descripcion }}
-                    </li>
-                  </ul>
-                </div>
-
-                <div class="site-meta">
-                  <small class="text-muted">
-                    <i class="bi bi-clock me-1"></i>
-                    {{ site.fechaCreacion | date:'dd/MM/yyyy' }}
-                  </small>
-                </div>
-              </div>
-
-              <div class="site-actions">
-                <button class="btn btn-outline-primary btn-sm" *appPermiso="'SITE_MANAGE'"
-                        (click)="openEditModal(site)"
-                        [disabled]="isLoading">
-                  <i class="bi bi-pencil-square me-1"></i>
-                  Editar
-                </button>
-                <button class="btn btn-sm ms-2"
-                        [ngClass]="site.activo ? 'btn-outline-danger' : 'btn-outline-success'"
-                        (click)="toggleActivo(site)"
-                        [disabled]="isLoading">
-                  <i class="bi me-1" [ngClass]="site.activo ? 'bi-toggle-off' : 'bi-toggle-on'"></i>
-                  {{ site.activo ? 'Desactivar' : 'Activar' }}
-                </button>
-
-              </div>
-            </div>
-          </div>
-        </ng-container>
-
-        <!-- Estado Vacío -->
-        <div *ngIf="sites.length === 0 && !isTableLoading" class="col-12">
-          <div class="empty-state text-center py-5">
-            <div class="empty-icon mb-3">
-              <i class="bi bi-buildings text-muted" style="font-size: 4rem;"></i>
-            </div>
-            <h4 class="text-muted mb-2">
-              {{ searchTerm ? 'No se encontraron resultados' : 'No hay sitios registrados' }}
-            </h4>
-            <p class="text-muted mb-4">
-              {{ searchTerm
-                ? 'Intenta con otros términos de búsqueda'
-                : 'Comienza creando tu primer sitio en el sistema.' }}
-            </p>
-            <button *ngIf="!searchTerm"
-                    class="btn btn-primary"
-                    (click)="openCreateModal()"
-                    [disabled]="isLoading">
-              <i class="bi bi-plus-circle me-2"></i>
-              Crear primer sitio
-            </button>
-            <button *ngIf="searchTerm"
-                    class="btn btn-outline-secondary"
-                    (click)="clearSearch()"
-                    [disabled]="isLoading">
-              <i class="bi bi-x-lg me-2"></i>
-              Limpiar búsqueda
-            </button>
-          </div>
-        </div>
-      </div>
-
-      <!-- Paginación Component -->
-      <div *ngIf="totalPages > 1 && sites.length > 0" class="pagination-section mt-5">
-        <app-pagination
-          [currentPage]="currentPage"
-          [totalItems]="totalElements"
-          [totalPages]="totalPages"
-          [pageSize]="pageSize"
-          [showInfo]="paginationConfig.showInfo"
-          [showSizeSelector]="paginationConfig.showSizeSelector"
-          [showNavigation]="paginationConfig.showNavigation"
-          [showJumpToPage]="paginationConfig.showJumpToPage"
-          [pageSizes]="paginationConfig.pageSizes"
-          [align]="paginationConfig.align"
-          [size]="paginationConfig.size"
-          [isLoading]="isLoading"
-          (pageChange)="onPageChange($event)"
-          (pageSizeChange)="onPageSizeChange($event)"
-          (refresh)="onRefresh()">
-        </app-pagination>
       </div>
     </div>
   </div>
 
-  <!-- Modal para Formulario -->
-  <div *ngIf="showModal" class="modal-overlay" (click)="closeModal()">
-    <div class="modal-container" (click)="$event.stopPropagation()">
-      <div class="modal-content shadow-lg">
-        <!-- Header del Modal -->
-        <div class="modal-header bg-primary-gradient text-white">
-          <div class="modal-icon">
-            <i class="bi" [ngClass]="isEditMode ? 'bi-pencil-square' : 'bi-plus-circle'"></i>
-          </div>
-          <div>
-            <h5 class="modal-title mb-0">
-              {{ isEditMode ? 'Editar Sitio' : 'Nuevo Sitio' }}
-            </h5>
-            <small class="opacity-75">
-              {{ isEditMode ? 'Modifica los datos del sitio' : 'Complete los datos del nuevo sitio' }}
-            </small>
-          </div>
-          <button type="button" class="btn-close btn-close-white" (click)="closeModal()"></button>
+  <!-- Barra de Acciones y Búsqueda -->
+  <div class="action-bar">
+    <div class="action-left">
+      <div class="search-container">
+        <div class="search-wrapper">
+          <i class="bi bi-search search-icon"></i>
+          <input
+            type="text"
+            class="search-input"
+            placeholder="Buscar por código, descripción..."
+            [(ngModel)]="searchTerm"
+            (input)="onSearchInput()"
+            [disabled]="isTableLoading"
+          >
+          <button
+            *ngIf="searchTerm"
+            class="btn btn-clear-search"
+            (click)="clearFilters()"
+            [disabled]="isTableLoading"
+          >
+            <i class="bi bi-x-lg"></i>
+          </button>
         </div>
+      </div>
 
-        <!-- Body del Modal -->
-        <div class="modal-body">
-          <form (ngSubmit)="saveSite()" #siteForm="ngForm">
-            <!-- Campo Código -->
-            <div class="form-group mb-4">
-              <label class="form-label fw-medium">
-                Código de Sitio
-                <span class="form-hint">(Opcional, máximo 150 caracteres)</span>
-              </label>
-              <input
-                type="text"
-                class="form-control form-control-lg"
-                [(ngModel)]="currentSite.codigoSitio"
-                name="codigoSitio"
-                maxlength="150"
-                placeholder="Ej: SIT-001"
-                [disabled]="isLoading"
-              >
-              <div class="mt-1 text-end">
-                <small class="text-muted">
-                  {{ currentSite.codigoSitio?.length || 0 }}/150 caracteres
-                </small>
+      <!-- Filtros Rápidos -->
+      <div class="quick-filters">
+        <div class="filter-group">
+          <span class="filter-label">Estado:</span>
+          <div class="btn-group" role="group">
+            <button
+              type="button"
+              class="btn btn-filter"
+              [class.active]="filters.activo === undefined"
+              (click)="changeFilterActivos(undefined)"
+              [disabled]="isTableLoading"
+            >
+              <i class="bi bi-grid-3x3-gap"></i>
+              Todos
+            </button>
+            <button
+              type="button"
+              class="btn btn-filter"
+              [class.active]="filters.activo === true"
+              (click)="changeFilterActivos(true)"
+              [disabled]="isTableLoading"
+            >
+              <i class="bi bi-check-circle"></i>
+              Activos
+            </button>
+            <button
+              type="button"
+              class="btn btn-filter"
+              [class.active]="filters.activo === false"
+              (click)="changeFilterActivos(false)"
+              [disabled]="isTableLoading"
+            >
+              <i class="bi bi-x-circle"></i>
+              Inactivos
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="action-right">
+
+
+      <!-- Botón Nuevo Site -->
+      <button  *appPermiso="'SITE_MANAGE'"
+        class="btn btn-primary btn-new-site"
+        (click)="openCreateModal()"
+        [disabled]="isTableLoading"
+      >
+        <i class="bi bi-plus-lg"></i>
+        Nuevo Site
+      </button>
+    </div>
+  </div>
+
+  <!-- Filtros Avanzados (Expandible) -->
+  <div class="advanced-filters" [class.expanded]="showAdvancedFilters">
+    <div class="filters-header">
+      <h5 class="filters-title">
+        <i class="bi bi-sliders"></i>
+        Filtros Avanzados
+      </h5>
+      <div class="filters-summary" *ngIf="appliedFiltersCount > 0">
+        <i class="bi bi-funnel-fill"></i>
+        {{ getFilterSummary() }}
+      </div>
+      <button class="btn btn-close-filters" (click)="toggleAdvancedFilters()">
+        <i class="bi bi-x-lg"></i>
+      </button>
+    </div>
+
+    <div class="filters-body">
+      <div class="row g-3">
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="form-label">
+              <i class="bi bi-upc-scan"></i>
+              Código específico
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="filters.codigoSitio"
+              placeholder="Ej: ST-001"
+              [disabled]="isTableLoading"
+            >
+          </div>
+        </div>
+        <div class="col-md-6">
+          <div class="form-group">
+            <label class="form-label">
+              <i class="bi bi-card-text"></i>
+              Descripción contiene
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="filters.descripcion"
+              placeholder="Ej: Oficina principal"
+              [disabled]="isTableLoading"
+            >
+          </div>
+        </div>
+      </div>
+
+      <div class="filters-actions">
+     <button
+  class="btn btn-primary btn-apply-filters"
+  (click)="applyFilters()"
+  [disabled]="isTableLoading"
+>
+  <i class="bi bi-check-lg"></i>
+  Aplicar Filtros
+  <span *ngIf="appliedFiltersCount > 0" class="filter-badge">
+    {{ appliedFiltersCount }}
+  </span>
+</button>
+        <button
+          class="btn btn-outline-secondary btn-clear-all"
+          (click)="clearFilters()"
+          [disabled]="isTableLoading"
+        >
+          <i class="bi bi-arrow-counterclockwise"></i>
+          Limpiar Filtros
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tabla de Sites -->
+  <div class="table-container">
+    <div class="table-responsive">
+      <table class="table table-hover table-striped">
+        <thead>
+          <tr>
+            <th width="120">
+              <div class="table-header">
+                <i class="bi bi-hash"></i>
+                Código
               </div>
-            </div>
+            </th>
+            <th>
+              <div class="table-header">
+                <i class="bi bi-card-text"></i>
+                Descripción Principal
+              </div>
+            </th>
+            <th width="120">
+              <div class="table-header">
+                <i class="bi bi-circle-fill"></i>
+                Estado
+              </div>
+            </th>
+            <th width="180">
+              <div class="table-header">
+                <i class="bi bi-calendar"></i>
+                Fecha Creación
+              </div>
+            </th>
+            <th width="150">
+              <div class="table-header">
+                <i class="bi bi-gear"></i>
+                Acciones
+              </div>
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Estado de carga -->
+          <tr *ngIf="isTableLoading">
+            <td colspan="5" class="loading-row">
+              <div class="loading-content">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Cargando...</span>
+                </div>
+                <span class="loading-text">Cargando sitios...</span>
+              </div>
+            </td>
+          </tr>
 
-            <!-- Campo Descripciones -->
-            <div class="form-group mb-4">
-              <label class="form-label fw-medium">
-                Descripciones <span class="text-danger">*</span>
-                <span class="form-hint">(Al menos una descripción obligatoria)</span>
-              </label>
-
-              <div class="descripciones-container">
-                <div *ngFor="let desc of descripcionesTemporal; let i = index"
-                     class="descripcion-item mb-3"
-                     [attr.data-index]="i">
-                  <div class="input-group">
-                    <textarea
-                      class="form-control"
-                      [(ngModel)]="descripcionesTemporal[i]"
-                      [name]="'descripcion' + i"
-                      rows="2"
-                      maxlength="255"
-                      placeholder="Ingrese una descripción..."
-                      required
-                      [class.is-invalid]="formSubmitted && descripcionesTemporal[i] && !descripcionesTemporal[i].trim()"
-                      [disabled]="isLoading"
-                    ></textarea>
-                    <button *ngIf="descripcionesTemporal.length > 1"
-                            class="btn btn-outline-danger"
-                            type="button"
-                            (click)="removeDescripcion(i)"
-                            [disabled]="isLoading">
-                      <i class="bi bi-trash"></i>
-                    </button>
-                  </div>
-                  <div *ngIf="formSubmitted && descripcionesTemporal[i] && !descripcionesTemporal[i].trim()"
-                       class="invalid-feedback d-block">
-                    Esta descripción no puede estar vacía
-                  </div>
-                  <div class="mt-1 text-end">
-                    <small class="text-muted">
-                      {{ (descripcionesTemporal[i] || '').length }}/255 caracteres
-                    </small>
-                  </div>
+          <!-- Sin resultados -->
+          <tr *ngIf="!isTableLoading && sites.length === 0">
+            <td colspan="5" class="no-results-row">
+              <div class="no-results-content">
+                <i class="bi bi-inbox no-results-icon"></i>
+                <div class="no-results-text">
+                  <h5>No se encontraron sitios</h5>
+                  <p *ngIf="hasActiveFilters()" class="text-muted">
+                    {{ getFilterSummary() }}
+                  </p>
+                  <p *ngIf="!hasActiveFilters()" class="text-muted">
+                    No hay sitios registrados en el sistema.
+                  </p>
                 </div>
               </div>
+            </td>
+          </tr>
 
-              <button type="button"
-                      class="btn btn-outline-secondary btn-sm mt-2"
-                      (click)="addDescripcion()"
-                      [disabled]="isLoading">
-                <i class="bi bi-plus-circle me-1"></i>
-                Agregar otra descripción
+          <!-- Lista de Sites -->
+          <tr *ngFor="let site of sites" class="site-row">
+            <td>
+              <div class="site-code">
+                <span class="code-text">{{ site.codigoSitio || 'N/A' }}</span>
+              </div>
+            </td>
+            <td>
+              <div class="site-desc">
+                <div class="desc-main">
+                  {{ getFirstDescripcion(site.descripciones) }}
+                </div>
+                <div *ngIf="site.descripciones.length > 1" class="desc-additional">
+                  <small class="text-muted">
+                    +{{ site.descripciones.length - 1 }} descripción{{ site.descripciones.length > 2 ? 'es' : '' }}
+                  </small>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span
+                class="badge status-badge"
+                [class]="getStatusBadgeClass(site.activo)"
+              >
+                <i [class]="getStatusIcon(site.activo)"></i>
+                {{ getStatusText(site.activo) }}
+              </span>
+            </td>
+            <td>
+              <div class="date-cell">
+                <div class="date-text">
+                  {{ site.fechaCreacion | date:'dd/MM/yyyy' }}
+                </div>
+                <div class="time-text">
+                  {{ site.fechaCreacion | date:'HH:mm' }}
+                </div>
+              </div>
+            </td>
+            <td>
+              <div class="action-buttons">
+                <button *appPermiso="'SITE_MANAGE'"
+                  class="btn btn-sm btn-outline-primary btn-action"
+                  (click)="openEditModal(site)"
+                  [title]="'Editar sitio'"
+                >
+                  <i class="bi bi-pencil"></i>
+                </button>
+                <button *appPermiso="'SITE_MANAGE'"
+                  class="btn btn-sm btn-outline-warning btn-action"
+                  (click)="toggleActivo(site)"
+                  [title]="site.activo ? 'Desactivar' : 'Activar'"
+                >
+                  <i [class]="site.activo ? 'bi-toggle-off' : 'bi-toggle-on'"></i>
+                </button>
+                <button
+                  class="btn btn-sm btn-outline-info btn-action"
+                  (click)="openDuplicateModal()"
+                  [title]="'Duplicar sitio'"
+                  [disabled]="!selectedSiteId"
+                >
+                  <i class="bi bi-files"></i>
+                </button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Paginación -->
+  <div class="pagination-wrapper">
+    <app-pagination
+      [currentPage]="currentPage"
+      [totalItems]="totalElements"
+      [totalPages]="totalPages"
+      [pageSize]="pageSize"
+      [showInfo]="paginationConfig.showInfo"
+      [showSizeSelector]="paginationConfig.showSizeSelector"
+      [showNavigation]="paginationConfig.showNavigation"
+      [showJumpToPage]="paginationConfig.showJumpToPage"
+      [showPageNumbers]="paginationConfig.showPageNumbers"
+      [pageSizes]="paginationConfig.pageSizes"
+      [align]="paginationConfig.align"
+      [size]="paginationConfig.size"
+      [isLoading]="isTableLoading"
+      (pageChange)="onPageChange($event)"
+      (pageSizeChange)="onPageSizeChange($event)"
+      (refresh)="onRefresh()"
+    ></app-pagination>
+  </div>
+
+  <!-- Modal para crear/editar Site -->
+  <div class="modal-backdrop" [class.show]="showModal" (click)="closeModal()"></div>
+
+  <div class="site-modal" [class.show]="showModal">
+    <div class="modal-content" (click)="$event.stopPropagation()">
+      <!-- Header del Modal -->
+      <div class="modal-header">
+        <div class="modal-icon">
+          <i class="bi" [class]="isEditMode ? 'bi-pencil-square' : 'bi-plus-circle'"></i>
+        </div>
+        <div class="modal-title">
+          <h5>{{ isEditMode ? 'Editar Site' : 'Nuevo Site' }}</h5>
+          <small class="text-muted">Complete todos los campos requeridos (*)</small>
+        </div>
+        <button type="button" class="btn-close" (click)="closeModal()" aria-label="Close"></button>
+      </div>
+
+      <!-- Body del Modal -->
+      <div class="modal-body">
+    <!-- En el modal body, después del campo de código -->
+<div *ngIf="errorMessage && errorMessage.includes('código')" class="alert alert-warning alert-dismissible fade show mt-2" role="alert">
+  <i class="bi bi-exclamation-triangle-fill me-2"></i>
+  {{ errorMessage }}
+  <button type="button" class="btn-close" (click)="errorMessage = ''"></button>
+</div>
+
+<form #siteForm="ngForm" (keydown.enter)="$event.preventDefault()">
+          <!-- Código del Site -->
+          <div class="form-group mb-4">
+            <label class="form-label required">
+              <i class="bi bi-upc-scan me-2"></i>
+              Código del Site
+            </label>
+            <input
+              type="text"
+              class="form-control"
+              [(ngModel)]="currentSite.codigoSitio"
+              name="codigoSitio"
+              placeholder="Ej: ST-001, OFC-001"
+              required
+              maxlength="150"
+              [class.is-invalid]="formSubmitted && (!currentSite.codigoSitio || currentSite.codigoSitio.trim() === '')"
+              [disabled]="isLoading"
+            >
+            <div class="invalid-feedback">
+              El código del site es requerido
+            </div>
+            <div class="form-text">
+              Código único identificador del site. Máximo 150 caracteres.
+            </div>
+          </div>
+
+          <!-- Estado -->
+          <div class="form-group mb-4">
+            <label class="form-label">
+              <i class="bi bi-toggle-on me-2"></i>
+              Estado
+            </label>
+            <div class="form-check form-switch">
+              <input
+                class="form-check-input"
+                type="checkbox"
+                role="switch"
+                [(ngModel)]="currentSite.activo"
+                name="activo"
+                id="siteActivo"
+                [disabled]="isLoading"
+              >
+              <label class="form-check-label" for="siteActivo">
+                <span class="status-indicator" [class.active]="currentSite.activo">
+                  {{ currentSite.activo ? 'Activo' : 'Inactivo' }}
+                </span>
+                <small class="text-muted d-block mt-1">
+                  {{ currentSite.activo ? 'Visible para asignaciones' : 'No disponible para nuevas asignaciones' }}
+                </small>
+              </label>
+            </div>
+          </div>
+
+          <!-- Descripciones -->
+          <div class="form-group mb-4">
+            <div class="descripciones-header">
+              <label class="form-label required">
+                <i class="bi bi-card-text me-2"></i>
+                Descripciones
+              </label>
+              <button
+                type="button"
+                class="btn btn-sm btn-outline-primary"
+                (click)="addDescripcion()"
+                [disabled]="isLoading"
+              >
+                <i class="bi bi-plus"></i>
+                Agregar
               </button>
             </div>
 
-            <!-- Campo Estado -->
-            <div class="form-group mb-4">
-              <label class="form-label fw-medium">Estado</label>
-              <div class="form-check form-switch">
-                <input class="form-check-input"
-                       type="checkbox"
-                       role="switch"
-                       id="activoSwitch"
-                       [(ngModel)]="currentSite.activo"
-                       name="activo"
-                       [disabled]="isLoading">
-                <label class="form-check-label" for="activoSwitch">
-                  {{ currentSite.activo ? 'Activo' : 'Inactivo' }}
-                </label>
+            <div class="descripciones-container">
+         <!-- Por esto: -->
+<div
+  *ngFor="let desc of descripcionesTemporal; let i = index"
+  class="descripcion-item"
+  [class.invalid]="formSubmitted && desc.value.trim() === ''"
+>
+
+                <div class="descripcion-input-wrapper">
+  <input
+  type="text"
+  class="form-control descripcion-input"
+  [(ngModel)]="desc.value"
+  [name]="'descripcion' + i"
+  placeholder="Ej: Oficina principal, Almacén central..."
+  required
+  [disabled]="isLoading"
+>
+                  <button
+                    *ngIf="descripcionesTemporal.length > 1"
+                    type="button"
+                    class="btn btn-remove-desc"
+                    (click)="removeDescripcion(i)"
+                    [disabled]="isLoading"
+                    [title]="'Eliminar descripción'"
+                  >
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </div>
+<div *ngIf="formSubmitted && desc.value.trim() === ''" class="invalid-feedback">
+                  La descripción no puede estar vacía
+                </div>
               </div>
-              <small class="form-text text-muted">
-                Los sitios inactivos no estarán disponibles para nuevas asignaciones
-              </small>
             </div>
-
-            <!-- Mensaje de Error del Modal -->
-            <div *ngIf="errorMessage" class="alert alert-danger mt-3">
-              <i class="bi bi-exclamation-triangle-fill me-2"></i>
-              {{ errorMessage }}
+<div *ngIf="showDescriptionsError()" class="invalid-feedback d-block">
+  Debe ingresar al menos una descripción válida
+</div>
+            <div class="form-text">
+              Agregue una o más descripciones para identificar claramente el site.
             </div>
+          </div>
 
-            <!-- Botones del Modal -->
-          <!-- Botones del Modal -->
-<div class="modal-footer border-top pt-4">
-  <button type="button"
+        </form>
+      </div>
+
+      <!-- Footer del Modal -->
+      <div class="modal-footer">
+        <button
+          type="button"
           class="btn btn-outline-secondary"
           (click)="closeModal()"
-          [disabled]="isLoading">
-    <i class="bi bi-x-lg me-2"></i>
-    Cancelar
-  </button>
-  <button type="submit"
-          class="btn btn-primary"
-          [disabled]="isLoading || !isFormValid()">
-    <ng-container *ngIf="!isLoading">
-      <i class="bi me-2" [ngClass]="isEditMode ? 'bi-save' : 'bi-plus-circle'"></i>
-      {{ isEditMode ? 'Guardar Cambios' : 'Crear Sitio' }}
-    </ng-container>
-    <ng-container *ngIf="isLoading">
-      <span class="spinner-border spinner-border-sm me-2"></span>
-      Guardando...
-    </ng-container>
-  </button>
-</div>
-          </form>
-        </div>
+          [disabled]="isLoading"
+        >
+          <i class="bi bi-x-lg"></i>
+          Cancelar
+        </button>
+    <button
+  type="submit"
+  class="btn btn-primary"
+  (click)="saveSite()"
+  [disabled]="isLoading || !isFormValid()"
+>
+          <span *ngIf="!isLoading">
+            <i class="bi" [class]="isEditMode ? 'bi-check-lg' : 'bi-plus-lg'"></i>
+            {{ isEditMode ? 'Actualizar' : 'Crear' }}
+          </span>
+          <span *ngIf="isLoading" class="d-flex align-items-center">
+            <div class="spinner-border spinner-border-sm me-2" role="status">
+              <span class="visually-hidden">Guardando...</span>
+            </div>
+            Guardando...
+          </span>
+        </button>
       </div>
     </div>
   </div>

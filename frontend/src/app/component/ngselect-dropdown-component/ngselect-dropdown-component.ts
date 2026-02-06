@@ -8,7 +8,7 @@ export interface DropdownItem {
   id: number;
   label?: string;
   adicional?: string;
-  estado?: boolean;
+  estado?: boolean | null;  // ← CAMBIA ESTO
 }
 
 @Component({
@@ -17,392 +17,706 @@ export interface DropdownItem {
   imports: [CommonModule, FormsModule, NgSelectModule],
   template: `
     <div class="dropdown-wrapper" [class.disabled-wrapper]="disabled">
-      <!-- Label opcional -->
-      <label *ngIf="label" class="dropdown-label form-label fw-semibold mb-2">
-        {{ label }}
-        <span *ngIf="required" class="text-danger">*</span>
+      <!-- Label mejorado con icono -->
+      <label *ngIf="label" class="dropdown-label">
+        <div class="label-content">
+          <span class="label-text">{{ label }}</span>
+          <span *ngIf="required" class="required-indicator">*</span>
+          <span *ngIf="helpText" class="help-icon" [title]="helpText">
+            <i class="bi bi-info-circle"></i>
+          </span>
+        </div>
       </label>
 
-      <!-- Dropdown principal -->
-      <ng-select
-        [items]="items"
-        [placeholder]="placeholder"
-        [searchable]="true"
-        [clearable]="true"
-        [loading]="loading"
-        [virtualScroll]="items.length > 100"
-        [multiple]="multiple"
-        [closeOnSelect]="!multiple"
-        [(ngModel)]="internalValue"
-        (change)="onSelectionChange($event)"
-        (search)="onSearch($event)"
-        (open)="onOpen()"
-        (close)="onClose()"
-        [class.is-invalid]="isInvalid"
-        [disabled]="disabled"
-        [compareWith]="compareItems">
+      <!-- Contenedor principal del dropdown -->
+      <div class="dropdown-container" [class.has-error]="isInvalid" [class.is-focused]="isFocused">
+        <!-- Icono izquierdo opcional -->
+        <div *ngIf="leftIcon" class="dropdown-left-icon">
+          <i class="bi" [class]="leftIcon"></i>
+        </div>
 
-        <!-- Template para mostrar seleccionado -->
-        <ng-template ng-label-tmp let-item="item">
-          <div class="selected-item-wrapper">
-            <span *ngIf="item" class="selected-item">
-              {{ getItemDisplay(item) }}
-            </span>
-          </div>
-        </ng-template>
+        <!-- Dropdown principal -->
+        <ng-select
+          [items]="items"
+          [placeholder]="placeholder"
+          [searchable]="true"
+          [clearable]="true"
+          [loading]="loading"
+          [virtualScroll]="items.length > 50"
+          [multiple]="multiple"
+          [closeOnSelect]="!multiple"
+          [ngModel]="selectedItem"
+          (ngModelChange)="onModelChange($event)"
+          (search)="onSearch($event)"
+          (open)="onOpen()"
+          (close)="onClose()"
+          (focus)="isFocused = true"
+          (blur)="isFocused = false"
+          [disabled]="disabled"
+          [compareWith]="compareById"
+          class="custom-ng-select">
 
-        <!-- Template para opciones -->
-        <ng-template ng-option-tmp let-item="item" let-index="index" let-search="searchTerm">
-          <div class="dropdown-option" [class.disabled]="item.estado === false">
-            <div class="d-flex align-items-center">
-              <!-- Checkbox para múltiple selección -->
-              <div *ngIf="multiple" class="me-3">
-                <div class="form-check">
-                  <input class="form-check-input" type="checkbox"
-                         [checked]="isItemSelected(item)"
-                         [disabled]="item.estado === false"
-                         readonly>
+          <!-- Template para mostrar seleccionado -->
+          <ng-template ng-label-tmp let-item="item">
+            <div class="selected-item">
+              <span *ngIf="item" class="selected-text">
+                {{ getItemDisplay(item) }}
+              </span>
+              <span *ngIf="!item" class="placeholder-text">
+                {{ placeholder }}
+              </span>
+            </div>
+          </ng-template>
+
+          <!-- Template para opciones -->
+          <ng-template ng-option-tmp let-item="item" let-index="index" let-search="searchTerm">
+            <div class="dropdown-option" [class.is-disabled]="item.estado === false">
+              <div class="option-content">
+                <!-- Checkbox para selección múltiple -->
+                <div *ngIf="multiple" class="option-checkbox">
+                  <div class="checkbox-wrapper">
+                    <div class="custom-checkbox" [class.checked]="isItemSelected(item)">
+                      <i class="bi bi-check"></i>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Contenido de la opción -->
+                <div class="option-main">
+                  <div class="option-header">
+                    <span class="option-label">{{ getItemDisplay(item) }}</span>
+                    <span *ngIf="item.estado === false" class="badge-inactive">
+                      <i class="bi bi-slash-circle"></i> Inactivo
+                    </span>
+                    <i *ngIf="!multiple && isItemSelected(item)" class="bi bi-check-lg option-selected-icon"></i>
+                  </div>
+
+                  <div *ngIf="item.adicional" class="option-additional">
+                    <i class="bi bi-info-circle"></i>
+                    <span>{{ item.adicional }}</span>
+                  </div>
                 </div>
               </div>
+            </div>
+          </ng-template>
 
-              <!-- Contenido principal -->
-              <div class="flex-grow-1">
-                <div class="option-label">
-                  {{ getItemDisplay(item) }}
-                </div>
-                <small *ngIf="item.adicional" class="text-muted option-additional">
-                  {{ item.adicional }}
-                </small>
+          <!-- Sin resultados -->
+          <ng-template ng-notfound-tmp let-searchTerm="searchTerm">
+            <div class="no-results">
+              <div class="no-results-icon">
+                <i class="bi bi-search"></i>
               </div>
-
-              <!-- Estado inactivo -->
-              <span *ngIf="item.estado === false" class="badge bg-secondary ms-2">Inactivo</span>
-
-              <!-- Check para selección simple -->
-              <i *ngIf="!multiple && isItemSelected(item)" class="bi bi-check-lg text-primary ms-2"></i>
+              <h4 class="no-results-title">{{ noResultsText }}</h4>
+              <p *ngIf="searchTerm" class="no-results-search">
+                No se encontraron resultados para "<strong>{{ searchTerm }}</strong>"
+              </p>
+              <div *ngIf="items.length === 0 && !searchTerm" class="empty-state">
+                <i class="bi bi-inbox"></i>
+                <p>No hay opciones disponibles</p>
+              </div>
             </div>
-          </div>
-        </ng-template>
+          </ng-template>
 
-        <!-- Sin resultados -->
-        <ng-template ng-notfound-tmp let-searchTerm="searchTerm">
-          <div class="no-results text-center p-4">
-            <i class="bi bi-search text-muted fs-4 mb-3"></i>
-            <p class="mb-1 fw-medium text-dark">{{ noResultsText }}</p>
-            <small *ngIf="searchTerm" class="text-muted">
-              Búsqueda: "<span class="fw-medium">{{ searchTerm }}</span>"
-            </small>
-            <div *ngIf="items.length === 0 && !searchTerm" class="mt-3">
-              <i class="bi bi-inbox text-muted fs-3 mb-2"></i>
-              <p class="text-muted mb-0">No hay opciones disponibles</p>
+          <!-- Loading -->
+          <ng-template ng-loadingtext-tmp>
+            <div class="loading-state">
+              <div class="loading-spinner">
+                <div class="spinner"></div>
+              </div>
+              <p class="loading-text">{{ loadingText }}</p>
             </div>
-          </div>
-        </ng-template>
+          </ng-template>
+        </ng-select>
 
-        <!-- Loading -->
-        <ng-template ng-loadingtext-tmp>
-          <div class="loading-wrapper text-center p-4">
-            <div class="spinner-border text-primary mb-3" style="width: 2rem; height: 2rem;" role="status">
-              <span class="visually-hidden">Cargando...</span>
-            </div>
-            <p class="fw-medium text-dark mb-0">{{ loadingText }}</p>
-          </div>
-        </ng-template>
-      </ng-select>
+        <!-- Icono derecho (estado) -->
+        <div class="dropdown-right-icon">
+          <i *ngIf="isInvalid" class="bi bi-exclamation-circle error-icon"></i>
+          <i *ngIf="!isInvalid && selectedItem && !multiple" class="bi bi-check-circle success-icon"></i>
+          <i *ngIf="!isInvalid && multiple && selectedItem?.length > 0" class="bi bi-check-circle success-icon"></i>
+        </div>
+      </div>
+
+      <!-- Contador de selecciones para múltiple -->
+      <div *ngIf="multiple && selectedItem?.length > 0" class="selection-counter">
+        <span class="counter-badge">
+          <i class="bi bi-check2-all"></i>
+          {{ selectedItem.length }} seleccionado{{ selectedItem.length !== 1 ? 's' : '' }}
+        </span>
+      </div>
 
       <!-- Mensajes de ayuda y error -->
-      <div *ngIf="helpText" class="help-text form-text text-muted mt-2">
-        <i class="bi bi-info-circle me-1"></i>
-        {{ helpText }}
+      <div *ngIf="errorText && isInvalid" class="error-message">
+        <i class="bi bi-exclamation-triangle"></i>
+        <span>{{ errorText }}</span>
       </div>
-      <div *ngIf="errorText" class="error-text invalid-feedback d-flex align-items-center mt-2">
-        <i class="bi bi-exclamation-triangle me-2"></i>
-        {{ errorText }}
+
+      <div *ngIf="helpText && !errorText" class="help-message">
+        <i class="bi bi-info-circle"></i>
+        <span>{{ helpText }}</span>
       </div>
     </div>
   `,
-  styles: [`
-    :host {
-      display: block;
-      width: 100%;
-    }
 
-    .dropdown-wrapper {
-      transition: all 0.3s ease;
-      margin-bottom: 1.5rem;
-    }
 
-    .disabled-wrapper {
-      opacity: 0.6;
-      pointer-events: none;
-    }
+  styles:[`
+:host {
+  display: block;
+  width: 100%;
+}
 
-    .dropdown-label {
-      color: #2c3e50;
-      font-size: 0.95rem;
-      margin-bottom: 0.5rem;
-      display: block;
-    }
+/* Contenedor principal */
+.dropdown-wrapper {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  margin-bottom: 1.5rem;
+}
 
-    /* Container styles - FONDO BLANCO SÓLIDO */
-    ::ng-deep .ng-select-container {
-      min-height: 48px;
-      border-radius: 10px;
-      border: 2px solid #e2e8f0;
-      background: #ffffff !important; /* FONDO BLANCO SÓLIDO */
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-      font-size: 0.95rem;
-    }
+.dropdown-wrapper.disabled-wrapper {
+  opacity: 0.6;
+  pointer-events: none;
+}
 
-    ::ng-deep .ng-select-container:hover {
-      border-color: #94a3b8;
-      background: #ffffff;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
-    }
+/* Label mejorado */
+.dropdown-label {
+  display: block;
+  margin-bottom: 0.75rem;
+}
 
-    ::ng-deep .ng-select-container.ng-select-focused {
-      border-color: #3b82f6;
-      background: #ffffff;
-      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
-    }
+.label-content {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
 
-    ::ng-deep .ng-select-container.is-invalid {
-      border-color: #dc3545 !important;
-      background: #fff5f5 !important;
-      box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.15) !important;
-    }
+.label-text {
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.875rem;
+  letter-spacing: -0.01em;
+}
 
-    ::ng-deep .ng-select-container.ng-select-disabled {
-      background: #f8f9fa !important;
-      border-color: #e2e8f0 !important;
-      color: #6c757d;
-    }
+.required-indicator {
+  color: #ef4444;
+  font-weight: 700;
+  margin-left: 2px;
+}
 
-    /* Placeholder */
-    ::ng-deep .ng-placeholder {
-      color: #94a3b8;
-      font-size: 0.95rem;
-      font-weight: 400;
-    }
+.help-icon {
+  color: #6b7280;
+  font-size: 0.875rem;
+  cursor: help;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
 
-    /* Selected item */
-    .selected-item-wrapper {
-      display: flex;
-      align-items: center;
-      padding: 2px 0;
-    }
+.help-icon:hover {
+  opacity: 1;
+}
 
-    .selected-item {
-      color: #2c3e50;
-      font-weight: 500;
-      font-size: 0.95rem;
-    }
+/* Contenedor del dropdown */
+.dropdown-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  border-radius: 12px;
+  background: #ffffff;
+  border: 2px solid #e5e7eb;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  width: 100%; /* ✅ ASEGURAR ancho completo */
+}
 
-    /* Dropdown panel - FONDO BLANCO SÓLIDO */
-    ::ng-deep .ng-dropdown-panel {
-      z-index: 1080;
-      border-radius: 10px;
-      border: 2px solid #e2e8f0;
-      background: #ffffff !important; /* FONDO BLANCO SÓLIDO */
-      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.12);
-      margin-top: 8px;
-      animation: slideDown 0.2s ease-out;
-    }
+.dropdown-container:hover {
+  border-color: #9ca3af;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+}
 
-    @keyframes slideDown {
-      from {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      to {
-        opacity: 1;
-        transform: translateY(0);
-      }
-    }
+.dropdown-container.is-focused {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
 
-    /* Options */
-    ::ng-deep .ng-option {
-      padding: 12px 18px !important;
-      border-bottom: 1px solid #f1f5f9;
-      transition: all 0.2s ease;
-      background: #ffffff !important; /* FONDO BLANCO SÓLIDO */
-    }
+.dropdown-container.has-error {
+  border-color: #ef4444 !important;
+  background: linear-gradient(0deg, rgba(239, 68, 68, 0.02), rgba(239, 68, 68, 0.02)), #ffffff;
+}
 
-    ::ng-deep .ng-option:hover {
-      background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.04) 100%) !important;
-      padding-left: 22px !important;
-    }
+.dropdown-container.has-error:hover {
+  border-color: #dc2626 !important;
+}
 
-    ::ng-deep .ng-option.ng-option-selected {
-      background: linear-gradient(90deg, rgba(59, 130, 246, 0.12) 0%, rgba(59, 130, 246, 0.06) 100%) !important;
-      font-weight: 600;
-      color: #1e40af;
-    }
+/* Iconos laterales */
+.dropdown-left-icon,
+.dropdown-right-icon {
+  display: flex;
+  align-items: center;
+  padding: 0 1rem;
+  color: #6b7280;
+  transition: color 0.2s;
+  flex-shrink: 0; /* ✅ EVITAR que se encojan */
+}
 
-    ::ng-deep .ng-option.ng-option-marked {
-      background-color: #f8fafc !important;
-    }
+.dropdown-left-icon {
+  border-right: 1px solid #f3f4f6;
+}
 
-    ::ng-deep .ng-option.ng-option-disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      background: #f8f9fa !important;
-    }
+.dropdown-right-icon {
+  border-left: 1px solid #f3f4f6;
+}
 
-    /* Option styling */
-    .dropdown-option.disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
+.success-icon {
+  color: #10b981;
+}
 
-    .option-label {
-      font-weight: 500;
-      color: #2c3e50;
-      font-size: 0.95rem;
-      margin-bottom: 2px;
-    }
+.error-icon {
+  color: #ef4444;
+}
 
-    .option-additional {
-      font-size: 0.85em;
-      margin-top: 2px;
-      display: block;
-      color: #64748b;
-      line-height: 1.4;
-    }
+/* NgSelect personalizado */
+::ng-deep .custom-ng-select .ng-select-container {
+  min-height: 56px;
+  height: auto;
+  border: none !important;
+  background: transparent !important;
+  box-shadow: none !important;
+  padding: 0.75rem 1rem;
+  width: 100%; /* ✅ ASEGURAR ancho completo */
+}
 
-    /* Multiple selection tags */
-    ::ng-deep .ng-value-container .ng-value {
-      background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-      color: white;
-      border-radius: 20px;
-      padding: 6px 14px;
-      margin-right: 6px;
-      margin-bottom: 6px;
-      font-size: 0.85rem;
-      font-weight: 500;
-      display: inline-flex;
-      align-items: center;
-      box-shadow: 0 2px 5px rgba(59, 130, 246, 0.25);
-    }
+::ng-deep .custom-ng-select .ng-select-container:hover {
+  background: transparent !important;
+}
 
-    ::ng-deep .ng-value-container .ng-value-icon {
-      color: white;
-      opacity: 0.9;
-      transition: all 0.2s ease;
-      margin-left: 8px;
-      font-size: 12px;
-    }
+::ng-deep .custom-ng-select .ng-placeholder {
+  color: #9ca3af;
+  font-weight: 400;
+  font-size: 0.9375rem;
+  opacity: 0.8;
+}
 
-    ::ng-deep .ng-value-container .ng-value-icon:hover {
-      opacity: 1;
-      transform: scale(1.1);
-    }
+::ng-deep .custom-ng-select .ng-value-container {
+  padding-left: 0 !important;
+  width: 100%; /* ✅ ASEGURAR ancho completo */
+}
 
-    /* Clear and dropdown arrows */
-    ::ng-deep .ng-arrow-wrapper,
-    ::ng-deep .ng-clear-wrapper {
-      color: #64748b;
-      transition: color 0.2s ease;
-    }
+/* Texto seleccionado - MEJORADO para texto largo */
+.selected-item {
+  display: flex;
+  align-items: center;
+  min-height: 1.5rem;
+  width: 100%; /* ✅ ASEGURAR ancho completo */
+}
 
-    ::ng-deep .ng-clear-wrapper:hover {
-      color: #dc3545;
-    }
+.selected-text {
+  color: #111827;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+  word-break: break-word; /* ✅ Permite romper palabras largas */
+  overflow-wrap: break-word; /* ✅ Para palabras muy largas */
+  white-space: normal; /* ✅ Permite múltiples líneas */
+  flex: 1; /* ✅ Ocupa todo el espacio disponible */
+  min-width: 0; /* ✅ Importante para que funcione flex con texto largo */
+}
 
-    ::ng-deep .ng-arrow-wrapper:hover {
-      color: #3b82f6;
-    }
+.placeholder-text {
+  color: #9ca3af;
+  font-weight: 400;
+  word-break: break-word; /* ✅ Para placeholder largo */
+}
 
-    /* Search input */
-    ::ng-deep .ng-input input {
-      color: #2c3e50;
-      font-size: 0.95rem;
-      padding: 8px 12px;
-    }
+/* Panel desplegable - MÁS ANCHO */
+::ng-deep .custom-ng-select .ng-dropdown-panel {
+  border-radius: 12px;
+  border: 2px solid #e5e7eb;
+  background: #ffffff;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+  margin-top: 8px;
+  animation: slideDown 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  overflow: hidden;
+  min-width: 350px; /* ✅ ANCHO MÍNIMO aumentado */
+  width: auto; /* ✅ Ancho automático basado en contenido */
+  max-width: 500px; /* ✅ ANCHO MÁXIMO para evitar que sea enorme */
+}
 
-    ::ng-deep .ng-input input:focus {
-      outline: none;
-      box-shadow: none;
-    }
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
 
-    /* No results styling */
-    .no-results {
-      background: #ffffff;
-    }
+/* Opciones - MEJORADO para texto largo */
+.dropdown-option {
+  padding: 0.875rem 1rem;
+  border-bottom: 1px solid #f9fafb;
+  transition: all 0.2s;
+  cursor: pointer;
+  min-width: 0; /* ✅ Importante para contenedor flex con texto largo */
+}
 
-    .no-results i {
-      color: #94a3b8;
-    }
+.dropdown-option:hover {
+  background: linear-gradient(90deg, rgba(59, 130, 246, 0.08) 0%, rgba(59, 130, 246, 0.04) 100%) !important;
+}
 
-    /* Loading styling */
-    .loading-wrapper {
-      background: #ffffff;
-    }
+.dropdown-option.is-disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f9fafb !important;
+}
 
-    /* Help and error text */
-    .help-text {
-      font-size: 0.85rem;
-      color: #64748b;
-      display: flex;
-      align-items: center;
-    }
+.dropdown-option.is-disabled:hover {
+  background: #f9fafb !important;
+}
 
-    .error-text {
-      font-size: 0.85rem;
-      color: #dc3545;
-      display: flex;
-      align-items: center;
-      padding: 8px 12px;
-      background: #fff5f5;
-      border-radius: 6px;
-      border-left: 4px solid #dc3545;
-    }
+.option-content {
+  display: flex;
+  align-items: flex-start; /* ✅ Cambiado a flex-start para mejor alineación */
+  gap: 0.75rem;
+  min-width: 0; /* ✅ Importante para texto largo */
+}
 
-    /* Responsive */
-    @media (max-width: 768px) {
-      ::ng-deep .ng-select-container {
-        min-height: 46px;
-        font-size: 0.9rem;
-      }
+/* Checkbox personalizado */
+.option-checkbox {
+  flex-shrink: 0; /* ✅ No se encoje */
+  margin-top: 0.125rem; /* ✅ Ajuste fino para alineación */
+}
 
-      ::ng-deep .ng-option {
-        padding: 10px 16px !important;
-      }
+.checkbox-wrapper {
+  width: 20px;
+  height: 20px;
+  position: relative;
+}
 
-      .dropdown-label {
-        font-size: 0.9rem;
-      }
+.custom-checkbox {
+  width: 20px;
+  height: 20px;
+  border: 2px solid #d1d5db;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  background: #ffffff;
+  flex-shrink: 0; /* ✅ No se encoje */
+}
 
-      .option-label {
-        font-size: 0.9rem;
-      }
-    }
+.custom-checkbox.checked {
+  border-color: #3b82f6;
+  background: #3b82f6;
+}
 
-    /* Scrollbar styling */
-    ::ng-deep .ng-dropdown-panel .ng-dropdown-panel-items {
-      max-height: 300px;
-      overflow-y: auto;
-    }
+.custom-checkbox.checked i {
+  color: #ffffff;
+  font-size: 0.75rem;
+}
 
-    ::ng-deep .ng-dropdown-panel .ng-dropdown-panel-items::-webkit-scrollbar {
-      width: 6px;
-    }
+/* Contenido principal de la opción - MEJORADO para texto largo */
+.option-main {
+  flex: 1;
+  min-width: 0; /* ✅ CRÍTICO: Permite que el texto se ajuste */
+  overflow: hidden; /* ✅ Evita desbordamiento */
+}
 
-    ::ng-deep .ng-dropdown-panel .ng-dropdown-panel-items::-webkit-scrollbar-track {
-      background: #f1f5f9;
-      border-radius: 3px;
-    }
+.option-header {
+  display: flex;
+  align-items: flex-start; /* ✅ Cambiado para mejor alineación con texto largo */
+  justify-content: space-between;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  flex-wrap: wrap; /* ✅ Permite que los elementos se ajusten */
+}
 
-    ::ng-deep .ng-dropdown-panel .ng-dropdown-panel-items::-webkit-scrollbar-thumb {
-      background: #cbd5e1;
-      border-radius: 3px;
-    }
+.option-label {
+  color: #111827;
+  font-weight: 500;
+  font-size: 0.9375rem;
+  flex: 1; /* ✅ Ocupa espacio disponible */
+  line-height: 1.4;
+  word-break: break-word; /* ✅ Permite romper palabras largas */
+  overflow-wrap: break-word; /* ✅ Para palabras muy largas */
+  white-space: normal; /* ✅ Permite múltiples líneas */
+  min-width: 200px; /* ✅ Ancho mínimo para opciones */
+  max-width: 100%; /* ✅ No exceder el contenedor */
+}
 
-    ::ng-deep .ng-dropdown-panel .ng-dropdown-panel-items::-webkit-scrollbar-thumb:hover {
-      background: #94a3b8;
-    }
-  `],
+.badge-inactive {
+  background: #f3f4f6;
+  color: #6b7280;
+  padding: 0.25rem 0.5rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  flex-shrink: 0; /* ✅ No se encoje */
+  margin-left: auto; /* ✅ Empuja a la derecha */
+}
+
+.option-selected-icon {
+  color: #3b82f6;
+  font-size: 1rem;
+  flex-shrink: 0; /* ✅ No se encoje */
+  margin-left: 0.5rem;
+}
+
+.option-additional {
+  display: flex;
+  align-items: flex-start; /* ✅ Cambiado para mejor alineación */
+  gap: 0.5rem;
+  color: #6b7280;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  word-break: break-word; /* ✅ Para texto adicional largo */
+}
+
+.option-additional i {
+  font-size: 0.75rem;
+  opacity: 0.7;
+  flex-shrink: 0; /* ✅ Icono no se encoje */
+  margin-top: 0.125rem; /* ✅ Ajuste fino para alineación */
+}
+
+/* Estado sin resultados */
+.no-results {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  min-width: 300px; /* ✅ Ancho mínimo para mensajes */
+}
+
+.no-results-icon {
+  color: #9ca3af;
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.no-results-title {
+  color: #374151;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-bottom: 0.5rem;
+  word-break: break-word; /* ✅ Para títulos largos */
+}
+
+.no-results-search {
+  color: #6b7280;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  word-break: break-word; /* ✅ Para texto de búsqueda largo */
+}
+
+.empty-state {
+  color: #9ca3af;
+  margin-top: 1rem;
+}
+
+.empty-state i {
+  font-size: 2.5rem;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+/* Estado de carga */
+.loading-state {
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  min-width: 300px; /* ✅ Ancho mínimo */
+}
+
+.loading-spinner {
+  margin-bottom: 1rem;
+}
+
+.spinner {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 3px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.loading-text {
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 0.9375rem;
+}
+
+/* Contador de selecciones */
+.selection-counter {
+  margin-top: 0.75rem;
+}
+
+.counter-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f0f9ff;
+  color: #0369a1;
+  padding: 0.375rem 0.875rem;
+  border-radius: 20px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  border: 1px solid #bae6fd;
+}
+
+/* Mensajes de error y ayuda */
+.error-message,
+.help-message {
+  display: flex;
+  align-items: flex-start; /* ✅ Cambiado para texto largo */
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  animation: fadeIn 0.3s ease;
+  word-break: break-word; /* ✅ Para mensajes largos */
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.error-message {
+  background: linear-gradient(0deg, rgba(239, 68, 68, 0.05), rgba(239, 68, 68, 0.05)), #fef2f2;
+  color: #b91c1c;
+  border-left: 3px solid #ef4444;
+}
+
+.help-message {
+  background: #f0f9ff;
+  color: #0369a1;
+  border-left: 3px solid #0ea5e9;
+}
+
+/* Para selección múltiple - Tags MEJORADO */
+::ng-deep .custom-ng-select .ng-value-container .ng-value {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-radius: 20px;
+  padding: 0.375rem 0.875rem;
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  box-shadow: 0 2px 5px rgba(59, 130, 246, 0.25);
+  animation: popIn 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  max-width: 100%; /* ✅ Limitar ancho máximo */
+  word-break: break-word; /* ✅ Para texto largo en tags */
+}
+
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8) translateY(4px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+::ng-deep .custom-ng-select .ng-value-container .ng-value-icon {
+  color: rgba(255, 255, 255, 0.9);
+  transition: all 0.2s;
+  margin-left: 0.5rem;
+  font-size: 0.75rem;
+  flex-shrink: 0; /* ✅ Icono no se encoje */
+}
+
+::ng-deep .custom-ng-select .ng-value-container .ng-value-icon:hover {
+  color: white;
+  transform: scale(1.1);
+}
+
+/* Scrollbar personalizada */
+::ng-deep .custom-ng-select .ng-dropdown-panel .ng-dropdown-panel-items {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+::ng-deep .custom-ng-select .ng-dropdown-panel .ng-dropdown-panel-items::-webkit-scrollbar {
+  width: 8px;
+}
+
+::ng-deep .custom-ng-select .ng-dropdown-panel .ng-dropdown-panel-items::-webkit-scrollbar-track {
+  background: #f9fafb;
+  border-radius: 4px;
+}
+
+::ng-deep .custom-ng-select .ng-dropdown-panel .ng-dropdown-panel-items::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+::ng-deep .custom-ng-select .ng-dropdown-panel .ng-dropdown-panel-items::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dropdown-container {
+    border-radius: 10px;
+  }
+
+  ::ng-deep .custom-ng-select .ng-select-container {
+    min-height: 52px;
+    padding: 0.625rem 0.875rem;
+  }
+
+  .dropdown-left-icon,
+  .dropdown-right-icon {
+    padding: 0 0.75rem;
+  }
+
+  /* En móviles, el panel ocupa casi toda la pantalla */
+  ::ng-deep .custom-ng-select .ng-dropdown-panel {
+    min-width: calc(100vw - 40px) !important; /* ✅ Ocupa casi todo el ancho */
+    max-width: calc(100vw - 40px) !important;
+    left: 50% !important;
+    transform: translateX(-50%) !important;
+  }
+
+  .option-label {
+    min-width: 150px; /* ✅ Ancho mínimo reducido en móvil */
+  }
+}
+
+/* Animación para cambios de estado */
+.dropdown-wrapper ::ng-deep .ng-select.ng-select-opened .ng-arrow {
+  transform: rotate(180deg);
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ✅ NUEVO: Estilo para input de búsqueda */
+::ng-deep .custom-ng-select .ng-input input {
+  width: 100% !important;
+  min-width: 200px !important;
+  font-size: 0.9375rem;
+  color: #111827;
+}
+
+/* ✅ NUEVO: Asegurar que el contenedor no se desborde */
+::ng-deep .custom-ng-select {
+  width: 100% !important;
+  min-width: 0 !important; /* ✅ Importante para flex */
+}
+    `],
   providers: [
     {
       provide: NG_VALUE_ACCESSOR,
@@ -424,13 +738,15 @@ export class NgselectDropdownComponent implements ControlValueAccessor, OnInit, 
   @Input() helpText: string = '';
   @Input() noResultsText: string = 'No se encontraron resultados';
   @Input() loadingText: string = 'Cargando...';
+  @Input() leftIcon: string = '';
 
   @Output() selectionChange = new EventEmitter<any>();
   @Output() searchChange = new EventEmitter<string>();
   @Output() opened = new EventEmitter<void>();
   @Output() closed = new EventEmitter<void>();
 
-  internalValue: any = null;
+  selectedItem: any = null;
+  isFocused: boolean = false;
   private searchSubject = new Subject<string>();
   private searchSubscription?: Subscription;
 
@@ -467,49 +783,54 @@ export class NgselectDropdownComponent implements ControlValueAccessor, OnInit, 
   }
 
   isItemSelected(item: DropdownItem): boolean {
-    if (!item || this.internalValue == null) {
+    if (!item || !this.selectedItem) {
       return false;
     }
 
     if (this.multiple) {
-      return Array.isArray(this.internalValue)
-        ? this.internalValue.some(val => this.compareItems(val, item))
+      return Array.isArray(this.selectedItem)
+        ? this.selectedItem.some((selected: any) => this.compareById(selected, item))
         : false;
     } else {
-      return this.compareItems(this.internalValue, item);
+      return this.compareById(this.selectedItem, item);
     }
   }
 
-  compareItems(item1: any, item2: any): boolean {
+  compareById(item1: any, item2: any): boolean {
     if (!item1 || !item2) return false;
 
-    if (typeof item1 === 'object' && typeof item2 === 'object') {
-      return item1.id === item2.id;
-    }
+    const id1 = typeof item1 === 'object' ? item1.id : item1;
+    const id2 = typeof item2 === 'object' ? item2.id : item2;
 
-    return item1 === item2;
+    return id1 === id2;
   }
 
-  onSelectionChange(event: any): void {
-    this.onChange(event);
-    this.onTouched();
+  onModelChange(event: any): void {
+    console.log('NgSelect - Model changed:', event);
+
+    // Actualizar el valor interno
+    this.selectedItem = event;
+
+    // Determinar qué valor enviar al formControl
+    let valueToSend: any;
 
     if (this.multiple && Array.isArray(event)) {
-      this.selectionChange.emit({
-        ids: event.map(item => item.id),
-        items: event,
-        count: event.length
-      });
+      valueToSend = event.map(item => item?.id || item);
     } else if (event) {
-      this.selectionChange.emit({
-        id: event.id,
-        label: this.getItemDisplay(event),
-        adicional: event.adicional,
-        item: event
-      });
+      // Si es un objeto, enviar solo el ID; si ya es un número, enviar el número
+      valueToSend = typeof event === 'object' ? event.id : event;
     } else {
-      this.selectionChange.emit(null);
+      valueToSend = null;
     }
+
+    console.log('NgSelect - Sending to formControl:', valueToSend);
+
+    // Notificar al formulario
+    this.onChange(valueToSend);
+    this.onTouched();
+
+    // Emitir evento personalizado
+    this.selectionChange.emit(event);
   }
 
   onSearch(event: { term: string; items: any[] }): void {
@@ -525,17 +846,38 @@ export class NgselectDropdownComponent implements ControlValueAccessor, OnInit, 
   }
 
   writeValue(value: any): void {
-    if (this.multiple && Array.isArray(value)) {
-      this.internalValue = value.map(id =>
-        this.items.find(item => item.id === id)
-      ).filter(item => item !== undefined);
-    } else if (value && typeof value === 'number') {
-      this.internalValue = this.items.find(item => item.id === value);
-    } else if (value && typeof value === 'object' && value.id) {
-      this.internalValue = value;
-    } else {
-      this.internalValue = value;
+    console.log('NgSelect - writeValue called:', value);
+
+    if (!value) {
+      this.selectedItem = null;
+      return;
     }
+
+    // Convertir ID numérico a objeto correspondiente
+    if (this.multiple && Array.isArray(value)) {
+      this.selectedItem = value.map(val => {
+        if (typeof val === 'object') {
+          return val; // Ya es un objeto
+        } else if (typeof val === 'number') {
+          // Buscar el objeto por ID
+          return this.items.find(item => item.id === val);
+        }
+        return null;
+      }).filter(item => item !== null);
+    } else if (value) {
+      if (typeof value === 'object') {
+        this.selectedItem = value; // Ya es un objeto
+      } else if (typeof value === 'number') {
+        // Buscar el objeto por ID
+        this.selectedItem = this.items.find(item => item.id === value);
+      } else {
+        this.selectedItem = value;
+      }
+    } else {
+      this.selectedItem = null;
+    }
+
+    console.log('NgSelect - selectedItem after writeValue:', this.selectedItem);
   }
 
   registerOnChange(fn: any): void {

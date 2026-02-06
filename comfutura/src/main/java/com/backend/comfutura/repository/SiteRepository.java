@@ -20,14 +20,6 @@ public interface SiteRepository extends JpaRepository<Site, Integer> {
 
     Page<Site> findByActivoTrue(Pageable pageable);
 
-    boolean existsByCodigoSitio(String codigoSitio);
-
-    boolean existsByCodigoSitioAndIdSiteNot(String codigoSitio, Integer id);
-    List<Site> findAllByActivo(Boolean activo);
-
-    @Query("SELECT DISTINCT s FROM Site s LEFT JOIN FETCH s.descripciones d WHERE s.activo = true AND d.activo = true")
-    Page<Site> findAllActivosWithDescripciones(Pageable pageable);
-
     @Query("SELECT s FROM Site s WHERE s.idSite = :id AND s.activo = true")
     Site findActivoById(@Param("id") Integer id);
 
@@ -44,6 +36,18 @@ public interface SiteRepository extends JpaRepository<Site, Integer> {
 
     Optional<Site> findByCodigoSitioAndActivoTrue(String codigoSitio);
 
+    boolean existsByCodigoSitio(String codigoSitio);
 
+    boolean existsByCodigoSitioAndIdSiteNot(String codigoSitio, Integer id);
+
+    @Query("SELECT s FROM Site s " +
+            "LEFT JOIN FETCH s.descripciones d " +
+            "WHERE s.activo = true AND d.activo = true")
+    Page<Site> findAllActivosWithDescripciones(Pageable pageable);
+
+    @Query("SELECT DISTINCT s FROM Site s " +
+            "LEFT JOIN FETCH s.descripciones d " +
+            "WHERE s.idSite = :id AND d.activo = true")
+    Optional<Site> findByIdWithActiveDescripciones(@Param("id") Integer id);
 
 }

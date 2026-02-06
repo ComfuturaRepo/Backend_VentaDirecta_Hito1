@@ -446,59 +446,235 @@ export class OtsComponent implements OnInit {
     const i = Math.floor(Math.log(bytes) / Math.log(k));
     return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   }
-  startImport(): void {
-    if (!this.importFile) {
-      this.showErrorAlert('Error', 'No hay archivo seleccionado');
-      return;
-    }
-
-    const validation = this.validateFile(this.importFile);
-    if (!validation.isValid) {
-      this.showErrorAlert('Archivo inválido', validation.message);
-      return;
-    }
-
-    this.importing = true;
-
-    Swal.fire({
-      title: '<div class="text-primary"><i class="bi bi-upload fs-1"></i></div>',
-      html: '<h5 class="mt-3 text-dark">Importando datos...</h5><p class="text-muted">Por favor no cierres esta ventana</p>',
-      allowOutsideClick: false,
-      showConfirmButton: false,
-      showCloseButton: false,
-      customClass: {
-        popup: 'sweet-alert-popup border-0'
-      },
-      didOpen: () => {
-        Swal.showLoading();
-      }
-    });
-
-    const importService = this.importMode === 'masivo'
-      ? this.excelService.importMasivo(this.importFile)
-      : this.excelService.importOts(this.importFile);
-
-    importService.subscribe({
-      next: (result: ImportResultDTO) => {
-        this.importResult = result;
-        this.importStep = 3;
-        this.importing = false;
-        Swal.close();
-
-        if (result.exito) {
-          setTimeout(() => this.loadOts(), 1000);
-        }
-
-        this.showImportResult(result);
-      },
-      error: (err) => {
-        this.importing = false;
-        Swal.close();
-        this.showErrorAlert('Error en importación', err.error?.mensaje || err.message || 'Error al importar el archivo');
-      }
-    });
+startImport(): void {
+  if (!this.importFile) {
+    this.showErrorAlert('Error', 'No hay archivo seleccionado');
+    return;
   }
 
+  const validation = this.validateFile(this.importFile);
+  if (!validation.isValid) {
+    this.showErrorAlert('Archivo inválido', validation.message);
+    return;
+  }
+
+  this.importing = true;
+
+  Swal.fire({
+    title: '<div class="text-primary"><i class="bi bi-upload fs-1"></i></div>',
+    html: '<h5 class="mt-3 text-dark">Validando archivo...</h5><p class="text-muted">Revisando datos antes de importar</p>',
+    allowOutsideClick: false,
+    showConfirmButton: false,
+    showCloseButton: false,
+    customClass: {
+      popup: 'sweet-alert-popup border-0'
+    },
+    didOpen: () => {
+      Swal.showLoading();
+    }
+  });
+
+  const importService = this.importMode === 'masivo'
+    ? this.excelService.importMasivo(this.importFile)
+    : this.excelService.importOts(this.importFile);
+
+  importService.subscribe({
+    next: (result: ImportResultDTO) => {
+      this.importResult = result;
+      this.importStep = 3;
+      this.importing = false;
+      Swal.close();
+
+      if (result.exito) {
+        setTimeout(() => this.loadOts(), 1000);
+      }
+
+      this.showImportResult(result);
+    },
+    error: (err) => {
+      this.importing = false;
+      Swal.close();
+
+      // ==================== MEJOR MANEJO DE ERRORES ====================
+      let errorMessage = 'Error desconocido al importar el archivo';
+
+      if (err.error?.message) {
+        // El backend devuelve un mensaje estructurado
+        errorMessage = err.error.message;
+      } else if (err.error?.mensaje) {
+        // Formato alternativo
+        errorMessage = err.error.mensaje;
+      } else if (err.message) {
+        errorMessage = err.message;
+      }
+
+      // Verificar si es un error de validación con múltiples errores
+      if (err.error?.erroresDetallados && Array.isArray(err.error.erroresDetallados)) {
+        this.showValidationErrors(err.error.erroresDetallados, err.error.totalRegistros || 0);
+      } else {
+        // Mostrar error genérico formateado
+        this.showImportErrorModal(errorMessage);
+      }
+    }
+  });
+}private showImportErrorModal(errorMessage: string): void {
+  Swal.fire({
+    title: '<strong class="text-danger">❌ Error en la importación</strong>',
+    html: `
+      <div class="text-start" style="max-height: 400px; overflow-y: auto;">
+        <div class="alert alert-danger border-0 mb-3">
+          <div class="d-flex align-items-start">
+            <i class="bi bi-x-circle me-3 fs-5"></i>
+            <div>
+              <h6 class="alert-heading mb-2">La importación no pudo completarse</h6>
+              <p class="mb-0 pre-wrap">${errorMessage}</p>
+            </div>
+          </div>
+        </div>
+
+        <h6 class="text-gray-700 mb-2">Posibles soluciones:</h6>
+        <ul class="text-gray-700">
+          <li>Verifica que el archivo tenga el formato correcto (.xlsx, .xls)</li>
+          <li>Asegúrate de que los encabezados sean exactos</li>
+          <li>Descarga la plantilla y compara con tu archivo</li>
+          <li>Contacta al administrador si el problema persiste</li>
+        </ul>
+      </div>
+    `,
+    width: 700,
+    confirmButtonText: '<i class="bi bi-download me-2"></i>Descargar plantilla',
+    showCancelButton: true,
+    cancelButtonText: '<i class="bi bi-x me-2"></i>Cerrar',
+    customClass: {
+      popup: 'sweet-alert-popup border-0',
+      confirmButton: 'btn btn-primary',
+      cancelButton: 'btn btn-secondary'
+    },
+    buttonsStyling: false
+  }).then((result) => {
+    if (result.isConfirmed) {
+      this.downloadImportTemplate();
+    }
+  });
+}
+private showValidationErrors(errors: string[], totalRegistros: number): void {
+  let errorsHtml = `
+    <div class="text-start" style="max-height: 400px; overflow-y: auto;">
+      <h5 class="text-danger mb-3">
+        <i class="bi bi-x-circle-fill me-2"></i>
+        Validación fallida
+      </h5>
+
+      <div class="alert alert-danger border-0 mb-4">
+        <div class="d-flex align-items-start">
+          <i class="bi bi-exclamation-triangle me-3 fs-5"></i>
+          <div>
+            <h6 class="alert-heading mb-2">Se encontraron ${errors.length} errores de validación</h6>
+            <p class="mb-0">Debes corregir estos errores antes de continuar con la importación.</p>
+          </div>
+        </div>
+      </div>
+
+      <h6 class="text-gray-700 mb-2">Errores encontrados:</h6>
+      <div class="table-responsive">
+        <table class="table table-sm table-bordered">
+          <thead class="table-light">
+            <tr>
+              <th width="60">#</th>
+              <th>Descripción del error</th>
+            </tr>
+          </thead>
+          <tbody>
+  `;
+
+  // Mostrar máximo 20 errores para no saturar
+  const maxErrorsToShow = Math.min(errors.length, 20);
+
+  for (let i = 0; i < maxErrorsToShow; i++) {
+    errorsHtml += `
+      <tr>
+        <td class="fw-semibold text-center">${i + 1}</td>
+        <td class="text-danger">${errors[i]}</td>
+      </tr>
+    `;
+  }
+
+  errorsHtml += `
+          </tbody>
+        </table>
+      </div>
+  `;
+
+  if (errors.length > maxErrorsToShow) {
+    errorsHtml += `
+      <div class="alert alert-info border-0 mt-3">
+        <i class="bi bi-info-circle me-2"></i>
+        Se encontraron ${errors.length - maxErrorsToShow} errores adicionales.
+        Corrige los errores mostrados arriba y vuelve a intentar.
+      </div>
+    `;
+  }
+
+  errorsHtml += `
+      <hr class="my-4">
+
+      <h6 class="text-gray-700 mb-2">Acciones recomendadas:</h6>
+      <ol class="text-gray-700">
+        <li>Corrige todos los errores en el archivo Excel</li>
+        <li>Verifica que los encabezados sean exactamente los requeridos</li>
+        <li>Usa solo valores de los dropdowns provistos</li>
+        <li>Descarga la plantilla para ver el formato correcto</li>
+        <li>Verifica que las fechas estén en formato dd/mm/aaaa</li>
+      </ol>
+
+      <div class="d-flex gap-2 mt-4">
+        <button class="btn btn-outline-primary btn-sm" onclick="this.dispatchEvent(new Event('downloadTemplate'))">
+          <i class="bi bi-download me-1"></i>Descargar plantilla
+        </button>
+        <button class="btn btn-primary btn-sm" onclick="this.dispatchEvent(new Event('closeModal'))">
+          <i class="bi bi-check me-1"></i>Entendido
+        </button>
+      </div>
+    </div>
+  `;
+
+  Swal.fire({
+    title: '<strong class="text-danger">❌ Importación detenida</strong>',
+    html: errorsHtml,
+    width: 800,
+    showConfirmButton: false,
+    showCancelButton: false,
+    customClass: {
+      popup: 'sweet-alert-popup border-0'
+    }
+  }).then((result) => {
+    // Cerrar modal si se hace clic en botón personalizado
+    if (result.dismiss === Swal.DismissReason.close) {
+      Swal.close();
+    }
+  });
+
+  // Manejar clics en botones personalizados
+  setTimeout(() => {
+    const swalPopup = document.querySelector('.swal2-popup');
+    if (swalPopup) {
+      const downloadBtn = swalPopup.querySelector('[onclick*="downloadTemplate"]');
+      const closeBtn = swalPopup.querySelector('[onclick*="closeModal"]');
+
+      if (downloadBtn) {
+        downloadBtn.addEventListener('click', () => {
+          this.downloadImportTemplate();
+        });
+      }
+
+      if (closeBtn) {
+        closeBtn.addEventListener('click', () => {
+          Swal.close();
+        });
+      }
+    }
+  }, 100);
+}
   private showImportResult(result: ImportResultDTO): void {
     const html = this.excelService.formatImportResult(result);
 

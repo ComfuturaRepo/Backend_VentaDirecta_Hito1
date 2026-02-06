@@ -5,9 +5,9 @@ export interface Permiso {
   descripcion: string;
   activo: boolean;
   niveles: Nivel[];
-
   areas: Area[];
   cargos: Cargo[];
+  trabajadores: TrabajadorDTO[]; // NUEVO
 }
 
 export interface PermisoDTO {
@@ -18,7 +18,10 @@ export interface PermisoDTO {
   nivelesIds: number[];
   areasIds: number[];
   cargosIds: number[];
+  trabajadoresIds: number[]; // NUEVO
 }
+
+
 
 export interface PermisoResponseDTO {
   idPermiso: number;
@@ -29,6 +32,25 @@ export interface PermisoResponseDTO {
   niveles: NivelDTO[];
   areas: AreaDTO[];
   cargos: CargoDTO[];
+  trabajadores: TrabajadorDTO[]; // NUEVO
+}
+
+// NUEVA interface para TrabajadorDTO
+export interface TrabajadorDTO {
+  idTrabajador: number;
+  nombres: string;
+  apellidos: string;
+  dni: string;
+  activo: boolean;
+}
+
+// NUEVA interface para PermisoTrabajadorTablaDTO
+export interface PermisoTrabajadorTablaDTO {
+  idTrabajador: number;
+  nombres: string;
+  apellidos: string;
+  dni: string;
+  activo: boolean;
 }
 export interface VerificarPermisoDTO {
   codigoPermiso: string;
@@ -113,7 +135,8 @@ export interface Trabajador {
   area: Area;
   cargo: Cargo;
   activo: boolean;
-}export interface PermisoFormData {
+}
+export interface PermisoFormData {
   idPermiso?: number;
   codigo: string;
   nombre: string;
@@ -148,4 +171,5 @@ export interface PermisoTablaDTO {
   niveles: PermisoNivelTablaDTO[];
   areas: PermisoAreaTablaDTO[];
   cargos: PermisoCargoTablaDTO[];
+  trabajadores: PermisoTrabajadorTablaDTO[]; // NUEVO
 }

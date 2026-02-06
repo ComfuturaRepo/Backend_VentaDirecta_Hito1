@@ -40,7 +40,6 @@ public class ExcelImportService {
     private static final int MAX_ROWS_IMPORT = 1000;
     private static final int MAX_COLUMNAS_COMBOS = 5; // Máximo 5 columnas en hoja combos
 
-    // ================ IMPORTACIÓN DE EXCEL ================
     @Transactional(rollbackFor = Exception.class)
     public ImportResultDTO importOtsFromExcel(MultipartFile file) throws IOException {
         ImportResultDTO result = new ImportResultDTO();
@@ -67,8 +66,10 @@ public class ExcelImportService {
             int siguienteOt = (ultimoOt != null ? ultimoOt + 1 : 20250001);
 
             List<ExcelImportDTO> registros = new ArrayList<>();
+            List<ExcelImportDTO> erroresValidacion = new ArrayList<>();
             int filasProcesadas = 0;
 
+            // === FASE 1: LECTURA Y VALIDACIÓN ===
             for (int i = 1; i <= sheet.getLastRowNum() && filasProcesadas < MAX_ROWS_IMPORT; i++) {
                 Row row = sheet.getRow(i);
                 if (row == null || isRowEmpty(row)) continue;
@@ -89,52 +90,107 @@ public class ExcelImportService {
                             registro.setMensajeError(validacion);
                             result.incrementarErroresValidacion();
                             result.agregarResumenError(validacion);
+                            erroresValidacion.add(registro);
                         } else {
                             registro.setTempRequest(request);
+                            registros.add(registro);
                         }
                     } catch (Exception e) {
                         registro.setValido(false);
                         registro.setMensajeError("Error en validación: " + e.getMessage());
                         log.warn("Validación fallida fila {}: {}", i + 1, e.getMessage());
                         result.incrementarErroresValidacion();
-                    }
-                }
-                registros.add(registro);
-            }
-
-            result.setTotalRegistros(registros.size());
-            log.info("Total registros encontrados: {}", registros.size());
-
-            List<ExcelImportDTO> exitosos = new ArrayList<>();
-            List<ExcelImportDTO> errores = new ArrayList<>();
-
-            // Procesar registros válidos
-            for (ExcelImportDTO registro : registros) {
-                if (registro.isValido() && registro.getTempRequest() != null) {
-                    try {
-                        otService.saveOt(registro.getTempRequest());
-                        registro.setMensajeError("CREADA EXITOSAMENTE - OT: " + registro.getOt());
-                        exitosos.add(registro);
-                        result.incrementarExitosos();
-                        log.info("✓ OT {} creada exitosamente", registro.getOt());
-                    } catch (Exception e) {
-                        log.error("✗ Error al guardar OT {}: {}", registro.getOt(), e.getMessage(), e);
-                        registro.setValido(false);
-                        registro.setMensajeError("Error al guardar OT " + registro.getOt() + ": " +
-                                getErrorMessage(e));
-                        errores.add(registro);
-                        result.incrementarErroresPersistencia();
-                        result.incrementarFallidos();
+                        erroresValidacion.add(registro);
                     }
                 } else {
-                    errores.add(registro);
-                    result.incrementarFallidos();
+                    erroresValidacion.add(registro);
+                    result.incrementarErroresValidacion();
                 }
             }
 
+            result.setTotalRegistros(filasProcesadas);
+            log.info("Total registros procesados: {}", filasProcesadas);
+            log.info("Registros válidos: {}, Errores de validación: {}",
+                    registros.size(), erroresValidacion.size());
+
+            // === FASE 2: VALIDACIÓN FINAL - NO PROCEDER SI HAY ERRORES ===
+            if (!erroresValidacion.isEmpty()) {
+                // Crear mensaje de error detallado
+                StringBuilder errorDetails = new StringBuilder();
+                errorDetails.append("❌ IMPORTACIÓN ABORTADA\n\n");
+                errorDetails.append("Se encontraron ").append(erroresValidacion.size())
+                        .append(" errores de validación en el archivo.\n\n");
+                errorDetails.append("Detalles de errores:\n");
+                errorDetails.append("─────────────────────\n");
+
+                for (int i = 0; i < Math.min(erroresValidacion.size(), 20); i++) {
+                    ExcelImportDTO error = erroresValidacion.get(i);
+                    errorDetails.append("Fila ").append(error.getFilaExcel())
+                            .append(": ").append(error.getMensajeError())
+                            .append("\n");
+                }
+
+                if (erroresValidacion.size() > 20) {
+                    errorDetails.append("\n... y ").append(erroresValidacion.size() - 20)
+                            .append(" errores más.\n");
+                }
+
+                errorDetails.append("\n─────────────────────\n");
+                errorDetails.append("Acciones requeridas:\n");
+                errorDetails.append("1. Corrija los errores en el archivo Excel\n");
+                errorDetails.append("2. Verifique que todas las columnas obligatorias estén completas\n");
+                errorDetails.append("3. Utilice únicamente valores de los dropdowns provistos\n");
+                errorDetails.append("4. Asegúrese que el código y descripción de site coincidan\n");
+
+                // Agregar errores al resultado
+                for (ExcelImportDTO error : erroresValidacion) {
+                    result.agregarErrorDetallado(error.getFilaExcel(), error.getMensajeError());
+                }
+
+                result.setRegistrosConError(erroresValidacion);
+                result.setRegistrosProcesados(new ArrayList<>());
+                result.setExito(false);
+                result.setMensajeResumen("IMPORTACIÓN DETENIDA: " + erroresValidacion.size() +
+                        " errores de validación encontrados.");
+
+                log.error("❌ IMPORTACIÓN ABORTADA - {} errores de validación encontrados",
+                        erroresValidacion.size());
+
+                throw new IOException(errorDetails.toString());
+            }
+
+            // === FASE 3: PROCESAR REGISTROS VÁLIDOS (solo si no hay errores) ===
+            log.info("✅ Validación superada. Procesando {} registros válidos...", registros.size());
+
+            List<ExcelImportDTO> exitosos = new ArrayList<>();
+            List<ExcelImportDTO> erroresPersistencia = new ArrayList<>();
+
+            for (ExcelImportDTO registro : registros) {
+                try {
+                    otService.saveOt(registro.getTempRequest());
+                    registro.setMensajeError("CREADA EXITOSAMENTE - OT: " + registro.getOt());
+                    exitosos.add(registro);
+                    result.incrementarExitosos();
+                    log.info("✓ OT {} creada exitosamente", registro.getOt());
+                } catch (Exception e) {
+                    log.error("✗ Error al guardar OT {}: {}", registro.getOt(), e.getMessage(), e);
+                    registro.setValido(false);
+                    registro.setMensajeError("Error al guardar OT " + registro.getOt() + ": " +
+                            getErrorMessage(e));
+                    erroresPersistencia.add(registro);
+                    result.incrementarErroresPersistencia();
+                    result.incrementarFallidos();
+
+                    // Agregar error detallado
+                    result.agregarErrorDetallado(registro.getFilaExcel(),
+                            "Error al guardar OT " + registro.getOt() + ": " + getErrorMessage(e));
+                }
+            }
+
+            // === FASE 4: PREPARAR RESULTADO FINAL ===
             result.setRegistrosProcesados(exitosos);
-            result.setRegistrosConError(errores);
-            result.setExito(!errores.isEmpty() ? false : exitosos.size() > 0);
+            result.setRegistrosConError(erroresPersistencia);
+            result.setExito(erroresPersistencia.isEmpty() && !exitosos.isEmpty());
             result.generarMensajeResumen();
 
             log.info("=== RESUMEN IMPORTACIÓN ===");
@@ -144,11 +200,29 @@ public class ExcelImportService {
 
             if (exitosos.isEmpty() && !registros.isEmpty()) {
                 log.warn("No se pudo crear ninguna OT. Verifique los datos.");
+
+                // Si todos fallaron en persistencia, agregar mensaje especial
+                if (!erroresPersistencia.isEmpty()) {
+                    result.setMensajeResumen("❌ IMPORTACIÓN FALLIDA: Todos los registros fallaron al guardar. " +
+                            "Verifique la conexión a la base de datos y los datos de entrada.");
+                }
             }
 
         } catch (Exception e) {
             log.error("❌ ERROR CRÍTICO al procesar archivo Excel", e);
-            throw new IOException("Error al procesar archivo Excel: " + getErrorMessage(e), e);
+
+            // Si ya es IOException (nuestro error de validación), re-lanzarla
+            if (e instanceof IOException) {
+                throw e;
+            }
+
+            // Para otros errores, crear mensaje genérico
+            String errorMsg = "Error al procesar archivo Excel: " + getErrorMessage(e);
+            if (result.getErroresDetallados() != null && !result.getErroresDetallados().isEmpty()) {
+                errorMsg += "\n\nErrores encontrados:\n" +
+                        String.join("\n", result.getErroresDetallados());
+            }
+            throw new IOException(errorMsg, e);
         } finally {
             result.setFin(System.currentTimeMillis());
             result.setDuracionMs(result.getFin() - result.getInicio());

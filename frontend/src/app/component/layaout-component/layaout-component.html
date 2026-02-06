@@ -133,6 +133,16 @@
           </a>
         </li>
 
+         <!-- Trabajadores -->
+        <li *appPermiso="'PROYECTO_VIEW'">
+          <a routerLink="/proyecto" routerLinkActive="active" (click)="closeMobile()">
+            <div class="menu-icon-wrapper">
+              <i class="bi bi-person-badge-fill"></i>
+            </div>
+            <span class="menu-label" *ngIf="!isCollapsed">Proyecto</span>
+          </a>
+        </li>
+
         <!-- Clientes -->
         <li *appPermiso="'CLIENTE_VIEW'">
           <a routerLink="/cliente" routerLinkActive="active" (click)="closeMobile()">

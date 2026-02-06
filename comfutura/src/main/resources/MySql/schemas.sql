@@ -206,7 +206,7 @@ CREATE TABLE maestro_codigo (
 -- =====================================================
 CREATE TABLE proyecto (
                           id_proyecto INT AUTO_INCREMENT PRIMARY KEY,
-                          nombre VARCHAR(150) NOT NULL,
+                          nombre VARCHAR(150) NOT NULL unique,
                           activo TINYINT(1) DEFAULT 1
 );
 CREATE TABLE fase (
@@ -759,3 +759,12 @@ CREATE TABLE permiso_cargo (
                                FOREIGN KEY (id_cargo) REFERENCES cargo(id_cargo)
 );
 
+CREATE TABLE permiso_trabajador (
+                                    id_permiso INT,
+                                    id_trabajador INT,
+                                    PRIMARY KEY (id_permiso, id_trabajador),
+                                    CONSTRAINT fk_permiso_trabajador_permiso
+                                        FOREIGN KEY (id_permiso) REFERENCES permiso(id_permiso),
+                                    CONSTRAINT fk_permiso_trabajador_trabajador
+                                        FOREIGN KEY (id_trabajador) REFERENCES trabajador(id_trabajador)
+);
