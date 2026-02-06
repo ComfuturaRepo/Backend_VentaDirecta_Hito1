@@ -10,3 +10,21 @@
 .table th {
   vertical-align: middle;
 }
+/* Columna Material / Servicio */
+.material-col {
+  width: 40%;
+  min-width: 320px;
+}
+
+/* Forzar ancho completo del ng-select */
+.material-col app-ngselect-dropdown,
+.material-col ::ng-deep ng-select,
+.material-col ::ng-deep .ng-select-container {
+  width: 100% !important;
+  min-width: 100%;
+}
+
+/* Altura cómoda dentro de tablas */
+.material-col ::ng-deep .ng-select-container {
+  min-height: 44px;
+}

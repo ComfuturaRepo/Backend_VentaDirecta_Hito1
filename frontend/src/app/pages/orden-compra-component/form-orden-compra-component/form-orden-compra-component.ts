@@ -6,10 +6,13 @@ import { OrdenCompraRequest, OrdenCompraResponse, OcDetalleRequest } from '../..
 import { OrdenCompraService } from '../../../service/orden-compra.service';
 import { DropdownItem, DropdownService } from '../../../service/dropdown.service';
 import { MaestroCodigoService } from '../../../service/maestro-codigo.service';
+import { NgselectDropdownComponent } from '../../../component/ngselect-dropdown-component/ngselect-dropdown-component';
+
+
 @Component({
   selector: 'app-form-orden-compra-component',
   standalone: true,
-  imports: [CommonModule, FormsModule],
+  imports: [CommonModule, FormsModule,NgselectDropdownComponent],
   templateUrl: './form-orden-compra-component.html',
   styleUrls: ['./form-orden-compra-component.css']
 })
@@ -118,7 +121,7 @@ private aplicarValoresEdicion(): void {
 
 
 
- 
+
 
  private getDefaultForm(): OrdenCompraRequest {
   return {
@@ -137,7 +140,7 @@ private aplicarValoresEdicion(): void {
 
 agregarDetalle(): void {
   this.form.detalles.push({
-   
+
     cantidad: 1,
     precioUnitario: 0
   });
@@ -152,7 +155,7 @@ agregarDetalle(): void {
 
 
 
-  
+
 
 
 formasPago: { id: string; label: string }[] = [
@@ -194,7 +197,7 @@ estados: { id: number; label: string }[] = [
     this.onClose.emit();
   }
 
-  
+
 }
 
 

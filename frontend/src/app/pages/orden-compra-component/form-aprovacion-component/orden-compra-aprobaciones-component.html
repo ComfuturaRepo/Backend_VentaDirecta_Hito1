@@ -36,17 +36,23 @@
       <p><b>Días en estado:</b> {{ aprob.diasEnEstado }}</p>
 
       <!-- BOTONES -->
-      <div *ngIf="aprob.estado === 'PENDIENTE'" class="mt-3 d-flex gap-2">
-        <button class="btn btn-sm btn-success"
-                (click)="aprobarNivel(aprob)">
-          ✔ Aprobar
-        </button>
+          <ng-container *ngIf="aprob.estado === 'PENDIENTE'">
+        <div *appPermiso="getPermisoNivel(aprob.nivel)"
+            class="mt-3 d-flex gap-2">
 
-        <button class="btn btn-sm btn-outline-danger"
-                (click)="rechazarNivel(aprob)">
-          ✖ Rechazar
-        </button>
-      </div>
+          <button class="btn btn-sm btn-success"
+                  (click)="aprobarNivel(aprob)">
+            ✔ Aprobar
+          </button>
+
+          <button class="btn btn-sm btn-outline-danger"
+                  (click)="rechazarNivel(aprob)">
+            ✖ Rechazar
+          </button>
+
+        </div>
+      </ng-container>
+
     </div>
   </div>
 </div>

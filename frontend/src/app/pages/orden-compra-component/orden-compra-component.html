@@ -20,12 +20,19 @@
         <div class="col-md-6 col-lg-5">
           <div class="input-group">
             <span class="input-group-text bg-light"><i class="bi bi-search"></i></span>
-            <input type="text" class="form-control" placeholder="Buscar OT, proveedor, material, estado..."
-                   [(ngModel)]="searchTerm" (input)="onSearchChange()" [disabled]="isLoading">
+           <input type="text"
+       class="form-control"
+       placeholder="Buscar OT, proveedor, estado..."
+       [(ngModel)]="searchTerm"
+       (input)="onSearchChange()">
+
           </div>
         </div>
         <div class="col-md-6 col-lg-7 text-md-end">
-          <small class="text-muted">Mostrando {{filteredOrdenes.length}} de {{ordenes.length}}</small>
+<small class="text-muted" *ngIf="pageData">
+  Mostrando {{ filteredOrdenes.length }}
+  de {{ totalElements }} registros
+</small>
         </div>
       </div>
     </div>
@@ -103,7 +110,7 @@
           <button class="btn btn-outline-primary" (click)="editarOrden(oc)" title="Editar">
             <i class="bi bi-pencil"></i>
           </button>
-          <button class="btn btn-outline-warning" (click)="toggleEstado(oc)" title="Cambiar estado">
+       <button class="btn btn-outline-warning" (click)="toggleEstado(oc)" title="Cambiar estado">
             <i class="bi bi-arrow-left-right"></i>
           </button>
        <button class="btn btn-outline-info"
@@ -123,19 +130,6 @@
     </tr>
         </tbody>
       </table>
-    </div>
-
-    <!-- Paginación -->
-    <div class="card-footer bg-white d-flex justify-content-between align-items-center" *ngIf="pageData && totalPages > 1">
-      <div>Página {{currentPage + 1}} de {{totalPages}}</div>
-      <nav>
-        <ul class="pagination pagination-sm mb-0">
-          <li class="page-item" [class.disabled]="currentPage === 0"><button class="page-link" (click)="irAPagina(0)">Primera</button></li>
-          <li class="page-item" [class.disabled]="currentPage === 0"><button class="page-link" (click)="irAPagina(currentPage-1)">Anterior</button></li>
-          <li class="page-item" [class.disabled]="currentPage === totalPages-1"><button class="page-link" (click)="irAPagina(currentPage+1)">Siguiente</button></li>
-          <li class="page-item" [class.disabled]="currentPage === totalPages-1"><button class="page-link" (click)="irAPagina(totalPages-1)">Última</button></li>
-        </ul>
-      </nav>
     </div>
 
 
@@ -180,7 +174,7 @@
               <span class="badge px-3 py-2"
                  [ngClass]="getEstadoClass(detalleOcSeleccionada?.estadoNombre ?? '')"></span>
 
-             
+
             </div>
           </div>
 
@@ -294,13 +288,15 @@
 
 <app-pagination
   [currentPage]="currentPage"
-
+  [totalItems]="totalElements"
   [totalPages]="totalPages"
   [pageSize]="pageSize"
+  [isLoading]="isLoading"
   (pageChange)="irAPagina($event)"
   (pageSizeChange)="cambiarPageSize($event)"
   (refresh)="cargarOrdenes(currentPage)">
 </app-pagination>
+
 
 
 

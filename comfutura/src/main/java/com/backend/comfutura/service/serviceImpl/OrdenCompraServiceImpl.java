@@ -19,6 +19,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -34,6 +35,7 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
     private final EmpresaRepository empresaRepository;
     private final SpringTemplateEngine templateEngine;
     private final OrdenCompraAprobacionService ordenCompraAprobacionService;
+    private final OrdenCompraAprobacionRepository ordenCompraAprobacionRepository;
 
     @Override
     @Transactional
@@ -140,15 +142,29 @@ public class OrdenCompraServiceImpl implements OrdenCompraService {
         Empresa empresa = empresaRepository.findById(idEmpresa)
                 .orElseThrow(() -> new RuntimeException("Empresa no encontrada"));
 
+        // 🔹 NUEVO: obtener aprobadores (SOLO aprobado_por)
+        List<String> aprobadores = ordenCompraAprobacionRepository
+                .findByOrdenCompra_IdOcOrderByNivel(idOc)
+                .stream()
+                .filter(a -> "APROBADO".equals(a.getEstado()))
+                .map(OrdenCompraAprobacion::getAprobadoPor)
+                .filter(Objects::nonNull)
+                .toList();
+
         Context context = new Context();
         context.setVariable("oc", oc);
         context.setVariable("empresa", empresa);
-        context.setVariable("fechaImpresion", LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
+        context.setVariable("fechaImpresion",
+                LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));
         context.setVariable("paginaActual", 1);
         context.setVariable("totalPaginas", 1);
 
+        // 🔹 NUEVO: pasar aprobadores al HTML
+        context.setVariable("aprobadores", aprobadores);
+
         return templateEngine.process("orden-compra", context);
     }
+
 
     // Mapper completo
     private OrdenCompraResponseDTO mapToResponseCompleto(OrdenCompra oc) {

@@ -53,42 +53,29 @@
 
                 <!-- OT -->
                 <div class="col-md-6">
-                  <label class="form-label">
-                    Orden de Trabajo (OT)
-                    <span class="text-danger">*</span>
-                  </label>
-                  <select class="form-select"
-                          [(ngModel)]="form.idOts"
-                          name="idOts"
-                          required>
-                    <option [ngValue]="0" disabled>
-                      Seleccione OT...
-                    </option>
-                    <option *ngFor="let ot of ots"
-                            [ngValue]="ot.id">
-                      {{ ot.label }}
-                    </option>
-                  </select>
+                  <app-ngselect-dropdown
+                    label="Orden de Trabajo (OT)"
+                    placeholder="Seleccione OT"
+                    [items]="ots"
+                    [(ngModel)]="form.idOts"
+                    name="idOts"
+                    [required]="true">
+                  </app-ngselect-dropdown>
+
                 </div>
 
                 <!-- PROVEEDOR -->
                 <div class="col-md-6">
-                  <label class="form-label">
-                    Proveedor
-                    <span class="text-danger">*</span>
-                  </label>
-                  <select class="form-select"
-                          [(ngModel)]="form.idProveedor"
-                          name="idProveedor"
-                          required>
-                    <option [ngValue]="0" disabled>
-                      Seleccione proveedor...
-                    </option>
-                    <option *ngFor="let prov of proveedores"
-                            [ngValue]="prov.id">
-                      {{ prov.label }}
-                    </option>
-                  </select>
+                 <app-ngselect-dropdown
+              label="Proveedor"
+              placeholder="Seleccione proveedor"
+              [items]="proveedores"
+              [(ngModel)]="form.idProveedor"
+              name="idProveedor"
+              [required]="true">
+            </app-ngselect-dropdown>
+
+
                 </div>
 
                 <!-- FORMA DE PAGO -->
@@ -179,24 +166,16 @@
                    <tr *ngFor="let d of form.detalles; let i = index">
 
                                   <!-- MATERIAL -->
-                                   <td>
-                                    <select class="form-select"
-                                          [(ngModel)]="d.idMaestro"
-                                          name="producto{{i}}">
-
-                                    <option [ngValue]="null">Seleccione material / servicio</option>
-
-                                    <option *ngFor="let m of maestros" [ngValue]="m.id">
-                                      {{ m.label }}
-                                    </option>
-
-                                  </select>
-
-
-
-
-
+                                 <td class="material-col">
+                                    <app-ngselect-dropdown
+                                      class="w-100"
+                                      placeholder="Material / Servicio"
+                                      [items]="maestros"
+                                      [(ngModel)]="d.idMaestro"
+                                      name="producto{{i}}">
+                                    </app-ngselect-dropdown>
                                   </td>
+
 
                                   <!-- CANTIDAD -->
                                   <td>
@@ -266,4 +245,6 @@
 
     </div>
   </div>
+
+
 </div>

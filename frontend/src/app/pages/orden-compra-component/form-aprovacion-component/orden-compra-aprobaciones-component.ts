@@ -10,7 +10,7 @@ import { PermisoDirective } from '../../../directive/permiso.directive';
 @Component({
   selector: 'app-orden-compra-aprobaciones',
   standalone: true,
-  
+
   imports: [CommonModule, FormsModule,    HttpClientModule ,PermisoDirective
 ],
   templateUrl: './orden-compra-aprobaciones-component.html'
@@ -101,6 +101,9 @@ export class OrdenCompraAprobacionesComponent implements OnInit {
     this.idOc,
     this.idEmpresaSeleccionada
   );
+}
+getPermisoNivel(nivel: number): string {
+  return `APROBADOR_${nivel}`;
 }
 
 }
