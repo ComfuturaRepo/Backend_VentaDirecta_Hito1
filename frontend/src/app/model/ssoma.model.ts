@@ -1,169 +1,279 @@
-// ==================== INTERFACES ====================
+export interface Ats {
+  idAts?: number;
+  fecha: Date;
+  hora: string;
+  numeroRegistro: string;
+  empresa: string;
+  lugarTrabajo: string;
+  coordenadas: string;
+  idOts?: number;
+  codigoOt?: string;
+  idTrabajo?: number;
+  nombreTrabajo?: string;
+  idSupervisorTrabajo?: number;
+  nombreSupervisorTrabajo?: string;
+  idResponsableLugar?: number;
+  nombreResponsableLugar?: string;
+  idSupervisorSst?: number;
+  nombreSupervisorSst?: string;
+}
 
-// Interfaz para ATS
-export interface AtsParticipante {
+export interface AtsRequest {
+  empresa: string;
+  lugarTrabajo: string;
+coordenadas: string;           // ← este falta en tu payload
+  idOts?: number;
+  idTrabajo?: number;
+  idSupervisorTrabajo?: number;
+  idResponsableLugar?: number;
+  idSupervisorSst?: number;
+  participantes?: AtsParticipanteRequest[];
+  riesgos?: AtsRiesgoRequest[];
+  eppIds?: number[];
+  tipoRiesgoIds?: number[];
+}
+
+export interface AtsParticipanteRequest {
   idTrabajador: number;
   idRol: number;
 }
 
-export interface AtsRiesgo {
-  idTarea: number;
-  idPeligro: number;
-  idRiesgo: number;
-  idMedida: number;
-}
-
-export interface AtsRequest {
-  fecha: string;
-  hora: string;
-  empresa: string;
-  lugarTrabajo: string;
-  idTrabajo: number;
-  participantes: AtsParticipante[];
-  riesgos: AtsRiesgo[];
-  eppIds: number[];
-  tipoRiesgoIds: number[];
+export interface AtsRiesgoRequest {
+  idTarea?: number;
+  idPeligro?: number;
+  idRiesgo?: number;
+  idMedida?: number;
+  observacion?: string;
 }
 
 export interface AtsResponse {
   idAts: number;
-  fecha: string;
+  fecha: Date;
   hora: string;
+  numeroRegistro: string;
   empresa: string;
   lugarTrabajo: string;
-  idTrabajo: number;
+  coordenadas: string;
+  idOts?: number;
+  codigoOt?: string;
+  idTrabajo?: number;
   nombreTrabajo?: string;
-  participantes: AtsParticipante[];
-  riesgos: AtsRiesgo[];
-  eppIds: number[];
-  tipoRiesgoIds: number[];
+  idSupervisorTrabajo?: number;
+  nombreSupervisorTrabajo?: string;
+  idResponsableLugar?: number;
+  nombreResponsableLugar?: string;
+  idSupervisorSst?: number;
+  nombreSupervisorSst?: string;
 }
-
-// Interfaz para Capacitación
-export interface CapacitacionAsistente {
-  idTrabajador: number;
-  observaciones?: string;
+export interface Capacitacion {
+  idCapacitacion?: number;
+  numeroRegistro: string;
+  tema: string;
+  fecha: Date;
+  hora: string;
+  tipoCharla: string;
+  idOts?: number;
+  idCapacitador?: number;
+  nombreCapacitador?: string;
+  idSupervisorTrabajo?: number;
+  nombreSupervisorTrabajo?: string;
+  idResponsableLugar?: number;
+  nombreResponsableLugar?: string;
+  idSupervisorSst?: number;
+  nombreSupervisorSst?: string;
 }
 
 export interface CapacitacionRequest {
-  numeroRegistro: string;
   tema: string;
-  fecha: string;
-  hora: string;
-  idCapacitador: number;
-  asistentes: CapacitacionAsistente[];
+  tipoCharla?: string;
+  idOts?: number;
+  idCapacitador?: number;
+  idSupervisorTrabajo?: number;
+  idResponsableLugar?: number;
+  idSupervisorSst?: number;
+  asistentes?: CapacitacionAsistenteRequest[];
+}
+
+export interface CapacitacionAsistenteRequest {
+  idTrabajador: number;
+  observaciones?: string;
 }
 
 export interface CapacitacionResponse {
   idCapacitacion: number;
   numeroRegistro: string;
   tema: string;
-  fecha: string;
+  fecha: Date;
   hora: string;
-  idCapacitador: number;
+  tipoCharla: string;
+  idCapacitador?: number;
   nombreCapacitador?: string;
-  asistentes: CapacitacionAsistente[];
+  idSupervisorTrabajo?: number;
+  nombreSupervisorTrabajo?: string;
+  idResponsableLugar?: number;
+  nombreResponsableLugar?: string;
+  idSupervisorSst?: number;
+  nombreSupervisorSst?: string;
+}export interface InspeccionEpp {
+  id?: number;
+  numeroRegistro: string;
+  fecha: Date;
+  tipoInspeccion: string;
+  areaTrabajo?: string;
+  idOts?: number;
+  idInspector?: number;
+  nombreInspector?: string;
+  idSupervisorTrabajo?: number;
+  nombreSupervisorTrabajo?: string;
+  idResponsableLugar?: number;
+  nombreResponsableLugar?: string;
+  idSupervisorSst?: number;
+  nombreSupervisorSst?: string;
 }
 
-// Interfaz para Inspección EPP
-export interface InspeccionEppDetalle {
+export interface InspeccionEppRequest {
+  tipoInspeccion?: string;
+  areaTrabajo?: string;
+  idOts?: number;
+  idInspector?: number;
+  idSupervisorTrabajo?: number;
+  idResponsableLugar?: number;
+  idSupervisorSst?: number;
+  detalles?: InspeccionEppDetalleRequest[];
+}
+
+export interface InspeccionEppDetalleRequest {
   idTrabajador: number;
   idEpp: number;
   cumple: boolean;
   observacion?: string;
-}
-
-export interface InspeccionEppRequest {
-  numeroRegistro: string;
-  fecha: string;
-  idInspector: number;
-  detalles: InspeccionEppDetalle[];
+  accionCorrectiva?: string;
 }
 
 export interface InspeccionEppResponse {
   id: number;
   numeroRegistro: string;
-  fecha: string;
-  idInspector: number;
+  fecha: Date;
+  tipoInspeccion: string;
+  areaTrabajo?: string;
+  idInspector?: number;
   nombreInspector?: string;
-  detalles: InspeccionEppDetalle[];
-}
-
-// Interfaz para Inspección Herramientas
-export interface InspeccionHerramientaDetalle {
-  idHerramienta: number;
-  cumple: boolean;
-  fotoUrl?: string;
-  observacion?: string;
+  idSupervisorTrabajo?: number;
+  nombreSupervisorTrabajo?: string;
+  idResponsableLugar?: number;
+  nombreResponsableLugar?: string;
+  idSupervisorSst?: number;
+  nombreSupervisorSst?: string;
+}export interface InspeccionHerramienta {
+  id?: number;
+  numeroRegistro: string;
+  fecha: Date;
+  ubicacionSede?: string;
+  idOts?: number;
+  idCliente?: number;
+  idProyecto?: number;
+  idSupervisor?: number;
+  nombreSupervisor?: string;
+  idSupervisorTrabajo?: number;
+  nombreSupervisorTrabajo?: string;
+  idResponsableLugar?: number;
+  nombreResponsableLugar?: string;
+  idSupervisorSst?: number;
+  nombreSupervisorSst?: string;
 }
 
 export interface InspeccionHerramientaRequest {
-  numeroRegistro: string;
-  fecha: string;
-  idSupervisor: number;
-  detalles: InspeccionHerramientaDetalle[];
+  ubicacionSede?: string;
+  idOts?: number;
+  idCliente?: number;
+  idProyecto?: number;
+  idSupervisor?: number;
+  idSupervisorTrabajo?: number;
+  idResponsableLugar?: number;
+  idSupervisorSst?: number;
+  detalles?: InspeccionHerramientaDetalleRequest[];
+}
+
+export interface InspeccionHerramientaDetalleRequest {
+  idHerramienta: number;
+  observacion?: string;
 }
 
 export interface InspeccionHerramientaResponse {
   id: number;
   numeroRegistro: string;
-  fecha: string;
-  idSupervisor: number;
+  fecha: Date;
+  ubicacionSede?: string;
+  idSupervisor?: number;
   nombreSupervisor?: string;
-  detalles: InspeccionHerramientaDetalle[];
-}
-
-// Interfaz para PETAR
-export interface PetarRespuesta {
-  idPregunta: number;
-  respuesta: boolean;
+  idSupervisorTrabajo?: number;
+  nombreSupervisorTrabajo?: string;
+  idResponsableLugar?: number;
+  nombreResponsableLugar?: string;
+  idSupervisorSst?: number;
+  nombreSupervisorSst?: string;
+}export interface Petar {
+  id?: number;
+  numeroRegistro: string;
+  fecha: Date;
+  requiereEvaluacionAmbiente: boolean;
+  aperturaLineaEquipos: boolean;
+  horaInicio?: string;
+  recursosNecesarios?: string;
+  procedimiento?: string;
+  idOts?: number;
+  idSupervisorTrabajo?: number;
+  nombreSupervisorTrabajo?: string;
+  idResponsableLugar?: number;
+  nombreResponsableLugar?: string;
+  idSupervisorSst?: number;
+  nombreSupervisorSst?: string;
+  idBrigadista?: number;
+  nombreBrigadista?: string;
+  idResponsableTrabajo?: number;
+  nombreResponsableTrabajo?: string;
 }
 
 export interface PetarRequest {
-  numeroRegistro: string;
-  fecha: string;
-  respuestas: PetarRespuesta[];
-  trabajadoresAutorizadosIds: number[];
+  requiereEvaluacionAmbiente: boolean;
+  aperturaLineaEquipos: boolean;
+  horaInicio?: string;
+  recursosNecesarios?: string;
+  procedimiento?: string;
+  idOts?: number;
+  idSupervisorTrabajo?: number;
+  idResponsableLugar?: number;
+  idSupervisorSst?: number;
+  idBrigadista?: number;
+  idResponsableTrabajo?: number;
+  conformidadRequerida?: boolean;
+  respuestas?: PetarRespuestaRequest[];
+  trabajadoresAutorizadosIds?: number[];
+}
+
+export interface PetarRespuestaRequest {
+  idPregunta: number;
+  respuesta: boolean;
+  observacion?: string;
 }
 
 export interface PetarResponse {
   id: number;
   numeroRegistro: string;
-  fecha: string;
-  respuestas: PetarRespuesta[];
-  trabajadoresAutorizadosIds: number[];
-}
-
-// Interfaz para SSOMA Completo
-export interface SsomaRequest {
-  ats: AtsRequest;
-  capacitacion: CapacitacionRequest;
-  inspeccionEpp: InspeccionEppRequest;
-  inspeccionHerramienta: InspeccionHerramientaRequest;
-  petar: PetarRequest;
-}
-
-export interface SsomaResponse {
-  mensaje: string;
-  transaccionId: string;
-  ats: AtsResponse;
-  capacitacion: CapacitacionResponse;
-  inspeccionEpp: InspeccionEppResponse;
-  inspeccionHerramienta: InspeccionHerramientaResponse;
-  petar: PetarResponse;
-}
-
-// Interfaz para Catálogos
-export interface Catalogo {
-  id: number;
-  nombre: string;
-  descripcion?: string;
-}
-
-export interface Trabajador {
-  idTrabajador: number;
-  nombres: string;
-  apellidos: string;
-  dni: string;
-  cargo: string;
+  fecha: Date;
+  requiereEvaluacionAmbiente: boolean;
+  aperturaLineaEquipos: boolean;
+  horaInicio?: string;
+  recursosNecesarios?: string;
+  procedimiento?: string;
+  idSupervisorTrabajo?: number;
+  nombreSupervisorTrabajo?: string;
+  idResponsableLugar?: number;
+  nombreResponsableLugar?: string;
+  idSupervisorSst?: number;
+  nombreSupervisorSst?: string;
+  idBrigadista?: number;
+  nombreBrigadista?: string;
+  idResponsableTrabajo?: number;
+  nombreResponsableTrabajo?: string;
 }
