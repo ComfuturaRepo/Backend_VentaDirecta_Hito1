@@ -1,4 +1,5 @@
 package com.backend.comfutura.service.serviceImpl;
+
 import com.backend.comfutura.dto.Page.PageResponseDTO;
 import com.backend.comfutura.dto.request.areaDTO.AreaDTO;
 import com.backend.comfutura.dto.response.permisos.*;
@@ -32,7 +33,10 @@ public class PermisoServiceImpl implements PermisoService {
     private CargoRepository cargoRepository;
 
     @Autowired
-    private UsuarioRepository usuarioRepository; // Asumiendo que tienes esta entidad
+    private TrabajadorRepository trabajadorRepository; // NUEVO: Necesitas este repositorio
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
 
     @Override
     @Transactional
@@ -63,6 +67,12 @@ public class PermisoServiceImpl implements PermisoService {
         if (permisoDTO.getCargosIds() != null) {
             List<Cargo> cargos = cargoRepository.findAllById(permisoDTO.getCargosIds());
             permiso.setCargos(new HashSet<>(cargos));
+        }
+
+        // NUEVO: Asignar trabajadores específicos
+        if (permisoDTO.getTrabajadoresIds() != null) {
+            List<Trabajador> trabajadores = trabajadorRepository.findAllById(permisoDTO.getTrabajadoresIds());
+            permiso.setTrabajadores(new HashSet<>(trabajadores));
         }
 
         Permiso saved = permisoRepository.save(permiso);
@@ -108,6 +118,14 @@ public class PermisoServiceImpl implements PermisoService {
             permiso.getCargos().clear();
         }
 
+        // NUEVO: Actualizar trabajadores
+        if (permisoDTO.getTrabajadoresIds() != null) {
+            List<Trabajador> trabajadores = trabajadorRepository.findAllById(permisoDTO.getTrabajadoresIds());
+            permiso.setTrabajadores(new HashSet<>(trabajadores));
+        } else {
+            permiso.getTrabajadores().clear();
+        }
+
         Permiso updated = permisoRepository.save(permiso);
         return convertirAResponseDTO(updated);
     }
@@ -122,11 +140,11 @@ public class PermisoServiceImpl implements PermisoService {
         permiso.getNiveles().clear();
         permiso.getAreas().clear();
         permiso.getCargos().clear();
+        permiso.getTrabajadores().clear(); // NUEVO: Limpiar relación con trabajadores
 
         permisoRepository.save(permiso); // Actualizar sin relaciones
         permisoRepository.delete(permiso);
     }
-
     @Override
     public PermisoResponseDTO obtenerPermisoPorId(Integer id) {
         Permiso permiso = permisoRepository.findById(id)
@@ -205,7 +223,8 @@ public class PermisoServiceImpl implements PermisoService {
         );
     }
 
-    // ✅ Nuevo método para convertir a DTO optimizado
+
+    // En el método listarTodosPermisosPaginados, actualiza el método convertirATablaDTO:
     private PermisoTablaDTO convertirATablaDTO(Permiso permiso) {
         PermisoTablaDTO dto = new PermisoTablaDTO();
         dto.setIdPermiso(permiso.getIdPermiso());
@@ -241,30 +260,45 @@ public class PermisoServiceImpl implements PermisoService {
                 ))
                 .collect(Collectors.toList()));
 
+        // NUEVO: Convertir solo campos necesarios para trabajadores
+        dto.setTrabajadores(permiso.getTrabajadores().stream()
+                .map(trabajador -> new PermisoTrabajadorTablaDTO(
+                        trabajador.getIdTrabajador(),
+                        trabajador.getNombres(),
+                        trabajador.getApellidos(),
+                        trabajador.getDni(),
+                        trabajador.getActivo()
+                ))
+                .collect(Collectors.toList()));
+
         return dto;
     }
+
     @Override
     public boolean verificarPermisoUsuario(VerificarPermisoDTO verificarPermisoDTO) {
         // Obtener usuario
         Usuario usuario = usuarioRepository.findById(verificarPermisoDTO.getIdUsuario())
                 .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
 
-        // Obtener nivel, área y cargo del usuario
+        // Obtener nivel, área, cargo y trabajador del usuario
         Integer idNivel = usuario.getNivel() != null ? usuario.getNivel().getIdNivel() : null;
         Integer idArea = usuario.getArea() != null ? usuario.getArea().getIdArea() : null;
         Integer idCargo = usuario.getCargo() != null ? usuario.getCargo().getIdCargo() : null;
+        Integer idTrabajador = usuario.getTrabajador() != null ? usuario.getTrabajador().getIdTrabajador() : null;
 
-        // Si el usuario no tiene nivel, área o cargo asignado, no tiene permisos
-        if (idNivel == null && idArea == null && idCargo == null) {
+        // Si el usuario no tiene ninguna relación, no tiene permisos
+        if (idNivel == null && idArea == null && idCargo == null && idTrabajador == null) {
             return false;
         }
 
-        // Buscar permiso que aplique al usuario
+        // Buscar permiso que aplique al usuario (incluyendo trabajador específico)
+        // Necesitarás actualizar tu repositorio para incluir esta búsqueda
         Optional<Permiso> permiso = permisoRepository.findPermisoByUsuario(
                 verificarPermisoDTO.getCodigoPermiso(),
                 idNivel,
                 idArea,
-                idCargo
+                idCargo,
+                idTrabajador
         );
 
         return permiso.isPresent();
@@ -290,6 +324,13 @@ public class PermisoServiceImpl implements PermisoService {
                 .map(this::convertirAResponseDTO)
                 .collect(Collectors.toList());
     }
+    @Override
+    public List<PermisoResponseDTO> obtenerPermisosPorTrabajador(Integer idTrabajador) {
+        // NUEVO método: Obtener permisos asignados directamente a un trabajador
+        return permisoRepository.findByTrabajadorId(idTrabajador).stream()
+                .map(this::convertirAResponseDTO)
+                .collect(Collectors.toList());
+    }
 
     @Override
     public List<String> obtenerPermisosUsuario(Integer idUsuario) {
@@ -299,6 +340,7 @@ public class PermisoServiceImpl implements PermisoService {
         Integer idNivel = usuario.getNivel() != null ? usuario.getNivel().getIdNivel() : null;
         Integer idArea = usuario.getArea() != null ? usuario.getArea().getIdArea() : null;
         Integer idCargo = usuario.getCargo() != null ? usuario.getCargo().getIdCargo() : null;
+        Integer idTrabajador = usuario.getTrabajador() != null ? usuario.getTrabajador().getIdTrabajador() : null;
 
         // Obtener todos los permisos y filtrar aquellos que aplican al usuario
         return permisoRepository.findAll().stream()
@@ -312,7 +354,11 @@ public class PermisoServiceImpl implements PermisoService {
                     boolean tieneCargo = idCargo != null && permiso.getCargos().stream()
                             .anyMatch(cargo -> cargo.getIdCargo().equals(idCargo));
 
-                    return tieneNivel || tieneArea || tieneCargo;
+                    // NUEVO: Verificar por trabajador específico
+                    boolean tieneTrabajador = idTrabajador != null && permiso.getTrabajadores().stream()
+                            .anyMatch(trabajador -> trabajador.getIdTrabajador().equals(idTrabajador));
+
+                    return tieneNivel || tieneArea || tieneCargo || tieneTrabajador;
                 })
                 .map(Permiso::getCodigo)
                 .collect(Collectors.toList());
@@ -353,6 +399,19 @@ public class PermisoServiceImpl implements PermisoService {
                     cargoDTO.setIdCargo(cargo.getIdCargo());
                     cargoDTO.setNombre(cargo.getNombre());
                     return cargoDTO;
+                })
+                .collect(Collectors.toList()));
+
+        // NUEVO: Convertir trabajadores
+        dto.setTrabajadores(permiso.getTrabajadores().stream()
+                .map(trabajador -> {
+                    TrabajadorDTO trabajadorDTO = new TrabajadorDTO();
+                    trabajadorDTO.setIdTrabajador(trabajador.getIdTrabajador());
+                    trabajadorDTO.setNombres(trabajador.getNombres());
+                    trabajadorDTO.setApellidos(trabajador.getApellidos());
+                    trabajadorDTO.setDni(trabajador.getDni());
+                    trabajadorDTO.setActivo(trabajador.getActivo());
+                    return trabajadorDTO;
                 })
                 .collect(Collectors.toList()));
 

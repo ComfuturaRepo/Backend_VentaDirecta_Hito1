@@ -18,6 +18,8 @@ public class PermisoTablaDTO {
     private List<PermisoNivelTablaDTO> niveles;
     private List<PermisoAreaTablaDTO> areas;
     private List<PermisoCargoTablaDTO> cargos;
+    private List<PermisoTrabajadorTablaDTO> trabajadores; // NUEVO
+
 }
 
 
