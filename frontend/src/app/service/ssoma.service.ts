@@ -2,202 +2,486 @@ import { Injectable } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environment';
-import { AtsRequest, AtsResponse, CapacitacionRequest, CapacitacionResponse, InspeccionEppRequest, InspeccionEppResponse, InspeccionHerramientaRequest, InspeccionHerramientaResponse, PetarRequest, PetarResponse } from '../model/ssoma.model';
-import { SsomaCompletoRequest, SsomaCompletoResponse } from '../model/ssoma-completo.model';
 
+// Interface basada en el controller Spring Boot
+export interface SsomaResponseDTO {
+  idSsoma: number;
+  idOts: number;
+  empresaNombre?: string;
+  trabajoNombre?: string;
+  latitud?: number;
+  longitud?: number;
+  fecha: Date;
+  horaInicio?: string;
+  horaFin?: string;
+  horaInicioTrabajo?: string;
+  horaFinTrabajo?: string;
+  supervisorTrabajo?: string;
+  supervisorSst?: string;
+  responsableArea?: string;
+  
+  participantes: ParticipanteResponseDTO[];
+  secuenciasTarea: SecuenciaTareaResponseDTO[];
+  checklistSeguridad: ChecklistSeguridadResponseDTO[];
+  eppChecks: EppCheckResponseDTO[];
+  charla?: CharlaResponseDTO;
+  inspeccionesTrabajador: InspeccionTrabajadorResponseDTO[];
+  herramientasInspeccion: HerramientaInspeccionResponseDTO[];
+  petar?: PetarResponseDTO;
+}
+
+// Sub-interfaces para la respuesta
+export interface ParticipanteResponseDTO {
+  idParticipante: number;
+  nombre: string;
+  cargo: string;
+  firmaUrl?: string;
+  fotoUrls: string[];
+}
+export interface HerramientaConIndice {
+  [key: string]: boolean | number | string | File | undefined;
+  herramientaMaestraId?: number;
+  herramientaNombre: string;
+  p1?: boolean;
+  p2?: boolean;
+  p3?: boolean;
+  p4?: boolean;
+  p5?: boolean;
+  p6?: boolean;
+  p7?: boolean;
+  p8?: boolean;
+  observaciones?: string;
+  foto?: File;
+}
+
+export interface SecuenciaTareaResponseDTO {
+  secuenciaTarea: string;
+  peligro: string;
+  riesgo: string;
+  consecuencias: string;
+  medidasControl: string;
+}
+
+export interface ChecklistSeguridadResponseDTO {
+  itemNombre: string;
+  usado: boolean;
+  observaciones?: string;
+  fotoUrls: string[];
+}
+
+export interface EppCheckResponseDTO {
+  eppNombre: string;
+  usado: boolean;
+  fotoUrls: string[];
+}
+
+export interface CharlaResponseDTO {
+  temaNombre?: string;
+  fechaCharla: Date;
+  duracionHoras?: number;
+  capacitadorNombre?: string;
+  videoUrl?: string;
+  duracionSegundos?: number;
+}
+
+export interface InspeccionTrabajadorResponseDTO {
+  tipoInspeccion: string;
+  trabajadorNombre?: string;
+  casco?: boolean;
+  lentes?: boolean;
+  orejeras?: boolean;
+  tapones?: boolean;
+  guantes?: boolean;
+  botas?: boolean;
+  arnes?: boolean;
+  chaleco?: boolean;
+  mascarilla?: boolean;
+  gafas?: boolean;
+  otros?: string;
+  accionCorrectiva?: string;
+  seguimiento?: string;
+  responsableNombre?: string;
+}
+
+export interface HerramientaInspeccionResponseDTO {
+  herramientaNombre: string;
+  p1?: boolean;
+  p2?: boolean;
+  p3?: boolean;
+  p4?: boolean;
+  p5?: boolean;
+  p6?: boolean;
+  p7?: boolean;
+  p8?: boolean;
+  observaciones?: string;
+  fotoUrls: string[];
+}
+
+export interface PetarRespuestaResponseDTO {
+  pregunta?: string;
+  respuesta?: boolean;
+  observaciones?: string;
+}
+
+export interface EquipoProteccionResponseDTO {
+  equipoNombre: string;
+  usado: boolean;
+}
+
+export interface PetarResponseDTO {
+  energiaPeligrosa?: boolean;
+  trabajoAltura?: boolean;
+  izaje?: boolean;
+  excavacion?: boolean;
+  espaciosConfinados?: boolean;
+  trabajoCaliente?: boolean;
+  otros?: boolean;
+  otrosDescripcion?: string;
+  velocidadAire?: string;
+  contenidoOxigeno?: string;
+  horaInicioPetar?: string;
+  horaFinPetar?: string;
+  respuestas: PetarRespuestaResponseDTO[];
+  equiposProteccion: EquipoProteccionResponseDTO[];
+}
+
+// Interface para la request basada en SsomaRequestDTO del Spring Boot
+export interface SsomaRequestDTO {
+  // Datos del formulario principal
+  idOts: number;
+  empresaId?: number;
+  trabajoId?: number;
+  latitud?: number;
+  longitud?: number;
+  fecha?: Date;
+  horaInicio?: string;
+  horaFin?: string;
+  horaInicioTrabajo?: string;
+  horaFinTrabajo?: string;
+  supervisorTrabajo?: string;
+  supervisorSst?: string;
+  responsableArea?: string;
+  
+  // Datos de participantes
+  participantes: ParticipanteRequestDTO[];
+  
+  // Secuencias de tarea
+  secuenciasTarea: SecuenciaTareaRequestDTO[];
+  
+  // Checklist seguridad
+  checklistSeguridad: ChecklistSeguridadRequestDTO[];
+  
+  // EPP checks
+  eppChecks: EppCheckRequestDTO[];
+  
+  // Charla
+  charla?: CharlaRequestDTO;
+  
+  // Inspecciones trabajador
+  inspeccionesTrabajador: InspeccionTrabajadorRequestDTO[];
+  
+  // Herramientas inspección
+  herramientasInspeccion: HerramientaInspeccionRequestDTO[];
+  
+  // PETAR
+  petar?: PetarRequestDTO;
+  
+  // Fotos y videos (se manejan separadamente como archivos)
+  fotosParticipantes?: FotoParticipanteRequestDTO[];
+  videoCharla?: VideoCharlaRequestDTO;
+  fotosEpp?: FotoEppRequestDTO[];
+  fotosHerramientas?: FotoHerramientaRequestDTO[];
+}
+
+// Sub-interfaces para la request
+export interface ParticipanteRequestDTO {
+  trabajadorId?: number;
+  nombre: string;
+  cargo: string;
+  firma?: File;
+}
+
+export interface SecuenciaTareaRequestDTO {
+  secuenciaTarea: string;
+  peligro: string;
+  riesgo: string;
+  consecuencias: string;
+  medidasControl: string;
+  orden: number;
+}
+
+export interface ChecklistSeguridadRequestDTO {
+  itemNombre: string;
+  usado: boolean;
+  observaciones?: string;
+  foto?: File;
+}
+
+export interface EppCheckRequestDTO {
+  eppNombre: string;
+  usado: boolean;
+  foto?: File;
+}
+
+export interface CharlaRequestDTO {
+  temaId?: number;
+  fechaCharla?: Date;
+  duracionHoras?: number;
+  capacitadorId?: number;
+}
+
+export interface InspeccionTrabajadorRequestDTO {
+  tipoInspeccion: 'PLANIFICADA' | 'NO_PLANIFICADA';
+  trabajadorId?: number;
+  trabajadorNombre?: string;
+  casco?: boolean;
+  lentes?: boolean;
+  orejeras?: boolean;
+  tapones?: boolean;
+  guantes?: boolean;
+  botas?: boolean;
+  arnes?: boolean;
+  chaleco?: boolean;
+  mascarilla?: boolean;
+  gafas?: boolean;
+  otros?: string;
+  accionCorrectiva?: string;
+  seguimiento?: string;
+  responsableId?: number;
+}
+
+export interface HerramientaInspeccionRequestDTO {
+  herramientaMaestraId?: number;
+  herramientaNombre: string;
+  p1?: boolean;
+  p2?: boolean;
+  p3?: boolean;
+  p4?: boolean;
+  p5?: boolean;
+  p6?: boolean;
+  p7?: boolean;
+  p8?: boolean;
+  observaciones?: string;
+  foto?: File;
+  
+  // Esto permite indexación por string
+  [key: string]: any;
+}
+export interface PetarRespuestaRequestDTO {
+  preguntaId?: number;
+  respuesta?: boolean;
+  observaciones?: string;
+}
+
+export interface EquipoProteccionRequestDTO {
+  equipoNombre: string;
+  usado: boolean;
+}
+
+export interface PetarRequestDTO {
+  energiaPeligrosa?: boolean;
+  trabajoAltura?: boolean;
+  izaje?: boolean;
+  excavacion?: boolean;
+  espaciosConfinados?: boolean;
+  trabajoCaliente?: boolean;
+  otros?: boolean;
+  otrosDescripcion?: string;
+  velocidadAire?: string;
+  contenidoOxigeno?: string;
+  horaInicioPetar?: string;
+  horaFinPetar?: string;
+  respuestas?: PetarRespuestaRequestDTO[];
+  equiposProteccion: EquipoProteccionRequestDTO[];
+}
+
+// Interfaces para archivos
+export interface FotoParticipanteRequestDTO {
+  participanteIndex: number;
+  foto: File;
+  tipoFoto: 'FRONTAL' | 'CREDENCIAL';
+}
+
+export interface VideoCharlaRequestDTO {
+  video: File;
+  duracionSegundos?: number;
+}
+
+export interface FotoEppRequestDTO {
+  eppIndex: number;
+  foto: File;
+}
+
+export interface FotoHerramientaRequestDTO {
+  herramientaIndex: number;
+  foto: File;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class SsomaService {
+  
   private apiUrl = `${environment.baseUrl}/api/ssoma`;
-
+  
   constructor(private http: HttpClient) { }
-
-  // =====================================================
-  // ATS - Análisis de Trabajo Seguro
-  // =====================================================
-
-  // Crear ATS
-  crearAts(atsRequest: AtsRequest): Observable<AtsResponse> {
-    return this.http.post<AtsResponse>(`${this.apiUrl}/ats`, atsRequest);
+  
+  /**
+   * POST /api/ssoma/crear
+   * Crea todo el formulario SSOMA completo (las 5 hojas)
+   */
+  crearFormularioCompleto(request: SsomaRequestDTO): Observable<SsomaResponseDTO> {
+    const formData = this.convertirRequestAFormData(request);
+    return this.http.post<SsomaResponseDTO>(`${this.apiUrl}/crear`, formData);
   }
-
-  // Obtener ATS por ID
-  obtenerAtsPorId(id: number): Observable<AtsResponse> {
-    return this.http.get<AtsResponse>(`${this.apiUrl}/ats/${id}`);
+  
+  /**
+   * GET /api/ssoma/{idSsoma}
+   * Obtiene todo el formulario SSOMA por ID
+   */
+  obtenerFormularioCompleto(idSsoma: number): Observable<SsomaResponseDTO> {
+    return this.http.get<SsomaResponseDTO>(`${this.apiUrl}/${idSsoma}`);
   }
-
-  // Listar todos los ATS
-  listarTodosAts(): Observable<AtsResponse[]> {
-    return this.http.get<AtsResponse[]>(`${this.apiUrl}/ats`);
+  
+  /**
+   * GET /api/ssoma/ots/{idOts}
+   * Obtiene todos los formularios SSOMA por OT
+   */
+  obtenerFormulariosPorOt(idOts: number): Observable<SsomaResponseDTO[]> {
+    return this.http.get<SsomaResponseDTO[]>(`${this.apiUrl}/ots/${idOts}`);
   }
-
-  // =====================================================
-  // CAPACITACIÓN - Charla de 5 minutos
-  // =====================================================
-
-  // Crear Capacitación
-  crearCapacitacion(capacitacionRequest: CapacitacionRequest): Observable<CapacitacionResponse> {
-    return this.http.post<CapacitacionResponse>(`${this.apiUrl}/capacitacion`, capacitacionRequest);
+  
+  /**
+   * Convierte el request SSOMA a FormData para enviar archivos
+   */
+  private convertirRequestAFormData(request: SsomaRequestDTO): FormData {
+    const formData = new FormData();
+    
+    // Datos principales
+    formData.append('idOts', request.idOts.toString());
+    if (request.empresaId) formData.append('empresaId', request.empresaId.toString());
+    if (request.trabajoId) formData.append('trabajoId', request.trabajoId.toString());
+    if (request.latitud) formData.append('latitud', request.latitud.toString());
+    if (request.longitud) formData.append('longitud', request.longitud.toString());
+    if (request.fecha) formData.append('fecha', request.fecha.toISOString());
+    if (request.horaInicio) formData.append('horaInicio', request.horaInicio);
+    if (request.horaFin) formData.append('horaFin', request.horaFin);
+    if (request.horaInicioTrabajo) formData.append('horaInicioTrabajo', request.horaInicioTrabajo);
+    if (request.horaFinTrabajo) formData.append('horaFinTrabajo', request.horaFinTrabajo);
+    if (request.supervisorTrabajo) formData.append('supervisorTrabajo', request.supervisorTrabajo);
+    if (request.supervisorSst) formData.append('supervisorSst', request.supervisorSst);
+    if (request.responsableArea) formData.append('responsableArea', request.responsableArea);
+    
+    // Arrays como JSON strings (como espera el backend @ModelAttribute)
+    formData.append('participantes', JSON.stringify(request.participantes));
+    formData.append('secuenciasTarea', JSON.stringify(request.secuenciasTarea));
+    formData.append('checklistSeguridad', JSON.stringify(request.checklistSeguridad));
+    formData.append('eppChecks', JSON.stringify(request.eppChecks));
+    if (request.charla) formData.append('charla', JSON.stringify(request.charla));
+    formData.append('inspeccionesTrabajador', JSON.stringify(request.inspeccionesTrabajador));
+    formData.append('herramientasInspeccion', JSON.stringify(request.herramientasInspeccion));
+    if (request.petar) formData.append('petar', JSON.stringify(request.petar));
+    
+    // Fotos de participantes (separadas)
+    if (request.fotosParticipantes) {
+      request.fotosParticipantes.forEach((foto, index) => {
+        formData.append(`fotosParticipantes[${index}].foto`, foto.foto);
+        formData.append(`fotosParticipantes[${index}].participanteIndex`, foto.participanteIndex.toString());
+        formData.append(`fotosParticipantes[${index}].tipoFoto`, foto.tipoFoto);
+      });
+    }
+    
+    // Video de charla
+    if (request.videoCharla) {
+      formData.append('videoCharla.video', request.videoCharla.video);
+      if (request.videoCharla.duracionSegundos) {
+        formData.append('videoCharla.duracionSegundos', request.videoCharla.duracionSegundos.toString());
+      }
+    }
+    
+    // Fotos de EPP
+    if (request.fotosEpp) {
+      request.fotosEpp.forEach((foto, index) => {
+        formData.append(`fotosEpp[${index}].foto`, foto.foto);
+        formData.append(`fotosEpp[${index}].eppIndex`, foto.eppIndex.toString());
+      });
+    }
+    
+    // Fotos de herramientas
+    if (request.fotosHerramientas) {
+      request.fotosHerramientas.forEach((foto, index) => {
+        formData.append(`fotosHerramientas[${index}].foto`, foto.foto);
+        formData.append(`fotosHerramientas[${index}].herramientaIndex`, foto.herramientaIndex.toString());
+      });
+    }
+    
+    // Firmas de participantes (si vienen en los participantes)
+    request.participantes.forEach((participante, index) => {
+      if (participante.firma) {
+        formData.append(`firmaParticipante${index}`, participante.firma);
+      }
+    });
+    
+    // Fotos de checklist (si vienen en el checklist)
+    request.checklistSeguridad.forEach((item, index) => {
+      if (item.foto) {
+        formData.append(`fotoChecklist${index}`, item.foto);
+      }
+    });
+    
+    // Fotos de EPP (si vienen en los eppChecks)
+    request.eppChecks.forEach((epp, index) => {
+      if (epp.foto) {
+        formData.append(`fotoEppDirecto${index}`, epp.foto);
+      }
+    });
+    
+    // Fotos de herramientas (si vienen en herramientasInspeccion)
+    request.herramientasInspeccion.forEach((herramienta, index) => {
+      if (herramienta.foto) {
+        formData.append(`fotoHerramientaDirecto${index}`, herramienta.foto);
+      }
+    });
+    
+    return formData;
   }
-
-  // Obtener Capacitación por ID
-  obtenerCapacitacionPorId(id: number): Observable<CapacitacionResponse> {
-    return this.http.get<CapacitacionResponse>(`${this.apiUrl}/capacitacion/${id}`);
-  }
-
-  // Listar todas las Capacitaciones
-  listarTodasCapacitaciones(): Observable<CapacitacionResponse[]> {
-    return this.http.get<CapacitacionResponse[]>(`${this.apiUrl}/capacitacion`);
-  }
-
-  // =====================================================
-  // INSPECCIÓN EPP
-  // =====================================================
-
-  // Crear Inspección EPP
-  crearInspeccionEpp(inspeccionEppRequest: InspeccionEppRequest): Observable<InspeccionEppResponse> {
-    return this.http.post<InspeccionEppResponse>(`${this.apiUrl}/inspeccion-epp`, inspeccionEppRequest);
-  }
-
-  // Obtener Inspección EPP por ID
-  obtenerInspeccionEppPorId(id: number): Observable<InspeccionEppResponse> {
-    return this.http.get<InspeccionEppResponse>(`${this.apiUrl}/inspeccion-epp/${id}`);
-  }
-
-  // Listar todas las Inspecciones EPP
-  listarTodasInspeccionesEpp(): Observable<InspeccionEppResponse[]> {
-    return this.http.get<InspeccionEppResponse[]>(`${this.apiUrl}/inspeccion-epp`);
-  }
-
-  // =====================================================
-  // INSPECCIÓN HERRAMIENTAS
-  // =====================================================
-
-  // Crear Inspección Herramienta
-  crearInspeccionHerramienta(inspeccionHerramientaRequest: InspeccionHerramientaRequest): Observable<InspeccionHerramientaResponse> {
-    return this.http.post<InspeccionHerramientaResponse>(`${this.apiUrl}/inspeccion-herramienta`, inspeccionHerramientaRequest);
-  }
-
-  // Obtener Inspección Herramienta por ID
-  obtenerInspeccionHerramientaPorId(id: number): Observable<InspeccionHerramientaResponse> {
-    return this.http.get<InspeccionHerramientaResponse>(`${this.apiUrl}/inspeccion-herramienta/${id}`);
-  }
-
-  // Listar todas las Inspecciones Herramienta
-  listarTodasInspeccionesHerramientas(): Observable<InspeccionHerramientaResponse[]> {
-    return this.http.get<InspeccionHerramientaResponse[]>(`${this.apiUrl}/inspeccion-herramienta`);
-  }
-
-  // =====================================================
-  // PETAR - Permisos para Trabajos de Alto Riesgo
-  // =====================================================
-
-  // Crear PETAR
-  crearPetar(petarRequest: PetarRequest): Observable<PetarResponse> {
-    return this.http.post<PetarResponse>(`${this.apiUrl}/petar`, petarRequest);
-  }
-
-  // Obtener PETAR por ID
-  obtenerPetarPorId(id: number): Observable<PetarResponse> {
-    return this.http.get<PetarResponse>(`${this.apiUrl}/petar/${id}`);
-  }
-
-  // Listar todos los PETAR
-  listarTodosPetar(): Observable<PetarResponse[]> {
-    return this.http.get<PetarResponse[]>(`${this.apiUrl}/petar`);
-  }
-
-  // =====================================================
-  // ENDPOINTS COMBINADOS
-  // =====================================================
-
-  // Crear SSOMA completo (todas las hojas en un solo request)
-  crearSsomaCompleto(ssomaCompletoRequest: SsomaCompletoRequest): Observable<SsomaCompletoResponse> {
-    return this.http.post<SsomaCompletoResponse>(`${this.apiUrl}/completo`, ssomaCompletoRequest);
-  }
-
-  // Obtener SSOMA completo por OT
-  obtenerSsomaCompletoPorOts(idOts: number): Observable<SsomaCompletoResponse> {
-    return this.http.get<SsomaCompletoResponse>(`${this.apiUrl}/por-ots/${idOts}`);
-  }
-
-  // =====================================================
-  // MÉTODOS DE UTILIDAD
-  // =====================================================
-
-  // Formatear fecha para el backend
-  formatDate(date: Date): string {
-    const year = date.getFullYear();
-    const month = ('0' + (date.getMonth() + 1)).slice(-2);
-    const day = ('0' + date.getDate()).slice(-2);
-    return `${year}-${month}-${day}`;
-  }
-
-  // Formatear hora para el backend
-  formatTime(date: Date): string {
-    const hours = ('0' + date.getHours()).slice(-2);
-    const minutes = ('0' + date.getMinutes()).slice(-2);
-    const seconds = ('0' + date.getSeconds()).slice(-2);
-    return `${hours}:${minutes}:${seconds}`;
-  }
-
-  // Crear objeto ATSRequest por defecto
-  crearAtsRequestDefault(): AtsRequest {
+  
+  /**
+   * Helper para crear un request SSOMA vacío
+   */
+  crearRequestVacio(): SsomaRequestDTO {
     return {
-      empresa: '',
-      lugarTrabajo: '',
-      coordenadas: '',
+      idOts: 0,
       participantes: [],
-      riesgos: [],
-      eppIds: [],
-      tipoRiesgoIds: []
+      secuenciasTarea: [],
+      checklistSeguridad: [],
+      eppChecks: [],
+      inspeccionesTrabajador: [],
+      herramientasInspeccion: []
     };
   }
-
-  // Crear objeto CapacitacionRequest por defecto
-  crearCapacitacionRequestDefault(): CapacitacionRequest {
+  
+  /**
+   * Helper para crear un participante vacío
+   */
+  crearParticipanteVacio(): ParticipanteRequestDTO {
     return {
-      tema: '',
-      tipoCharla: 'CHARLA_5_MINUTOS',
-      asistentes: []
+      nombre: '',
+      cargo: ''
     };
   }
-
-  // Crear objeto InspeccionEppRequest por defecto
-  crearInspeccionEppRequestDefault(): InspeccionEppRequest {
+  
+  /**
+   * Helper para crear una secuencia de tarea vacía
+   */
+  crearSecuenciaTareaVacia(): SecuenciaTareaRequestDTO {
     return {
-      tipoInspeccion: 'PLANIFICADA',
-      detalles: []
-    };
-  }
-
-  // Crear objeto InspeccionHerramientaRequest por defecto
-  crearInspeccionHerramientaRequestDefault(): InspeccionHerramientaRequest {
-    return {
-      detalles: []
-    };
-  }
-
-  // Crear objeto PetarRequest por defecto
-  crearPetarRequestDefault(): PetarRequest {
-    return {
-      requiereEvaluacionAmbiente: false,
-      aperturaLineaEquipos: false,
-      respuestas: [],
-      trabajadoresAutorizadosIds: []
-    };
-  }
-
-  // Crear objeto SsomaCompletoRequest por defecto
-  crearSsomaCompletoRequestDefault(): SsomaCompletoRequest {
-    return {
-      ats: this.crearAtsRequestDefault(),
-      capacitacion: this.crearCapacitacionRequestDefault(),
-      inspeccionEpp: this.crearInspeccionEppRequestDefault(),
-      inspeccionHerramienta: this.crearInspeccionHerramientaRequestDefault(),
-      petar: this.crearPetarRequestDefault()
+      secuenciaTarea: '',
+      peligro: '',
+      riesgo: '',
+      consecuencias: '',
+      medidasControl: '',
+      orden: 0
     };
   }
 }

@@ -1,34 +1,24 @@
 package com.backend.comfutura.service;
 
-import com.backend.comfutura.dto.request.ssomaDTO.*;
-import com.backend.comfutura.dto.response.ssomaDTO.*;
+import com.backend.comfutura.dto.request.ssoma.SsomaRequestDTO;
+import com.backend.comfutura.dto.response.ssomaDTO.SsomaResponseDTO;
+
 import java.util.List;
 
 public interface SsomaService {
-    SsomaCompletoResponse crearSsomaCompleto(SsomaCompletoRequest request);
-    SsomaCompletoResponse obtenerSsomaCompletoPorOts(Integer idOts);
-    // ATS
-    AtsResponse crearAts(AtsRequest request);
-    AtsResponse obtenerAtsPorId(Integer id);
-    List<AtsResponse> listarTodosAts();
 
-    // Capacitación
-    CapacitacionResponse crearCapacitacion(CapacitacionRequest request);
-    CapacitacionResponse obtenerCapacitacionPorId(Integer id);
-    List<CapacitacionResponse> listarTodasCapacitaciones();
+    /**
+     * Crea todo el formulario SSOMA completo (las 5 hojas)
+     */
+    SsomaResponseDTO crearFormularioCompleto(SsomaRequestDTO request);
 
-    // Inspección EPP
-    InspeccionEppResponse crearInspeccionEpp(InspeccionEppRequest request);
-    InspeccionEppResponse obtenerInspeccionEppPorId(Integer id);
-    List<InspeccionEppResponse> listarTodasInspeccionesEpp();
+    /**
+     * Obtiene todo el formulario SSOMA por ID
+     */
+    SsomaResponseDTO obtenerFormularioCompleto(Integer idSsoma);
 
-    // Inspección Herramientas
-    InspeccionHerramientaResponse crearInspeccionHerramienta(InspeccionHerramientaRequest request);
-    InspeccionHerramientaResponse obtenerInspeccionHerramientaPorId(Integer id);
-    List<InspeccionHerramientaResponse> listarTodasInspeccionesHerramientas();
-
-    // PETAR
-    PetarResponse crearPetar(PetarRequest request);
-    PetarResponse obtenerPetarPorId(Integer id);
-    List<PetarResponse> listarTodosPetar();
+    /**
+     * Obtiene todos los formularios SSOMA por OT
+     */
+    List<SsomaResponseDTO> obtenerFormulariosPorOt(Integer idOts);
 }

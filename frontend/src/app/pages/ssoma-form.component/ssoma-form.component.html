@@ -1,136 +1,945 @@
-<div class="container my-4">
-  <div class="card shadow">
-    <div class="card-header bg-primary text-white">
-      <h4 class="mb-0">Crear SSOMA - Prueba de fotos</h4>
-    </div>
-    <div class="card-body">
-
-      <form [formGroup]="ssomaForm">
-
-        <!-- Tabs (simplificados para prueba) -->
-        <ul class="nav nav-tabs mb-4">
-          <li class="nav-item"><button class="nav-link" [class.active]="activeTab === 'ats'"     (click)="setTab('ats')">ATS</button></li>
-          <li class="nav-item"><button class="nav-link" [class.active]="activeTab === 'capacitacion'" (click)="setTab('capacitacion')">Capacitación</button></li>
-          <li class="nav-item"><button class="nav-link" [class.active]="activeTab === 'inspeccionEpp'" (click)="setTab('inspeccionEpp')">Inspección EPP</button></li>
-        </ul>
-
-        <div class="tab-content border p-4">
-
-          <!-- ATS - Participantes -->
-          <div *ngIf="activeTab === 'ats'" [formGroup]="atsForm">
-            <h5>Participantes (ATS)</h5>
-            <div formArrayName="participantes">
-              <div *ngFor="let p of participantesArray.controls; let i = index" [formGroupName]="i" class="border p-3 mb-3 rounded">
-                <div class="input-group mb-2">
-                  <select class="form-select" formControlName="idTrabajador">
-                    <option value="">Seleccionar trabajador</option>
-                    <option *ngFor="let t of trabajadores" [value]="t.id">{{t.nombre}}</option>
-                  </select>
-                  <button class="btn btn-outline-primary" type="button" (click)="openCamera('participantes', i)">
-                    📸 Tomar foto
-                  </button>
-                  <button class="btn btn-outline-danger" type="button" (click)="removeParticipante(i)">×</button>
-                </div>
-                <div *ngIf="getFoto('participantes', i)" class="text-center mt-2">
-                  <img [src]="getFoto('participantes', i)!" alt="Foto" style="max-width: 180px; border-radius: 8px;">
-                </div>
-              </div>
-            </div>
-            <button type="button" class="btn btn-sm btn-primary" (click)="addParticipante()">+ Participante</button>
-          </div>
-
-          <!-- Capacitación - Asistentes -->
-          <div *ngIf="activeTab === 'capacitacion'" [formGroup]="capacitacionForm">
-            <h5>Asistentes (Capacitación)</h5>
-            <div formArrayName="asistentes">
-              <div *ngFor="let a of asistentesArray.controls; let i = index" [formGroupName]="i" class="border p-3 mb-3 rounded">
-                <div class="input-group mb-2">
-                  <select class="form-select" formControlName="idTrabajador">
-                    <option value="">Seleccionar</option>
-                    <option *ngFor="let t of trabajadores" [value]="t.id">{{t.nombre}}</option>
-                  </select>
-                  <button class="btn btn-outline-primary" type="button" (click)="openCamera('asistentes', i)">
-                    📸 Tomar foto
-                  </button>
-                  <button class="btn btn-outline-danger" type="button" (click)="removeAsistente(i)">×</button>
-                </div>
-                <div *ngIf="getFoto('asistentes', i)" class="text-center mt-2">
-                  <img [src]="getFoto('asistentes', i)!" alt="Foto" style="max-width: 180px; border-radius: 8px;">
-                </div>
-              </div>
-            </div>
-            <button type="button" class="btn btn-sm btn-primary" (click)="addAsistente()">+ Asistente</button>
-          </div>
-
-          <!-- Inspección EPP -->
-          <div *ngIf="activeTab === 'inspeccionEpp'" [formGroup]="inspeccionEppForm">
-            <h5>Inspección EPP</h5>
-            <div formArrayName="detalles">
-              <div *ngFor="let d of detallesEppArray.controls; let i = index" [formGroupName]="i" class="border p-3 mb-3 rounded">
-                <div class="row g-2 mb-2">
-                  <div class="col-md-5">
-                    <select class="form-select" formControlName="idTrabajador">
-                      <option value="">Trabajador</option>
-                      <option *ngFor="let t of trabajadores" [value]="t.id">{{t.nombre}}</option>
-                    </select>
-                  </div>
-                  <div class="col-md-4">
-                    <select class="form-select" formControlName="idEpp">
-                      <option value="">EPP</option>
-                      <option *ngFor="let e of epps" [value]="e.id">{{e.nombre}}</option>
-                    </select>
-                  </div>
-                  <div class="col-md-3">
-                    <button class="btn btn-outline-primary w-100 mb-2" type="button" (click)="openCamera('detallesEpp', i)">
-                      📸 Foto
-                    </button>
-                    <button class="btn btn-outline-danger w-100" type="button" (click)="removeDetalleEpp(i)">Eliminar</button>
-                  </div>
-                </div>
-                <div *ngIf="getFoto('detallesEpp', i)" class="text-center mt-2">
-                  <img [src]="getFoto('detallesEpp', i)!" alt="Foto EPP" style="max-width: 180px; border-radius: 8px;">
-                </div>
-              </div>
-            </div>
-            <button type="button" class="btn btn-sm btn-success" (click)="addDetalleEpp()">+ Agregar</button>
-          </div>
-
-        </div>
-
-        <div class="mt-4 text-center">
-          <button type="button" class="btn btn-lg btn-success" (click)="onSubmit()">
-            Ver datos en consola (prueba)
-          </button>
-        </div>
-
-      </form>
+<div class="container mt-4">
+  <!-- Título -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <h2 class="text-center text-primary">
+        <i class="fas fa-file-alt me-2"></i>FORMULARIO SSOMA - 5 HOJAS
+      </h2>
+      <p class="text-center text-muted">Complete todas las secciones del formulario de seguridad</p>
     </div>
   </div>
 
-  <!-- Modal de cámara -->
-  <div class="modal fade" [class.show]="showCameraModal" [style.display]="showCameraModal ? 'block' : 'none'" tabindex="-1">
-    <div class="modal-dialog modal-dialog-centered modal-lg">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h5 class="modal-title">Tomar foto</h5>
-          <button type="button" class="btn-close" (click)="closeCameraModal()"></button>
-        </div>
-        <div class="modal-body text-center">
-          <video id="cameraVideo" autoplay playsinline style="width:100%; max-height:420px; background:#000;"></video>
-          <canvas id="photoCanvas" style="display:none;"></canvas>
+  <!-- Navegación por pestañas -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <ul class="nav nav-tabs" id="ssomaTabs">
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="activeTab === 'hoja1'" 
+             (click)="cambiarTab('hoja1')" href="javascript:void(0)">
+            <i class="fas fa-home me-1"></i> Hoja 1: Datos Generales
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="activeTab === 'hoja2'" 
+             (click)="cambiarTab('hoja2')" href="javascript:void(0)">
+            <i class="fas fa-chalkboard-teacher me-1"></i> Hoja 2: Charla
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="activeTab === 'hoja3'" 
+             (click)="cambiarTab('hoja3')" href="javascript:void(0)">
+            <i class="fas fa-hard-hat me-1"></i> Hoja 3: Inspección EPP
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="activeTab === 'hoja4'" 
+             (click)="cambiarTab('hoja4')" href="javascript:void(0)">
+            <i class="fas fa-tools me-1"></i> Hoja 4: Herramientas
+          </a>
+        </li>
+        <li class="nav-item">
+          <a class="nav-link" [class.active]="activeTab === 'hoja5'" 
+             (click)="cambiarTab('hoja5')" href="javascript:void(0)">
+            <i class="fas fa-exclamation-triangle me-1"></i> Hoja 5: PETAR
+          </a>
+        </li>
+      </ul>
+    </div>
+  </div>
 
-          <div *ngIf="fotoPreview" class="mt-3">
-            <h6>Vista previa:</h6>
-            <img [src]="fotoPreview" alt="Vista previa" style="max-width:320px; border:3px solid #198754; border-radius:8px;">
+  <!-- Contenido de las pestañas -->
+  <div class="row">
+    <div class="col-12">
+      
+      <!-- HOJA 1: DATOS GENERALES -->
+      <div *ngIf="activeTab === 'hoja1'" class="tab-content">
+        <div class="card">
+          <div class="card-header bg-primary text-white">
+            <h4><i class="fas fa-info-circle me-2"></i>DATOS GENERALES DEL TRABAJO</h4>
+          </div>
+          <div class="card-body">
+            
+            <!-- Sección 1: Información básica -->
+            <div class="row mb-4">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Número de OT *</label>
+                <input type="number" class="form-control" 
+                       [(ngModel)]="formulario.idOts" 
+                       min="1" required>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Fecha</label>
+                <input type="datetime-local" class="form-control" 
+                       [(ngModel)]="formulario.fecha">
+              </div>
+            </div>
+
+            <!-- Sección 2: Empresa y trabajo -->
+            <div class="row mb-4">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Empresa Contratista</label>
+                <select class="form-select" [(ngModel)]="formulario.empresaId">
+                  <option value="">-- Seleccione --</option>
+                  <option *ngFor="let empresa of empresas" [value]="empresa.id">
+                    {{empresa.label}}
+                  </option>
+                </select>
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Trabajo a Realizar</label>
+                <select class="form-select" [(ngModel)]="formulario.trabajoId">
+                  <option value="">-- Seleccione --</option>
+                  <option *ngFor="let trabajo of trabajos" [value]="trabajo.id">
+                    {{trabajo.label}}
+                  </option>
+                </select>
+              </div>
+            </div>
+
+            <!-- Sección 3: Horarios -->
+            <div class="row mb-4">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Hora Inicio Formulario</label>
+                <input type="time" class="form-control" 
+                       [(ngModel)]="formulario.horaInicio">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Hora Fin Formulario</label>
+                <input type="time" class="form-control" 
+                       [(ngModel)]="formulario.horaFin">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Hora Inicio Trabajo</label>
+                <input type="time" class="form-control" 
+                       [(ngModel)]="formulario.horaInicioTrabajo">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Hora Fin Trabajo</label>
+                <input type="time" class="form-control" 
+                       [(ngModel)]="formulario.horaFinTrabajo">
+              </div>
+            </div>
+
+            <!-- Sección 4: Coordenadas GPS -->
+            <div class="row mb-4">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Latitud</label>
+                <input type="number" step="any" class="form-control" 
+                       [(ngModel)]="formulario.latitud" 
+                       placeholder="Ej: -12.046374">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Longitud</label>
+                <input type="number" step="any" class="form-control" 
+                       [(ngModel)]="formulario.longitud" 
+                       placeholder="Ej: -77.042793">
+              </div>
+            </div>
+
+            <!-- Sección 5: Responsables -->
+            <div class="row mb-4">
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Supervisor del Trabajo</label>
+                <input type="text" class="form-control" 
+                       [(ngModel)]="formulario.supervisorTrabajo">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Supervisor SST</label>
+                <input type="text" class="form-control" 
+                       [(ngModel)]="formulario.supervisorSst">
+              </div>
+              <div class="col-md-4 mb-3">
+                <label class="form-label fw-bold">Responsable del Área</label>
+                <input type="text" class="form-control" 
+                       [(ngModel)]="formulario.responsableArea">
+              </div>
+            </div>
+
+            <!-- Sección 6: Participantes -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="border-bottom pb-2">
+                  <i class="fas fa-users me-2"></i>PARTICIPANTES DEL EQUIPO
+                  <button type="button" class="btn btn-sm btn-success float-end" 
+                          (click)="agregarParticipante()">
+                    <i class="fas fa-plus"></i> Agregar
+                  </button>
+                </h5>
+                
+                <div *ngFor="let participante of formulario.participantes; let i = index" 
+                     class="card mb-3">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-4 mb-2">
+                        <label class="form-label">Trabajador</label>
+                        <select class="form-select" 
+                                [(ngModel)]="participante.trabajadorId">
+                          <option value="">-- Seleccionar --</option>
+                          <option *ngFor="let trabajador of trabajadores" 
+                                  [value]="trabajador.id">
+                            {{trabajador.label}}
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-md-3 mb-2">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" 
+                               [(ngModel)]="participante.nombre">
+                      </div>
+                      <div class="col-md-3 mb-2">
+                        <label class="form-label">Cargo</label>
+                        <input type="text" class="form-control" 
+                               [(ngModel)]="participante.cargo">
+                      </div>
+                      <div class="col-md-2 mb-2 d-flex align-items-end">
+                        <button *ngIf="formulario.participantes.length > 1" 
+                                type="button" class="btn btn-danger btn-sm" 
+                                (click)="eliminarParticipante(i)">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <!-- Fotos y firma del participante -->
+                    <div class="row mt-2">
+                      <div class="col-md-4">
+                        <label class="form-label">Foto Frontal</label>
+                        <input type="file" class="form-control" accept="image/*" 
+                               (change)="onFotoParticipanteSeleccionada($event, i, 'FRONTAL')">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Foto Credencial</label>
+                        <input type="file" class="form-control" accept="image/*" 
+                               (change)="onFotoParticipanteSeleccionada($event, i, 'CREDENCIAL')">
+                      </div>
+                      <div class="col-md-4">
+                        <label class="form-label">Firma Digital</label>
+                        <input type="file" class="form-control" accept="image/*" 
+                               (change)="onFirmaParticipanteSeleccionada($event, i)">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección 7: Secuencia de Tarea -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="border-bottom pb-2">
+                  <i class="fas fa-tasks me-2"></i>SECUENCIA DE LA TAREA
+                  <button type="button" class="btn btn-sm btn-success float-end" 
+                          (click)="agregarSecuencia()">
+                    <i class="fas fa-plus"></i> Agregar
+                  </button>
+                </h5>
+                
+                <div class="table-responsive">
+                  <table class="table table-bordered">
+                    <thead class="table-light">
+                      <tr>
+                        <th width="5%">#</th>
+                        <th width="20%">Secuencia de Tarea</th>
+                        <th width="15%">Peligro</th>
+                        <th width="15%">Riesgo</th>
+                        <th width="15%">Consecuencias</th>
+                        <th width="20%">Medidas de Control</th>
+                        <th width="10%">Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <tr *ngFor="let secuencia of formulario.secuenciasTarea; let i = index">
+                        <td>{{secuencia.orden}}</td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" 
+                                 [(ngModel)]="secuencia.secuenciaTarea">
+                        </td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" 
+                                 [(ngModel)]="secuencia.peligro">
+                        </td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" 
+                                 [(ngModel)]="secuencia.riesgo">
+                        </td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" 
+                                 [(ngModel)]="secuencia.consecuencias">
+                        </td>
+                        <td>
+                          <input type="text" class="form-control form-control-sm" 
+                                 [(ngModel)]="secuencia.medidasControl">
+                        </td>
+                        <td>
+                          <button *ngIf="formulario.secuenciasTarea.length > 1" 
+                                  type="button" class="btn btn-danger btn-sm" 
+                                  (click)="eliminarSecuencia(i)">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        </td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección 8: Checklist Seguridad -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="border-bottom pb-2">
+                  <i class="fas fa-check-circle me-2"></i>CHECKLIST DE SEGURIDAD
+                </h5>
+                
+                <div class="row">
+                  <div *ngFor="let item of formulario.checklistSeguridad; let i = index" 
+                       class="col-md-6 mb-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" 
+                             [(ngModel)]="item.usado" [id]="'check' + i">
+                      <label class="form-check-label" [for]="'check' + i">
+                        {{item.itemNombre}}
+                      </label>
+                      <input *ngIf="item.itemNombre === 'Otros'" type="text" 
+                             class="form-control form-control-sm mt-1" 
+                             [(ngModel)]="item.observaciones" placeholder="Especificar">
+                    </div>
+                    <div class="mt-2">
+                      <input type="file" class="form-control form-control-sm" 
+                             accept="image/*" 
+                             (change)="onFotoChecklistSeleccionada($event, i)">
+                      <small class="text-muted">Foto del equipo</small>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="card-footer text-end">
+            <button type="button" class="btn btn-primary" 
+                    (click)="cambiarTab('hoja2')">
+              Continuar a Hoja 2 <i class="fas fa-arrow-right ms-1"></i>
+            </button>
           </div>
         </div>
-        <div class="modal-footer">
-          <button type="button" class="btn btn-secondary" (click)="closeCameraModal()">Cancelar</button>
-          <button type="button" class="btn btn-primary" (click)="capturePhoto()">Capturar</button>
-          <button type="button" class="btn btn-success" *ngIf="fotoPreview" (click)="savePhoto()">Guardar foto</button>
+      </div>
+
+      <!-- HOJA 2: CHARLA 5 MINUTOS -->
+      <div *ngIf="activeTab === 'hoja2'" class="tab-content">
+        <div class="card">
+          <div class="card-header bg-info text-white">
+            <h4><i class="fas fa-chalkboard-teacher me-2"></i>CHARLA DE 5 MINUTOS</h4>
+          </div>
+          <div class="card-body">
+            
+         <!-- Opción 1: Usar el getter -->
+<div class="row mb-4">
+  <div class="col-md-6 mb-3">
+    <label class="form-label fw-bold">Tema de la Charla</label>
+    <select class="form-select" 
+            [(ngModel)]="charlaForm.temaId"
+            name="temaCharla">
+      <option value="">-- Seleccione --</option>
+      <option *ngFor="let tema of temasCharla" [value]="tema.id">
+        {{tema.label}}
+      </option>
+    </select>
+  </div>
+  <div class="col-md-6 mb-3">
+    <label class="form-label fw-bold">Capacitador</label>
+    <select class="form-select" 
+            [(ngModel)]="charlaForm.capacitadorId"
+            name="capacitadorCharla">
+      <option value="">-- Seleccione --</option>
+      <option *ngFor="let trabajador of trabajadores" 
+              [value]="trabajador.id">
+        {{trabajador.label}}
+      </option>
+    </select>
+  </div>
+</div>
+
+<!-- Fecha y duración -->
+<div class="row mb-4">
+  <div class="col-md-6 mb-3">
+    <label class="form-label fw-bold">Fecha de Charla</label>
+    <input type="datetime-local" class="form-control" 
+           [(ngModel)]="charlaForm.fechaCharla"
+           name="fechaCharla">
+  </div>
+  <div class="col-md-6 mb-3">
+    <label class="form-label fw-bold">Duración (horas)</label>
+    <input type="number" step="0.1" class="form-control" 
+           [(ngModel)]="charlaForm.duracionHoras"
+           name="duracionCharla">
+  </div>
+</div>
+
+            <!-- Video de la charla -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="border-bottom pb-2">
+                  <i class="fas fa-video me-2"></i>GRABACIÓN DE LA CHARLA (30 segundos)
+                </h5>
+                
+                <div class="alert alert-info">
+                  <i class="fas fa-info-circle me-2"></i>
+                  Grabe un video de 30 segundos de la charla de seguridad
+                </div>
+                
+                <div class="row">
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">Subir Video Grabado</label>
+                      <input type="file" class="form-control" accept="video/*" 
+                             (change)="onVideoCharlaSeleccionado($event)">
+                      <small class="text-muted">Formatos: MP4, AVI, MOV (máx. 100MB)</small>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <div class="mb-3">
+                      <label class="form-label fw-bold">O Grabar Ahora</label>
+                      <div class="d-grid gap-2">
+                        <button type="button" class="btn btn-warning" 
+                                (click)="iniciarGrabacionVideo()">
+                          <i class="fas fa-video me-2"></i>Grabar Video
+                        </button>
+                        <button type="button" class="btn btn-secondary" 
+                                (click)="tomarFoto()">
+                          <i class="fas fa-camera me-2"></i>Tomar Foto
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Preview de video (si existe) -->
+                <div *ngIf="videoCharlaFile" class="mt-3">
+                  <div class="alert alert-success">
+                    <i class="fas fa-check-circle me-2"></i>
+                    Video seleccionado: {{videoCharlaFile.name}}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="card-footer d-flex justify-content-between">
+            <button type="button" class="btn btn-secondary" 
+                    (click)="cambiarTab('hoja1')">
+              <i class="fas fa-arrow-left me-1"></i> Volver a Hoja 1
+            </button>
+            <button type="button" class="btn btn-primary" 
+                    (click)="cambiarTab('hoja3')">
+              Continuar a Hoja 3 <i class="fas fa-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOJA 3: INSPECCIÓN EPP -->
+      <div *ngIf="activeTab === 'hoja3'" class="tab-content">
+        <div class="card">
+          <div class="card-header bg-warning text-dark">
+            <h4><i class="fas fa-hard-hat me-2"></i>INSPECCIÓN DE EPP</h4>
+          </div>
+          <div class="card-body">
+            
+            <!-- Checklist EPP -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="border-bottom pb-2">
+                  <i class="fas fa-clipboard-check me-2"></i>EQUIPOS DE PROTECCIÓN PERSONAL
+                </h5>
+                
+                <div class="row">
+                  <div *ngFor="let epp of formulario.eppChecks; let i = index" 
+                       class="col-md-6 col-lg-4 mb-3">
+                    <div class="card">
+                      <div class="card-body">
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" 
+                                 [(ngModel)]="epp.usado" 
+                                 [id]="'epp' + i">
+                          <label class="form-check-label fw-bold" 
+                                 [for]="'epp' + i">
+                            {{epp.eppNombre}}
+                          </label>
+                        </div>
+                        <div class="mt-2">
+                          <input type="file" class="form-control form-control-sm" 
+                                 accept="image/*" 
+                                 (change)="onFotoEppSeleccionada($event, i)">
+                          <small class="text-muted">Foto del EPP en uso</small>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Inspección por trabajador -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="border-bottom pb-2">
+                  <i class="fas fa-user-check me-2"></i>INSPECCIÓN POR TRABAJADOR
+                  <button type="button" class="btn btn-sm btn-success float-end" 
+                          (click)="agregarInspeccion()">
+                    <i class="fas fa-plus"></i> Agregar
+                  </button>
+                </h5>
+                
+                <div *ngFor="let inspeccion of formulario.inspeccionesTrabajador; let i = index" 
+                     class="card mb-3">
+                  <div class="card-header">
+                    Trabajador {{i + 1}}
+                    <button *ngIf="formulario.inspeccionesTrabajador.length > 1" 
+                            type="button" class="btn btn-sm btn-danger float-end" 
+                            (click)="eliminarInspeccion(i)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Trabajador</label>
+                        <select class="form-select" 
+                                [(ngModel)]="inspeccion.trabajadorId">
+                          <option value="">-- Seleccionar --</option>
+                          <option *ngFor="let trabajador of trabajadores" 
+                                  [value]="trabajador.id">
+                            {{trabajador.label}}
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Nombre</label>
+                        <input type="text" class="form-control" 
+                               [(ngModel)]="inspeccion.trabajadorNombre">
+                      </div>
+                    </div>
+                    
+                    <!-- Checklist EPP por trabajador -->
+                    <div class="row">
+                      <div class="col-md-3 mb-2">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" 
+                                 [(ngModel)]="inspeccion.casco">
+                          <label class="form-check-label">Casco</label>
+                        </div>
+                      </div>
+                      <div class="col-md-3 mb-2">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" 
+                                 [(ngModel)]="inspeccion.lentes">
+                          <label class="form-check-label">Lentes</label>
+                        </div>
+                      </div>
+                      <div class="col-md-3 mb-2">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" 
+                                 [(ngModel)]="inspeccion.guantes">
+                          <label class="form-check-label">Guantes</label>
+                        </div>
+                      </div>
+                      <div class="col-md-3 mb-2">
+                        <div class="form-check">
+                          <input class="form-check-input" type="checkbox" 
+                                 [(ngModel)]="inspeccion.botas">
+                          <label class="form-check-label">Botas</label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <!-- Acciones correctivas -->
+                    <div class="row mt-3">
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Acción Correctiva</label>
+                        <textarea class="form-control" rows="2" 
+                                  [(ngModel)]="inspeccion.accionCorrectiva"></textarea>
+                      </div>
+                      <div class="col-md-6 mb-3">
+                        <label class="form-label">Seguimiento</label>
+                        <textarea class="form-control" rows="2" 
+                                  [(ngModel)]="inspeccion.seguimiento"></textarea>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="card-footer d-flex justify-content-between">
+            <button type="button" class="btn btn-secondary" 
+                    (click)="cambiarTab('hoja2')">
+              <i class="fas fa-arrow-left me-1"></i> Volver a Hoja 2
+            </button>
+            <button type="button" class="btn btn-primary" 
+                    (click)="cambiarTab('hoja4')">
+              Continuar a Hoja 4 <i class="fas fa-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOJA 4: HERRAMIENTAS -->
+      <div *ngIf="activeTab === 'hoja4'" class="tab-content">
+        <div class="card">
+          <div class="card-header bg-success text-white">
+            <h4><i class="fas fa-tools me-2"></i>INSPECCIÓN DE HERRAMIENTAS MANUALES</h4>
+          </div>
+          <div class="card-body">
+            
+            <!-- Lista de herramientas -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="border-bottom pb-2">
+                  <i class="fas fa-toolbox me-2"></i>HERRAMIENTAS A INSPECCIONAR
+                  <button type="button" class="btn btn-sm btn-success float-end" 
+                          (click)="agregarHerramienta()">
+                    <i class="fas fa-plus"></i> Agregar
+                  </button>
+                </h5>
+                
+                <div *ngFor="let herramienta of formulario.herramientasInspeccion; let i = index" 
+                     class="card mb-3">
+                  <div class="card-header">
+                    Herramienta {{i + 1}}
+                    <button *ngIf="formulario.herramientasInspeccion.length > 1" 
+                            type="button" class="btn btn-sm btn-danger float-end" 
+                            (click)="eliminarHerramienta(i)">
+                      <i class="fas fa-trash"></i>
+                    </button>
+                  </div>
+                  <div class="card-body">
+                    <div class="row mb-3">
+                      <div class="col-md-6">
+                        <label class="form-label">Herramienta</label>
+                        <select class="form-select" 
+                                [(ngModel)]="herramienta.herramientaMaestraId">
+                          <option value="">-- Seleccionar --</option>
+                          <option *ngFor="let hm of herramientasMaestras" 
+                                  [value]="hm.id">
+                            {{hm.label}}
+                          </option>
+                        </select>
+                      </div>
+                      <div class="col-md-6">
+                        <label class="form-label">Nombre de Herramienta</label>
+                        <input type="text" class="form-control" 
+                               [(ngModel)]="herramienta.herramientaNombre">
+                      </div>
+                    </div>
+                    
+                    <!-- Preguntas de inspección -->
+                    <div class="row">
+                      <div class="col-md-6">
+                        <div *ngFor="let pregunta of herramientasPreguntas; let j = index" 
+                             class="mb-2">
+                          <div class="form-check">
+                       <input class="form-check-input" type="checkbox" 
+       [(ngModel)]="herramienta.p1" 
+       [id]="'p' + i + '_1'">
+                            <label class="form-check-label" 
+                                   [for]="'p' + i + '_' + j">
+                              {{pregunta}}
+                            </label>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="col-md-6">
+                        <div class="mb-3">
+                          <label class="form-label">Foto de la Herramienta</label>
+                          <input type="file" class="form-control" accept="image/*" 
+                                 (change)="onFotoHerramientaSeleccionada($event, i)">
+                          <small class="text-muted">Suba foto del estado actual</small>
+                        </div>
+                        <div class="mb-3">
+                          <label class="form-label">Observaciones</label>
+                          <textarea class="form-control" rows="4" 
+                                    [(ngModel)]="herramienta.observaciones"></textarea>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="card-footer d-flex justify-content-between">
+            <button type="button" class="btn btn-secondary" 
+                    (click)="cambiarTab('hoja3')">
+              <i class="fas fa-arrow-left me-1"></i> Volver a Hoja 3
+            </button>
+            <button type="button" class="btn btn-primary" 
+                    (click)="cambiarTab('hoja5')">
+              Continuar a Hoja 5 <i class="fas fa-arrow-right ms-1"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- HOJA 5: PETAR -->
+      <div *ngIf="activeTab === 'hoja5'" class="tab-content">
+        <div class="card">
+          <div class="card-header bg-danger text-white">
+            <h4><i class="fas fa-exclamation-triangle me-2"></i>PERMISO PARA TRABAJO DE ALTO RIESGO (PETAR)</h4>
+          </div>
+          <div class="card-body">
+            
+            <!-- Tipo de trabajo de alto riesgo -->
+            <div class="row mb-4">
+              <div class="col-12">
+                <h5 class="border-bottom pb-2">
+                  <i class="fas fa-radiation-alt me-2"></i>TIPO DE TRABAJO DE ALTO RIESGO
+                </h5>
+                
+                <div class="row" *ngIf="formulario.petar">
+                  <div class="col-md-4 mb-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" 
+                             [(ngModel)]="formulario.petar.energiaPeligrosa">
+                      <label class="form-check-label fw-bold">
+                        Energía Peligrosa
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" 
+                             [(ngModel)]="formulario.petar.trabajoAltura">
+                      <label class="form-check-label fw-bold">
+                        Trabajo en Altura
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" 
+                             [(ngModel)]="formulario.petar.izaje">
+                      <label class="form-check-label fw-bold">
+                        Izaje
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" 
+                             [(ngModel)]="formulario.petar.excavacion">
+                      <label class="form-check-label fw-bold">
+                        Excavación
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" 
+                             [(ngModel)]="formulario.petar.espaciosConfinados">
+                      <label class="form-check-label fw-bold">
+                        Espacios Confinados
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" 
+                             [(ngModel)]="formulario.petar.trabajoCaliente">
+                      <label class="form-check-label fw-bold">
+                        Trabajo en Caliente
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-4 mb-3">
+                    <div class="form-check">
+                      <input class="form-check-input" type="checkbox" 
+                             [(ngModel)]="formulario.petar.otros">
+                      <label class="form-check-label fw-bold">
+                        Otros
+                      </label>
+                    </div>
+                  </div>
+                  <div class="col-md-8 mb-3" *ngIf="formulario.petar.otros">
+                    <input type="text" class="form-control" 
+                           [(ngModel)]="formulario.petar.otrosDescripcion" 
+                           placeholder="Especificar otros riesgos">
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Condiciones ambientales -->
+            <div class="row mb-4" *ngIf="formulario.petar">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Velocidad del Aire</label>
+                <input type="text" class="form-control" 
+                       [(ngModel)]="formulario.petar.velocidadAire" 
+                       placeholder="Ej: 0.5 m/s">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Contenido de Oxígeno</label>
+                <input type="text" class="form-control" 
+                       [(ngModel)]="formulario.petar.contenidoOxigeno" 
+                       placeholder="Ej: 20.9%">
+              </div>
+            </div>
+
+            <!-- Horario PETAR -->
+            <div class="row mb-4" *ngIf="formulario.petar">
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Hora Inicio PETAR</label>
+                <input type="time" class="form-control" 
+                       [(ngModel)]="formulario.petar.horaInicioPetar">
+              </div>
+              <div class="col-md-6 mb-3">
+                <label class="form-label fw-bold">Hora Fin PETAR</label>
+                <input type="time" class="form-control" 
+                       [(ngModel)]="formulario.petar.horaFinPetar">
+              </div>
+            </div>
+
+            <!-- Preguntas de verificación -->
+            <div class="row mb-4" *ngIf="formulario.petar">
+              <div class="col-12">
+                <h5 class="border-bottom pb-2">
+                  <i class="fas fa-question-circle me-2"></i>PREGUNTAS DE VERIFICACIÓN
+                </h5>
+                
+                <div *ngFor="let respuesta of formulario.petar.respuestas; let i = index" 
+                     class="card mb-2">
+                  <div class="card-body">
+                    <div class="row">
+                      <div class="col-md-8">
+                        <p class="fw-bold">{{preguntasPetar[i]?.pregunta}}</p>
+                      </div>
+                      <div class="col-md-4">
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="radio" 
+                                 [name]="'respuesta' + i" 
+                                 [value]="true" 
+                                 [(ngModel)]="respuesta.respuesta">
+                          <label class="form-check-label">Sí</label>
+                        </div>
+                        <div class="form-check form-check-inline">
+                          <input class="form-check-input" type="radio" 
+                                 [name]="'respuesta' + i" 
+                                 [value]="false" 
+                                 [(ngModel)]="respuesta.respuesta">
+                          <label class="form-check-label">No</label>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="row mt-2">
+                      <div class="col-12">
+                        <input type="text" class="form-control" 
+                               [(ngModel)]="respuesta.observaciones" 
+                               placeholder="Observaciones">
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Equipos de protección -->
+            <div class="row mb-4" *ngIf="formulario.petar">
+              <div class="col-12">
+                <h5 class="border-bottom pb-2">
+                  <i class="fas fa-shield-alt me-2"></i>EQUIPOS DE PROTECCIÓN REQUERIDOS
+                  <button type="button" class="btn btn-sm btn-success float-end" 
+                          (click)="agregarEquipoProteccion()">
+                    <i class="fas fa-plus"></i> Agregar
+                  </button>
+                </h5>
+                
+                <div *ngFor="let equipo of formulario.petar.equiposProteccion; let i = index" 
+                     class="card mb-2">
+                  <div class="card-body">
+                    <div class="row align-items-center">
+                      <div class="col-md-6">
+                        <input type="text" class="form-control" 
+                               [(ngModel)]="equipo.equipoNombre" 
+                               placeholder="Nombre del equipo">
+                      </div>
+                      <div class="col-md-4">
+                        <div class="form-check form-switch">
+                          <input class="form-check-input" type="checkbox" 
+                                 [(ngModel)]="equipo.usado">
+                          <label class="form-check-label">Usado</label>
+                        </div>
+                      </div>
+                      <div class="col-md-2">
+                        <button *ngIf="formulario.petar!.equiposProteccion.length > 1" 
+                                type="button" class="btn btn-danger btn-sm" 
+                                (click)="eliminarEquipoProteccion(i)">
+                          <i class="fas fa-trash"></i>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div class="card-footer d-flex justify-content-between">
+            <button type="button" class="btn btn-secondary" 
+                    (click)="cambiarTab('hoja4')">
+              <i class="fas fa-arrow-left me-1"></i> Volver a Hoja 4
+            </button>
+            <button type="button" class="btn btn-success btn-lg" 
+                    (click)="guardarFormulario()">
+              <i class="fas fa-save me-2"></i>GUARDAR FORMULARIO COMPLETO
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Resumen de archivos -->
+  <div class="row mt-4">
+    <div class="col-12">
+      <div class="card">
+        <div class="card-header bg-light">
+          <h6 class="mb-0">
+            <i class="fas fa-folder-open me-2"></i>ARCHIVOS ADJUNTADOS
+          </h6>
+        </div>
+        <div class="card-body">
+          <div class="row">
+            <div class="col-md-3">
+              <div class="alert alert-info">
+                <i class="fas fa-users me-2"></i>
+                Fotos participantes: {{fotosParticipantes.length}}
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="alert alert-info">
+                <i class="fas fa-video me-2"></i>
+                Video charla: {{videoCharlaFile ? 'Sí' : 'No'}}
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="alert alert-info">
+                <i class="fas fa-hard-hat me-2"></i>
+                Fotos EPP: {{fotosEpp.length}}
+              </div>
+            </div>
+            <div class="col-md-3">
+              <div class="alert alert-info">
+                <i class="fas fa-tools me-2"></i>
+                Fotos herramientas: {{fotosHerramientas.length}}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
     </div>
   </div>
-  <div class="modal-backdrop fade show" *ngIf="showCameraModal"></div>
+
 </div>
