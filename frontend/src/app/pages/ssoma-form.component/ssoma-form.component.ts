@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, ViewChild, ElementRef, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import Swal from 'sweetalert2';
@@ -21,18 +21,30 @@ import { DropdownService } from '../../service/dropdown.service';
   imports: [CommonModule, FormsModule],
   templateUrl: './ssoma-form.component.html'
 })
-export class SsomaFormularioComponent implements OnInit {
+export class SsomaFormularioComponent implements OnInit, OnDestroy {
   @ViewChild('videoElement') videoElement!: ElementRef;
   @ViewChild('canvasElement') canvasElement!: ElementRef;
+  @ViewChild('videoRecorder') videoRecorder!: ElementRef<HTMLVideoElement>;
   
   // Formulario principal
   formulario: SsomaRequestDTO;
   
   // Estado de cámara
   isCameraActive = false;
+  isTakingPhoto = false;
   stream: MediaStream | null = null;
   currentPhotoType: 'participante' | 'epp' | 'herramienta' | 'charla' = 'participante';
   currentPhotoIndex = 0;
+  
+  // Estado de video
+  mediaRecorder: MediaRecorder | null = null;
+  recordedChunks: Blob[] = [];
+  isRecording = false;
+  recordingTimer: any;
+  recordingSeconds = 0;
+  recordingInterval: any;
+  recordingTimerText = '00:00';
+  showRecordingIndicator = false;
   
   // Dropdowns
   empresas: any[] = [];
@@ -66,11 +78,31 @@ export class SsomaFormularioComponent implements OnInit {
   // Estado de pestañas
   activeTab = 'hoja1';
   
+  // Métodos auxiliares
+  formatRecordingTime(seconds: number): string {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  }
+  
   constructor(
     private ssomaService: SsomaService,
     private dropdownService: DropdownService
   ) {
     this.formulario = this.crearFormularioVacio();
+  }
+  
+  ngOnDestroy(): void {
+    this.detenerCamara();
+    this.detenerGrabacionVideo();
+    
+    // Limpiar todos los timers
+    if (this.recordingTimer) {
+      clearInterval(this.recordingTimer);
+    }
+    if (this.recordingInterval) {
+      clearInterval(this.recordingInterval);
+    }
   }
   
   ngOnInit(): void {
@@ -85,9 +117,9 @@ export class SsomaFormularioComponent implements OnInit {
     // Fecha y hora automáticas (no editables)
     this.formulario.fecha = ahora;
     this.formulario.horaInicio = this.formatTime(ahora);
-    this.formulario.horaFin = this.formatTime(new Date(ahora.getTime() + 8 * 60 * 60 * 1000)); // +8 horas
-    this.formulario.horaInicioTrabajo = this.formatTime(new Date(ahora.getTime() + 30 * 60 * 1000)); // +30 min
-    this.formulario.horaFinTrabajo = this.formatTime(new Date(ahora.getTime() + 8 * 60 * 60 * 1000 - 30 * 60 * 1000)); // -30 min
+    this.formulario.horaFin = this.formatTime(new Date(ahora.getTime() + 8 * 60 * 60 * 1000));
+    this.formulario.horaInicioTrabajo = this.formatTime(new Date(ahora.getTime() + 30 * 60 * 1000));
+    this.formulario.horaFinTrabajo = this.formatTime(new Date(ahora.getTime() + 8 * 60 * 60 * 1000 - 30 * 60 * 1000));
     
     // Inicializar charla con datos automáticos
     this.formulario.charla = {
@@ -240,32 +272,116 @@ export class SsomaFormularioComponent implements OnInit {
     }
   }
   
-  // MÉTODOS PARA CÁMARA EN TIEMPO REAL
   async iniciarCamara(tipo: 'participante' | 'epp' | 'herramienta' | 'charla', index: number = 0): Promise<void> {
+    if (this.isRecording) {
+      this.detenerGrabacionVideo();
+    }
+    
     this.currentPhotoType = tipo;
     this.currentPhotoIndex = index;
+    this.isTakingPhoto = true;
     
     try {
+      if (this.stream) {
+        this.detenerCamara();
+      }
+      
       this.stream = await navigator.mediaDevices.getUserMedia({ 
-        video: { facingMode: 'environment' },
+        video: { 
+          width: { ideal: 640 },
+          height: { ideal: 480 },
+          facingMode: 'environment'
+        },
         audio: false 
       });
       
       if (this.videoElement) {
         this.videoElement.nativeElement.srcObject = this.stream;
+        this.videoElement.nativeElement.play();
         this.isCameraActive = true;
       }
-    } catch (error) {
-      Swal.fire('Error', 'No se pudo acceder a la cámara', 'error');
+      
+      Swal.fire({
+        title: '📸 CÁMARA ACTIVA',
+        html: `
+          <div class="text-center">
+            <div class="mb-3" style="position: relative;">
+              <video id="liveCamera" autoplay playsinline 
+                     style="width: 100%; max-height: 400px; border-radius: 10px; border: 3px solid #dc3545;"></video>
+              <div style="position: absolute; top: 10px; left: 10px; background: rgba(220, 53, 69, 0.8); color: white; padding: 5px 10px; border-radius: 5px;">
+                <i class="fas fa-circle fa-beat" style="color: #fff;"></i> CÁMARA ACTIVA
+              </div>
+            </div>
+            <p class="text-danger fw-bold">Posicione para tomar la foto</p>
+            <div class="d-grid gap-2">
+              <button id="btnTakePhoto" class="btn btn-success btn-lg">
+                <i class="fas fa-camera"></i> TOMAR FOTO AHORA
+              </button>
+              <button id="btnCancel" class="btn btn-outline-secondary">
+                <i class="fas fa-times"></i> Cancelar
+              </button>
+            </div>
+          </div>
+        `,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          const videoEl = document.getElementById('liveCamera') as HTMLVideoElement;
+          if (videoEl && this.stream) {
+            videoEl.srcObject = this.stream;
+            videoEl.play();
+          }
+          
+          const btnTakePhoto = document.getElementById('btnTakePhoto');
+          const btnCancel = document.getElementById('btnCancel');
+          
+          if (btnTakePhoto) {
+            btnTakePhoto.onclick = () => {
+              this.tomarFoto();
+              Swal.close();
+            };
+          }
+          
+          if (btnCancel) {
+            btnCancel.onclick = () => {
+              this.detenerCamara();
+              Swal.close();
+            };
+          }
+        }
+      });
+      
+    } catch (error: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de cámara',
+        text: 'No se pudo acceder a la cámara: ' + error.message,
+        confirmButtonText: 'Aceptar'
+      });
+      this.isTakingPhoto = false;
     }
   }
   
   tomarFoto(): void {
-    if (!this.stream || !this.videoElement || !this.canvasElement) return;
+    if (!this.stream || !this.videoElement || !this.canvasElement) {
+      Swal.fire('Error', 'Cámara no disponible', 'error');
+      return;
+    }
+    
+    // Efecto de flash
+    document.body.style.backgroundColor = '#ffffff';
+    setTimeout(() => {
+      document.body.style.backgroundColor = '';
+    }, 100);
     
     const video = this.videoElement.nativeElement;
     const canvas = this.canvasElement.nativeElement;
     const context = canvas.getContext('2d');
+    
+    if (!context) {
+      Swal.fire('Error', 'No se pudo acceder al contexto del canvas', 'error');
+      return;
+    }
     
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
@@ -273,10 +389,35 @@ export class SsomaFormularioComponent implements OnInit {
     
     canvas.toBlob((blob: Blob | null) => {
       if (blob) {
-        const file = new File([blob], `foto-${Date.now()}.jpg`, { type: 'image/jpeg' });
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+        const fileName = `foto-${this.currentPhotoType}-${timestamp}.jpg`;
+        const file = new File([blob], fileName, { type: 'image/jpeg', lastModified: Date.now() });
+        
         this.procesarFotoTomada(file);
+        
+        const imageUrl = URL.createObjectURL(blob);
+        Swal.fire({
+          title: '📸 ¡FOTO TOMADA!',
+          html: `
+            <div class="text-center">
+              <img src="${imageUrl}" style="max-width: 100%; max-height: 300px; border-radius: 10px; border: 3px solid #28a745;">
+              <div class="mt-3">
+                <p class="text-success fw-bold">
+                  <i class="fas fa-check-circle"></i> Foto guardada correctamente
+                </p>
+                <p>Tipo: ${this.currentPhotoType.toUpperCase()}</p>
+              </div>
+            </div>
+          `,
+          showConfirmButton: true,
+          confirmButtonText: 'Aceptar',
+          timer: 3000
+        }).then(() => {
+          URL.revokeObjectURL(imageUrl);
+          this.detenerCamara();
+        });
       }
-    }, 'image/jpeg', 0.9);
+    }, 'image/jpeg', 0.95);
   }
   
   procesarFotoTomada(file: File): void {
@@ -290,7 +431,6 @@ export class SsomaFormularioComponent implements OnInit {
           foto: file,
           tipoFoto: 'FRONTAL'
         });
-        Swal.fire('Éxito', 'Foto de participante tomada', 'success');
         break;
         
       case 'epp':
@@ -301,7 +441,6 @@ export class SsomaFormularioComponent implements OnInit {
           eppIndex: this.currentPhotoIndex,
           foto: file
         });
-        Swal.fire('Éxito', 'Foto de EPP tomada', 'success');
         break;
         
       case 'herramienta':
@@ -312,18 +451,16 @@ export class SsomaFormularioComponent implements OnInit {
           herramientaIndex: this.currentPhotoIndex,
           foto: file
         });
-        Swal.fire('Éxito', 'Foto de herramienta tomada', 'success');
         break;
         
       case 'charla':
-        // Para foto de charla, guardamos en checklist
         if (this.currentPhotoIndex < this.formulario.checklistSeguridad.length) {
           this.formulario.checklistSeguridad[this.currentPhotoIndex].foto = file;
-          Swal.fire('Éxito', 'Foto de checklist tomada', 'success');
         }
         break;
     }
     
+    this.isTakingPhoto = false;
     this.detenerCamara();
   }
   
@@ -331,76 +468,157 @@ export class SsomaFormularioComponent implements OnInit {
     if (this.stream) {
       this.stream.getTracks().forEach(track => track.stop());
       this.stream = null;
-      this.isCameraActive = false;
     }
+    this.isCameraActive = false;
+    this.isTakingPhoto = false;
   }
   
-  // MÉTODO PARA GRABAR VIDEO
   async grabarVideoCharla(): Promise<void> {
     try {
+      this.detenerCamara();
+      
+      Swal.fire({
+        title: '🎥 PREPARANDO GRABACIÓN',
+        text: 'Iniciando cámara y micrófono...',
+        icon: 'info',
+        showConfirmButton: false,
+        timer: 1500
+      });
+      
       const stream = await navigator.mediaDevices.getUserMedia({ 
-        video: true, 
+        video: { 
+          width: { ideal: 1280 },
+          height: { ideal: 720 },
+          facingMode: 'environment'
+        }, 
         audio: true 
       });
       
-      const mediaRecorder = new MediaRecorder(stream);
-      const chunks: Blob[] = [];
+      this.mediaRecorder = new MediaRecorder(stream, {
+        mimeType: 'video/webm; codecs=vp9'
+      });
       
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          chunks.push(event.data);
+      this.recordedChunks = [];
+      this.isRecording = true;
+      this.recordingSeconds = 0;
+      this.showRecordingIndicator = true;
+      
+      this.mediaRecorder.ondataavailable = (event: BlobEvent) => {
+        if (event.data && event.data.size > 0) {
+          this.recordedChunks.push(event.data);
         }
       };
       
-      mediaRecorder.onstop = () => {
-        const blob = new Blob(chunks, { type: 'video/webm' });
-        const file = new File([blob], `video-charla-${Date.now()}.webm`, { type: 'video/webm' });
-        
-        this.formulario.videoCharla = {
-          video: file,
-          duracionSegundos: 30
-        };
-        
-        Swal.fire('Éxito', 'Video de charla grabado (30 segundos)', 'success');
-        
-        // Detener stream
-        stream.getTracks().forEach(track => track.stop());
+      this.mediaRecorder.onstop = () => {
+        this.finalizarGrabacionVideo(stream);
       };
       
-      // Iniciar grabación
-      mediaRecorder.start();
+      this.mediaRecorder.start(1000);
       
-      // Mostrar mensaje de grabación
+      this.recordingInterval = setInterval(() => {
+        this.recordingSeconds++;
+        this.recordingTimerText = this.formatRecordingTime(this.recordingSeconds);
+        
+        // Detener automáticamente después de 30 segundos
+        if (this.recordingSeconds >= 30) {
+          this.detenerGrabacionVideo();
+        }
+      }, 1000);
+      
       Swal.fire({
-        title: 'Grabando...',
-        text: 'Grabando video de 30 segundos',
-        timer: 30000,
-        timerProgressBar: true,
-        showConfirmButton: false
-      }).then(() => {
-        // Detener grabación automáticamente después de 30 segundos
-        mediaRecorder.stop();
+        title: '🎬 GRABANDO VIDEO...',
+        html: `
+          <div class="text-center">
+            <div class="mb-3">
+              <div class="recording-indicator">
+                <i class="fas fa-circle fa-beat text-danger fa-3x"></i>
+              </div>
+              <h1 class="text-danger mt-3">${this.recordingTimerText}</h1>
+              <p class="text-muted">Habla frente a la cámara (máximo 30 segundos)</p>
+              <div class="progress" style="height: 10px;">
+                <div class="progress-bar bg-danger progress-bar-striped progress-bar-animated" 
+                     role="progressbar" style="width: ${(this.recordingSeconds / 30) * 100}%">
+                </div>
+              </div>
+            </div>
+            <button id="btnStopRecording" class="btn btn-danger btn-lg mt-3">
+              <i class="fas fa-stop"></i> DETENER GRABACIÓN
+            </button>
+          </div>
+        `,
+        showConfirmButton: false,
+        allowOutsideClick: false,
+        didOpen: () => {
+          const btnStop = document.getElementById('btnStopRecording');
+          if (btnStop) {
+            btnStop.onclick = () => this.detenerGrabacionVideo();
+          }
+        }
       });
       
-    } catch (error) {
-      Swal.fire('Error', 'No se pudo acceder a la cámara/micrófono', 'error');
+    } catch (error: any) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de cámara',
+        text: 'No se pudo acceder a la cámara/micrófono: ' + error.message,
+        confirmButtonText: 'Aceptar'
+      });
     }
   }
   
-  // MÉTODO PARA TOMAR FIRMA (simulación con cámara)
+  detenerGrabacionVideo(): void {
+    if (this.mediaRecorder && this.isRecording) {
+      this.mediaRecorder.stop();
+      this.isRecording = false;
+      this.showRecordingIndicator = false;
+      clearInterval(this.recordingInterval);
+      clearInterval(this.recordingTimer);
+      Swal.close();
+    }
+  }
+  
+  private finalizarGrabacionVideo(stream: MediaStream): void {
+    const blob = new Blob(this.recordedChunks, { type: 'video/webm' });
+    const file = new File([blob], `video-charla-${Date.now()}.webm`, { 
+      type: 'video/webm' 
+    });
+    
+    this.formulario.videoCharla = {
+      video: file,
+      duracionSegundos: this.recordingSeconds
+    };
+    
+    Swal.fire({
+      icon: 'success',
+      title: '✅ VIDEO GRABADO',
+      html: `
+        <div class="text-center">
+          <i class="fas fa-check-circle fa-3x text-success mb-3"></i>
+          <p>Video grabado correctamente</p>
+          <p><strong>Duración:</strong> ${this.recordingSeconds} segundos</p>
+        </div>
+      `,
+      timer: 3000,
+      showConfirmButton: false
+    });
+    
+    stream.getTracks().forEach(track => track.stop());
+    this.isRecording = false;
+    this.showRecordingIndicator = false;
+  }
+  
   async tomarFirma(index: number): Promise<void> {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
       
       Swal.fire({
-        title: 'Tome una foto de la firma',
-        text: 'Coloque la firma frente a la cámara y haga clic en Tomar Foto',
+        title: '✍️ TOMAR FIRMA',
+        text: 'Coloque la firma frente a la cámara',
         showCancelButton: true,
         confirmButtonText: 'Tomar Foto',
         cancelButtonText: 'Cancelar'
       }).then(async (result) => {
         if (result.isConfirmed) {
-          // Tomar foto de la firma
           const video = document.createElement('video');
           video.srcObject = stream;
           video.play();
@@ -424,7 +642,6 @@ export class SsomaFormularioComponent implements OnInit {
           }
         }
         
-        // Detener stream
         stream.getTracks().forEach(track => track.stop());
       });
       
@@ -433,7 +650,6 @@ export class SsomaFormularioComponent implements OnInit {
     }
   }
   
-  // Métodos para PETAR
   inicializarPetar(): void {
     if (!this.formulario.petar) {
       this.formulario.petar = {
@@ -482,7 +698,6 @@ export class SsomaFormularioComponent implements OnInit {
     }
   }
   
-  // Validación
   validarFormulario(): boolean {
     if (!this.formulario.idOts || this.formulario.idOts <= 0) {
       Swal.fire('Error', 'Debe ingresar un número de OT válido', 'error');
@@ -497,7 +712,6 @@ export class SsomaFormularioComponent implements OnInit {
     return true;
   }
   
-  // Envío del formulario
   guardarFormulario(): void {
     if (!this.validarFormulario()) return;
     
@@ -531,7 +745,6 @@ export class SsomaFormularioComponent implements OnInit {
           confirmButtonText: 'Aceptar'
         });
         
-        // Resetear formulario
         this.formulario = this.crearFormularioVacio();
         this.inicializarFormulario();
         this.detenerCamara();
@@ -547,45 +760,118 @@ export class SsomaFormularioComponent implements OnInit {
       }
     });
   }
-  // En el componente TypeScript
-get charlaTemaId(): number | undefined {
-  return this.formulario.charla?.temaId;
-}
-
-set charlaTemaId(value: number | undefined) {
-  if (!this.formulario.charla) {
-    this.formulario.charla = {
-      temaId: undefined,
-      fechaCharla: new Date(),
-      duracionHoras: 0.5,
-      capacitadorId: undefined
-    };
+  
+  get charlaTemaId(): number | undefined {
+    return this.formulario.charla?.temaId;
   }
-  this.formulario.charla.temaId = value;
-}
-
-get charlaCapacitadorId(): number | undefined {
-  return this.formulario.charla?.capacitadorId;
-}
-
-set charlaCapacitadorId(value: number | undefined) {
-  if (!this.formulario.charla) {
-    this.formulario.charla = {
-      temaId: undefined,
-      fechaCharla: new Date(),
-      duracionHoras: 0.5,
-      capacitadorId: undefined
-    };
+  
+  set charlaTemaId(value: number | undefined) {
+    if (!this.formulario.charla) {
+      this.formulario.charla = {
+        temaId: undefined,
+        fechaCharla: new Date(),
+        duracionHoras: 0.5,
+        capacitadorId: undefined
+      };
+    }
+    this.formulario.charla.temaId = value;
   }
-  this.formulario.charla.capacitadorId = value;
-}
-  // Navegación entre pestañas
+  
+  get charlaCapacitadorId(): number | undefined {
+    return this.formulario.charla?.capacitadorId;
+  }
+  
+  set charlaCapacitadorId(value: number | undefined) {
+    if (!this.formulario.charla) {
+      this.formulario.charla = {
+        temaId: undefined,
+        fechaCharla: new Date(),
+        duracionHoras: 0.5,
+        capacitadorId: undefined
+      };
+    }
+    this.formulario.charla.capacitadorId = value;
+  }
+  
   cambiarTab(tab: string): void {
     this.activeTab = tab;
     this.detenerCamara();
     
     if (tab === 'hoja5' && !this.formulario.petar) {
       this.inicializarPetar();
+    }
+  }
+  // Métodos para manejar la fecha de la charla
+getCharlaFecha(): string {
+  if (!this.formulario.charla?.fechaCharla) {
+    return '';
+  }
+  const date = new Date(this.formulario.charla.fechaCharla);
+  return date.toISOString().split('T')[0];
+}
+
+setCharlaFecha(event: Event): void {
+  const input = event.target as HTMLInputElement;
+  const fechaValue = input.value;
+  
+  if (!this.formulario.charla) {
+    this.formulario.charla = {
+      temaId: undefined,
+      fechaCharla: new Date(),
+      duracionHoras: 0.5,
+      capacitadorId: undefined
+    };
+  }
+  
+  if (fechaValue) {
+    this.formulario.charla.fechaCharla = new Date(fechaValue);
+  }
+}
+
+// Métodos para manejar la duración de la charla
+getCharlaDuracion(): number {
+  return this.formulario.charla?.duracionHoras || 0.5;
+}
+
+setCharlaDuracion(value: number | null): void {
+  if (!this.formulario.charla) {
+    this.formulario.charla = {
+      temaId: undefined,
+      fechaCharla: new Date(),
+      duracionHoras: 0.5,
+      capacitadorId: undefined
+    };
+  }
+  
+  this.formulario.charla.duracionHoras = value || 0.5;
+}
+  mostrarPreviewFoto(imageUrl: string, tipo: string): void {
+    Swal.fire({
+      title: `Foto de ${tipo} tomada`,
+      imageUrl: imageUrl,
+      imageAlt: `Foto de ${tipo}`,
+      showConfirmButton: true,
+      confirmButtonText: 'Aceptar',
+      imageWidth: 400,
+      imageHeight: 300
+    }).then(() => {
+      URL.revokeObjectURL(imageUrl);
+    });
+  }
+  
+  async verificarPermisosCamara(): Promise<boolean> {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      stream.getTracks().forEach(track => track.stop());
+      return true;
+    } catch {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Permisos de cámara',
+        text: 'Por favor habilite los permisos de cámara en su navegador',
+        confirmButtonText: 'Entendido'
+      });
+      return false;
     }
   }
 }

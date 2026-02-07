@@ -1,51 +1,50 @@
 <div class="container mt-3">
-  <!-- Título -->
-  <div class="mb-3">
-    <h2 class="text-center">FORMULARIO SSOMA - 5 HOJAS</h2>
-    <p class="text-center text-muted">Fecha automática: {{formulario.fecha | date:'dd/MM/yyyy HH:mm'}}</p>
+  
+  <!-- Indicadores de Estado -->
+  <div *ngIf="isTakingPhoto" class="alert alert-danger text-center">
+    <i class="fas fa-circle fa-beat"></i> 
+    <strong>TOMANDO FOTOS</strong> - Cámara activa
+  </div>
+  
+  <div *ngIf="isRecording" class="alert alert-danger text-center">
+    <i class="fas fa-video fa-beat"></i> 
+    <strong>GRABANDO VIDEO</strong> - {{recordingTimerText}} / 00:30
+    <button class="btn btn-sm btn-light ms-3" (click)="detenerGrabacionVideo()">
+      <i class="fas fa-stop"></i> Detener
+    </button>
   </div>
 
-  <!-- Cámara en tiempo real (oculta por defecto) -->
-  <div *ngIf="isCameraActive" class="mb-3 text-center">
-    <div class="card">
-      <div class="card-header bg-primary text-white">
-        <h5 class="mb-0">Cámara Activa</h5>
-      </div>
-      <div class="card-body">
-        <video #videoElement autoplay playsinline class="w-100" style="max-height: 400px;"></video>
-        <canvas #canvasElement style="display: none;"></canvas>
-        <div class="mt-3">
-          <button class="btn btn-success me-2" (click)="tomarFoto()">
-            <i class="fas fa-camera"></i> Tomar Foto
-          </button>
-          <button class="btn btn-danger" (click)="detenerCamara()">
-            <i class="fas fa-stop"></i> Cancelar
-          </button>
-        </div>
-      </div>
-    </div>
+  <!-- Elementos multimedia ocultos -->
+  <video #videoElement autoplay playsinline style="display: none;"></video>
+  <video #videoRecorder autoplay playsinline style="display: none;"></video>
+<canvas #canvasElement style="display: none;"></canvas>
+
+  <!-- Título -->
+  <div class="mb-3">
+    <h2 class="text-center text-primary">FORMULARIO SSOMA - 5 HOJAS</h2>
+    <p class="text-center text-muted">Fecha automática: {{formulario.fecha | date:'dd/MM/yyyy HH:mm'}}</p>
   </div>
 
   <!-- Navegación -->
   <div class="mb-3">
     <div class="btn-group w-100">
       <button class="btn" [class.btn-primary]="activeTab === 'hoja1'" [class.btn-outline-primary]="activeTab !== 'hoja1'"
-              (click)="cambiarTab('hoja1')">Hoja 1</button>
+              (click)="cambiarTab('hoja1')">Hoja 1: Datos</button>
       <button class="btn" [class.btn-primary]="activeTab === 'hoja2'" [class.btn-outline-primary]="activeTab !== 'hoja2'"
-              (click)="cambiarTab('hoja2')">Hoja 2</button>
+              (click)="cambiarTab('hoja2')">Hoja 2: Charla</button>
       <button class="btn" [class.btn-primary]="activeTab === 'hoja3'" [class.btn-outline-primary]="activeTab !== 'hoja3'"
-              (click)="cambiarTab('hoja3')">Hoja 3</button>
+              (click)="cambiarTab('hoja3')">Hoja 3: EPP</button>
       <button class="btn" [class.btn-primary]="activeTab === 'hoja4'" [class.btn-outline-primary]="activeTab !== 'hoja4'"
-              (click)="cambiarTab('hoja4')">Hoja 4</button>
+              (click)="cambiarTab('hoja4')">Hoja 4: Herramientas</button>
       <button class="btn" [class.btn-primary]="activeTab === 'hoja5'" [class.btn-outline-primary]="activeTab !== 'hoja5'"
-              (click)="cambiarTab('hoja5')">Hoja 5</button>
+              (click)="cambiarTab('hoja5')">Hoja 5: PETAR</button>
     </div>
   </div>
 
-  <!-- HOJA 1 -->
+  <!-- HOJA 1: Datos Generales -->
   <div *ngIf="activeTab === 'hoja1'" class="card">
     <div class="card-header bg-primary text-white">
-      <h4 class="mb-0">Hoja 1: Datos Generales</h4>
+      <h4 class="mb-0"><i class="fas fa-file-alt me-2"></i>Hoja 1: Datos Generales</h4>
     </div>
     <div class="card-body">
       
@@ -83,9 +82,9 @@
       <!-- Participantes -->
       <div class="mb-3">
         <h5 class="border-bottom pb-2">
-          Participantes
+          <i class="fas fa-users me-2"></i>Participantes
           <button type="button" class="btn btn-sm btn-success float-end" (click)="agregarParticipante()">
-            + Agregar
+            <i class="fas fa-plus"></i> Agregar
           </button>
         </h5>
         
@@ -111,8 +110,11 @@
               </div>
               <div class="col-md-2 d-flex align-items-end">
                 <div class="btn-group">
-                  <button class="btn btn-sm btn-primary" (click)="iniciarCamara('participante', i)">
-                    <i class="fas fa-camera"></i> Foto
+                  <button class="btn btn-sm btn-primary" 
+                          [class.btn-success]="isTakingPhoto && currentPhotoType === 'participante' && currentPhotoIndex === i"
+                          (click)="iniciarCamara('participante', i)">
+                    <i class="fas fa-camera"></i> 
+                    {{isTakingPhoto && currentPhotoType === 'participante' && currentPhotoIndex === i ? '...' : 'Foto'}}
                   </button>
                   <button class="btn btn-sm btn-secondary" (click)="tomarFirma(i)">
                     <i class="fas fa-signature"></i> Firma
@@ -128,21 +130,73 @@
         </div>
       </div>
 
+      <!-- Secuencias de Tarea -->
+      <div class="mb-3">
+        <h5 class="border-bottom pb-2">
+          <i class="fas fa-tasks me-2"></i>Secuencias de Tarea
+          <button class="btn btn-sm btn-success float-end" (click)="agregarSecuencia()">
+            <i class="fas fa-plus"></i> Agregar
+          </button>
+        </h5>
+        
+        <div *ngFor="let secuencia of formulario.secuenciasTarea; let i = index" class="card mb-2">
+          <div class="card-header">
+            <strong>Secuencia {{secuencia.orden}}</strong>
+            <button *ngIf="formulario.secuenciasTarea.length > 1" 
+                    class="btn btn-sm btn-danger float-end" (click)="eliminarSecuencia(i)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
+          <div class="card-body">
+            <div class="row">
+              <div class="col-md-6">
+                <label class="form-label">Secuencia de Tarea</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="secuencia.secuenciaTarea"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Peligro</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="secuencia.peligro"></textarea>
+              </div>
+            </div>
+            <div class="row mt-2">
+              <div class="col-md-6">
+                <label class="form-label">Riesgo</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="secuencia.riesgo"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Consecuencias</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="secuencia.consecuencias"></textarea>
+              </div>
+            </div>
+            <div class="row mt-2">
+              <div class="col-12">
+                <label class="form-label">Medidas de Control</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="secuencia.medidasControl"></textarea>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Checklist Seguridad -->
       <div class="mb-3">
-        <h5 class="border-bottom pb-2">Checklist de Seguridad</h5>
+        <h5 class="border-bottom pb-2"><i class="fas fa-clipboard-check me-2"></i>Checklist de Seguridad</h5>
         <div class="row">
           <div *ngFor="let item of formulario.checklistSeguridad; let i = index" class="col-md-6 mb-2">
-            <div class="form-check">
-              <input class="form-check-input" type="checkbox" [(ngModel)]="item.usado" [id]="'check' + i">
-              <label class="form-check-label" [for]="'check' + i">
-                {{item.itemNombre}}
-                <button *ngIf="item.usado" class="btn btn-sm btn-link" (click)="iniciarCamara('charla', i)">
-                  <i class="fas fa-camera"></i>
-                </button>
-              </label>
-              <input *ngIf="item.itemNombre === 'Otros'" type="text" class="form-control form-control-sm mt-1" 
-                     [(ngModel)]="item.observaciones" placeholder="Especificar">
+            <div class="card">
+              <div class="card-body">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="item.usado" [id]="'check' + i">
+                  <label class="form-check-label fw-bold" [for]="'check' + i">
+                    {{item.itemNombre}}
+                    <button *ngIf="item.usado" class="btn btn-sm btn-link" (click)="iniciarCamara('charla', i)">
+                      <i class="fas fa-camera"></i> Foto
+                    </button>
+                  </label>
+                </div>
+                <input *ngIf="item.itemNombre === 'Otros'" type="text" class="form-control form-control-sm mt-1" 
+                       [(ngModel)]="item.observaciones" placeholder="Especificar">
+              </div>
             </div>
           </div>
         </div>
@@ -151,15 +205,15 @@
     </div>
     <div class="card-footer text-end">
       <button class="btn btn-primary" (click)="cambiarTab('hoja2')">
-        Continuar a Hoja 2 →
+        Continuar a Hoja 2 <i class="fas fa-arrow-right"></i>
       </button>
     </div>
   </div>
 
-  <!-- HOJA 2 -->
+  <!-- HOJA 2: Charla -->
   <div *ngIf="activeTab === 'hoja2'" class="card">
     <div class="card-header bg-info text-white">
-      <h4 class="mb-0">Hoja 2: Charla de 5 Minutos</h4>
+      <h4 class="mb-0"><i class="fas fa-chalkboard-teacher me-2"></i>Hoja 2: Charla de 5 Minutos</h4>
     </div>
     <div class="card-body">
       
@@ -168,53 +222,70 @@
         <p class="text-muted">Grabe un video de 30 segundos de la charla de seguridad</p>
         
         <div class="d-grid gap-2">
-          <button class="btn btn-warning btn-lg" (click)="grabarVideoCharla()">
-            <i class="fas fa-video"></i> Grabar Video (30 segundos)
+          <button class="btn btn-warning btn-lg" 
+                  [class.btn-danger]="isRecording"
+                  (click)="grabarVideoCharla()">
+            <i class="fas fa-video"></i> 
+            {{isRecording ? 'GRABANDO... ' + recordingTimerText : 'Grabar Video (30 segundos)'}}
           </button>
         </div>
         
         <div *ngIf="formulario.videoCharla" class="alert alert-success mt-3">
-          <i class="fas fa-check-circle"></i> Video grabado correctamente
+          <i class="fas fa-check-circle"></i> Video grabado correctamente ({{formulario.videoCharla.duracionSegundos}} segundos)
         </div>
       </div>
 
       <div class="row mb-3">
         <div class="col-md-6">
           <label class="form-label fw-bold">Tema de la Charla</label>
-   <!-- En el HTML -->
-<select class="form-select" [(ngModel)]="charlaTemaId">
-  <option value="">-- Seleccione --</option>
-  <option *ngFor="let tema of temasCharla" [value]="tema.id">
-    {{tema.label}}
-  </option>
-</select>
+          <select class="form-select" [(ngModel)]="charlaTemaId">
+            <option value="">-- Seleccione --</option>
+            <option *ngFor="let tema of temasCharla" [value]="tema.id">
+              {{tema.label}}
+            </option>
+          </select>
         </div>
         <div class="col-md-6">
           <label class="form-label fw-bold">Capacitador</label>
-      <select class="form-select" [(ngModel)]="charlaCapacitadorId">
-  <option value="">-- Seleccione --</option>
-  <option *ngFor="let trabajador of trabajadores" [value]="trabajador.id">
-    {{trabajador.label}}
-  </option>
-</select>
+          <select class="form-select" [(ngModel)]="charlaCapacitadorId">
+            <option value="">-- Seleccione --</option>
+            <option *ngFor="let trabajador of trabajadores" [value]="trabajador.id">
+              {{trabajador.label}}
+            </option>
+          </select>
         </div>
       </div>
+
+    <div class="row mb-3">
+  <div class="col-md-6">
+    <label class="form-label fw-bold">Fecha Charla</label>
+    <input type="date" class="form-control" 
+           [value]="getCharlaFecha()"
+           (change)="setCharlaFecha($event)">
+  </div>
+  <div class="col-md-6">
+    <label class="form-label fw-bold">Duración (horas)</label>
+    <input type="number" class="form-control" step="0.5" min="0.5" max="8"
+           [ngModel]="getCharlaDuracion()"
+           (ngModelChange)="setCharlaDuracion($event)">
+  </div>
+</div>
 
     </div>
     <div class="card-footer d-flex justify-content-between">
       <button class="btn btn-secondary" (click)="cambiarTab('hoja1')">
-        ← Volver a Hoja 1
+        <i class="fas fa-arrow-left"></i> Volver a Hoja 1
       </button>
       <button class="btn btn-primary" (click)="cambiarTab('hoja3')">
-        Continuar a Hoja 3 →
+        Continuar a Hoja 3 <i class="fas fa-arrow-right"></i>
       </button>
     </div>
   </div>
 
-  <!-- HOJA 3 -->
+  <!-- HOJA 3: EPP -->
   <div *ngIf="activeTab === 'hoja3'" class="card">
     <div class="card-header bg-warning text-dark">
-      <h4 class="mb-0">Hoja 3: Inspección de EPP</h4>
+      <h4 class="mb-0"><i class="fas fa-hard-hat me-2"></i>Hoja 3: Inspección de EPP</h4>
     </div>
     <div class="card-body">
       
@@ -223,7 +294,7 @@
         <div class="row">
           <div *ngFor="let epp of formulario.eppChecks; let i = index" class="col-md-3 mb-3">
             <div class="card">
-              <div class="card-body">
+              <div class="card-body text-center">
                 <div class="form-check form-switch">
                   <input class="form-check-input" type="checkbox" [(ngModel)]="epp.usado" [id]="'epp' + i">
                   <label class="form-check-label fw-bold" [for]="'epp' + i">
@@ -232,7 +303,8 @@
                 </div>
                 <button *ngIf="epp.usado" class="btn btn-sm btn-primary mt-2 w-100" 
                         (click)="iniciarCamara('epp', i)">
-                  <i class="fas fa-camera"></i> Foto
+                  <i class="fas fa-camera"></i> 
+                  {{isTakingPhoto && currentPhotoType === 'epp' && currentPhotoIndex === i ? 'TOMANDO...' : 'Foto'}}
                 </button>
               </div>
             </div>
@@ -243,11 +315,20 @@
       <!-- Inspección por trabajador -->
       <div class="mb-3">
         <h5 class="border-bottom pb-2">
-          Inspección por Trabajador
-          <button class="btn btn-sm btn-success float-end" (click)="agregarInspeccion()">+ Agregar</button>
+          <i class="fas fa-user-check me-2"></i>Inspección por Trabajador
+          <button class="btn btn-sm btn-success float-end" (click)="agregarInspeccion()">
+            <i class="fas fa-plus"></i> Agregar
+          </button>
         </h5>
         
         <div *ngFor="let inspeccion of formulario.inspeccionesTrabajador; let i = index" class="card mb-2">
+          <div class="card-header">
+            Inspección {{i + 1}}
+            <button *ngIf="formulario.inspeccionesTrabajador.length > 1" 
+                    class="btn btn-sm btn-danger float-end" (click)="eliminarInspeccion(i)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
           <div class="card-body">
             <div class="row">
               <div class="col-md-6">
@@ -265,39 +346,75 @@
               </div>
             </div>
             
-            <div class="row mt-2">
-              <div class="col-md-3">
+            <div class="row mt-3">
+              <div class="col-md-4">
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" [(ngModel)]="inspeccion.casco">
                   <label class="form-check-label">Casco</label>
                 </div>
-              </div>
-              <div class="col-md-3">
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" [(ngModel)]="inspeccion.lentes">
                   <label class="form-check-label">Lentes</label>
                 </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="inspeccion.orejeras">
+                  <label class="form-check-label">Orejeras</label>
+                </div>
               </div>
-              <div class="col-md-3">
+              <div class="col-md-4">
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" [(ngModel)]="inspeccion.guantes">
                   <label class="form-check-label">Guantes</label>
                 </div>
-              </div>
-              <div class="col-md-3">
                 <div class="form-check">
                   <input class="form-check-input" type="checkbox" [(ngModel)]="inspeccion.botas">
                   <label class="form-check-label">Botas</label>
                 </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="inspeccion.arnes">
+                  <label class="form-check-label">Arnés</label>
+                </div>
+              </div>
+              <div class="col-md-4">
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="inspeccion.chaleco">
+                  <label class="form-check-label">Chaleco</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="inspeccion.mascarilla">
+                  <label class="form-check-label">Mascarilla</label>
+                </div>
+                <div class="form-check">
+                  <input class="form-check-input" type="checkbox" [(ngModel)]="inspeccion.gafas">
+                  <label class="form-check-label">Gafas</label>
+                </div>
               </div>
             </div>
             
-            <div class="row mt-2">
-              <div class="col">
-                <button *ngIf="formulario.inspeccionesTrabajador.length > 1" 
-                        class="btn btn-danger btn-sm float-end" (click)="eliminarInspeccion(i)">
-                  <i class="fas fa-trash"></i>
-                </button>
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <label class="form-label">Otros EPP</label>
+                <input type="text" class="form-control" [(ngModel)]="inspeccion.otros" placeholder="Especificar otros EPP">
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Responsable</label>
+                <select class="form-select" [(ngModel)]="inspeccion.responsableId">
+                  <option value="">-- Seleccionar --</option>
+                  <option *ngFor="let trabajador of trabajadores" [value]="trabajador.id">
+                    {{trabajador.label}}
+                  </option>
+                </select>
+              </div>
+            </div>
+            
+            <div class="row mt-3">
+              <div class="col-md-6">
+                <label class="form-label">Acción Correctiva</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="inspeccion.accionCorrectiva"></textarea>
+              </div>
+              <div class="col-md-6">
+                <label class="form-label">Seguimiento</label>
+                <textarea class="form-control" rows="2" [(ngModel)]="inspeccion.seguimiento"></textarea>
               </div>
             </div>
           </div>
@@ -307,28 +424,37 @@
     </div>
     <div class="card-footer d-flex justify-content-between">
       <button class="btn btn-secondary" (click)="cambiarTab('hoja2')">
-        ← Volver a Hoja 2
+        <i class="fas fa-arrow-left"></i> Volver a Hoja 2
       </button>
       <button class="btn btn-primary" (click)="cambiarTab('hoja4')">
-        Continuar a Hoja 4 →
+        Continuar a Hoja 4 <i class="fas fa-arrow-right"></i>
       </button>
     </div>
   </div>
 
-  <!-- HOJA 4 -->
+  <!-- HOJA 4: Herramientas -->
   <div *ngIf="activeTab === 'hoja4'" class="card">
     <div class="card-header bg-success text-white">
-      <h4 class="mb-0">Hoja 4: Inspección de Herramientas</h4>
+      <h4 class="mb-0"><i class="fas fa-tools me-2"></i>Hoja 4: Inspección de Herramientas</h4>
     </div>
     <div class="card-body">
       
       <div class="mb-3">
         <h5 class="border-bottom pb-2">
-          Herramientas a Inspeccionar
-          <button class="btn btn-sm btn-success float-end" (click)="agregarHerramienta()">+ Agregar</button>
+          <i class="fas fa-toolbox me-2"></i>Herramientas a Inspeccionar
+          <button class="btn btn-sm btn-success float-end" (click)="agregarHerramienta()">
+            <i class="fas fa-plus"></i> Agregar
+          </button>
         </h5>
         
         <div *ngFor="let herramienta of formulario.herramientasInspeccion; let i = index" class="card mb-3">
+          <div class="card-header">
+            Herramienta {{i + 1}}
+            <button *ngIf="formulario.herramientasInspeccion.length > 1" 
+                    class="btn btn-sm btn-danger float-end" (click)="eliminarHerramienta(i)">
+              <i class="fas fa-trash"></i>
+            </button>
+          </div>
           <div class="card-body">
             <div class="row mb-3">
               <div class="col-md-6">
@@ -348,43 +474,66 @@
             
             <div class="row">
               <div class="col-md-6">
+                <h6>Puntos de Inspección:</h6>
                 <div class="mb-2">
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" [(ngModel)]="herramienta.p1">
-                    <label class="form-check-label">¿Está en buen estado?</label>
+                    <label class="form-check-label">¿Está en buen estado general?</label>
                   </div>
                 </div>
                 <div class="mb-2">
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" [(ngModel)]="herramienta.p2">
-                    <label class="form-check-label">¿Tiene filo adecuado?</label>
+                    <label class="form-check-label">¿Tiene filo/mecanismo adecuado?</label>
                   </div>
                 </div>
                 <div class="mb-2">
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" [(ngModel)]="herramienta.p3">
-                    <label class="form-check-label">¿Mango en buen estado?</label>
+                    <label class="form-check-label">¿Mango/empuñadura en buen estado?</label>
                   </div>
                 </div>
                 <div class="mb-2">
                   <div class="form-check">
                     <input class="form-check-input" type="checkbox" [(ngModel)]="herramienta.p4">
-                    <label class="form-check-label">¿Sin grietas?</label>
+                    <label class="form-check-label">¿Sin grietas o fisuras?</label>
+                  </div>
+                </div>
+                <div class="mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="herramienta.p5">
+                    <label class="form-check-label">¿Sistema de seguridad operativo?</label>
+                  </div>
+                </div>
+                <div class="mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="herramienta.p6">
+                    <label class="form-check-label">¿Sin corrosión u oxidación?</label>
+                  </div>
+                </div>
+                <div class="mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="herramienta.p7">
+                    <label class="form-check-label">¿Elementos de fijación seguros?</label>
+                  </div>
+                </div>
+                <div class="mb-2">
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="herramienta.p8">
+                    <label class="form-check-label">¿Etiquetas de seguridad legibles?</label>
                   </div>
                 </div>
               </div>
               <div class="col-md-6">
-                <button class="btn btn-primary w-100 mb-2" (click)="iniciarCamara('herramienta', i)">
-                  <i class="fas fa-camera"></i> Tomar Foto
+                <button class="btn btn-primary w-100 mb-3" 
+                        (click)="iniciarCamara('herramienta', i)">
+                  <i class="fas fa-camera"></i> 
+                  {{isTakingPhoto && currentPhotoType === 'herramienta' && currentPhotoIndex === i ? 'TOMANDO FOTO...' : 'Tomar Foto de Herramienta'}}
                 </button>
-                <div class="mb-2">
+                <div class="mb-3">
                   <label class="form-label">Observaciones</label>
-                  <textarea class="form-control" rows="3" [(ngModel)]="herramienta.observaciones"></textarea>
+                  <textarea class="form-control" rows="5" [(ngModel)]="herramienta.observaciones"></textarea>
                 </div>
-                <button *ngIf="formulario.herramientasInspeccion.length > 1" 
-                        class="btn btn-danger w-100" (click)="eliminarHerramienta(i)">
-                  <i class="fas fa-trash"></i> Eliminar
-                </button>
               </div>
             </div>
           </div>
@@ -394,42 +543,121 @@
     </div>
     <div class="card-footer d-flex justify-content-between">
       <button class="btn btn-secondary" (click)="cambiarTab('hoja3')">
-        ← Volver a Hoja 3
+        <i class="fas fa-arrow-left"></i> Volver a Hoja 3
       </button>
       <button class="btn btn-primary" (click)="cambiarTab('hoja5')">
-        Continuar a Hoja 5 →
+        Continuar a Hoja 5 <i class="fas fa-arrow-right"></i>
       </button>
     </div>
   </div>
 
-  <!-- HOJA 5 -->
+  <!-- HOJA 5: PETAR -->
   <div *ngIf="activeTab === 'hoja5'" class="card">
     <div class="card-header bg-danger text-white">
-      <h4 class="mb-0">Hoja 5: PETAR (Trabajo de Alto Riesgo)</h4>
+      <h4 class="mb-0"><i class="fas fa-exclamation-triangle me-2"></i>Hoja 5: PETAR (Trabajo de Alto Riesgo)</h4>
     </div>
     <div class="card-body">
       
       <div *ngIf="formulario.petar">
         <!-- Tipo de trabajo -->
         <div class="mb-3">
-          <h5>Tipo de Trabajo de Alto Riesgo</h5>
+          <h5 class="border-bottom pb-2">Tipo de Trabajo de Alto Riesgo</h5>
           <div class="row">
-            <div class="col-md-4 mb-2">
+            <div class="col-md-3 mb-2">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" [(ngModel)]="formulario.petar.energiaPeligrosa">
                 <label class="form-check-label fw-bold">Energía Peligrosa</label>
               </div>
             </div>
-            <div class="col-md-4 mb-2">
+            <div class="col-md-3 mb-2">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" [(ngModel)]="formulario.petar.trabajoAltura">
                 <label class="form-check-label fw-bold">Trabajo en Altura</label>
               </div>
             </div>
-            <div class="col-md-4 mb-2">
+            <div class="col-md-3 mb-2">
               <div class="form-check">
                 <input class="form-check-input" type="checkbox" [(ngModel)]="formulario.petar.izaje">
                 <label class="form-check-label fw-bold">Izaje</label>
+              </div>
+            </div>
+            <div class="col-md-3 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="formulario.petar.excavacion">
+                <label class="form-check-label fw-bold">Excavación</label>
+              </div>
+            </div>
+            <div class="col-md-3 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="formulario.petar.espaciosConfinados">
+                <label class="form-check-label fw-bold">Espacios Confinados</label>
+              </div>
+            </div>
+            <div class="col-md-3 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="formulario.petar.trabajoCaliente">
+                <label class="form-check-label fw-bold">Trabajo Caliente</label>
+              </div>
+            </div>
+            <div class="col-md-3 mb-2">
+              <div class="form-check">
+                <input class="form-check-input" type="checkbox" [(ngModel)]="formulario.petar.otros">
+                <label class="form-check-label fw-bold">Otros</label>
+              </div>
+            </div>
+            <div class="col-md-6" *ngIf="formulario.petar.otros">
+              <input type="text" class="form-control" [(ngModel)]="formulario.petar.otrosDescripcion" 
+                     placeholder="Especificar otros trabajos">
+            </div>
+          </div>
+        </div>
+
+        <!-- Condiciones ambientales -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Velocidad del Aire (m/s)</label>
+            <input type="text" class="form-control" [(ngModel)]="formulario.petar.velocidadAire">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Contenido de Oxígeno (%)</label>
+            <input type="text" class="form-control" [(ngModel)]="formulario.petar.contenidoOxigeno">
+          </div>
+        </div>
+
+        <!-- Horarios PETAR -->
+        <div class="row mb-3">
+          <div class="col-md-6">
+            <label class="form-label">Hora Inicio PETAR</label>
+            <input type="time" class="form-control" [(ngModel)]="formulario.petar.horaInicioPetar">
+          </div>
+          <div class="col-md-6">
+            <label class="form-label">Hora Fin PETAR</label>
+            <input type="time" class="form-control" [(ngModel)]="formulario.petar.horaFinPetar">
+          </div>
+        </div>
+
+        <!-- Respuestas -->
+        <div class="mb-3">
+          <h5 class="border-bottom pb-2">Respuestas de Seguridad</h5>
+          <div *ngFor="let respuesta of formulario.petar.respuestas; let i = index" class="card mb-2">
+            <div class="card-body">
+              <div class="row">
+                <div class="col-md-8">
+                  <label class="form-label">Pregunta {{i + 1}}</label>
+                  <div class="form-check">
+                    <input class="form-check-input" type="checkbox" [(ngModel)]="respuesta.respuesta">
+                    <label class="form-check-label">
+                      {{i === 0 ? '¿Se identificaron todos los riesgos?' : 
+                        i === 1 ? '¿Se implementaron todas las medidas de control?' :
+                        i === 2 ? '¿Se comunicaron los riesgos al equipo?' :
+                        '¿Se verificaron las condiciones seguras?'}}
+                    </label>
+                  </div>
+                </div>
+                <div class="col-md-4">
+                  <label class="form-label">Observaciones</label>
+                  <input type="text" class="form-control" [(ngModel)]="respuesta.observaciones">
+                </div>
               </div>
             </div>
           </div>
@@ -439,7 +667,9 @@
         <div class="mb-3">
           <h5 class="border-bottom pb-2">
             Equipos de Protección Requeridos
-            <button class="btn btn-sm btn-success float-end" (click)="agregarEquipoProteccion()">+ Agregar</button>
+            <button class="btn btn-sm btn-success float-end" (click)="agregarEquipoProteccion()">
+              <i class="fas fa-plus"></i> Agregar
+            </button>
           </h5>
           
           <div *ngFor="let equipo of formulario.petar.equiposProteccion; let i = index" class="card mb-2">
@@ -469,7 +699,7 @@
     </div>
     <div class="card-footer d-flex justify-content-between">
       <button class="btn btn-secondary" (click)="cambiarTab('hoja4')">
-        ← Volver a Hoja 4
+        <i class="fas fa-arrow-left"></i> Volver a Hoja 4
       </button>
       <button class="btn btn-success btn-lg" (click)="guardarFormulario()">
         <i class="fas fa-save"></i> GUARDAR FORMULARIO COMPLETO
@@ -479,8 +709,8 @@
 
   <!-- Resumen -->
   <div class="card mt-3">
-    <div class="card-header">
-      <h6 class="mb-0">Archivos Adjuntados</h6>
+    <div class="card-header bg-light">
+      <h6 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Archivos Adjuntados</h6>
     </div>
     <div class="card-body">
       <div class="row">
