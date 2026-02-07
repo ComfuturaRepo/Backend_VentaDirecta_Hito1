@@ -14,9 +14,20 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.MySQLDialect
 
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 500MB
 
 server:
   port: ${PORT:8080}
+
+  tomcat:
+    max-parameter-count: -1        # PERMITE MUCHOS ARCHIVOS EN UN REQUEST
+    max-swallow-size: -1
+    max-http-form-post-size: -1
+    connection-timeout: 120000
 
 security:
   jwt:

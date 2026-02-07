@@ -38,21 +38,6 @@ export interface ParticipanteResponseDTO {
   firmaUrl?: string;
   fotoUrls: string[];
 }
-export interface HerramientaConIndice {
-  [key: string]: boolean | number | string | File | undefined;
-  herramientaMaestraId?: number;
-  herramientaNombre: string;
-  p1?: boolean;
-  p2?: boolean;
-  p3?: boolean;
-  p4?: boolean;
-  p5?: boolean;
-  p6?: boolean;
-  p7?: boolean;
-  p8?: boolean;
-  observaciones?: string;
-  foto?: File;
-}
 
 export interface SecuenciaTareaResponseDTO {
   secuenciaTarea: string;
@@ -263,10 +248,8 @@ export interface HerramientaInspeccionRequestDTO {
   p8?: boolean;
   observaciones?: string;
   foto?: File;
-  
-  // Esto permite indexación por string
-  [key: string]: any;
 }
+
 export interface PetarRespuestaRequestDTO {
   preguntaId?: number;
   respuesta?: boolean;
@@ -357,7 +340,7 @@ export class SsomaService {
   private convertirRequestAFormData(request: SsomaRequestDTO): FormData {
     const formData = new FormData();
     
-    // Datos principales
+    // 1. Agregar todos los campos simples primero
     formData.append('idOts', request.idOts.toString());
     if (request.empresaId) formData.append('empresaId', request.empresaId.toString());
     if (request.trabajoId) formData.append('trabajoId', request.trabajoId.toString());
@@ -372,17 +355,122 @@ export class SsomaService {
     if (request.supervisorSst) formData.append('supervisorSst', request.supervisorSst);
     if (request.responsableArea) formData.append('responsableArea', request.responsableArea);
     
-    // Arrays como JSON strings (como espera el backend @ModelAttribute)
-    formData.append('participantes', JSON.stringify(request.participantes));
-    formData.append('secuenciasTarea', JSON.stringify(request.secuenciasTarea));
-    formData.append('checklistSeguridad', JSON.stringify(request.checklistSeguridad));
-    formData.append('eppChecks', JSON.stringify(request.eppChecks));
-    if (request.charla) formData.append('charla', JSON.stringify(request.charla));
-    formData.append('inspeccionesTrabajador', JSON.stringify(request.inspeccionesTrabajador));
-    formData.append('herramientasInspeccion', JSON.stringify(request.herramientasInspeccion));
-    if (request.petar) formData.append('petar', JSON.stringify(request.petar));
+    // 2. Agregar arrays como elementos individuales del FormData
+    this.agregarArrayAFormData(formData, 'participantes', request.participantes);
+    this.agregarArrayAFormData(formData, 'secuenciasTarea', request.secuenciasTarea);
+    this.agregarArrayAFormData(formData, 'checklistSeguridad', request.checklistSeguridad);
+    this.agregarArrayAFormData(formData, 'eppChecks', request.eppChecks);
+    this.agregarArrayAFormData(formData, 'inspeccionesTrabajador', request.inspeccionesTrabajador);
+    this.agregarArrayAFormData(formData, 'herramientasInspeccion', request.herramientasInspeccion);
     
-    // Fotos de participantes (separadas)
+    // 3. Agregar objetos complejos
+    if (request.charla) {
+      this.agregarObjetoAFormData(formData, 'charla', request.charla);
+    }
+    
+    if (request.petar) {
+      if (request.petar.respuestas) {
+        this.agregarArrayAFormData(formData, 'petar.respuestas', request.petar.respuestas);
+      }
+      if (request.petar.equiposProteccion) {
+        this.agregarArrayAFormData(formData, 'petar.equiposProteccion', request.petar.equiposProteccion);
+      }
+      this.agregarObjetoPetarAFormData(formData, 'petar', request.petar);
+    }
+    
+    // 4. Agregar archivos
+    this.agregarArchivos(formData, request);
+    
+    return formData;
+  }
+  
+  /**
+   * Método auxiliar para agregar arrays al FormData
+   */
+  private agregarArrayAFormData(formData: FormData, prefix: string, array: any[]): void {
+    if (!array || array.length === 0) return;
+    
+    array.forEach((item, index) => {
+      const itemPrefix = `${prefix}[${index}]`;
+      
+      if (typeof item === 'object') {
+        // Si es un objeto, agregar sus propiedades
+        Object.keys(item).forEach(key => {
+          const value = item[key];
+          if (value !== undefined && value !== null && key !== 'foto' && key !== 'firma') {
+            const fieldName = `${itemPrefix}.${key}`;
+            if (value instanceof Date) {
+              formData.append(fieldName, value.toISOString());
+            } else if (typeof value === 'boolean') {
+              formData.append(fieldName, value.toString());
+            } else {
+              formData.append(fieldName, value.toString());
+            }
+          }
+        });
+      } else {
+        // Si es un valor simple
+        formData.append(`${prefix}[]`, item.toString());
+      }
+    });
+  }
+  
+  /**
+   * Método auxiliar para agregar objetos al FormData
+   */
+  private agregarObjetoAFormData(formData: FormData, prefix: string, obj: any): void {
+    if (!obj) return;
+    
+    Object.keys(obj).forEach(key => {
+      const value = obj[key];
+      if (value !== undefined && value !== null) {
+        const fieldName = `${prefix}.${key}`;
+        if (value instanceof Date) {
+          formData.append(fieldName, value.toISOString());
+        } else if (typeof value === 'boolean') {
+          formData.append(fieldName, value.toString());
+        } else if (typeof value === 'object' && !Array.isArray(value)) {
+          // Objeto anidado
+          this.agregarObjetoAFormData(formData, fieldName, value);
+        } else {
+          formData.append(fieldName, value.toString());
+        }
+      }
+    });
+  }
+  
+  /**
+   * Método especial para PETAR ya que tiene arrays dentro
+   */
+  private agregarObjetoPetarAFormData(formData: FormData, prefix: string, petar: any): void {
+    if (!petar) return;
+    
+    // Agregar campos simples del PETAR
+    const camposSimples = [
+      'energiaPeligrosa', 'trabajoAltura', 'izaje', 'excavacion',
+      'espaciosConfinados', 'trabajoCaliente', 'otros',
+      'otrosDescripcion', 'velocidadAire', 'contenidoOxigeno',
+      'horaInicioPetar', 'horaFinPetar'
+    ];
+    
+    camposSimples.forEach(campo => {
+      const value = petar[campo];
+      if (value !== undefined && value !== null) {
+        const fieldName = `${prefix}.${campo}`;
+        if (typeof value === 'boolean') {
+          formData.append(fieldName, value.toString());
+        } else {
+          formData.append(fieldName, value.toString());
+        }
+      }
+    });
+  }
+  
+  /**
+   * Método para agregar todos los archivos al FormData
+   */
+  private agregarArchivos(formData: FormData, request: SsomaRequestDTO): void {
+    // Fotos de participantes
     if (request.fotosParticipantes) {
       request.fotosParticipantes.forEach((foto, index) => {
         formData.append(`fotosParticipantes[${index}].foto`, foto.foto);
@@ -415,35 +503,33 @@ export class SsomaService {
       });
     }
     
-    // Firmas de participantes (si vienen en los participantes)
+    // Firmas de participantes
     request.participantes.forEach((participante, index) => {
       if (participante.firma) {
         formData.append(`firmaParticipante${index}`, participante.firma);
       }
     });
     
-    // Fotos de checklist (si vienen en el checklist)
+    // Fotos de checklist
     request.checklistSeguridad.forEach((item, index) => {
       if (item.foto) {
         formData.append(`fotoChecklist${index}`, item.foto);
       }
     });
     
-    // Fotos de EPP (si vienen en los eppChecks)
+    // Fotos de EPP (directas)
     request.eppChecks.forEach((epp, index) => {
       if (epp.foto) {
         formData.append(`fotoEppDirecto${index}`, epp.foto);
       }
     });
     
-    // Fotos de herramientas (si vienen en herramientasInspeccion)
+    // Fotos de herramientas (directas)
     request.herramientasInspeccion.forEach((herramienta, index) => {
       if (herramienta.foto) {
         formData.append(`fotoHerramientaDirecto${index}`, herramienta.foto);
       }
     });
-    
-    return formData;
   }
   
   /**
@@ -482,6 +568,27 @@ export class SsomaService {
       consecuencias: '',
       medidasControl: '',
       orden: 0
+    };
+  }
+  
+  /**
+   * Helper para crear un checklist vacío
+   */
+  crearChecklistVacio(): ChecklistSeguridadRequestDTO {
+    return {
+      itemNombre: '',
+      usado: false,
+      observaciones: ''
+    };
+  }
+  
+  /**
+   * Helper para crear un EPP check vacío
+   */
+  crearEppCheckVacio(): EppCheckRequestDTO {
+    return {
+      eppNombre: '',
+      usado: false
     };
   }
 }
